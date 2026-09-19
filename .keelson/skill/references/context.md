@@ -28,7 +28,3 @@ Write the answer into `change.md → Impact`. An Impact section that only lists 
 
 When the material for a change does not fit, do not summarise constraints into something looser. Narrow the slice, or keep reading on demand and say what you have not checked. `NOW.md → Blocked / uncertain` is the place for "not yet checked: …".
 
-<!-- guided -->
-## Reading order for a spec change
-`INTENT.md` → `ROADMAP.md → Now` → `change.md` → the capability specs it names → matched rules → tests for those capabilities → `keelson impact` on the files you will touch → the callers it found → anything a spec links under `refs`.
-<!-- /guided -->
