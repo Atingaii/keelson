@@ -11,6 +11,7 @@ All notable changes to this project are documented here. The format follows Keep
 
 ### Changed
 
+- Keelson now uses a single project-local runtime root: `.keelson/workflow.md` and `.keelson/skill/` hold the canonical workflow, skill, and references. `AGENTS.md`, `CLAUDE.md`, `.agents/skills/keelson/`, and native host skill paths are discovery shims only, eliminating duplicated guidance while preserving platform discovery.
 - Platform generation is now standards-first: Cursor, GitHub Copilot, and Kilo Code reuse the canonical `AGENTS.md` + `.agents/skills/` surface instead of receiving duplicate Keelson copies; Kiro keeps only its native skill path where it adds discovery, Qoder's documented skill path is retained, and speculative duplicate rule files are removed.
 - The canonical `SKILL.md` is now a thin on-demand router rather than a second copy of the resident ORIENT → BOUND → BUILD → SENSE → RECONCILE loop; a repository test caps it at 60 lines.
 - Markdown parsing and generated agent surfaces are now line-ending agnostic: LF and CRLF parse identically, while package-owned rendered Markdown emits LF for stable cross-platform output.
