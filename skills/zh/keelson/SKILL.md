@@ -1,21 +1,27 @@
 ---
 name: keelson
-description: 面向带有 .keelson/ 目录的仓库的工程协作层。凡是用户要求在此类项目中构建、新增、修改、重构、修复、调试、规划、继续、交接、收尾、评审或发布工作时使用；用户说 "grill me"、"status"、"hand off"、"land it"、"retro"，或说"盘问我"、"进度"、"交接"、"收尾"、"复盘"时同样使用。它把 specs 当作唯一真相、按路径路由 rules、记录决策与未决问题、分别跟踪工作、验证和发布三种状态，并按 effort 层级分派子代理。
+description: 面向带有 .keelson/ 目录的仓库的工程协作层。凡是用户要求在此类项目中构建、新增、修改、重构、修复、调试、规划、继续、交接、收尾、评审或发布工作时使用；用户说 "grill me"、"status"、"hand off"、"land it"、"retro"，或说"盘问我"、"进度"、"交接"、"收尾"、"复盘"时同样使用。它把 specs 当作当前行为真相、按路径路由 rules、记录决策与未决问题、分离工作/验证/发布状态，并把反复出现的错误逐步提升为更强的可执行检查。
 ---
 
 # Keelson
 
-Keelson 垫在你正常工作方式之下，服务的是要活很多年的项目。仓库把长期事实保存在 `.keelson/`：`INTENT.md`（为什么存在、边界、你可以独自决定什么）、`ROADMAP.md`（当前里程碑）、`NOW.md`（当前在做什么）、`GLOSSARY.md`（一个术语一个含义）、specs（系统今天的行为，路径在 `config.yaml` 里）、`rules/`（按路径路由的约定）、`changes/`（进行中的工作，空闲时为空）。项目已有的文档通过 `config.yaml → refs` 引用，绝不复制。工作怎么做由你自己判断；Keelson 只保证你需要的事实摆在面前、你产出的事实被写下来，并且没有与代码相符的证据就不会宣布完成。
+Keelson 是项目的工程控制层。仓库把长期事实保存在 `.keelson/`：`INTENT.md`（为什么存在、边界、你可以独自决定什么）、`ROADMAP.md`（当前里程碑）、`NOW.md`（当前在做什么）、`GLOSSARY.md`（一个术语一个含义）、specs（系统今天的行为，路径在 `config.yaml` 中）、`rules/`（按路径作用的约定）、`changes/`（进行中的工作，空闲时为空）。项目已有文档通过 `config.yaml → refs` 引用，绝不复制。
 
-这里没有针对你的门禁。门禁作用在工件上：`keelson land` 会拒绝过期的证据、未勾选的验收、未决问题和未确认的假设。每条准则都说明它为什么存在，好让你判断它何时不适用。用户指令和项目自身的说明文件永远优先。
+Keelson 约束的是**状态转换，而不是实现方式**。怎么解决问题由你判断；但非平凡修改前不能跳过当前上下文，不能悄悄改变行为契约，不能拿过期证据宣布完成，也不能带着未关闭的验收直接落地。一个规则如果能被机器稳定检查，就优先把它做成可执行不变量，而不是再写一段提示词。用户指令和项目自身说明文件始终优先。
 
 ## 首次接触
 
 如果 `NOW.md` 以 "First contact" 开头，说明还没有人起草过项目事实。阅读仓库（README、清单文件、目录布局、代码，以及 `config.yaml → refs` 指向的文档），起草 `INTENT.md`（为什么存在、边界、硬约束、一份初始的 Authorizations 段），已有代码的项目再为每个能力写一份 spec、为有约定的路径写 rules。然后用一次简短的交流请所有者确认或修正，保留他们的回答，重写 `NOW.md`。如果所有者一上来就提了需求，就在整理那个变更的过程中顺带完成，一起确认。永远不要让所有者手写这些文件。
 
-## 非平凡工作开始前
+## 执行主回路
 
-`keelson context --paths <你预计会改的文件>` 打印 INTENT、ROADMAP、NOW、活动中的变更、既有引用资料和命中的 rules。改共享模块之前，`keelson impact <files>` 列出导入方和可能受影响的 specs；把它当导航，然后靠阅读找出它看不见的调用方。
+每个非平凡变更都走 **ORIENT → BOUND → BUILD → SENSE → RECONCILE**。不要因为聊天记录里“好像已经有了”就跳过某一段。
+
+- **ORIENT（定向）** — 先看工作树，再运行 `keelson context --paths <你预计会改的文件>`；改共享模块前运行 `keelson impact <files>`。直接读命中的 spec/rules，不依赖会话记忆。
+- **BOUND（定界）** — 按下表判断变更大小，写回你的理解，显式标出假设，并在实现扩大之前把验收边界说清楚。
+- **BUILD（构建）** — 一次只推进一个纵向切片；不要把无关清理塞进当前切片；决策变化时同步保持 change 工件真实。
+- **SENSE（感知）** — 工作中尽早运行最便宜且相关的 test/lint/type/fitness 检查；任何完成性结论前都要用 `keelson check --record` 重新取得当前工作树上的证据。
+- **RECONCILE（收敛）** — 把稳定事实写回 specs/rules/glossary/NOW；未完成就留下可恢复的 handoff；同一类失败反复出现时，把它提升为窄范围 rule 或可执行 check，而不是沉淀成聊天经验。
 
 ## 先定大小，再选参考
 
@@ -29,18 +35,19 @@ Keelson 垫在你正常工作方式之下，服务的是要活很多年的项目
 
 ## 你现在需要什么？
 
-- **负责人还不确定想要什么，或正在学习** → `references/discover.md`（先谈场景再谈技术、哪些未知该提出来、范围守卫、先探索再承诺、引导模式）
-- **弄清要做什么** → `references/shape.md`（先查事实、写回、决策状态、授权、访谈、无人值守运行）
-- **词汇或边界在漂移** → `references/model.md`（术语表、bounded context、不变量、深模块、设计两次）
-- **知道代码会牵动什么** → `references/context.md`（三层上下文、影响分析、预算）
-- **规划变更** → `references/plan.md`（change.md、切片、验收、delta specs、effort 层级、既有任务系统）
-- **设计或可靠性问题** → `references/engineer.md`（工程透镜：交付、结构、演进、运行、质量目标）
-- **构建** → `references/build.md`（裁定、按层级分派子代理、并行工作、保持工件真实）
-- **证明它能用** → `references/verify.md`（记录有效性、内容有效性、`keelson check --record`、评审）
-- **停下或继续** → `references/handoff.md`（交接字段、安全恢复、NOW.md）
-- **集成与发布** → `references/land.md`（落地门禁、spec 冲突、rollout、沉淀经验、技术债）
-- **把新事实写回去，让项目保持小** → `references/reconcile.md`（每个事实去哪里、重写不追加、预算与压缩、`keelson doctor`）
-- **有东西坏了** → `references/debug.md`（复现、根因、分类）
+- **负责人还不确定想要什么，或正在学习** → `references/discover.md`
+- **弄清要做什么** → `references/shape.md`
+- **词汇或边界在漂移** → `references/model.md`
+- **知道代码会牵动什么** → `references/context.md`
+- **规划变更** → `references/plan.md`
+- **设计或可靠性问题** → `references/engineer.md`
+- **构建** → `references/build.md`
+- **证明它能用** → `references/verify.md`
+- **Harness 总在漏掉同一类问题** → `references/harness.md`（前馈/反馈控制、升级阶梯、机械不变量、sunset）
+- **停下或继续** → `references/handoff.md`
+- **集成与发布** → `references/land.md`
+- **把新事实写回去，让项目保持小** → `references/reconcile.md`
+- **有东西坏了** → `references/debug.md`
 - **"retro"** → 运行 `keelson retro` 并按建议行动
 
 ## 你会用到的 CLI

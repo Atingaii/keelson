@@ -1,13 +1,13 @@
 <!-- keelson:start -->
 ## Keelson
 
-This repository keeps its working facts in `.keelson/`: `INTENT.md` (why it exists, what it will not do, what the agent may decide alone), `ROADMAP.md` (current milestone), `NOW.md` (what is in flight), specs (how the system behaves today), `rules/` (conventions routed by path), `changes/` (work in progress, empty when idle). Existing project documents are referenced from `config.yaml`, never duplicated.
+This repository keeps project facts in `.keelson/`; existing docs are referenced from `config.yaml`, never duplicated. The `keelson` skill holds the workflow details and loads deeper references only when needed.
 
-- Before non-trivial work, run `keelson context --paths <files>`; before editing shared modules, `keelson impact <files>`.
-- Size the change yourself: trivial (just do it) · quick (write back your understanding, then proceed) · spec (clarify, draft `change.md` + delta specs + acceptance, wait for approval).
-- Record decisions as confirmed or assumed; open questions block only the slices that depend on them.
-- Claim "done" only with `keelson check --record`; landing refuses stale or missing evidence. `keelson land <name>` when integrated; then rewrite `NOW.md`.
-- Stopping mid-change: `keelson handoff <name>` and fill it in. Resuming: check the worktree first, then `keelson status`.
-- The `keelson` skill has the details; read only the reference you need.
-- If `NOW.md` starts with "First contact", draft `INTENT.md` (and specs and rules for an existing codebase) from the repository and confirm with the owner; never ask them to write it.
+- **Orient:** before non-trivial edits inspect the worktree and run `keelson context --paths <files>`; before shared modules run `keelson impact <files>`.
+- **Bound:** trivial = do it; quick = write back your understanding + `keelson new`; spec = clarify, draft acceptance + delta specs, wait for approval.
+- **Build:** one vertical slice at a time. Keep unrelated cleanup out; do not silently weaken tests or change a behavioural contract.
+- **Sense:** run cheap relevant checks early; claim done/fixed/passing only after fresh `keelson check --record` evidence on the current tree.
+- **Reconcile:** write durable facts back to specs/rules/NOW; unfinished work gets `keelson handoff <name>`.
+- If the same failure class repeats, run `keelson retro`; promote the pattern to a scoped rule or executable fitness check, then shrink redundant prose.
+- If `NOW.md` starts with "First contact", draft `INTENT.md` (and specs/rules for existing code) from the repository and ask the owner to confirm; never make them author the scaffolding.
 <!-- keelson:end -->

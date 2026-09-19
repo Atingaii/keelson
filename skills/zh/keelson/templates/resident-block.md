@@ -1,13 +1,13 @@
 <!-- keelson:start -->
 ## Keelson
 
-本仓库把工作事实保存在 `.keelson/`：`INTENT.md`（为什么存在、明确不做什么、代理可以独自决定什么）、`ROADMAP.md`（当前里程碑）、`NOW.md`（当前在做什么）、specs（系统今天的行为）、`rules/`（按路径路由的约定）、`changes/`（进行中的工作，空闲时为空）。项目已有的文档通过 `config.yaml` 引用，绝不复制。
+本仓库把项目事实保存在 `.keelson/`；已有文档只从 `config.yaml` 引用，绝不复制。完整工作流在 `keelson` skill 中，深层 reference 仅按需读取。
 
-- 非平凡工作开始前运行 `keelson context --paths <files>`；改共享模块之前运行 `keelson impact <files>`。
-- 变更大小由你判断：trivial（直接做）· quick（写回你的理解，然后继续）· spec（澄清，起草 `change.md` + delta specs + 验收，等待批准）。
-- 决策记为已确认或假设；未决问题只阻塞依赖它的切片。
-- 只在 `keelson check --record` 之后宣布"完成"；落地会拒绝过期或缺失的证据。已集成时 `keelson land <name>`；然后重写 `NOW.md`。
-- 变更中途停下：`keelson handoff <name>` 并填好。恢复：先检查工作树，再 `keelson status`。
-- 细节在 `keelson` 技能里；只读你需要的那份参考。
-- 如果 `NOW.md` 以 "First contact" 开头，就根据仓库起草 `INTENT.md`（已有代码的项目再加 specs 和 rules）并请所有者确认；永远不要让他们手写。
+- **定向：** 非平凡修改前先看工作树并运行 `keelson context --paths <files>`；改共享模块前运行 `keelson impact <files>`。
+- **定界：** trivial 直接做；quick 先写回理解再 `keelson new`；spec 先澄清、写验收与 delta specs，获批后再实现。
+- **构建：** 一次只推进一个纵向切片。无关清理不要顺手带入；不得静默削弱测试或改变行为契约。
+- **感知：** 尽早跑便宜且相关的检查；只有当前工作树上的新鲜 `keelson check --record` 证据之后才能说“完成/修复/通过”。
+- **收敛：** 把稳定事实写回 specs/rules/NOW；未完成工作用 `keelson handoff <name>` 留下可恢复状态。
+- 同一类失败重复出现时运行 `keelson retro`；把模式提升为窄范围 rule 或可执行 fitness check，再删减重复提示词。
+- 如果 `NOW.md` 以 "First contact" 开头，就根据仓库起草 `INTENT.md`（已有代码时再加 specs/rules）并请所有者确认；不要让所有者手写脚手架。
 <!-- keelson:end -->
