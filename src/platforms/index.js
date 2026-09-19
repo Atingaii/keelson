@@ -132,8 +132,9 @@ export function legacyManagedRemovals(root, targets) {
 }
 
 export function plannedManagedRemovals(root, targets) {
+  const keep = new Set(targets.flatMap(managedSurfacePaths));
   return [...new Set([
-    ...staleManagedTargets(root, targets).flatMap(managedSurfacePaths),
+    ...staleManagedTargets(root, targets).flatMap(managedSurfacePaths).filter((rel) => !keep.has(rel)),
     ...legacyManagedRemovals(root, targets),
   ])].filter((rel) => exists(path.join(root, rel)));
 }
@@ -337,31 +338,35 @@ export function removeHooks(root) {
   writeJson(settingsPath, settings);
 }
 
-function removeTargetSurfaces(root, p) {
+function removeTargetSurfaces(root, p, keep = new Set()) {
   const removed = [];
-  const skill = path.join(root, p.skillsDir, 'keelson');
-  if (exists(skill)) {
+  const skillRel = path.join(p.skillsDir, 'keelson');
+  const skill = path.join(root, skillRel);
+  if (!keep.has(skillRel) && exists(skill)) {
     rmrf(skill);
     removed.push(path.relative(root, skill));
   }
-  const ins = path.join(root, p.instructions);
-  if (exists(ins)) {
+  const insRel = p.instructions;
+  const ins = path.join(root, insRel);
+  if (!keep.has(insRel) && exists(ins)) {
     if (p.instructionsFormat === 'kiro') rmrf(ins);
     else write(ins, removeBlock(read(ins)));
     removed.push(path.relative(root, ins));
   }
-  if (p.rulesFile && exists(path.join(root, p.rulesFile))) {
+  if (p.rulesFile && !keep.has(p.rulesFile) && exists(path.join(root, p.rulesFile))) {
     rmrf(path.join(root, p.rulesFile));
     removed.push(p.rulesFile);
   }
-  if (p.hooks) removeHooks(root);
+  if (p.hooks && ![...keep].some((rel) => rel === '.claude/settings.json')) removeHooks(root);
   return removed;
 }
 
 export function reconcileManagedTargets(root, targets) {
   const removed = [];
   const stale = staleManagedTargets(root, targets);
-  for (const p of stale) removed.push(...removeTargetSurfaces(root, p));
+  const keep = new Set(targets.flatMap(managedSurfacePaths));
+  if (targets.some((p) => p.hooks)) keep.add('.claude/settings.json');
+  for (const p of stale) removed.push(...removeTargetSurfaces(root, p, keep));
   for (const rel of legacyManagedRemovals(root, targets)) {
     rmrf(path.join(root, rel));
     removed.push(rel);
