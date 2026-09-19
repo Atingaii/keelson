@@ -22,7 +22,7 @@ description: 面向含 .keelson/ 目录项目的工程控制层。用于探索�
 
 ## 执行规则
 
-- 如果 `NOW.md` 写着“First contact”，先读仓库、起草 `INTENT.md`，只为仓库里真实存在的事实创建 specs/rules，然后让所有者确认或纠正；不要让所有者手写脚手架。
+- 如果 `NOW.md` 写着“First contact”，先读仓库并起草 `INTENT.md`，让所有者确认或纠正。不要把整个仓库盘点成 specs/rules；只有当前工作需要长期行为契约或工程不变量时才创建。
 - 非平凡工作从当前工作树开始：`keelson context --paths <files>`；修改共享模块前运行 `keelson impact <files>`。
 - 给变更定大小：**trivial** 直接做；**quick** 写回理解后建立轻量 change；**spec** 先写验收、delta specs 和计划，再等批准。
 - 工件是信息容器，不是仪式。不要因为存在模板就创建空 ROADMAP、GLOSSARY、rule、tasks、ledger、handoff 或 spec。
