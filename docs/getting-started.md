@@ -18,7 +18,7 @@ cd your-project
 keelson init
 ```
 
-By default this sets up Claude Code. Pass `--tools` for other agents, comma separated:
+With no flags it picks the coding tools installed on this machine. Name the ones you use with one flag per tool (`keelson platforms` lists them):
 
 ```bash
 keelson init --claude --codex --cursor
@@ -28,10 +28,11 @@ Sample output on a repository that already has decision records and CI:
 
 ```text
 Keelson init in /home/you/your-project
+· tools detected on this machine: Claude Code (override with --tools or --<platform>)
 ✓ referencing existing decisions: docs/adr
 ✓ referencing existing tasks: https://github.com/you/your-project/issues
 ✓ referencing existing ci: .github/workflows
-✓ .keelson/INTENT.md (fill in why the project exists and what the agent may decide alone)
+✓ .keelson/INTENT.md (the agent drafts it from the code on first contact; confirm it when it asks)
 ✓ .keelson/NOW.md
 ✓ .keelson/ROADMAP.md (current milestone; link your tracker instead of duplicating it)
 ✓ .keelson/GLOSSARY.md (shared vocabulary; fill it when two words start meaning the same thing)
@@ -39,15 +40,13 @@ Keelson init in /home/you/your-project
 ✓ .keelson/rules/general.md
 ✓ .gitignore: .keelson/.local/ (session state and evidence stay on this machine)
 ✓ .keelson/config.yaml
-✓ Claude Code: skill → .claude/skills/keelson
-✓ Claude Code: resident block → CLAUDE.md
+✓ Claude Code: skill → .claude/skills/keelson; instructions → CLAUDE.md
 ✓ Claude Code: hooks → .claude/settings.json (session snapshot + per-prompt state line)
 · model detection cached in ~/.keelson/models.cache.json (keelson models)
+✓ .keelson/NOW.md: first-contact task written for the agent (draft INTENT, specs, and rules from the code)
 
-Next
-  1. Edit .keelson/INTENT.md — why this project exists, what it will not do, what the agent may decide alone.
-  2. Open your agent here and start talking; on first contact it drafts INTENT.md, the specs, and the rules from the code.
-  3. Then just talk to your agent. Nothing else to type.
+Done. Open your agent in this directory and start talking.
+  On first contact it reads the repository, drafts .keelson/INTENT.md, the specs, and the rules, and asks you to confirm before anything lands.
 ```
 
 `init` never overwrites files that already exist in `.keelson/`. It appends a marked block to `CLAUDE.md` (or `AGENTS.md`, `GEMINI.md`) and leaves the rest of the file alone. Existing material it finds (architecture notes, decision records, CI, a GitHub issues page) is recorded under `refs` in `config.yaml` and referenced, never copied. If `package.json` has `lint`, `typecheck`, or `test` scripts, they become check commands. `keelson init --dry-run` lists what would be written without writing it.

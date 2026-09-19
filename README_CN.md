@@ -81,16 +81,13 @@ Keelson 把项目需要的事实留在仓库里，以代理在恰当时机读取
 ```bash
 npm install -g keelson
 cd your-project
-keelson init                      # 默认 Claude Code
-keelson init --tools claude,codex # 或一次配置多个工具
+keelson init                 # 自动选用本机已安装的编码工具
+keelson init --cursor --codex   # 或者点名你在用的那些
 ```
 
-然后：
+这是唯一的一步。在该目录下打开你的代理，开始对话。首次接触时，它读取仓库，起草 `.keelson/INTENT.md`（项目为什么存在、明确不做什么、代理可以自行决定什么）；对已有代码的项目，还会为每个能力写一份 spec，为有约定的路径写 rules。然后用一次简短的交流请你确认。这些文件你永远不需要手写。
 
-1. 编辑 `.keelson/INTENT.md`：项目为什么存在、明确不做什么、代理可以自行决定什么。
-2. 和你的代理对话。没有别的要敲的。
-
-已有代码库？`keelson init` 找到你的架构说明、决策记录、CI 和 issue 跟踪器时会直接引用它们。运行 `keelson init --onboard`，让代理从代码反推 specs 和 rules 草稿供你确认。见[已有项目](docs/zh/existing-projects.md)。
+`keelson init` 还会引用它找到的架构说明、决策记录、CI 和 issue 跟踪器，而不是复制它们。见[已有项目](docs/zh/existing-projects.md)。
 
 `keelson init --lang zh` 安装中文版的代理技能。
 
@@ -175,19 +172,34 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 - 路径路由和 `keelson impact` 是导航，不是证明。grep 看不见的调用方仍然要靠代理阅读。
 - 磁盘上的文件不是分布式锁，分支也不消除语义冲突。跨机器的认领与合并控制属于你的跟踪器、pull request 和 CI。
 - 第二个代理同意第一个代理，是一个信号，不是正确性证明。真正被检查的是验收清单。
-- Hook 只在 Claude Code 上存在。其他工具依赖常驻块和 `keelson context`。
+- Hook 只在 Claude Code 上存在。其他工具依赖常驻块和 `keelson context`。在 22 个受支持的工具里，两个在真实会话中验证过；其余按文档或惯例确定文件位置，并带有可信度标签。
 - Keelson 从不执行生产操作。它提醒，你来运行。
 - 大型项目的长期演进是设计目标。0.x 版本在真实的 Claude Code 会话和小项目上跑过；Codex CLI 适配器验证过能加载技能，但还没有完整走完一个变更。超出这个范围的说法都视为未验证。
 
 ## 支持的工具
 
-| 工具 | 技能位置 | 说明文件 | Hook |
-|---|---|---|---|
-| Claude Code（`claude`） | `.claude/skills/keelson/` | `CLAUDE.md` | 有 |
-| Codex CLI（`codex`） | `.agents/skills/keelson/` | `AGENTS.md` | 无 |
-| Cursor（`cursor`） | `.agents/skills/keelson/` | `AGENTS.md` 和 `.cursor/rules/keelson.mdc` | 无 |
-| OpenCode（`opencode`） | `.agents/skills/keelson/` | `AGENTS.md` | 无 |
-| Gemini CLI（`gemini`） | `.agents/skills/keelson/` | `GEMINI.md` | 无 |
+`keelson init` 接受每个工具一个标志，或 `--tools a,b`，或什么都不给（它探测本机已安装的工具）。除 Claude Code 外的每个选择还会安装跨工具层：`AGENTS.md` 加 `.agents/skills/`，任何读取这一约定的代理都能拾取。`keelson platforms` 打印完整表格，并标出本机已安装的工具。
+
+| 工具 | 说明文件 | 技能 | Hook | 可信度 |
+|---|---|---|---|---|
+| Claude Code `--claude` | `CLAUDE.md` | `.claude/skills/` | 会话启动和每个提示词 | verified |
+| Codex CLI `--codex` | `AGENTS.md` | `.agents/skills/` | | verified |
+| Cursor `--cursor` | `AGENTS.md`、`.cursor/rules/keelson.mdc` | `.cursor/skills/` | | documented |
+| OpenCode `--opencode` | `AGENTS.md` | `.agents/skills/` | | documented |
+| Gemini CLI `--gemini` | `GEMINI.md` | `.agents/skills/` | | documented |
+| GitHub Copilot `--copilot` | `.github/copilot-instructions.md` | `.github/skills/` | | documented |
+| Kiro `--kiro` | `.kiro/steering/keelson.md` | `.kiro/skills/` | | documented |
+| Kilo Code `--kilo` | `AGENTS.md`、`.kilocode/rules/keelson.md` | `.kilocode/skills/` | | documented |
+| Antigravity `--antigravity` | `AGENTS.md`、`.agent/rules/keelson.md` | `.agent/skills/` | | convention |
+| Devin `--devin` | `AGENTS.md` | `.devin/skills/` | | convention |
+| Qoder `--qoder` | `AGENTS.md`、`.qoder/rules/keelson.md` | `.qoder/skills/` | | convention |
+| CodeBuddy `--codebuddy` | `AGENTS.md`、`.codebuddy/rules/keelson.md` | `.codebuddy/skills/` | | convention |
+| Droid `--droid` | `AGENTS.md` | `.factory/skills/` | | convention |
+| Pi Agent `--pi`、Oh My Pi `--ohmypi` | `AGENTS.md` | `.pi/skills/` | | convention |
+| Reasonix `--reasonix`、ZCode `--zcode`、Trae `--trae`、Grok Build `--grok`、Kimi Code `--kimi`、Snow CLI `--snow` | `AGENTS.md`（Trae 另有 `.trae/rules/keelson.md`） | `.<tool>/skills/` | | convention |
+| 任何读取 `AGENTS.md` + `.agents/skills/` 的工具 `--agents`（Amp、Cline、Deep Agents、Firebender、Warp 等） | `AGENTS.md` | `.agents/skills/` | | documented |
+
+可信度说明文件位置是怎么确定的。*verified*（已验证）的工具与维护者跑过真实会话。*documented*（有文档）的位置来自该工具自己的文档。*convention*（按惯例）的位置遵循该工具的目录惯例，尚未实际验证；如果某个工具没有拾取技能，在 `config.yaml` 的 `platforms.<id>` 下覆盖它的路径，然后运行 `keelson doctor`。Hook 只在工具提供的地方存在；其他地方由常驻块要求代理自己运行 `keelson context`。
 
 ## CLI
 
@@ -206,6 +218,7 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 | `keelson retro` | ledger 指标和裁剪建议 |
 | `keelson models` | effort 层级到模型别名的解析 |
 | `keelson doctor` | 诊断安装并报告知识健康 |
+| `keelson platforms` | 列出受支持的工具、它们的文件位置以及哪些已安装 |
 | `keelson ablate` / `restore` | 摘除全部表面做 A/B 对照，再原样恢复 |
 | `keelson uninstall` | 移除生成的表面；`--purge` 连 `.keelson/` 一起移除 |
 

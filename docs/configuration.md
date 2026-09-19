@@ -72,6 +72,7 @@ effort:
 | `refs.tasks` | detected | URL or path of the issue tracker. The tracker stays authoritative for what is wanted |
 | `refs.ci` | detected | Path to CI configuration |
 | `models` | `{}` | Project-level tier overrides. Either `models: { deep: opus }` for all platforms or `models: { claude: { deep: opus } }` per platform. Aliases only |
+| `platforms` | absent | Per-project overrides of where a tool reads its instructions and skills, keyed by tool id. See Platform overrides |
 | `effort.review_min` | `standard` | Lowest tier for a reviewer subagent |
 | `effort.plan_min` | `deep` | Lowest tier for drafting `change.md` and delta specs |
 | `effort.verify_min` | `deep` | Lowest tier for the final fresh-reader review on spec changes |
@@ -98,6 +99,22 @@ Budgets are in lines. Crossing one is a signal to compact that document (rewrite
 ### Check kinds
 
 `fitness` marks a check that turns an architecture or quality constraint into a command: a dependency-direction test, an interface compatibility check, a latency budget. `keelson check` prints the name and kind next to each result, and the skill's `verify.md` reference treats the full set as mechanical evidence, which is necessary and never sufficient.
+
+### Platform overrides
+
+Where each tool reads its instructions and skills comes from the registry shipped with the package; `keelson platforms` prints it. A project can override any key of a tool's entry under `platforms.<id>`:
+
+```yaml
+platforms:
+  cursor:
+    skillsDir: .cursor/skills
+    rulesFile: .cursor/rules/keelson.mdc
+  kiro:
+    instructions: .kiro/steering/keelson.md
+    instructionsFormat: kiro
+```
+
+Keys: `instructions` (the file that receives the resident block), `instructionsFormat` (`kiro` writes a standalone steering file with an inclusion header instead of a marked block), `skillsDir` (where the `keelson/` skill directory is installed), `rulesFile` and `rulesFormat` (`mdc` for a rule file with frontmatter, `md` for plain Markdown), and `hooks` (`true` only for a tool that runs hooks the way Claude Code does). Overrides apply to `init`, `update`, `doctor`, `uninstall`, and `ablate`. Use them when a tool moves its directories, or when a `convention` entry does not match your install.
 
 ### Migration
 

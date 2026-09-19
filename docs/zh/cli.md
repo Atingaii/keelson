@@ -4,34 +4,33 @@
 
 所有命令都可以在项目内任意位置运行；Keelson 向上查找含有 `config.yaml` 或 `INTENT.md` 的 `.keelson/`（用户级的 `~/.keelson/` 永远不算）。退出码 0 表示成功，1 表示错误或检查失败，2 表示未知命令。多数命令支持 `--json` 输出机器可读结果。`--help` 和 `--version` 随处可用；`keelson <command> --help` 打印该命令的用法行。
 
-布尔标志：`--json`、`--force`、`--dry-run`、`--no-hooks`、`--onboard`、`--refresh`、`--detect`、`--keep`、`--quiet`、`--confirm-assumptions`、`--accept-drift`、`--worktree`、`--purge`。值标志接受 `--key value` 或 `--key=value`。`--guide` 是值标志，但也可以裸用：`--guide` 和 `--guide true` 打开引导模式，`--guide false` 关闭。
+布尔标志：`--json`、`--force`、`--dry-run`、`--no-hooks`、`--refresh`、`--detect`、`--keep`、`--quiet`、`--confirm-assumptions`、`--accept-drift`、`--worktree`、`--purge`，以及每个平台一个标志（`--claude`、`--cursor`……）。值标志接受 `--key value` 或 `--key=value`。`--guide` 是值标志，但也可以裸用：`--guide` 和 `--guide true` 打开引导模式，`--guide false` 关闭。
 
 ## `keelson init`
 
 ```text
-keelson init [--tools claude,codex,cursor,opencode,gemini] [--profile lean|guided]
-             [--lang en|zh] [--guide] [--no-hooks] [--onboard] [--dry-run] [--dir <path>]
+keelson init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided]
+             [--lang en|zh] [--no-hooks] [--dry-run] [--dir <path>]
 ```
 
-创建 `.keelson/`，含 `INTENT.md`、`NOW.md`、`ROADMAP.md`、`GLOSSARY.md`、`rules/index.md`、`rules/general.md`、`config.yaml`、空的 `changes/` 和 specs 目录。首次 init 时探测既有资料（架构说明、决策记录、CI、GitHub issues）写入 `refs`，探测检查命令，并把 `.keelson/.local/` 加进 `.gitignore`。为每个工具安装技能（盖有 CLI 版本）、常驻块，以及（Claude Code）hook。运行本地模型探测。从不覆盖 `.keelson/` 里已有的文件。
+唯一的一步。创建 `.keelson/`，含 `INTENT.md`、`ROADMAP.md`、`NOW.md`、`GLOSSARY.md`、`rules/index.md`、`rules/general.md`、`config.yaml` 和空的 `changes/`。为每个选中的工具安装技能、说明块，以及（Claude Code）hook；除 Claude Code 外的每个选择还会安装跨工具层（`AGENTS.md` + `.agents/skills/`）。首次运行时探测检查命令和既有项目资料。往 `NOW.md` 写入一个首次接触任务：代理根据仓库起草 `INTENT.md`（已有代码的项目还有 specs 和 rules），并请所有者确认。从不覆盖 `.keelson/` 里已有的文件。
 
-- `--onboard` 把 `NOW.md` 重写为已有代码库的接入任务。
-- `--guide` 在 `config.yaml` 里设 `guide: true`，并往常驻块加一行说明所有者正在学习工程；技能随后用场景和取舍来解释选择。`--guide false` 再关掉它。
+工具选择，按优先级：`--tools a,b`；每个工具一个标志（`--claude`、`--codex`、`--cursor`、`--opencode`、`--gemini`、`--copilot`、`--kiro`、`--kilo`、`--antigravity`、`--devin`、`--qoder`、`--codebuddy`、`--droid`、`--pi`、`--ohmypi`、`--reasonix`、`--zcode`、`--trae`、`--grok`、`--kimi`、`--snow`、`--agents`）；更新时 `config.yaml` 里已有的工具；本机能找到其命令的工具；Claude Code。
+
+- `--guide` 为正在学习工程的所有者打开引导模式。
 - `--no-hooks` 跳过 hook 安装。
-- `--dry-run` 列出每个技能文件将被创建、更新还是保持不变，说明文件将被创建、追加还是刷新，以及待执行的配置迁移。不写入任何东西。
+- `--dry-run` 列出将被创建、更新或迁移的内容，不写入任何东西。
 - `--dir` 指定另一个目录。
 
+工具或 profile 未知时以 1 退出。
+
+## `keelson platforms`
+
 ```text
-$ keelson init --dry-run
-Keelson update (dry run) in /home/you/shop
-  unchanged .claude/skills/keelson/SKILL.md
-  update    .claude/skills/keelson/references/verify.md
-  refresh   CLAUDE.md
-  migrate   .keelson/config.yaml v2 → v3
-nothing written
+keelson platforms [--json]
 ```
 
-工具或 profile 未知时以 1 退出。
+列出每个受支持的工具及其说明文件、技能目录、rules 文件、hook 支持、可信度标签，以及它是否已安装在本机、是否已在本项目中配置。
 
 ## `keelson update`
 

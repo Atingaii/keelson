@@ -74,6 +74,7 @@ effort:
 | `refs.tasks` | 自动探测 | issue 跟踪器的 URL 或路径。跟踪器对"要做什么"保持权威 |
 | `refs.ci` | 自动探测 | CI 配置的路径 |
 | `models` | `{}` | 项目级层级覆盖。`models: { deep: opus }` 对所有平台生效，或 `models: { claude: { deep: opus } }` 按平台。只用别名 |
+| `platforms` | 不存在 | 按工具 id 覆盖该工具读取说明和技能的位置。见平台覆盖 |
 | `effort.review_min` | `standard` | 评审子代理的最低层级 |
 | `effort.plan_min` | `deep` | 起草 `change.md` 和 delta specs 的最低层级 |
 | `effort.verify_min` | `deep` | spec 变更最终陌生读者评审的最低层级 |
@@ -100,6 +101,22 @@ effort:
 ### 检查类型
 
 `fitness` 标记一条把架构或质量约束变成命令的检查：依赖方向测试、接口兼容性检查、延迟预算。`keelson check` 在每条结果旁打印名字和类型，技能的 `verify.md` reference 把整组检查视为机械证据，它是必要的，永远不充分。
+
+### 平台覆盖
+
+每个工具从哪里读取说明和技能，来自随包附带的注册表；`keelson platforms` 会打印它。项目可以在 `platforms.<id>` 下覆盖某个工具条目的任意键：
+
+```yaml
+platforms:
+  cursor:
+    skillsDir: .cursor/skills
+    rulesFile: .cursor/rules/keelson.mdc
+  kiro:
+    instructions: .kiro/steering/keelson.md
+    instructionsFormat: kiro
+```
+
+键：`instructions`（接收常驻块的文件）、`instructionsFormat`（`kiro` 写一个带 inclusion 头的独立 steering 文件，而不是带标记的块）、`skillsDir`（`keelson/` 技能目录安装到哪里）、`rulesFile` 和 `rulesFormat`（`mdc` 为带 frontmatter 的 rule 文件，`md` 为纯 Markdown）、`hooks`（只对像 Claude Code 那样运行 hook 的工具设为 `true`）。覆盖对 `init`、`update`、`doctor`、`uninstall` 和 `ablate` 生效。当某个工具挪动了目录，或某个 `convention` 条目与你的安装不符时使用它。
 
 ### 迁移
 

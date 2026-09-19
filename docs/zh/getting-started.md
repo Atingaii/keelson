@@ -20,20 +20,21 @@ cd your-project
 keelson init
 ```
 
-默认配置 Claude Code。其他代理用 `--tools` 指定，逗号分隔：
+不带标志时，它选用本机已安装的编码工具。用每个工具一个标志点名你在用的那些（`keelson platforms` 列出全部）：
 
 ```bash
-keelson init --tools claude,codex,cursor
+keelson init --claude --codex --cursor
 ```
 
 在一个已有决策记录和 CI 的仓库上，输出示例：
 
 ```text
 Keelson init in /home/you/your-project
+· tools detected on this machine: Claude Code (override with --tools or --<platform>)
 ✓ referencing existing decisions: docs/adr
 ✓ referencing existing tasks: https://github.com/you/your-project/issues
 ✓ referencing existing ci: .github/workflows
-✓ .keelson/INTENT.md (fill in why the project exists and what the agent may decide alone)
+✓ .keelson/INTENT.md (the agent drafts it from the code on first contact; confirm it when it asks)
 ✓ .keelson/NOW.md
 ✓ .keelson/ROADMAP.md (current milestone; link your tracker instead of duplicating it)
 ✓ .keelson/GLOSSARY.md (shared vocabulary; fill it when two words start meaning the same thing)
@@ -41,46 +42,23 @@ Keelson init in /home/you/your-project
 ✓ .keelson/rules/general.md
 ✓ .gitignore: .keelson/.local/ (session state and evidence stay on this machine)
 ✓ .keelson/config.yaml
-✓ Claude Code: skill → .claude/skills/keelson
-✓ Claude Code: resident block → CLAUDE.md
+✓ Claude Code: skill → .claude/skills/keelson; instructions → CLAUDE.md
 ✓ Claude Code: hooks → .claude/settings.json (session snapshot + per-prompt state line)
 · model detection cached in ~/.keelson/models.cache.json (keelson models)
+✓ .keelson/NOW.md: first-contact task written for the agent (draft INTENT, specs, and rules from the code)
 
-Next
-  1. Edit .keelson/INTENT.md — why this project exists, what it will not do, what the agent may decide alone.
-  2. Existing codebase? Re-run with --onboard, or ask your agent: "draft specs and rules from the code".
-  3. Then just talk to your agent. Nothing else to type.
+Done. Open your agent in this directory and start talking.
+  On first contact it reads the repository, drafts .keelson/INTENT.md, the specs, and the rules, and asks you to confirm before anything lands.
 ```
 
 `init` 从不覆盖 `.keelson/` 里已有的文件。它往 `CLAUDE.md`（或 `AGENTS.md`、`GEMINI.md`）追加一个带标记的块，文件其余部分原样保留。它找到的既有资料（架构说明、决策记录、CI、GitHub issues 页面）记录在 `config.yaml` 的 `refs` 下，只引用、不复制。如果 `package.json` 有 `lint`、`typecheck` 或 `test` 脚本，它们会成为检查命令。`keelson init --dry-run` 列出将要写入的内容而不真正写入。
 
 `keelson init --lang zh` 安装中文版的代理技能。
 
-## 写 INTENT.md
+## 首次接触
 
-打开 `.keelson/INTENT.md`。模板要求五样东西：
+在项目目录下打开你的代理，随便说点什么，或者只说"你好"。`NOW.md` 里有一个首次接触任务，于是代理读取仓库，起草 `.keelson/INTENT.md`（项目为什么存在、边界、硬约束、代理可以自行决定什么）；对已有代码的项目，还会为每个能力写一份 spec，为有约定的路径写 rules。它用一次简短的交流请你确认或修正，并保留你的回答。如果你一上来就提了需求，它会在整理那个变更的过程中顺带完成，并一起确认。这些文件你永远不需要手写。
 
-- 项目为什么存在，一段话；
-- 边界，包括那些诱人但已决定不做的事；
-- 硬约束，如运行时、兼容性、许可；
-- 授权：代理可以自行决定什么、什么要给出推荐由你决定、什么必须确认；
-- 变更定大小与批准的工作默认值。
-
-每一项非平凡工作开始时都会读这个文件。保持在一页以内。
-
-`GLOSSARY.md` 一开始是空的。当两个词开始表示同一件事，或一个词开始表示两件事时，加一行；从那以后代理在 specs 和代码里都用这些术语。
-
-如果你是一边构建一边学习工程，运行 `keelson init --guide`。代理会把选择呈现为带推荐和取舍的场景，在你决定后说出对应的工程概念，并在每个 spec 变更收尾时留一段简短的教学说明。其他一切不变。
-
-## 接入已有代码库
-
-对已经有代码的项目，运行：
-
-```bash
-keelson init --onboard
-```
-
-这会把一个接入任务写进 `NOW.md`。打开你的代理，说"继续"。代理读代码库，列出它发现的能力，为每个能力写一份 spec，并为有约定的路径提出 rules。当 `refs` 下的某份文档已经描述了某个契约或决策时，spec 链接过去而不是重述。在你确认之前，specs 和 rules 都是草稿。见[已有项目](existing-projects.md)。
 
 ## 第一个 quick 变更
 

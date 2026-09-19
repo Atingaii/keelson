@@ -169,7 +169,7 @@ The project's documents are kept small the same way. Each document type has a li
 - Path routing and `keelson impact` are navigation, not proof. The agent still reads for callers that a grep cannot see.
 - Files on disk are not a distributed lock, and a branch does not remove semantic conflicts. Claiming and merge control across machines belong to your tracker, pull requests, and CI.
 - A second agent agreeing with the first is a signal, not a correctness proof. The acceptance list is what gets checked.
-- Hooks exist only for Claude Code. Other tools rely on the resident block and `keelson context`.
+- Hooks exist only for Claude Code. Other tools rely on the resident block and `keelson context`. Of the 22 supported tools, two have been exercised in real sessions; the rest follow documented or conventional file locations and carry a confidence label.
 - Keelson never performs production operations. It reminds; you run.
 - Long-run evolution of large projects is the design goal. The 0.x releases have been exercised in real Claude Code sessions on small projects; the Codex CLI adapter has been verified to load the skill but not yet through a full change. Treat claims beyond that as untested.
 

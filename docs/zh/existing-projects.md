@@ -43,10 +43,10 @@ paths:
 ## 接入
 
 ```bash
-keelson init --onboard
+keelson init
 ```
 
-这会把一个接入任务写进 `NOW.md`，其中列出找到的 refs。打开你的代理，说"继续"。代理会：
+在已有代码的仓库上，`keelson init` 会把一个首次接触任务写进 `NOW.md`，其中列出它找到的 refs。打开你的代理，随便说点什么。代理会：
 
 1. 读代码库和被引用的文档；
 2. 列出它发现的能力；

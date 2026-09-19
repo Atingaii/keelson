@@ -6,7 +6,7 @@
 能。Hook 只在 Claude Code 上存在，而且只注入状态。没有 hook 时，常驻块要求代理在非平凡工作前运行 `keelson context --paths <files>`，你说"继续"时它最先读的是 `NOW.md` 和每个变更的 `handoff.md`。如果在 Claude Code 上也想这样，给 `init` 传 `--no-hooks`。
 
 **支持哪些工具？**
-`claude`、`codex`、`cursor`、`opencode` 和 `gemini`。每个都会得到技能目录和说明文件里的常驻块。Cursor 还会得到 `.cursor/rules/keelson.mdc`。`keelson init --tools a,b,c` 一次配置多个。其他读 `AGENTS.md` 和 `.agents/skills/` 的工具可以直接使用 `codex` 的输出。
+22 个工具，由 `keelson platforms` 和 README 列出。每个都会得到技能目录和它所读取的说明文件里的说明块；有些还会得到一个 rules 文件。除 Claude Code 外的每个选择都会安装跨工具层（`AGENTS.md` + `.agents/skills/`），任何读取这一约定的代理都能拾取。`keelson init --cursor --codex` 一次配置多个，或者只运行 `keelson init`，使用本机已安装的工具。
 
 **我必须在聊天里敲命令吗？**
 不必。你像以前一样和代理对话。CLI 由代理自己运行。"grill me"、"status"、"hand off"、"land it"、"retro" 这些短语在技能里有定义好的含义，但没有一个是必须的。
