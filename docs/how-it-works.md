@@ -54,6 +54,8 @@ Pass `--no-hooks` to `init` to skip them. Existing hooks in `settings.json` are 
 
 `profile` selects how much text ships. `lean` strips blocks marked `<!-- guided -->`. `guided` keeps them.
 
+Package-owned Markdown is normalized to LF when Keelson renders or installs it. Parsers and hooks treat LF and CRLF as semantically equivalent, so a Windows checkout or a user-edited CRLF file does not change the project state Keelson sees; user files are not rewritten merely to change line endings.
+
 ## The change directory
 
 `keelson new <name> --tier quick|spec [--capability a,b] [--touches globs] [--depends other] [--worktree]` creates `.keelson/changes/<name>/`:
