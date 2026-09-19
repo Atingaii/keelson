@@ -180,7 +180,7 @@ The project's documents are kept small the same way. Each document type has a li
 
 `keelson init` takes one flag per tool, or `--tools a,b`, or nothing (it detects what is installed). Every project keeps canonical guidance under `.keelson/` and installs the portable discovery layer: `AGENTS.md` plus `.agents/skills/`. Hosts that already read this surface reuse it; native host paths, when needed, are also shims into the same `.keelson/` runtime. `keelson platforms` prints the full table with what is installed on your machine.
 
-| Tool | Instructions | Skills | Hooks | Confidence |
+| Tool | Instructions discovery | Skill discovery | Hooks | Confidence |
 |---|---|---|---|---|
 | Claude Code `--claude` | `CLAUDE.md` | `.claude/skills/` | session start and per prompt | verified |
 | Codex CLI `--codex` | `AGENTS.md` | `.agents/skills/` | | verified |
