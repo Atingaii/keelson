@@ -585,7 +585,7 @@ test('status exposes shared contracts and impact lists importers', () => {
   assert.equal(im.activeChanges.length, 2);
 });
 
-test('handoff stamps at/updated/by and the session hook prints its next step', () => {
+test('handoff is an explicit transfer artifact and remains readable after session changes', () => {
   const dir = tmpProject({});
   execFileSync('git', ['init', '-q'], { cwd: dir });
   execFileSync('git', ['-c', 'user.email=a@b', '-c', 'user.name=Ann', 'commit', '--allow-empty', '-qm', 'init'], { cwd: dir });
@@ -596,8 +596,8 @@ test('handoff stamps at/updated/by and the session hook prints its next step', (
   assert.match(h, /^at: [0-9a-f]{7,}$/m);
   assert.match(h, /^by: Ann$/m);
   write(dir, '.keelson/changes/share-links/handoff.md', h.replace(/## Next step\n…/, '## Next step\nWire the revoke endpoint.'));
-  const snap = execFileSync('node', [path.join(dir, '.keelson/hooks/session-start.mjs')], { env: { ...process.env, CLAUDE_PROJECT_DIR: dir }, encoding: 'utf8' });
-  assert.match(snap, /share-links handoff → next: Wire the revoke endpoint\./);
+  const ctx = JSON.parse(run(dir, ['context', '--json'], { env }).stdout);
+  assert.equal(ctx.changes.find((c) => c.name === 'share-links').handoffNext.trim(), 'Wire the revoke endpoint.');
   const st = JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes[0];
   assert.equal(st.handoff.headMoved, false);
   execFileSync('git', ['-c', 'user.email=a@b', '-c', 'user.name=Ann', 'commit', '--allow-empty', '-qm', 'moved'], { cwd: dir });
