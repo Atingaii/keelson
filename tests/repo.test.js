@@ -56,6 +56,12 @@ test('resident instructions stay a small map into the skill', () => {
   }
 });
 
+test('repository dogfood skill exposes every canonical reference', () => {
+  const canonical = walk(path.join(ROOT, 'skills', 'keelson', 'references'));
+  const dogfood = walk(path.join(ROOT, '.claude', 'skills', 'keelson', 'references'));
+  assert.deepEqual(dogfood, canonical);
+});
+
 test('shaping audits assumptions without turning clarification into ceremony', () => {
   const en = fs.readFileSync(path.join(ROOT, 'skills/keelson/references/shape.md'), 'utf8');
   const zh = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/shape.md'), 'utf8');
