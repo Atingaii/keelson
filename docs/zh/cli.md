@@ -73,6 +73,19 @@ Rules that apply (2):
 ! active change add-pagination (ann, in-progress) declares these paths or capabilities — coordinate before editing
 ```
 
+## `keelson focus`
+
+```text
+keelson focus [change] [--auto|--clear] [--json]
+```
+
+给 Agent 使用的 session 路由命令。它只改变 gitignored 的 conversation pointer，绝不改变长期 work status。
+
+- `focus <change>`：宿主存在稳定 session identity 时，把当前 session 绑定到一个 active change。
+- `--auto`：优先保留已有有效 focus；否则选择当前 branch 唯一匹配或全局唯一 active change。
+- `--clear`：清掉当前 session pointer，不 cancel/complete change。
+- degraded mode：宿主没有经过验证的 session identity 时只返回安全候选，不持久化共享/global focus；多个候选永远不猜。
+
 ## `keelson new`
 
 ```text
@@ -125,7 +138,7 @@ share-links  [spec]  work: in-progress  verify: ~ stale  release: unreleased  (a
 keelson handoff [name] [--by who] [--json]
 ```
 
-从模板创建 `changes/<name>/handoff.md`，或给已有的重新盖戳，写入 `at`（短 HEAD）、`updated` 和 `by`。各部分由代理填写。只有一个活动变更时可以省略名字。
+创建/重新盖戳一个显式 transfer package，只用于换人/换机器，不用于普通聊天恢复。有 session focus 时优先使用它；否则只有一个 active change 时可省略名字。
 
 ## `keelson validate`
 
@@ -145,7 +158,7 @@ keelson validate [--json]
 keelson check [cmd...] [--record [claim]] [--change name] [--quiet] [--json]
 ```
 
-运行 `config.yaml → check` 里的条目（或作为位置参数给出的单条命令），把每条输出保存到 `.keelson/.local/evidence/<timestamp>-<n>.log`，并为每个条目打印一个退出码。条目可以是命令字符串或 `{name, command, kind}`；有名字的条目在命令前打印名字和类型：
+运行 `config.yaml → check` 里的条目（或作为位置参数给出的单条命令），把每条输出保存到 `.keelson/.runtime/evidence/<timestamp>-<n>.log`，并为每个条目打印一个退出码。条目可以是命令字符串或 `{name, command, kind}`；有名字的条目在命令前打印名字和类型：
 
 ```text
 keelson check — 3 commands
@@ -250,4 +263,4 @@ keelson restore [--force] [--dry-run] [--dir <path>]
 keelson uninstall [--purge]
 ```
 
-移除生成的运行时/集成表面：宿主 skill shim 目录、发现块、配置过的宿主专用 rule 文件、`.claude/settings.json` 里的 hook 条目、`.keelson/workflow.md`、`.keelson/skill/`、`.keelson/hooks/` 和 `.keelson/.local/`。保留 `.keelson/` 中的项目事实（INTENT、NOW、ROADMAP、rules、specs、changes）。`--purge` 连 `.keelson/` 一起移除；存放在它之外的 specs 不受影响。
+移除生成的运行时/集成表面：宿主 skill shim 目录、发现块、配置过的宿主专用 rule 文件、`.claude/settings.json` 里的 hook 条目、`.keelson/workflow.md`、`.keelson/skill/`、`.keelson/hooks/`、`.keelson/.runtime/` 与兼容旧版 `.keelson/.local/`。保留 `.keelson/` 中的项目事实（INTENT、NOW、ROADMAP、rules、specs、changes）。`--purge` 连 `.keelson/` 一起移除；存放在它之外的 specs 不受影响。
