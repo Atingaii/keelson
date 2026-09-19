@@ -74,6 +74,8 @@ export async function init({ flags }, cwd = process.cwd()) {
   const cfg = fresh ? structuredClone(DEFAULT_CONFIG) : loadConfig(cfgPath);
 
   // Tools: explicit selection · saved config · reliable auto-detection · portable fallback.
+  const retiredFlagged = RETIRED_PLATFORM_IDS.filter((id) => flags[id] === true);
+  if (retiredFlagged.length) throw new Error(`retired host adapter flag(s): ${retiredFlagged.map((id) => `--${id}`).join(', ')}. Use --agents for the portable layer, or choose one of: ${PLATFORM_IDS.filter((id) => id !== 'agents').map((id) => `--${id}`).join(', ')}`);
   const flagged = PLATFORM_IDS.filter((id) => flags[id] === true);
   const explicitlySelected = list(flags.tools).length > 0 || flagged.length > 0;
   let tools = list(flags.tools).length ? list(flags.tools) : flagged.length ? flagged : cfg.tools?.length && !fresh ? cfg.tools : [];
@@ -96,8 +98,16 @@ export async function init({ flags }, cwd = process.cwd()) {
     portableFallback = detected.portableFallback;
     detectedTools = !portableFallback;
   }
-  for (const t of tools) if (!PLATFORMS[t]) throw new Error(`unknown tool "${t}". Known: ${PLATFORM_IDS.join(', ')}`);
+  for (const t of tools) if (!PLATFORMS[t]) {
+    if (RETIRED_PLATFORM_IDS.includes(t)) throw new Error(`retired host adapter "${t}". Use "agents" for the portable layer, or choose one of: ${PLATFORM_IDS.filter((id) => id !== 'agents').join(', ')}`);
+    throw new Error(`unknown tool "${t}". Known: ${PLATFORM_IDS.join(', ')}`);
+  }
   cfg.tools = [...new Set(tools)];
+  const retiredOverrides = Object.keys(cfg.platforms ?? {}).filter((id) => RETIRED_PLATFORM_IDS.includes(id));
+  for (const id of retiredOverrides) delete cfg.platforms[id];
+  if (cfg.platforms && !Object.keys(cfg.platforms).length) delete cfg.platforms;
+  const retiredModelOverrides = Object.keys(cfg.models ?? {}).filter((id) => RETIRED_PLATFORM_IDS.includes(id));
+  for (const id of retiredModelOverrides) delete cfg.models[id];
   cfg.lang = flags.lang ?? cfg.lang ?? 'en';
   cfg.profile = flags.profile ?? cfg.profile ?? 'lean';
   if (flags.guide !== undefined) cfg.guide = flags.guide !== 'false' && flags.guide !== false;
@@ -126,6 +136,8 @@ export async function init({ flags }, cwd = process.cwd()) {
       console.log(`  ${(exists(ins) ? (read(ins).includes('<!-- keelson:start -->') ? 'refresh' : 'append') : 'create').padEnd(9)} ${t.instructions}`);
     }
     if (retiredFromConfig.length) console.log(`  migrate   config tools: drop retired ${retiredFromConfig.join(', ')}`);
+    if (retiredOverrides.length) console.log(`  migrate   config platforms: drop retired ${retiredOverrides.join(', ')}`);
+    if (retiredModelOverrides.length) console.log(`  migrate   config models: drop retired ${retiredModelOverrides.join(', ')}`);
     if (rawVersion < CONFIG_VERSION) console.log(`  migrate   .keelson/config.yaml v${rawVersion} → v${CONFIG_VERSION}`);
     console.log(dim('nothing written'));
     return 0;
@@ -133,6 +145,8 @@ export async function init({ flags }, cwd = process.cwd()) {
 
   heading(`Keelson ${fresh ? 'init' : 'update'} in ${root}`);
   if (retiredFromConfig.length) warn(`retired host adapters removed from config: ${retiredFromConfig.join(', ')}; use the portable agents layer or select one of: ${PLATFORM_IDS.filter((id) => id !== 'agents').join(', ')}`);
+  if (retiredOverrides.length) warn(`retired platform overrides removed: ${retiredOverrides.join(', ')}`);
+  if (retiredModelOverrides.length) warn(`retired model overrides removed: ${retiredModelOverrides.join(', ')}`);
   if (detectedTools) info(`tools detected on this machine: ${cfg.tools.map((t) => PLATFORMS[t].label).join(', ')} (override with --tools or --<platform>)`);
   else if (portableFallback) {
     const note = conventionDetected.length ? `; convention-only detections: ${conventionDetected.map((t) => PLATFORMS[t].label).join(', ')} (opt in explicitly if wanted)` : '';
