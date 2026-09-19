@@ -108,6 +108,7 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 | `.keelson/rules/` | 由 `rules/index.md` 按路径 glob 路由的约定 | 你和代理 |
 | `.keelson/changes/<name>/` | 每个进行中的变更一个目录：`change.md`、`tasks.md`、`ledger.md`、`handoff.md`、delta specs | 代理 |
 | `.keelson/config.yaml` | 工具、profile、检查命令、`paths.specs`、指向既有资料的 `refs`、文档预算、引导模式、模型覆盖 | `keelson init` |
+| `.keelson/.managed.json` | 当前安装负责的 Keelson 生成发现表面 | `keelson init` / `update`；不要手改 |
 | `.keelson/.local/` | 检查证据和本机状态。已加入 gitignore | `keelson check` |
 
 无事进行时 `changes/` 为空。既有文档从 `config.yaml → refs` 引用，从不复制。
