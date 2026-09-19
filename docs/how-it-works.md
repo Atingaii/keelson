@@ -32,24 +32,25 @@ Pass `--no-hooks` to `init` to skip them. Existing hooks in `settings.json` are 
 
 ## The skill
 
-`init` copies the skill to the tool's skill directory (`.claude/skills/keelson/` or `.agents/skills/keelson/`) and stamps the package version into `SKILL.md`'s frontmatter so `keelson doctor` can spot a stale install. It contains `SKILL.md` and twelve references:
+`init` copies the skill to the tool's skill directory (`.claude/skills/keelson/` or `.agents/skills/keelson/`) and stamps the package version into `SKILL.md`'s frontmatter so `keelson doctor` can spot a stale install. It contains `SKILL.md` and thirteen references:
 
 | Reference | Read when |
 |---|---|
-| `discover.md` | The owner is not sure what they want, or is learning: scenario before technology, which unknowns to raise, scope guard, explore before committing, guided mode |
-| `shape.md` | Understanding what is wanted: facts first, write-back, decision states, stop rule, interviewing, authorization, unattended runs, sizing |
+| `discover.md` | The owner is not sure what they want, or is learning: scenario before technology, gap ownership, the one highest-value question, scope guard, explore before committing, guided mode |
+| `shape.md` | Understanding what is wanted: facts first, assumption audit, write-back, decision states, stop rule, one-question interviewing, authorization, unattended runs, sizing |
 | `model.md` | Words or boundaries are drifting: glossary and bounded contexts, boundaries and invariants, deep modules, design it twice |
 | `context.md` | Knowing what the code touches: three context layers, impact analysis, budget |
 | `plan.md` | Creating `change.md`, vertical slices, acceptance, delta specs, effort tiers, working with an existing tracker |
 | `engineer.md` | A design or reliability question: engineering lenses by delivery, structure, evolution, and operation; named patterns as vocabulary; quality targets as numbers |
 | `build.md` | Executing tasks: rulings, subagent dispatch by tier, escalation, parallel work, keeping artifacts true |
 | `verify.md` | Record validity, content validity, no silent weakening of tests, fresh-reader review, completion report |
+| `harness.md` | Evolving the control system: invariants, feedforward/feedback placement, repeated-failure promotion, baselines, sunset conditions |
 | `handoff.md` | What goes where, writing a handoff, resuming safely, `NOW.md` |
 | `land.md` | Landing gates, code and specs reviewed together, collisions, release state, promoting learnings |
 | `reconcile.md` | Writing new facts back and keeping the project small: where each fact goes, rewrite not append, budgets and compaction, gardening cadence |
 | `debug.md` | Reproduce, locate, fix, name the root-cause category |
 
-`SKILL.md` routes by need. The agent reads one reference at a time. Every guideline carries a hidden HTML comment with an `id`, the failure it prevents (`without`), and its deletion condition (`sunset`). `keelson retro` reads those comments.
+`SKILL.md` routes by need. The agent reads one reference at a time. During BOUND, ambiguous work uses a compact assumption audit and asks at most one user-owned, load-bearing question at a time; the audit itself is not stored, while material outcomes are routed into `change.md`, specs, rules, or the glossary. Every guideline carries a hidden HTML comment with an `id`, the failure it prevents (`without`), and its deletion condition (`sunset`). `keelson retro` reads those comments.
 
 `profile` selects how much text ships. `lean` strips blocks marked `<!-- guided -->`. `guided` keeps them.
 
@@ -59,7 +60,7 @@ Pass `--no-hooks` to `init` to skip them. Existing hooks in `settings.json` are 
 
 ```text
 change.md      frontmatter (tier, created, status, owner, branch, worktree, depends, touches)
-               + Why, What [, How, Alternatives, Impact], Acceptance, Open questions [, Rollout], Decisions
+               + Why, What (outcome + non-goals) [, How, Alternatives, Impact], Acceptance, Open questions [, Rollout], Decisions
 tasks.md       "## Slice: name" + "Delivers: …" + checkbox tasks with (effort: tier) and verify: `cmd`
 ledger.md      append-only ### entries
 handoff.md     created by `keelson handoff`, stamped with at/updated/by
