@@ -10,6 +10,7 @@ const require = createRequire(import.meta.url);
 const REGISTRY = require('../../registry/platforms.json');
 export const PLATFORMS = Object.fromEntries(Object.entries(REGISTRY.platforms).map(([id, p]) => [id, { id, ...p }]));
 export const PLATFORM_IDS = Object.keys(PLATFORMS);
+export const RETIRED_PLATFORM_IDS = ['cursor', 'copilot', 'kilo', 'antigravity', 'devin', 'qoder', 'droid', 'ohmypi', 'reasonix', 'zcode', 'trae', 'grok', 'kimi', 'snow'];
 
 /** Merge per-project overrides (config.yaml → platforms) on top of the registry. */
 export function platformFor(id, cfg = null) {
@@ -32,7 +33,21 @@ export const LEGACY_MANAGED_PATHS = [
   '.kilocode/skills/keelson',
   '.kilocode/rules/keelson.md',
   '.kiro/steering/keelson.md',
+  '.qoder/skills/keelson',
   '.qoder/rules/keelson.md',
+  '.codebuddy/rules/keelson.md',
+  '.pi/skills/keelson',
+  '.agent/skills/keelson',
+  '.agent/rules/keelson.md',
+  '.devin/skills/keelson',
+  '.factory/skills/keelson',
+  '.reasonix/skills/keelson',
+  '.zcode/skills/keelson',
+  '.trae/skills/keelson',
+  '.trae/rules/keelson.md',
+  '.grok/skills/keelson',
+  '.kimi/skills/keelson',
+  '.snow/skills/keelson',
 ];
 
 /** Expand a tool selection into concrete targets. Every project also gets the portable cross-tool layer. */
