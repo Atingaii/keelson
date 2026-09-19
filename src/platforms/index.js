@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { PKG_ROOT } from '../lib/paths.js';
-import { read, readOr, write, exists, copyDir, rmrf, readJson, writeJson, mkdirp } from '../lib/fs.js';
+import { read, readOr, write, exists, copyDir, rmrf, readJson, writeJson, mkdirp, replaceDirSafe } from '../lib/fs.js';
 
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -23,6 +23,7 @@ export function platformFor(id, cfg = null) {
 export const CROSS_TOOL = { id: 'agents', label: 'cross-tool layer', instructions: 'AGENTS.md', skillsDir: '.agents/skills', hooks: false };
 export const CANONICAL_SKILL_DIR = path.join('.keelson', 'skill');
 export const CANONICAL_WORKFLOW = path.join('.keelson', 'workflow.md');
+export const MANAGED_STATE = path.join('.keelson', '.managed.json');
 
 /** Expand a tool selection into concrete targets. Every project also gets the portable cross-tool layer. */
 export function installTargets(tools, cfg = null) {
@@ -41,6 +42,59 @@ export function installTargets(tools, cfg = null) {
   }
   push(CROSS_TOOL);
   return targets;
+}
+
+
+const managedTarget = (t) => ({
+  id: t.id ?? null,
+  label: t.label ?? t.id ?? 'managed surface',
+  instructions: t.instructions,
+  skillsDir: t.skillsDir,
+  instructionsFormat: t.instructionsFormat ?? null,
+  rulesFile: t.rulesFile ?? null,
+  rulesFormat: t.rulesFormat ?? null,
+  hooks: Boolean(t.hooks),
+});
+const targetKey = (t) => [t.instructions, t.skillsDir, t.instructionsFormat ?? '', t.rulesFile ?? '', t.rulesFormat ?? '', Boolean(t.hooks)].join('|');
+
+export function readManagedState(root) {
+  return readJson(path.join(root, MANAGED_STATE), null);
+}
+
+export function managedTargets(root) {
+  const state = readManagedState(root);
+  return Array.isArray(state?.targets) ? state.targets : [];
+}
+
+export function managedStateMatches(root, targets) {
+  const state = readManagedState(root);
+  if (!state || state.version !== 1) return false;
+  const a = JSON.stringify((state.targets ?? []).map(managedTarget).sort((x, y) => targetKey(x).localeCompare(targetKey(y))));
+  const b = JSON.stringify(targets.map(managedTarget).sort((x, y) => targetKey(x).localeCompare(targetKey(y))));
+  return a === b;
+}
+
+export function writeManagedState(root, targets, packageVersion) {
+  writeJson(path.join(root, MANAGED_STATE), {
+    version: 1,
+    packageVersion,
+    targets: targets.map(managedTarget),
+  });
+  return MANAGED_STATE;
+}
+
+export function staleManagedTargets(root, targets) {
+  const current = new Set(targets.map(targetKey));
+  return managedTargets(root).filter((t) => !current.has(targetKey(t)));
+}
+
+function managedSurfacePaths(t) {
+  return [path.join(t.skillsDir, 'keelson'), t.instructions, t.rulesFile].filter(Boolean);
+}
+
+export function plannedManagedRemovals(root, targets) {
+  return [...new Set(staleManagedTargets(root, targets).flatMap(managedSurfacePaths))]
+    .filter((rel) => exists(path.join(root, rel)));
 }
 
 const START = '<!-- keelson:start -->';
@@ -129,16 +183,18 @@ export function plannedSkillFiles(root, target, { lang, version }) {
 
 export function installCanonicalSkill(root, { lang, profile, version }) {
   const dest = path.join(root, CANONICAL_SKILL_DIR);
-  rmrf(dest);
-  for (const f of renderSkillFiles(lang, profile, version)) write(path.join(dest, f.rel), f.content);
+  const files = renderSkillFiles(lang, profile, version);
+  replaceDirSafe(dest, (tmp) => {
+    for (const f of files) write(path.join(tmp, f.rel), f.content);
+  });
   return path.relative(root, dest);
 }
 
 export function installSkill(root, target, { lang, version }) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
   const dest = path.join(root, p.skillsDir, 'keelson');
-  rmrf(dest);
-  write(path.join(dest, 'SKILL.md'), renderSkillShim(lang, version));
+  const content = renderSkillShim(lang, version);
+  replaceDirSafe(dest, (tmp) => write(path.join(tmp, 'SKILL.md'), content));
   return path.relative(root, dest);
 }
 
@@ -240,25 +296,42 @@ export function removeHooks(root) {
   writeJson(settingsPath, settings);
 }
 
-export function removeSurfaces(root, tools, cfg = null) {
+function removeTargetSurfaces(root, p) {
   const removed = [];
-  for (const p of installTargets(tools.filter((t) => PLATFORMS[t]), cfg)) {
-    const skill = path.join(root, p.skillsDir, 'keelson');
-    if (exists(skill)) {
-      rmrf(skill);
-      removed.push(path.relative(root, skill));
-    }
-    const ins = path.join(root, p.instructions);
-    if (exists(ins)) {
-      if (p.instructionsFormat === 'kiro') rmrf(ins);
-      else write(ins, removeBlock(read(ins)));
-      removed.push(path.relative(root, ins));
-    }
-    if (p.rulesFile && exists(path.join(root, p.rulesFile))) {
-      rmrf(path.join(root, p.rulesFile));
-      removed.push(p.rulesFile);
-    }
+  const skill = path.join(root, p.skillsDir, 'keelson');
+  if (exists(skill)) {
+    rmrf(skill);
+    removed.push(path.relative(root, skill));
   }
-  removeHooks(root);
+  const ins = path.join(root, p.instructions);
+  if (exists(ins)) {
+    if (p.instructionsFormat === 'kiro') rmrf(ins);
+    else write(ins, removeBlock(read(ins)));
+    removed.push(path.relative(root, ins));
+  }
+  if (p.rulesFile && exists(path.join(root, p.rulesFile))) {
+    rmrf(path.join(root, p.rulesFile));
+    removed.push(p.rulesFile);
+  }
+  if (p.hooks) removeHooks(root);
   return removed;
+}
+
+export function reconcileManagedTargets(root, targets) {
+  const removed = [];
+  for (const p of staleManagedTargets(root, targets)) removed.push(...removeTargetSurfaces(root, p));
+  return [...new Set(removed)];
+}
+
+export function removeSurfaces(root, tools, cfg = null) {
+  const stateTargets = managedTargets(root);
+  const targets = stateTargets.length ? stateTargets : installTargets(tools.filter((t) => PLATFORMS[t]), cfg);
+  const removed = [];
+  for (const p of targets) removed.push(...removeTargetSurfaces(root, p));
+  removeHooks(root);
+  if (exists(path.join(root, MANAGED_STATE))) {
+    rmrf(path.join(root, MANAGED_STATE));
+    removed.push(MANAGED_STATE);
+  }
+  return [...new Set(removed)];
 }
