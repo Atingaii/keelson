@@ -2,174 +2,128 @@
 
 # 快速上手
 
-本页带一个项目走完 `keelson init`、一个 quick 变更、一个带未决问题的 spec 变更、一次交接、第二个会话和一次落地。大约需要二十分钟。
+Keelson 面向用户只有一条流程：
+
+> **运行一次 `keelson init`，之后继续像原来一样和 Coding Agent 对话。**
+
+从 Explore、quick/spec 变更、handoff、验证、落地、bug 修复，到升级和卸载的完整故事见[完整用户流程](user-flow.md)。
 
 ## 安装
 
-Keelson 需要 Node.js 20 或更新版本。
+需要 Node.js 20+。
 
 ```bash
 npm install -g keelson
 keelson --version
 ```
 
-## 初始化项目
+## 初始化
 
 ```bash
 cd your-project
 keelson init
 ```
 
-不带标志时，它只自动选择本机已安装且发现路径已经 `verified/documented` 的宿主；`convention` 宿主只提示、不会静默开启。一个可靠宿主也没找到时，使用通用 `AGENTS.md` + `.agents/skills/` 层。用每个工具一个标志点名你在用的那些（`keelson platforms` 列出全部）：
+没有指定宿主时，Keelson 自动探测本机已安装、发现路径已 verified/documented 的一等公民 CLI；一个也没有时，使用通用 `AGENTS.md + .agents/skills/` 层。
+
+也可以显式指定：
 
 ```bash
-keelson init --claude --codex --cursor
+keelson init --claude
+keelson init --codex --opencode
+keelson init --gemini --kiro
 ```
 
-在一个已有决策记录和 CI 的仓库上，输出示例：
-
-```text
-Keelson init in /home/you/your-project
-· tools detected on this machine: Claude Code (override with --tools or --<platform>)
-✓ referencing existing decisions: docs/adr
-✓ referencing existing tasks: https://github.com/you/your-project/issues
-✓ referencing existing ci: .github/workflows
-✓ .keelson/README.md (human project map; created by Keelson)
-✓ .keelson/INTENT.md (the agent drafts it from the code on first contact; confirm it when it asks)
-✓ .keelson/NOW.md
-✓ .keelson/ROADMAP.md (current milestone; link your tracker instead of duplicating it)
-✓ .keelson/GLOSSARY.md (shared vocabulary; fill it when two words start meaning the same thing)
-✓ .keelson/rules/index.md
-✓ .keelson/rules/general.md
-✓ .gitignore: .keelson/.local/ (session state and evidence stay on this machine)
-✓ .keelson/config.yaml
-✓ canonical runtime → .keelson/workflow.md; .keelson/skill
-✓ Claude Code: discovery shim → .claude/skills/keelson; instructions → CLAUDE.md
-✓ cross-tool layer: discovery shim → .agents/skills/keelson; instructions → AGENTS.md
-✓ Claude Code: hooks → .claude/settings.json (session snapshot + per-prompt state line)
-· model detection cached in ~/.keelson/models.cache.json (keelson models)
-✓ .keelson/NOW.md: first-contact task written for the agent (draft INTENT, specs, and rules from the code)
-
-Done. Open your agent in this directory and start talking.
-  On first contact it reads the repository, drafts .keelson/INTENT.md, the specs, and the rules, and asks you to confirm before anything lands.
-```
-
-`init` 从不覆盖 INTENT、NOW、specs、rules、活动 changes 等项目事实。它还会把自己生成并负责的适配表面记录到 `.keelson/.managed.json`，这样后续 `update`、`uninstall`、`ablate` 能精确清理旧 Keelson 文件而不靠猜。由 Keelson 维护的运行时文件——`.keelson/README.md`、`.keelson/workflow.md`、`.keelson/skill/`——会被 `keelson update` 刷新。`.keelson/` 外只追加/替换 `CLAUDE.md`（或 `AGENTS.md`、`GEMINI.md`）中的发现块，并写入单文件 skill shim；标记块之外的用户内容原样保留。它找到的既有资料（架构说明、决策记录、CI、GitHub issues 页面）记录在 `config.yaml` 的 `refs` 下，只引用、不复制。如果 `package.json` 有 `lint`、`typecheck` 或 `test` 脚本，它们会成为检查命令。`keelson init --dry-run` 列出将要写入的内容而不真正写入。
-
-`keelson init --lang zh` 让 `.keelson/workflow.md`、canonical skill 和各宿主发现 shim 使用中文版。
-
-## 首次接触
-
-如果你是人直接打开 `.keelson/`，先看 `.keelson/README.md`；它同时解释项目状态与 canonical 运行时。Agent 从 `.keelson/workflow.md` 和 `.keelson/skill/SKILL.md` 进入；人通常继续看 `NOW.md`、`INTENT.md`、对应 spec 或活动变更。在项目目录下打开你的代理，随便说点什么，或者只说"你好"。`NOW.md` 里有一个首次接触任务，于是代理读取仓库，起草 `.keelson/INTENT.md`（项目为什么存在、边界、硬约束、代理可以自行决定什么）；对已有代码的项目，还会为每个能力写一份 spec，为有约定的路径写 rules。它用一次简短的交流请你确认或修正，并保留你的回答。如果你一上来就提了需求，它会在整理那个变更的过程中顺带完成，并一起确认。这些文件你永远不需要手写。
-
-
-## 第一个 quick 变更
-
-用自然语言说你想要什么：
-
-```text
-给订单列表加分页。
-```
-
-代理对预计要改的文件运行 `keelson context --paths`，读 `INTENT.md`、`NOW.md` 和命中的 rules，用几行写回它的理解。然后运行 `keelson new add-order-pagination`，填好 `change.md`（Why、What、Acceptance）和 `tasks.md`，开始做。任务完成后它运行：
+查看一等公民宿主：
 
 ```bash
-keelson check --record "pagination on /orders"
+keelson platforms
 ```
 
-这会运行检查命令，把输出保存到 `.keelson/.local/evidence/`，并在 ledger 里追加一条 `Verify:`，带每条命令的退出码和工作树指纹。代理勾选已运行过检查的验收项，然后运行 `keelson land add-order-pagination --now "…"`，告诉你改了什么。
+## init 会创建什么
 
-如果你更希望在 quick 变更开工前先批准，在 `.keelson/config.yaml` 里设置：
-
-```yaml
-confirm:
-  quick: wait
-```
-
-## 第一个 spec 变更
-
-spec 变更会改变行为契约、新增或删除能力、涉及迁移，或放弃显而易见的方案。比如说：
+Fresh init 刻意保持很小：
 
 ```text
-让用户可以用链接分享相册。
+.keelson/
+├── README.md
+├── INTENT.md
+├── NOW.md
+├── config.yaml
+├── manifest.json
+├── workflow.md
+└── skill/
+    ├── SKILL.md
+    └── references/
 ```
 
-代理识别出大小，一轮一轮地问那些阻塞下一个切片的问题，每个问题配一条推荐和它的取舍。然后运行 `keelson new share-links --tier spec --capability sharing --touches src/api/**` 并起草：
+不会预先创建空 ROADMAP、Glossary、rules、specs、changes、tasks、ledger 或 handoff。
 
-- `change.md`，含 Why、What、How、Alternatives、Impact、Acceptance、Open questions 和 Decisions；
-- `specs/sharing/spec.md`，只写 delta：新增、修改和删除的需求，带主 spec 的 `base:` 戳；
-- `tasks.md`，分切片，每个切片写明交付什么，每个任务带 effort 层级；
-- `ledger.md`，记录裁定、分派、根因和验证证据。
+在 `.keelson/` 外，Keelson 只写已选宿主真正需要的薄发现表面；完整指导仍只有 `.keelson/` 里一份。
 
-假设你还没决定链接的过期时间。代理会这样记录：
+`manifest.json` 记录当前安装真正负责哪些生成表面，因此以后 `update`、`uninstall` 或切换宿主时可以准确对齐，而不是猜。
 
-```markdown
-## Open questions
-- default expiry for share links? — blocks: Revoke and expiry
+## 第一次接触
 
-## Decisions
-- sharing: links are unguessable tokens; sequential ids rejected because they leak album count
-- (assumed) sharing: links expire after 7 days by default
-```
+正常打开你使用的 Coding Agent，直接提出真实需求。
 
-未决问题只阻塞以它命名的那个切片。代理等你批准计划，然后构建"创建与访问"切片，记录证据，并因为还有一个未决问题和一个假设决策而在落地前停下。`keelson status` 显示：
+第一次非平凡对话时，Agent 会：
 
-```text
-share-links  [spec]  work: in-progress  verify: ✓ passed  release: unreleased  (ann)
-   ✓ slice Create and access 2/2 — a link can be created and opens the album
-   · slice Revoke and expiry 0/3 — revoked or expired links refuse every access path
-   acceptance 2/4
-   open: default expiry for share links? (blocks Revoke and expiry)
-   1 assumed decision awaiting the owner
-```
+1. 读取仓库与已有引用材料；
+2. 根据已有证据起草 `.keelson/INTENT.md`；
+3. 用一次很短的交流让你确认或纠正项目边界；
+4. 继续整理当前真实需求。
 
-## 停下与恢复
+它不会把整个仓库一次性盘点成 specs/rules。只有当前工作真的暴露出行为契约或稳定工程不变量时，这些文件才出现。
 
-代理在变更中途停下时，会运行 `keelson handoff share-links` 并填好六个部分：目标与已确认的决策、已完成、未决与受阻、已排除、下一步、验证。它会同步重写 `NOW.md`。
+例如：
 
-打开新会话，说"继续"。在 Claude Code 上，会话启动 hook 已经打印了 `NOW.md`、活动变更和交接里的下一步。在其他工具上，代理先运行 `keelson context`。它用 `keelson status` 检查未提交的文件和 HEAD 是否在交接之后移动过，从不重置未提交的工作，然后从下一步接着做。
+> **你：** 给订单页面加搜索。  
+> **Agent：** 我理解为在现有订单列表中按订单号和客户名过滤；不做全站搜索，也不改变公开 API。我发现已有分页契约，会保持不变。这个边界对吗？
 
-回答那个未决问题：
+确认之后就正常继续。
 
-```text
-继续。过期时间 30 天。
-```
+## 后续哪些内容会长出来
 
-代理更新 `change.md`（删除未决问题，确认决策）、delta spec 和切片，构建它，记录新的证据。任何编辑之后旧证据都算过期；`keelson land` 会这么说。
+只有有实际信息时才出现：
 
-## 落地
+- `ROADMAP.md` —— 有值得写进仓库、而不是 tracker 的里程碑/方向；
+- `GLOSSARY.md` —— 术语开始重要或产生歧义；
+- `rules/` —— 稳定的路径作用域工程不变量需要跨会话保存；
+- `specs/` —— 可观察行为需要长期契约；
+- `changes/` —— 非平凡工作正在进行；
+- `.local/` —— 产生本机验证证据。
 
-当每个任务和验收项都已勾选、没有未决问题、最后一条 `Verify:` 与当前工作树匹配时，代理运行：
+quick change 最开始只有 `change.md`。spec 级变更还会有任务计划和行为 delta。真正发生验证事件或跨会话交接之后，ledger/handoff 才出现。
 
-```bash
-keelson land share-links --confirm-assumptions --now "Nothing in flight. Next: watch share-link error rate for a week."
-```
-
-`--confirm-assumptions` 是你的决定，不是代理的：它把 `(assumed)` 决策作为已确认折叠进 spec。delta specs 合并进 `specs/sharing/spec.md`。决策行折叠进它的 `Decisions` 段。变更目录被删除。`NOW.md` 被重写。代理把落地和最后一次代码改动一起提交，让 specs 和代码共享一个修订。
-
-如果落地被拒绝，消息会列出每一个原因：
-
-```text
-keelson: cannot land "share-links":
-  - 1 open question(s): default expiry for share links?
-  - verification stale (verified at tree 5bcb829dae, worktree is 9a92f4bead)
-  - 1 assumed decision(s) would be folded as confirmed; pass --confirm-assumptions once the owner agrees
-```
-
-这些你都可以自己查看：
+## 用户可能会主动运行的命令
 
 ```bash
 keelson status
-keelson validate
-keelson doctor
 ```
-
-## 团队与 CI
-
-在 pull request 模板里加一行，要求非平凡工作附带变更目录，并在 CI 里运行：
+查看活动工作、verification 是否新鲜、open questions、handoff 和 release 状态。
 
 ```bash
-keelson validate && keelson check
+keelson doctor
 ```
+诊断 runtime/shim/manifest 漂移、项目结构、过期证据、冲突和 knowledge health。
 
-`validate` 在结构错误时非零退出：缺失的段落、未知的状态、带日期的模型 ID、损坏的 rule 引用。`check` 在任何配置的命令失败时非零退出。发布状态来自 git tag：`keelson status` 列出上一个 tag 之后落地的变更。见[协作](collaboration.md)。
+```bash
+npm install -g keelson@latest
+keelson update
+```
+升级或切换宿主后，刷新 package-owned guidance 并对齐生成表面。
+
+```bash
+keelson uninstall
+```
+移除生成的 integration/runtime 表面但保留项目事实。只有明确想删除整个 `.keelson/` 时才加 `--purge`。
+
+用户不需要记住那些主要给 Agent 使用的命令。
+
+## 下一步
+
+- [完整用户流程](user-flow.md)
+- [核心概念](concepts.md)
+- [工作原理](how-it-works.md)
+- [已有项目](existing-projects.md)
