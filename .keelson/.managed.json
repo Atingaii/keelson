@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "packageVersion": "0.3.0",
+  "targets": [
+    {
+      "id": "claude",
+      "label": "Claude Code",
+      "instructions": "CLAUDE.md",
+      "skillsDir": ".claude/skills",
+      "instructionsFormat": null,
+      "rulesFile": null,
+      "rulesFormat": null,
+      "hooks": true
+    },
+    {
+      "id": "agents",
+      "label": "cross-tool layer",
+      "instructions": "AGENTS.md",
+      "skillsDir": ".agents/skills",
+      "instructionsFormat": null,
+      "rulesFile": null,
+      "rulesFormat": null,
+      "hooks": false
+    }
+  ]
+}
