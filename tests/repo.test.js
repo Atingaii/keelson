@@ -122,17 +122,33 @@ test('skill frontmatter stamping is CRLF-safe and emits LF', () => {
   assert.doesNotMatch(out, /\r/);
 });
 
-test('platform registry retains the broad host compatibility contract', () => {
+test('platform registry exposes exactly seven first-class hosts plus the portable fallback', () => {
   const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'platforms.json'), 'utf8'));
-  const expected = ['claude', 'cursor', 'opencode', 'codex', 'kiro', 'kilo', 'gemini', 'antigravity', 'devin', 'qoder', 'codebuddy', 'copilot', 'droid', 'pi', 'ohmypi', 'reasonix', 'zcode', 'trae', 'grok', 'kimi', 'snow', 'agents'];
-  for (const id of expected) assert.ok(reg.platforms[id], `missing platform: ${id}`);
+  const firstClass = ['claude', 'codex', 'opencode', 'pi', 'gemini', 'kiro', 'codebuddy'];
+  assert.deepEqual(Object.keys(reg.platforms).sort(), [...firstClass, 'agents'].sort());
+  for (const id of firstClass) {
+    assert.equal(reg.platforms[id].support, 'first-class', id);
+    assert.notEqual(reg.platforms[id].confidence, 'convention', id);
+    assert.equal(reg.platforms[id].rulesFile, undefined, `${id}: no duplicate host rule file`);
+  }
+  assert.equal(reg.platforms.agents.support, 'portable');
+  assert.equal(reg.platforms.agents.skillsDir, '.agents/skills');
+  assert.match(reg.platforms.agents.examples, /Any host/);
 });
 
-test('platform registry keeps the portable Agent Skills fallback and detects Copilot CLI', () => {
-  const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'platforms.json'), 'utf8'));
-  assert.equal(reg.platforms.copilot.bin, 'copilot');
-  assert.equal(reg.platforms.agents.skillsDir, '.agents/skills');
-  assert.match(reg.platforms.agents.examples, /Amp/);
+test('first-class host discovery paths match their documented integration model', () => {
+  const p = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'platforms.json'), 'utf8')).platforms;
+
+  for (const id of ['codex', 'opencode', 'pi']) {
+    assert.equal(p[id].instructions, 'AGENTS.md', id);
+    assert.equal(p[id].skillsDir, '.agents/skills', id);
+  }
+
+  assert.deepEqual([p.claude.instructions, p.claude.skillsDir, p.claude.hooks], ['CLAUDE.md', '.claude/skills', true]);
+  assert.deepEqual([p.gemini.instructions, p.gemini.skillsDir], ['GEMINI.md', '.agents/skills']);
+  assert.deepEqual([p.kiro.instructions, p.kiro.skillsDir], ['AGENTS.md', '.kiro/skills']);
+  assert.deepEqual([p.codebuddy.instructions, p.codebuddy.skillsDir], ['CODEBUDDY.md', '.codebuddy/skills']);
+
   for (const lang of ['skills/keelson', 'skills/zh/keelson']) {
     const map = fs.readFileSync(path.join(ROOT, lang, 'templates', 'README.md'), 'utf8');
     assert.match(map, /NOW\.md/);
@@ -141,23 +157,9 @@ test('platform registry keeps the portable Agent Skills fallback and detects Cop
   }
 });
 
-test('documented hosts reuse the portable surface unless a native skill path adds capability', () => {
-  const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'platforms.json'), 'utf8'));
-
-  for (const id of ['cursor', 'copilot', 'kilo']) {
-    assert.equal(reg.platforms[id].instructions, 'AGENTS.md', `${id} should reuse AGENTS.md`);
-    assert.equal(reg.platforms[id].skillsDir, '.agents/skills', `${id} should reuse .agents/skills`);
-    assert.equal(reg.platforms[id].rulesFile, undefined, `${id} should not add a duplicate always-on rule`);
-  }
-
-  assert.equal(reg.platforms.kiro.instructions, 'AGENTS.md');
-  assert.equal(reg.platforms.kiro.skillsDir, '.kiro/skills');
-  assert.equal(reg.platforms.kiro.instructionsFormat, undefined);
-
-  assert.equal(reg.platforms.qoder.instructions, 'AGENTS.md');
-  assert.equal(reg.platforms.qoder.skillsDir, '.qoder/skills');
-  assert.equal(reg.platforms.qoder.confidence, 'documented');
-  assert.equal(reg.platforms.qoder.rulesFile, undefined);
+test('model registry is bounded to the seven first-class hosts', () => {
+  const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'models.json'), 'utf8'));
+  assert.deepEqual(Object.keys(reg.platforms).sort(), ['claude', 'codex', 'opencode', 'pi', 'gemini', 'kiro', 'codebuddy'].sort());
 });
 
 test('registry tiers point at aliases that exist in the platform rank', () => {
