@@ -153,18 +153,18 @@ This keeps host compatibility from multiplying project rules.
 
 Official support is intentionally bounded to seven CLI hosts plus the portable standards layer:
 
-| Host | Instructions | Skill discovery | Evidence |
-|---|---|---|---|
-| Claude Code | `CLAUDE.md` | `.claude/skills/` | verified |
-| Codex CLI | `AGENTS.md` | `.agents/skills/` | verified |
-| OpenCode | `AGENTS.md` | `.agents/skills/` | documented |
-| Pi | `AGENTS.md` | `.agents/skills/` | documented |
-| Gemini CLI | `GEMINI.md` | `.agents/skills/` | documented |
-| Kiro CLI | `AGENTS.md` | `.kiro/skills/` | documented |
-| CodeBuddy CLI | `CODEBUDDY.md` | `.codebuddy/skills/` | documented |
-| Portable Agent Skills readers | `AGENTS.md` | `.agents/skills/` | fallback |
+| Host | Instructions | Skill discovery | Session focus | Evidence |
+|---|---|---|---|---|
+| Claude Code | `CLAUDE.md` | `.claude/skills/` | **native** | verified |
+| Codex CLI | `AGENTS.md` | `.agents/skills/` | degraded | verified |
+| OpenCode | `AGENTS.md` | `.agents/skills/` | degraded | documented |
+| Pi | `AGENTS.md` | `.agents/skills/` | degraded | documented |
+| Gemini CLI | `GEMINI.md` | `.agents/skills/` | degraded | documented |
+| Kiro CLI | `AGENTS.md` | `.kiro/skills/` | degraded | documented |
+| CodeBuddy CLI | `CODEBUDDY.md` | `.codebuddy/skills/` | degraded | documented |
+| Portable Agent Skills readers | `AGENTS.md` | `.agents/skills/` | degraded | fallback |
 
-A host becomes first-class only when its discovery paths are verified or backed by primary documentation and it passes the same init/update/doctor/uninstall contract.
+A host becomes first-class only when discovery/lifecycle paths are verified or backed by primary documentation and it passes the shared contract. Session focus is a separate capability: `native` means Keelson has a verified identity bridge; `degraded` means durable work remains correct but ambiguous conversations must select a change explicitly.
 
 ## Reliability is part of the product
 
