@@ -17,13 +17,17 @@ export async function uninstall({ flags }, cwd = process.cwd()) {
     rmrf(p.hooks);
     ok('removed .keelson/hooks');
   }
-  if (exists(p.local)) {
-    rmrf(p.local);
-    ok('removed .keelson/.local');
+  if (exists(p.runtime)) {
+    rmrf(p.runtime);
+    ok('removed .keelson/.runtime');
+  }
+  if (exists(p.legacyLocal)) {
+    rmrf(p.legacyLocal);
+    ok('removed legacy .keelson/.local');
   }
   if (flags.purge) {
     rmrf(p.keelson);
     warn('removed .keelson/ entirely (INTENT, NOW, rules, changes). Specs outside .keelson/ are untouched.');
-  } else info('kept .keelson/ project facts (INTENT, NOW, ROADMAP, rules, specs, changes); generated workflow/skill/hooks/local state were removed. Pass --purge to remove everything.');
+  } else info('kept .keelson/ project facts (INTENT, NOW, ROADMAP, rules, specs, changes); generated workflow/skill/hooks/runtime state were removed. Pass --purge to remove everything.');
   return 0;
 }
