@@ -1,11 +1,11 @@
 # Roadmap
 
 ## Now
-0.3.x: harden the harness without growing the always-on prompt. The resident instructions stay a small map; the skill performs an assumption audit at the decision frontier, asks at most one load-bearing user question at a time, and turns durable answers into existing project truth. Done when English/Chinese guidance stays mirrored, the assumption-routing contract is tested, the docs describe the same behaviour, and the cross-platform CI baseline is green.
+0.3.x harness hardening is complete: thin always-on instructions; ORIENT → BOUND → BUILD → SENSE → RECONCILE; an assumption audit at the decision frontier; one highest-value user question only when a load-bearing user-owned gap remains; durable answers routed into existing truth; and LF/CRLF-equivalent Markdown semantics. English/Chinese guidance is mirrored, the assumption-routing contract has regression tests, and the GitHub Actions matrix is green on Ubuntu, macOS, and Windows with Node 20 and 22.
 
 ## Next
 - Continuous-evolution test: several changes in one project with session breaks, a requirement revision, a parallel branch, and a merge conflict; compare against a bare agent.
-- Registry entries for Codex, Cursor, and OpenCode once their alias conventions are stable.
+- Codex end-to-end run when the account limit lifts; then confirm registry alias conventions for Codex, Cursor, and OpenCode.
 - Retro thresholds tuned on real ledgers rather than guesses.
 
 ## Later
