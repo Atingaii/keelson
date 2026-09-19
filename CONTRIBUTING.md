@@ -31,7 +31,7 @@ bin/keelson.js        entry point
 src/cli.js            command table and dispatch
 src/commands/*.js     one file per command
 src/lib/              config, paths, glob, markdown parsers, changes, git, models, health (knowledge-health findings for doctor)
-src/platforms/        per-tool generators (skill dir, instructions file, hooks)
+src/platforms/        registry.js (what hosts) · runtime.js (canonical rendering) · integration.js (manifest/shims/hooks) · index.js facade
 skills/keelson/       the English skill: SKILL.md, references/, templates/
 skills/zh/keelson/    the Chinese skill, same layout
 hooks/*.mjs           self-contained hook scripts copied into projects
@@ -49,7 +49,11 @@ The repository uses Keelson on itself. `.keelson/INTENT.md` states what the proj
 - `src/lib/changes.js` derives work status and verification status; `src/lib/git.js` computes the worktree fingerprint, tags, folded changes, and importers.
 - `src/commands/land.js` exports `landingBlockers`, the single list of reasons a landing is refused. `doctor` and `land` share it.
 - `hooks/*.mjs` have no imports beyond Node built-ins; they run in projects where the CLI is not installed.
-- `src/platforms/index.js` renders the canonical `.keelson/skill/` (profile applied, version stamped), the canonical workflow, and one-file host discovery shims for installation and `--dry-run`.
+- `src/platforms/registry.js` owns the first-class host contract; `runtime.js` renders the canonical workflow/Skill; `integration.js` owns manifest reconciliation, discovery shims, hooks, migration, and removal. `index.js` only re-exports the stable platform API.
+
+## Artifact rule
+
+Do not create a new standing document or change artifact because a template exists. A file should appear only when it carries information another session/person needs. Fresh init stays minimal; quick changes may have only `change.md`; ledger and handoff are event-driven.
 
 ## Adding a first-class host adapter
 
