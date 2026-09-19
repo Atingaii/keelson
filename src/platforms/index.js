@@ -319,7 +319,16 @@ function removeTargetSurfaces(root, p) {
 
 export function reconcileManagedTargets(root, targets) {
   const removed = [];
-  for (const p of staleManagedTargets(root, targets)) removed.push(...removeTargetSurfaces(root, p));
+  const stale = staleManagedTargets(root, targets);
+  for (const p of stale) removed.push(...removeTargetSurfaces(root, p));
+  if (stale.some((p) => p.hooks) && !targets.some((p) => p.hooks)) {
+    removeHooks(root);
+    const hooksDir = path.join(root, '.keelson', 'hooks');
+    if (exists(hooksDir)) {
+      rmrf(hooksDir);
+      removed.push(path.relative(root, hooksDir));
+    }
+  }
   return [...new Set(removed)];
 }
 
