@@ -88,12 +88,19 @@ export async function doctor({ flags }, cwd = process.cwd()) {
     if (pl.hooks) {
       const settings = readJson(path.join(root, '.claude', 'settings.json'), {}) ?? {};
       const has = (ev, script) => (settings.hooks?.[ev] ?? []).some((g) => (g.hooks ?? []).some((h) => String(h.command ?? '').includes(script)));
-      if (!has('SessionStart', 'session-start.mjs')) add('warn', `${pl.label}: SessionStart hook not registered (init --no-hooks, or removed); the agent must run \`keelson context\` itself`);
-      if (!has('UserPromptSubmit', 'prompt-state.mjs')) add('warn', `${pl.label}: UserPromptSubmit hook not registered`);
-      for (const script of ['session-start.mjs', 'prompt-state.mjs']) {
+      const registrations = [
+        ['SessionStart', 'session-start.mjs'],
+        ['UserPromptSubmit', 'prompt-state.mjs'],
+      ];
+      for (const [event, script] of registrations) {
+        const registered = has(event, script);
+        if (!registered) {
+          add('warn', `${pl.label}: ${event} hook not registered (fine after init --no-hooks; the agent falls back to the discovery workflow)`);
+          continue;
+        }
         const installed = path.join(p.hooks, script);
-        if (!exists(installed)) add('error', `hook script missing: .keelson/hooks/${script}`);
-        else if (normalize(readOr(installed)) !== normalize(readOr(path.join(PKG_ROOT, 'hooks', script)))) add('error', `hook script drifted: .keelson/hooks/${script} (run \`keelson update\`)`);
+        if (!exists(installed)) add('error', `registered hook script missing: .keelson/hooks/${script}`);
+        else if (normalize(readOr(installed)) !== normalize(readOr(path.join(PKG_ROOT, 'hooks', script)))) add('error', `registered hook script drifted: .keelson/hooks/${script} (run \`keelson update\`)`);
       }
     }
   }
