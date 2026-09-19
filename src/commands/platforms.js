@@ -2,15 +2,18 @@ import { PLATFORMS, PLATFORM_IDS } from '../platforms/index.js';
 import { detectLocal } from '../lib/models.js';
 import { findProjectRoot, projectPaths } from '../lib/paths.js';
 import { loadConfig } from '../lib/config.js';
+import { exists } from '../lib/fs.js';
+import path from 'node:path';
 import { heading, dim } from '../lib/out.js';
 
 export async function platforms({ flags }, cwd = process.cwd()) {
   const root = findProjectRoot(cwd);
   const cfg = root ? loadConfig(projectPaths(root).config) : null;
   const det = detectLocal().tools;
+  const portableConfigured = Boolean(root && exists(path.join(root, 'AGENTS.md')) && exists(path.join(root, '.agents', 'skills', 'keelson', 'SKILL.md')));
   const rows = PLATFORM_IDS.map((id) => {
     const p = PLATFORMS[id];
-    return { id, label: p.label, instructions: p.instructions, skills: p.skillsDir, rules: p.rulesFile ?? null, hooks: p.hooks, confidence: p.confidence, installed: det[id]?.installed ?? null, configured: cfg?.tools?.includes(id) ?? false };
+    return { id, label: p.label, instructions: p.instructions, skills: p.skillsDir, rules: p.rulesFile ?? null, hooks: p.hooks, confidence: p.confidence, examples: p.examples ?? null, installed: det[id]?.installed ?? null, configured: id === 'agents' ? portableConfigured : cfg?.tools?.includes(id) ?? false };
   });
   if (flags.json) {
     console.log(JSON.stringify(rows, null, 2));
@@ -25,6 +28,6 @@ export async function platforms({ flags }, cwd = process.cwd()) {
     console.log(`  --${r.id.padEnd(12)} ${r.label.padEnd(w)}  ${r.instructions.padEnd(34)} ${r.skills.padEnd(20)} ${r.hooks ? 'hooks ' : '      '} ${dim(r.confidence)}${marks ? dim(`  [${marks}]`) : ''}`);
   }
   console.log('');
-  console.log(dim('every selection except --claude also installs the cross-tool layer: AGENTS.md + .agents/skills/'));
+  console.log(dim('every project also installs the portable layer: AGENTS.md + .agents/skills/'));
   return 0;
 }
