@@ -5,7 +5,6 @@ import { loadConfig } from '../lib/config.js';
 import { parseLedger, ROOT_CAUSES } from '../lib/markdown.js';
 import { loadAllChanges } from '../lib/changes.js';
 import { historicalLedgers } from '../lib/git.js';
-import { PLATFORMS } from '../platforms/index.js';
 import { heading, info, warn, ok, dim } from '../lib/out.js';
 
 export function collectLedgers(root) {
@@ -47,18 +46,15 @@ export function computeMetrics(ledgers) {
   };
 }
 
-/** Parse "<!-- keelson: id=… | without: … | sunset: … -->" annotations in installed skill references. */
-export function collectGuidance(root, tools) {
+/** Parse guidance annotations from the single canonical project-local skill. */
+export function collectGuidance(root) {
   const out = [];
-  for (const t of tools) {
-    const dir = path.join(root, PLATFORMS[t]?.skillsDir ?? '', 'keelson', 'references');
-    for (const f of walk(dir)) {
-      const txt = read(path.join(dir, f));
-      for (const m of txt.matchAll(/<!--\s*keelson:\s*id=([\w.-]+)\s*\|\s*without:\s*([^|]*?)\s*\|\s*sunset:\s*(.*?)\s*-->/g)) {
-        out.push({ id: m[1], without: m[2].trim(), sunset: m[3].trim(), file: `${PLATFORMS[t].skillsDir}/keelson/references/${f}` });
-      }
+  const dir = path.join(root, '.keelson', 'skill', 'references');
+  for (const f of walk(dir)) {
+    const txt = read(path.join(dir, f));
+    for (const m of txt.matchAll(/<!--\s*keelson:\s*id=([\w.-]+)\s*\|\s*without:\s*([^|]*?)\s*\|\s*sunset:\s*(.*?)\s*-->/g)) {
+      out.push({ id: m[1], without: m[2].trim(), sunset: m[3].trim(), file: `.keelson/skill/references/${f}` });
     }
-    break; // one platform's copy is enough; they are identical
   }
   return out;
 }
@@ -88,7 +84,7 @@ export async function retro({ flags }, cwd = process.cwd()) {
   const cfg = loadConfig(projectPaths(root).config);
   const ledgers = collectLedgers(root);
   const metrics = computeMetrics(ledgers);
-  const guidance = collectGuidance(root, cfg.tools ?? []);
+  const guidance = collectGuidance(root);
   const sug = suggestions(metrics, guidance);
   if (flags.json) {
     console.log(JSON.stringify({ metrics, guidance, suggestions: sug }, null, 2));
@@ -105,7 +101,7 @@ export async function retro({ flags }, cwd = process.cwd()) {
   console.log(`  verify entries ${metrics.verifies.total}, failed ${metrics.verifies.failed}`);
   console.log('');
   heading('Guidance with sunset conditions');
-  if (!guidance.length) console.log(dim('  none found (is the skill installed for a configured tool?)'));
+  if (!guidance.length) console.log(dim('  none found (run `keelson update` to restore .keelson/skill/)'));
   for (const g of guidance) console.log(`  ${g.id.padEnd(26)} ${dim(g.sunset)}`);
   console.log('');
   heading('Suggestions');
