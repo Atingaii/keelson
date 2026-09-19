@@ -22,7 +22,7 @@ Use `model.md` when vocabulary or boundaries drift and `engineer.md` only when a
 
 ## Operating rules
 
-- If `NOW.md` says “First contact”, inspect the repository, draft `INTENT.md`, and create specs/rules only for facts that actually exist. Ask the owner to confirm or correct the draft; never make them author the scaffolding.
+- If `NOW.md` says “First contact”, inspect the repository and draft `INTENT.md`; ask the owner to confirm or correct it. Do not inventory the whole repository into specs/rules—create those only when current work needs a durable contract or invariant.
 - Non-trivial work starts from the current tree: `keelson context --paths <files>`; before changing a shared module, `keelson impact <files>`.
 - Size the change: **trivial** = do it; **quick** = write back understanding and create a lightweight change; **spec** = acceptance + delta specs + plan, then wait for approval.
 - Artifacts are containers for information, not ceremony. Do **not** create an empty ROADMAP, GLOSSARY, rule, tasks, ledger, handoff, or spec just because a template exists.
