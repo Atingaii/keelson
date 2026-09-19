@@ -23,8 +23,11 @@ After each task, a reviewer subagent (tier ≥ `standard`, never below the imple
 
 ```markdown
 ### Dispatch: task 2 → standard (sonnet)
+Result: pass
 Implemented paged query; reviewer accepted. Verify `npm test -- orders.repo` exit 0.
 ```
+
+The first line of a `Dispatch:` body is `Result: pass` or `Result: fail`; `keelson retro` counts only that line, never words in the prose.
 
 If the task's verification fails twice at a tier, escalate one tier and re-dispatch; log it:
 

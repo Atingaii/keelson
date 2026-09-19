@@ -57,6 +57,7 @@ export function validateProject(root) {
     }
     if (/\{\{\w+\}\}|^…$/m.test(c.body)) warnings.push(`${tag}/change.md still has template placeholders`);
     for (const e of c.ledger) if (e.kind === 'verify' && (e.exit === null || !e.command)) errors.push(`${tag}/ledger.md: Verify entry "${e.title}" needs a \`command\` and "exit N"`);
+    for (const e of c.ledger) if (e.kind === 'dispatch' && e.result === null) warnings.push(`${tag}/ledger.md: Dispatch "${e.title}" has no "Result: pass|fail" line, so retro cannot count it`);
     for (const e of c.ledger) if (e.kind === 'root-cause' && !['missing-rule', 'cross-layer', 'propagation', 'test-gap', 'implicit-assumption', 'guessed-fix'].includes(e.category)) errors.push(`${tag}/ledger.md: unknown root cause category "${e.category}"`);
     for (const df of c.deltaFiles) {
       const d = parseDelta(read(path.join(c.dir, 'specs', df)));

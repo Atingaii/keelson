@@ -31,7 +31,9 @@ export function computeMetrics(ledgers) {
     const d = dispatches.filter((x) => x.tier === t);
     const esc = escalations.filter((x) => x.from === t).length;
     const fails = d.filter((x) => x.result === 'fail').length;
-    byTier[t] = { dispatches: d.length, failures: fails, escalatedFrom: esc, firstPass: d.length ? Math.round(((d.length - fails) / d.length) * 100) : null };
+    const passes = d.filter((x) => x.result === 'pass').length;
+    const known = passes + fails;
+    byTier[t] = { dispatches: d.length, failures: fails, unknown: d.length - known, escalatedFrom: esc, firstPass: known ? Math.round((passes / known) * 100) : null };
   }
   const verifies = entries.filter((e) => e.kind === 'verify');
   return {
@@ -99,7 +101,7 @@ export async function retro({ flags }, cwd = process.cwd()) {
   for (const [k, v] of Object.entries(metrics.rootCauses)) console.log(`  ${k.padEnd(20)} ${v}`);
   console.log('');
   heading('Effort tiers');
-  for (const [t, m] of Object.entries(metrics.byTier)) console.log(`  ${t.padEnd(9)} dispatches ${m.dispatches}  failures ${m.failures}  escalated ${m.escalatedFrom}  first-pass ${m.firstPass ?? '—'}${m.firstPass !== null ? '%' : ''}`);
+  for (const [t, m] of Object.entries(metrics.byTier)) console.log(`  ${t.padEnd(9)} dispatches ${m.dispatches}  failures ${m.failures}${m.unknown ? `  no-result ${m.unknown}` : ''}  escalated ${m.escalatedFrom}  first-pass ${m.firstPass ?? '—'}${m.firstPass !== null ? '%' : ''}`);
   console.log(`  verify entries ${metrics.verifies.total}, failed ${metrics.verifies.failed}`);
   console.log('');
   heading('Guidance with sunset conditions');

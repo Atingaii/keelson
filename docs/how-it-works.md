@@ -146,7 +146,7 @@ Glob semantics: `**/` matches zero or more directories; `**` alone matches anyth
 | `### Ruling: <topic>` | A decision the agent made instead of stopping | count |
 | `### Root cause: <category>` | Category of a fixed bug | `missing-rule`, `cross-layer`, `propagation`, `test-gap`, `implicit-assumption`, `guessed-fix` |
 | `### Verify: <claim>` | Evidence for a status claim | a command in backticks and `exit N` in the body |
-| `### Dispatch: task N → <tier> (<alias>)` | A subagent dispatch | tier, task, pass/fail words in the body |
+| `### Dispatch: task N → <tier> (<alias>)` | A subagent dispatch | tier, task, and a `Result: pass\|fail` line in the body |
 | `### Escalate: task N <tier> → <tier>` | A re-dispatch one tier up | from, to |
 | `### Note: <text>` | Anything else | none |
 

@@ -79,7 +79,8 @@ export function parseLedger(text) {
       const dm = entry.title.match(/(light|standard|deep)/i);
       entry.tier = dm ? dm[1].toLowerCase() : null;
       entry.task = (entry.title.match(/task\s*([\d.]+)/i) || [])[1] ?? null;
-      entry.result = /\b(fail|failed|rejected)\b/i.test(s.body) ? 'fail' : /\b(pass|passed|accepted|ok)\b/i.test(s.body) ? 'pass' : null;
+      const rm = s.body.match(/^\s*Result:\s*(pass|fail|accepted|rejected|ok)\b/im);
+      entry.result = rm ? (/^(pass|accepted|ok)$/i.test(rm[1]) ? 'pass' : 'fail') : null;
     }
     if (kind === 'escalate') {
       const em = entry.title.match(/(light|standard|deep)\s*(?:→|->|to)\s*(light|standard|deep)/i);

@@ -154,7 +154,7 @@ test('retro reads ledgers and reports metrics', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--no-hooks'], { env });
   run(dir, ['new', 'r'], { env });
-  write(dir, '.keelson/changes/r/ledger.md', '### Root cause: cross-layer\nx\n### Root cause: cross-layer\ny\n### Root cause: cross-layer\nz\n### Dispatch: task 1 → light (h)\npass\n');
+  write(dir, '.keelson/changes/r/ledger.md', '### Root cause: cross-layer\nx\n### Root cause: cross-layer\ny\n### Root cause: cross-layer\nz\n### Dispatch: task 1 → light (h)\nResult: pass\n');
   const j = JSON.parse(run(dir, ['retro', '--json'], { env }).stdout);
   assert.equal(j.metrics.rootCauses['cross-layer'], 3);
   assert.equal(j.metrics.byTier.light.dispatches, 1);

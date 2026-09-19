@@ -11,6 +11,7 @@ All notable changes to this project are documented here. The format follows Keep
 - `SKILL.md` lists the CLI commands the agent will use; `keelson <command> --help` prints per-command usage.
 - Task titles in `keelson status` no longer include prose that follows the verify command.
 - The user-level `~/.keelson/` directory is never mistaken for a project root.
+- `Dispatch:` ledger entries carry an explicit `Result: pass|fail` line; `keelson retro` no longer infers results from prose, and `keelson validate` warns when the line is missing.
 
 ## [0.1.0] - 2026-09-19
 

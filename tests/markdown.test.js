@@ -10,7 +10,7 @@ test('parseTasks reads state, id, effort, verify', () => {
 });
 
 test('parseLedger classifies entries', () => {
-  const l = parseLedger(`# L\n\n### Ruling: ack\nbody\n\n### Root cause: guessed-fix\nx\n\n### Verify: e2e\n\`npm test\` exit 0\n\n### Dispatch: task 2 → light (haiku)\nreviewer rejected. failed\n\n### Escalate: task 2 light -> standard\nwhy`);
+  const l = parseLedger(`# L\n\n### Ruling: ack\nbody\n\n### Root cause: guessed-fix\nx\n\n### Verify: e2e\n\`npm test\` exit 0\n\n### Dispatch: task 2 → light (haiku)\nResult: fail\nreviewer rejected.\n\n### Escalate: task 2 light -> standard\nwhy`);
   assert.deepEqual(l.map((e) => e.kind), ['ruling', 'root-cause', 'verify', 'dispatch', 'escalate']);
   assert.equal(l[1].category, 'guessed-fix');
   assert.equal(l[2].exit, 0);
@@ -50,4 +50,10 @@ test('parseTasks keeps the title clean when prose follows the verify command', (
   const [u] = parseTasks('- [ ] 3. Review — verify: `npm test` (effort: deep)');
   assert.equal(u.title, 'Review');
   assert.equal(u.effort, 'deep');
+});
+
+test('dispatch result comes only from the Result line', () => {
+  const [a, b] = parseLedger(`### Dispatch: task 3 → deep (fable)\nReviewer named its rejected option; no blockers.\n\n### Dispatch: task 4 → light (haiku)\nResult: pass\nfailed attempts earlier were retried.`);
+  assert.equal(a.result, null);
+  assert.equal(b.result, 'pass');
 });

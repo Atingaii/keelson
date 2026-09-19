@@ -148,7 +148,7 @@ glob 语义：`**/` 匹配零个或多个目录；单独的 `**` 匹配任何东
 | `### Ruling: <topic>` | 代理没有停下而是自己做出的决定 | 计数 |
 | `### Root cause: <category>` | 已修复 bug 的类别 | `missing-rule`、`cross-layer`、`propagation`、`test-gap`、`implicit-assumption`、`guessed-fix` |
 | `### Verify: <claim>` | 状态声明的证据 | 正文中反引号里的命令和 `exit N` |
-| `### Dispatch: task N → <tier> (<alias>)` | 一次子代理分派 | 层级、任务、正文中的 pass/fail 词 |
+| `### Dispatch: task N → <tier> (<alias>)` | 一次子代理分派 | 层级、任务，以及正文中的一行 `Result: pass\|fail` |
 | `### Escalate: task N <tier> → <tier>` | 升一级重新分派 | from、to |
 | `### Note: <text>` | 其他任何内容 | 无 |
 

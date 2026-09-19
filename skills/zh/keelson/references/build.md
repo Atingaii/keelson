@@ -23,8 +23,11 @@ At-least-once with idempotent consumers. Exactly-once would need a broker featur
 
 ```markdown
 ### Dispatch: task 2 → standard (sonnet)
+Result: pass
 Implemented paged query; reviewer accepted. Verify `npm test -- orders.repo` exit 0.
 ```
+
+`Dispatch:` 正文的第一行是 `Result: pass` 或 `Result: fail`；`keelson retro` 只数这一行，不看散文里的用词。
 
 任务的验证在同一层级失败两次，就升一级重新分派，并记录：
 
