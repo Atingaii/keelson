@@ -51,14 +51,18 @@ The repository uses Keelson on itself. `.keelson/INTENT.md` states what the proj
 - `hooks/*.mjs` have no imports beyond Node built-ins; they run in projects where the CLI is not installed.
 - `src/platforms/index.js` renders the canonical `.keelson/skill/` (profile applied, version stamped), the canonical workflow, and one-file host discovery shims for installation and `--dry-run`.
 
-## Adding a platform generator
+## Adding a first-class host adapter
 
-1. Add an entry to `PLATFORMS` in `src/platforms/index.js` with `label`, `instructions` (the file that gets the discovery block), `skillsDir` (where the one-file skill shim is discovered), optional `rulesFile`, and `hooks` (true only if the tool runs hooks the way Claude Code does). The canonical workflow and skill always remain under `.keelson/`.
-2. If the tool needs a different file shape, extend `installInstructions`.
-3. Add the tool's CLI name to `detectLocal` in `src/lib/models.js` and a platform entry to `registry/models.json`.
-4. Add a row to the supported tools table in `README.md` and `README_CN.md`.
-5. Add a test in `tests/` that runs `init --tools <id>` in a temporary directory and asserts the files.
+First-class support is intentionally expensive. Do not add a host because a directory name looks plausible.
 
+1. Start from the host's current primary documentation (or a real maintained session) for its project instruction file and Agent Skills discovery path. No `convention`-only first-class entries.
+2. Prefer the portable `AGENTS.md` + `.agents/skills/` surface when the host documents it. Add a native path only when it adds discovery the portable layer does not provide.
+3. Add the host to `registry/platforms.json` with `support: first-class`, a CLI `bin`, and `confidence: verified|documented`; keep the canonical workflow and skill under `.keelson/`.
+4. Add/update the host in `registry/models.json` only for stable capability facts; never guess release-specific model IDs.
+5. The shared platform-contract test must pass: init, canonical single-root runtime, discovery-only shim, `doctor`, update reconciliation, uninstall ownership, and Windows/macOS/Linux CI.
+6. Update English and Chinese support tables. State the evidence level honestly; documented discovery is not the same claim as an end-to-end exercised workflow.
+
+Hosts outside the first-class matrix should use the portable `agents` fallback until they meet this bar. Retired adapters go into the signature-matched migration list so existing users are cleaned up without deleting unrelated files.
 ## Adding a registry entry
 
 Edit `registry/models.json`:
