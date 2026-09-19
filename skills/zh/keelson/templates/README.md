@@ -24,6 +24,7 @@
 | `NOW.md` | 此刻正在发生什么？哪里受阻？下一步是什么？ | 短期当前状态；整体重写，不写成日记 |
 | `GLOSSARY.md` | 项目里的关键术语在这里具体是什么意思？ | 长期共享词汇 |
 | `config.yaml` | Keelson 使用哪些工具、检查、引用、预算和路径？ | 机械配置 |
+| `.managed.json` | 当前 Keelson 安装负责哪些生成的发现表面？ | Keelson 维护的 desired-state 所有权清单；`init`/`update` 重写 |
 | `specs/<capability>/spec.md` | 某个能力**今天**的行为契约是什么？ | 长期当前真相；需求、场景、稳定决策 |
 | `rules/index.md` | 某个路径应该读哪些工程规则？ | 长期路由表 |
 | `rules/*.md` | 这一范围内有哪些约定/不变量？ | 长期；优先可检查 |
