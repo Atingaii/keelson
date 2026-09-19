@@ -105,6 +105,7 @@ Claude Code users can also install the skill from the plugin marketplace (`/plug
 | `.keelson/rules/` | Conventions routed by path glob from `rules/index.md` | You and the agent |
 | `.keelson/changes/<name>/` | One directory per change in flight: `change.md`, `tasks.md`, `ledger.md`, `handoff.md`, delta specs | The agent |
 | `.keelson/config.yaml` | Tools, profile, check commands, `paths.specs`, `refs` to existing material, document budgets, guided mode, model overrides | `keelson init` |
+| `.keelson/.managed.json` | Package-owned discovery surfaces currently managed by this install | `keelson init` / `update`; do not hand-edit |
 | `.keelson/.local/` | Check evidence and per-machine state. Gitignored | `keelson check` |
 
 `changes/` is empty when nothing is in flight. Existing documents are referenced from `config.yaml → refs`, never copied.
