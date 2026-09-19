@@ -13,7 +13,7 @@ export async function platforms({ flags }, cwd = process.cwd()) {
   const portableConfigured = Boolean(root && exists(path.join(root, '.keelson', 'workflow.md')) && exists(path.join(root, '.keelson', 'skill', 'SKILL.md')) && exists(path.join(root, 'AGENTS.md')) && exists(path.join(root, '.agents', 'skills', 'keelson', 'SKILL.md')));
   const rows = PLATFORM_IDS.map((id) => {
     const p = PLATFORMS[id];
-    return { id, label: p.label, instructions: p.instructions, skillDiscovery: p.skillsDir, rules: p.rulesFile ?? null, hooks: p.hooks, confidence: p.confidence, examples: p.examples ?? null, installed: det[id]?.installed ?? null, configured: id === 'agents' ? portableConfigured : cfg?.tools?.includes(id) ?? false };
+    return { id, label: p.label, instructions: p.instructions, skills: p.skillsDir, skillDiscovery: p.skillsDir, rules: p.rulesFile ?? null, hooks: p.hooks, confidence: p.confidence, examples: p.examples ?? null, installed: det[id]?.installed ?? null, configured: id === 'agents' ? portableConfigured : cfg?.tools?.includes(id) ?? false };
   });
   if (flags.json) {
     console.log(JSON.stringify(rows, null, 2));
