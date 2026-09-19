@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { exists, read, write, rmrf, mkdirp, readOr } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
-import { loadChange, loadAllChanges, verificationStatus } from '../lib/changes.js';
+import { loadChange, loadAllChanges, verificationStatus, sharedContracts } from '../lib/changes.js';
 import { parseSpec, parseDelta, renderSpec, parseFrontmatter } from '../lib/markdown.js';
 import { worktreeFingerprint } from '../lib/git.js';
 import { specBase } from './new.js';
@@ -95,6 +95,11 @@ export async function land({ flags, positional }, cwd = process.cwd()) {
 
   heading(`Landing ${name} (${c.tier})`);
   const dry = Boolean(flags.dryRun);
+  for (const k of sharedContracts(loadAllChanges(p.changes)).filter((k) => k.a === name || k.b === name)) {
+    const other = k.a === name ? k.b : k.a;
+    const o = loadChange(p.changes, other);
+    warn(`shared contract with active change ${other}${o?.owner ? ` (${o.owner})` : ''}: ${[...k.capabilities.map((cap) => `${p.specsRel}/${cap}`), ...k.paths].join(', ')} — its delta will drift after this landing and its owner must re-read the merged spec before landing`);
+  }
   for (const df of c.deltaFiles) {
     const cap = path.dirname(df).replace(/\\/g, '/');
     if (cap === '.' || cap.includes('<')) {

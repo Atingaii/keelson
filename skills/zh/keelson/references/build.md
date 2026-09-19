@@ -43,6 +43,8 @@ Two failures on boundary handling; light-tier output ignored the empty-page case
 
 多个写代码的人（人或代理）同时工作时，每个变更用自己的分支或 worktree（`keelson new --worktree`）。共享接口在任何一方实现之前先对齐：在 delta spec 里约定契约，落地或引用它，然后再建。两个活动变更触及同一能力或同样声明的路径时，`keelson status` 会警告；把它当作"先谈"，不是锁。磁盘上的文件不是分布式锁，分支也消除不了语义冲突；跨机器的认领和合并控制属于任务系统、pull request 和 CI。把别人的变更集成进你的之后，重新跑验证；旧证据按定义已经过期。
 
+对方所有者联系不上时（无人值守运行、同事不在线），既不要等待，也不要假装重叠不存在：把你对共享需求的 delta 压到这次变更允许的最小范围，在 ledger 里记一条 `### Note:`、在 `NOW.md` 里写一行说明重叠，并在写回和完成报告里说出来。`keelson land` 落地时会点名重叠的变更；它们的落地会停在漂移门禁上，直到其所有者重新读过合并后的 spec。
+
 ## 工作过程中让工件保持真实
 <!-- keelson: id=build.update-artifacts | without: tasks.md 和 change.md 描述的是计划而不是实际发生的事；下一个会话信了过期的文字 | sunset: never -->
 

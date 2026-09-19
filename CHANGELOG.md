@@ -17,6 +17,7 @@ The engineering judgment layer: how to find out what is wanted, keep vocabulary 
 - `keelson doctor` reports knowledge health: documents over budget, requirement text that reads like history, duplicated requirement names across capabilities, changes idle for 14 days or more, changes with more than 25 tasks, always-on rules over budget, and `docs/generated/` files older than the source tree. Findings are suggestions with a fix; nothing is rewritten.
 - `config.yaml → check` entries may be `{name, command, kind}` with `kind` in `test`, `lint`, `typecheck`, `build`, `fitness`, `check`; `keelson check` prints the name and kind, and guesses the kind for plain strings.
 - `keelson validate` warns when a slice is named after a layer.
+- `keelson land` names the active changes that share a capability or declared paths with the change being landed, so their owners know their delta will drift; the skill says what to do when that owner cannot be reached.
 - `config.yaml` version 3; `keelson update` migrates version 1 and 2 files.
 
 ## [0.2.0] - 2026-09-19

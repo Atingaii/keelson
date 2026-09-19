@@ -256,6 +256,11 @@ test('status exposes shared contracts and impact lists importers', () => {
   const st = JSON.parse(run(dir, ['status', '--json'], { env }).stdout);
   assert.equal(st.conflicts.length, 1);
   assert.deepEqual(st.conflicts[0].capabilities, ['orders']);
+  write(dir, '.keelson/changes/a/tasks.md', '- [x] 1. x (effort: light)\n');
+  write(dir, '.keelson/changes/a/change.md', read(dir, '.keelson/changes/a/change.md').replace(/^status:.*$/m, 'status: in-progress').replace(/## Acceptance[\s\S]*?## Open questions/, '## Acceptance\n- [x] ok — check: `true`\n\n## Open questions').replace(/## How\n…/, '## How\nh').replace(/## Alternatives[\s\S]*?## Impact/, '## Alternatives\n- **x (chosen)** — a\n- **y** — strongest: b. Rejected because: c\n\n## Impact').replace(/## Decisions[\s\S]*$/, '## Decisions\n- orders: x over y; y rejected because c\n'));
+  write(dir, '.keelson/changes/a/ledger.md', '### Verify: ok\n`true` exit 0\n');
+  const landed = run(dir, ['land', 'a', '--dry-run'], { env }).stdout;
+  assert.match(landed, /shared contract with active change b/);
   const im = JSON.parse(run(dir, ['impact', 'src/api/orders.js', '--json'], { env }).stdout);
   assert.deepEqual(im.callers, ['src/web.js']);
   assert.equal(im.specs[0].capability, 'orders');

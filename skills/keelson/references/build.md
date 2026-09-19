@@ -43,6 +43,8 @@ Escalation is for work that came back wrong. It is not for dispatches that never
 
 When more than one writer (person or agent) works at once, each change gets its own branch or worktree (`keelson new --worktree`). Shared interfaces are aligned before either side implements them: agree the contract in the delta spec, land or reference it, then build. `keelson status` warns when two active changes touch the same capability or the same declared paths; treat that as "talk first", not as a lock. A file on disk is not a distributed lock and a branch does not remove semantic conflicts; cross-machine claiming and merge control belong to the tracker, pull requests, and CI. After integrating someone else's change into yours, re-run verification; the old evidence is stale by definition.
 
+When the other owner cannot be reached (an unattended run, a colleague offline), do not wait and do not pretend the overlap is absent: keep your delta to the shared requirement as small as the change allows, record the overlap as a `### Note:` in your ledger and a line in `NOW.md`, and say it in your write-back and completion report. `keelson land` names the overlapping changes when you land; their landing will stop at the drift gate until their owner re-reads the merged spec.
+
 ## Keep the artifacts true while you work
 <!-- keelson: id=build.update-artifacts | without: tasks.md and change.md describe the plan, not what happened; the next session trusts stale text | sunset: never -->
 
