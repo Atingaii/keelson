@@ -1,228 +1,192 @@
 # Keelson
 
-An engineering collaboration layer for coding agents on long-lived projects. Init once, then just talk.
+**A project-local engineering control plane for coding agents.**  
+Initialize once, then keep using your agent normally.
 
 [![npm version](https://img.shields.io/npm/v/keelson?style=flat-square)](https://www.npmjs.com/package/keelson)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/Atingaii/keelson/ci.yml?branch=main&style=flat-square)](https://github.com/Atingaii/keelson/actions/workflows/ci.yml)
 
-AI writes code fast. Every session it starts from scratch: no memory of why the project is shaped the way it is, which paths were tried and rejected, what is half-finished, or which conventions apply where. On a project that lives for years, that costs more than any single task saves.
+Coding agents are good at producing code and bad at carrying project state across sessions: why a decision exists, what behavior is contractual, what is still open, whether verification belongs to the current tree, and where another agent should resume.
 
-- **Reasons vanish.** The odd-looking code was a deliberate trade-off. Three months later a fresh session "cleans it up" and re-opens a closed bug. The approach that was rejected in June is proposed again in September.
-- **Specs drift.** The document that described how the system behaves was true once. Nobody updates it with each change, so it becomes fiction and the agent reads fiction.
-- **"Tests pass" is not "requirement met".** A green run on Tuesday's code says nothing about Wednesday's edit, and it says nothing about the acceptance criterion nobody wrote a test for.
-- **Nobody can resume.** The next session, the next person, the next model re-derives state from git and chat scrollback, retries ruled-out assumptions, and treats stale verification as current.
-- **Parallel work collides.** Two changes implement the same contract two ways, and the collision shows up in the merge.
-
-Keelson keeps the facts a project needs in the repository, in a form agents read at the right moment and write back when they finish. It is small: a kernel of files, a thin CLI that does mechanical work, and one skill the agent reads by need. Full engineering capability unfolds when the change calls for it. Project state is reviewable in the same pull request as the code. Verification is wired into the Git, tests, and CI you already have. Light means you do not manage process. It does not mean the project drops the design, plans, and state it needs.
-
-## Philosophy
+Keelson keeps those facts in the repository and exposes them to the agent only when needed.
 
 ```text
-→ facts over process
-→ state over ceremony
-→ evidence over claims
-→ reuse over duplication
-→ thinner as models improve
+facts over process
+evidence over claims
+one source of truth over copies
+progressive disclosure over permanent ceremony
+strong defaults with explicit escape hatches
 ```
 
-## See it in action
+## 60-second example
 
-```text
-You:   Let people share a photo album with a link.
+You keep talking normally:
 
-Agent: Understood as: a share link per album, opened by anyone who has it,
-       with revoke and expiry. Out: per-account permissions. Found: the auth
-       rule in rules/api.md says every read goes through canView(). This adds
-       a capability, so it is a spec change.
-       One question before I plan: should a revoked link keep thumbnails
-       cached? I recommend no; a leaked link then leaks nothing after revoke.
+> **You:** Let customers revoke share links. Revoked links must immediately stop opening images.
 
-You:   No thumbnails after revoke. Expiry I have not decided.
+The agent reads the current project, writes back the boundary, and asks only the load-bearing question:
 
-Agent: Recorded. Expiry stays an open question; it blocks only the "Revoke
-       and expiry" slice. I will build "Create and access" now under the
-       assumption that links expire after 7 days by default.
+> **Agent:** I will treat revocation as immediate denial on every image access path; already-downloaded browser bytes cannot be remotely erased. No grace period. I recommend this over a timed grace period because “immediate” is part of the requirement. Approve that boundary?
 
-       ... keelson new share-links --tier spec --capability sharing
-       ... drafts change.md (acceptance, open question, assumed decision),
-           the delta spec, and tasks.md with two slices; builds slice 1 ...
-       ... keelson check --record "share links: create and access"
+After approval it creates only the artifacts this change needs, implements one vertical slice at a time, and records verification against the exact worktree.
 
-       Done: slice "Create and access". POST /shares and the share page.
-       Evidence: `npm run lint` exit 0; `npm test` exit 0 · tree 5bcb829dae.
-       Acceptance 2/4 checked; the other two belong to the expiry slice.
-       Not landed: one open question and one assumed decision need you.
-       Handoff written; NOW.md updated.
-```
+If you stop:
 
-Next day, new session:
+> **You:** Stop here.  
+> **Agent:** Handoff written. Next step: deny direct image access for revoked links.
 
-```text
-[keelson] Active changes: share-links (spec, in-progress, 3/5 tasks, ann)
-  share-links handoff → next: decide expiry, then build "Revoke and expiry"
+Tomorrow:
 
-You:   continue. Expiry is 30 days, and links can be extended once.
+> **You:** Continue.  
+> **Agent:** Resuming from the recorded handoff; the previous decision is already confirmed.
 
-Agent: Updating change.md: expiry decision confirmed, open question closed,
-       delta spec gains the extension scenario. Building the second slice.
-       ... keelson check --record "share links: revoke and expiry" ...
-       All 5 tasks and 4/4 acceptance items checked. Landing.
-       ... keelson land share-links --confirm-assumptions --now "Nothing in flight."
-       specs/sharing updated (+3 requirements, 3 decision lines). Change
-       folded; ledger stays in git history. Unreleased until the next tag.
-```
+Before saying “done”, Keelson requires fresh evidence. If code changes after verification, that evidence becomes stale.
 
 ## Quick start
 
-Requires Node.js 20 or newer.
+Requires Node.js 20+.
 
 ```bash
 npm install -g keelson
 cd your-project
-keelson init                 # picks verified/documented installed hosts; otherwise portable AGENTS.md
-keelson init --claude --codex   # or name the first-class hosts you use
+keelson init
 ```
 
-That is the only step. The canonical runtime lives under `.keelson/`: `workflow.md` plus `skill/` and its references. Init also writes tiny discovery shims such as `AGENTS.md` and `.agents/skills/keelson/SKILL.md`, so compatible agents can find that one runtime later without duplicating it. Open your agent in the directory and talk to it. On first contact it reads the repository, drafts `.keelson/INTENT.md` (why the project exists, what it will not do, what the agent may decide alone), and, for an existing codebase, one spec per capability and rules for the paths that have conventions. It asks you to confirm in one short exchange. You never write those files by hand.
+That is the normal setup.
 
-`keelson init` also references the architecture notes, decision records, CI, and issue tracker it finds, instead of copying them. See [Existing projects](docs/existing-projects.md).
+Then open Claude Code, Codex, OpenCode, Pi, Gemini CLI, Kiro CLI, or CodeBuddy CLI in the project and work as usual.
 
-Claude Code users can also install the skill from the plugin marketplace (`/plugin marketplace add Atingaii/keelson`, then `/plugin install keelson@keelson`). The CLI is still needed for `keelson init` and the other commands.
+Most users only ever run:
 
-## What lives in the repository
+```bash
+keelson init       # once
+keelson status     # optional: inspect current state
+keelson doctor     # diagnose
+keelson update     # after upgrading or changing hosts
+keelson uninstall  # remove generated integration surfaces
+```
 
-| Path | Holds | Written by |
-|---|---|---|
-| `.keelson/README.md` | Human map: what to read first, what every Keelson file means, and what survives landing | Keelson; refreshed by `update` |
-| `.keelson/workflow.md` | Canonical always-applicable operating loop | Keelson; refreshed by `update` |
-| `.keelson/skill/` | Canonical `SKILL.md` plus on-demand references | Keelson; refreshed by `update` |
-| `.keelson/INTENT.md` | Why the project exists, boundaries, hard constraints, what the agent may decide alone | Agent drafts; owner confirms |
-| `.keelson/ROADMAP.md` | The current milestone; later work as direction only. Links the tracker when there is one | You and the agent |
-| `.keelson/NOW.md` | What is in flight, what is blocked, the next step. Present tense, rewritten in full | The agent, when it stops or lands |
-| `.keelson/GLOSSARY.md` | One meaning per term, used by specs, code, and conversation alike | You and the agent, as words drift |
-| specs (`paths.specs`, default `.keelson/specs/<capability>/spec.md`) | How the system behaves today: requirements, scenarios, decisions with their rejected alternatives | The agent, merged at landing |
-| `.keelson/rules/` | Conventions routed by path glob from `rules/index.md` | You and the agent |
-| `.keelson/changes/<name>/` | One directory per change in flight: `change.md`, `tasks.md`, `ledger.md`, `handoff.md`, delta specs | The agent |
-| `.keelson/config.yaml` | Tools, profile, check commands, `paths.specs`, `refs` to existing material, document budgets, guided mode, model overrides | `keelson init` |
-| `.keelson/.managed.json` | Package-owned discovery surfaces currently managed by this install | `keelson init` / `update`; do not hand-edit |
-| `.keelson/.local/` | Check evidence and per-machine state. Gitignored | `keelson check` |
+The rest of the CLI exists primarily for the coding agent.
 
-`changes/` is empty when nothing is in flight. Existing documents are referenced from `config.yaml → refs`, never copied.
+## One golden path
 
-## Six questions a long-lived project must answer
+Keelson routes natural-language work into six intents:
 
-| Months in, can you still… | Keelson mechanism |
+| Intent | What it means |
 |---|---|
-| say what the project solves, what it will not do, and what was decided? | `INTENT.md`; each spec's `Decisions` section names the rejected option; `(assumed)` decisions are folded only when the owner confirms |
-| switch agent or session and continue accurately? | `NOW.md`, per-change `handoff.md` stamped with the commit, session-start hook prints the next step |
-| change several modules without missing a dependent? | three context layers, `keelson impact <files>` for importers and affected specs, shared-contract warnings in `keelson status` |
-| let people or agents work in parallel without overwriting each other? | owner and branch per change, `keelson new --worktree`, `touches` and `depends`, conflicts exposed; the tracker, pull requests, and CI stay authoritative |
-| trust that green tests mean the requirement is met? | acceptance items mapped to a test, command, manual check, or review; evidence carries a worktree fingerprint and goes stale on the next edit; fresh-reader review |
-| keep specs, architecture, and follow-ups in sync after a merge? | `keelson land` refuses stale evidence, open questions, and drifted specs; delta specs merge into the truth; release state from tags; learnings promoted to rules and checks |
+| **Explore** | Think, compare, clarify; stay read-only until you ask for a change |
+| **Change** | Bound a feature/refactor/migration, then deliver the smallest vertical slices |
+| **Fix** | Reproduce → locate → regression check → repair → verify |
+| **Resume** | Read NOW + handoff and continue the recorded next step |
+| **Finish** | Verify → review → land → fold durable truth back |
+| **Improve** | Turn recurring failures into a spec, scoped rule, or executable check |
 
-## Three states, not one Done
+These are routing modes for the agent, not commands the user has to memorize.
 
-Every change carries three dimensions, reported by `keelson status`:
+See the full walkthrough: **[Complete user flow](docs/user-flow.md)**.
 
-| Dimension | Values | Derived from |
-|---|---|---|
-| work | `clarifying`, `in-progress`, `blocked`, `in-review`, `integrated`, `cancelled` | `status:` in `change.md`, else tasks and the ledger |
-| verification | `not-run`, `passed`, `failed`, `partial`, `stale` | the last `Verify:` entry, compared with the current worktree fingerprint |
-| release | `unreleased`, or what `release:` says | git tags; changes landed since the last tag are unreleased |
+## A small control plane that grows only when needed
 
-So "implemented, tests pass, awaiting your review, not merged" and "merged, migration not yet run" are both expressible, and neither is "done".
+Fresh init deliberately starts small:
 
-## How it works
+```text
+.keelson/
+├── README.md
+├── INTENT.md
+├── NOW.md
+├── config.yaml
+├── manifest.json
+├── workflow.md
+└── skill/
+    ├── SKILL.md
+    └── references/
+```
 
-1. **A tiny discovery block** in `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, or `CODEBUDDY.md`. It only points the host to `.keelson/workflow.md` and `.keelson/skill/SKILL.md`; it is not another copy of the workflow.
-2. **Two hooks** (Claude Code). One prints the roadmap's `Now`, `NOW.md`, active changes, and handoff next steps at session start. The other prints one line per prompt with work and verification state, and nothing when the project is idle. Hooks inject state, never instructions.
-3. **One canonical skill** at `.keelson/skill/SKILL.md`, routed by need. It points to one reference for each class of task; the agent reads only the one it needs. Host skill directories contain a one-file discovery shim, never another reference tree.
-4. **A thin CLI** that does mechanical work: scaffolds, fingerprints, merges specs, records evidence, refuses a landing that lacks it. Understanding the request, analysing impact, and reviewing code stay with the agent.
+Optional knowledge appears only when it carries real information:
 
-Nothing in the skill is a gate on the agent. The gates are on artifacts.
+```text
+ROADMAP.md                   # only when a milestone needs to live here
+GLOSSARY.md                  # only when vocabulary is load-bearing
+rules/                       # only for durable scoped invariants
+specs/<capability>/spec.md   # only for behavior contracts
+changes/<name>/              # only while non-trivial work is in flight
+.local/                      # local evidence, gitignored
+```
 
-### For people learning engineering
+A quick change begins with only:
 
-`keelson init --guide` marks the owner as someone learning engineering by building. The agent then asks about scenarios before technology, presents each choice with a recommendation, the reason, the alternatives, and the trade-off, names the engineering idea after the decision, and closes each spec change with a short teaching note in the conversation. The files, gates, and states are the same as for everyone else.
+```text
+changes/rename-buyer/
+└── change.md
+```
 
-## Change sizes
+`tasks.md`, `ledger.md`, `handoff.md`, and delta specs appear only when the change actually needs a plan, evidence, a session boundary, or a behavior-contract delta.
 
-The agent decides the size. You can override with "treat this as spec" or "just do it".
+**Empty scaffolding is not progress.**
 
-| Size | Signals | What happens |
-|---|---|---|
-| trivial | Style, typo, one-file explicit fix, no behaviour change | Just done. No change directory |
-| quick | Several files, clear intent, no behaviour contract changes | Agent writes back its understanding, creates a change with an acceptance list, proceeds |
-| spec | Behaviour contract changes, new or removed capability, migrations, abandoning the obvious approach | Agent clarifies until the next slice is deliverable, drafts `change.md` with acceptance and delta specs, waits for approval |
+## One canonical runtime
 
-Set `confirm.quick: wait` in `config.yaml` to approve quick changes too. In an unattended run the agent builds under `(assumed)` decisions and stops before landing.
+Full Keelson guidance has one source of truth:
 
-## Effort tiers and models
+```text
+.keelson/workflow.md
+.keelson/skill/
+```
 
-Tasks carry an effort tier: `light`, `standard`, or `deep`. When the host offers subagents, the agent dispatches each task on a model resolved from its tier, reviewers never below the implementer, two verification failures escalating one tier. Tiers resolve to floating model family aliases, never dated IDs, so a new model release changes nothing in the repository. See [docs/models.md](docs/models.md).
+Host-visible files such as `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEBUDDY.md`, and host skill directories are thin discovery shims. They point back to the same runtime instead of copying it.
 
-## Designed to get thinner
+This keeps host compatibility from multiplying project rules.
 
-Every guideline in the skill carries a hidden annotation: the failure it prevents and the condition under which it should be deleted. `keelson retro` reads every ledger, including those of folded changes recovered from git history, and suggests which guidance to prune and which rules or checks to add. Two profiles ship from one source: `lean` (default) keeps stance and principles, `guided` adds step lists and examples.
+## First-class hosts
 
-The project's documents are kept small the same way. Each document type has a line budget in `config.yaml`, and `keelson doctor` reports knowledge health: documents over budget, requirement text that reads like history, duplicated requirements across capabilities, changes idle for two weeks, changes with more than 25 tasks, always-on rules over budget, generated docs older than the code. Every finding is a suggestion for a small fix, never an automatic rewrite. The rule is that project material may grow with the project, but what is read per task must not grow with the whole history.
+Official support is intentionally bounded to seven CLI hosts plus the portable standards layer:
 
-## Honest limits
+| Host | Instructions | Skill discovery | Evidence |
+|---|---|---|---|
+| Claude Code | `CLAUDE.md` | `.claude/skills/` | verified |
+| Codex CLI | `AGENTS.md` | `.agents/skills/` | verified |
+| OpenCode | `AGENTS.md` | `.agents/skills/` | documented |
+| Pi | `AGENTS.md` | `.agents/skills/` | documented |
+| Gemini CLI | `GEMINI.md` | `.agents/skills/` | documented |
+| Kiro CLI | `AGENTS.md` | `.kiro/skills/` | documented |
+| CodeBuddy CLI | `CODEBUDDY.md` | `.codebuddy/skills/` | documented |
+| Portable Agent Skills readers | `AGENTS.md` | `.agents/skills/` | fallback |
 
-- Path routing and `keelson impact` are navigation, not proof. The agent still reads for callers that a grep cannot see.
-- Files on disk are not a distributed lock, and a branch does not remove semantic conflicts. Claiming and merge control across machines belong to your tracker, pull requests, and CI.
-- A second agent agreeing with the first is a signal, not a correctness proof. The acceptance list is what gets checked.
-- Hooks currently exist only for Claude Code. The other first-class hosts use their documented instruction/skill discovery paths and the same `.keelson/` runtime. Claude Code has been exercised end-to-end and Codex has been exercised for skill loading; the remaining adapters are backed by host documentation and the shared adapter contract, not by claims of full-session validation.
-- Keelson never performs production operations. It reminds; you run.
-- Long-run evolution of large projects is the design goal. The 0.x releases have been exercised in real Claude Code sessions on small projects; the Codex CLI adapter has been verified to load the skill but not yet through a full change. Treat claims beyond that as untested.
+A host becomes first-class only when its discovery paths are verified or backed by primary documentation and it passes the same init/update/doctor/uninstall contract.
 
-## Supported tools
+## Reliability is part of the product
 
-Keelson deliberately keeps the official matrix small: **seven first-class CLI hosts** plus one portable standards fallback. A first-class adapter must have a verified or host-documented discovery path, deterministic init/update/uninstall ownership, one canonical `.keelson/` runtime, `doctor` coverage, and the same cross-platform adapter contract in tests. Tools outside this list can still use `--agents` when they read `AGENTS.md` and/or `.agents/skills/`; Keelson does not invent a host-specific directory for them.
+Keelson treats its own installation like a control system, not a pile of copied files.
 
-| Host | Flag | Instruction discovery | Skill discovery | Hooks | Evidence |
-|---|---|---|---|---|---|
-| Claude Code | `--claude` | `CLAUDE.md` | `.claude/skills/` | session start + prompt state | verified |
-| Codex CLI | `--codex` | `AGENTS.md` | `.agents/skills/` | — | verified |
-| OpenCode | `--opencode` | `AGENTS.md` | `.agents/skills/` | — | documented |
-| Pi coding agent | `--pi` | `AGENTS.md` | `.agents/skills/` | — | documented |
-| Gemini CLI | `--gemini` | `GEMINI.md` | `.agents/skills/` | — | documented |
-| Kiro CLI | `--kiro` | `AGENTS.md` | `.kiro/skills/` | — | documented |
-| CodeBuddy CLI | `--codebuddy` | `CODEBUDDY.md` | `.codebuddy/skills/` | — | documented |
-| Portable Agent Skills readers | `--agents` | `AGENTS.md` | `.agents/skills/` | — | standard fallback |
+- **Desired state:** `.keelson/manifest.json` records generated host surfaces Keelson owns.
+- **Reconciliation:** `keelson update` removes stale Keelson-owned adapters and preserves neighboring user files.
+- **Recoverable replacement:** package-owned skill directories keep the last complete copy until the new one is ready.
+- **Drift detection:** `keelson doctor` checks runtime content, shims, hooks, manifest state, verification freshness, conflicts, and knowledge health.
+- **Revision-bound evidence:** `keelson check --record` ties verification to a worktree fingerprint; later edits make it stale.
+- **Low toil:** repeated mistakes should become narrow rules or executable checks, then redundant prose should disappear.
 
-With no explicit selection, `keelson init` auto-selects installed first-class hosts whose paths are verified or documented; if none are found it installs only the portable layer. Every selection still converges on the same `.keelson/workflow.md + .keelson/skill/` runtime. `keelson platforms` shows the support level, paths, confidence, installed state, and configured state.
-## CLI
+## What Keelson is not
 
-| Command | Purpose |
-|---|---|
-| `keelson init` / `update` | Create or refresh the canonical `.keelson/` runtime plus host discovery shims and hooks. `--dry-run` previews |
-| `keelson context --paths <files>` | INTENT, ROADMAP, NOW, active changes, references, matched rules |
-| `keelson impact <files>` | Importers, affected specs and rules, overlapping active changes |
-| `keelson new <name>` | Scaffold a change with owner, branch, delta base; `--worktree` for isolation |
-| `keelson status` | Work, verification, and release state; slices, acceptance, open questions, conflicts |
-| `keelson check --record` | Run checks, save evidence, append a `Verify:` entry with the worktree fingerprint |
-| `keelson handoff <name>` | Create or re-stamp `handoff.md` |
-| `keelson land <name>` | Merge delta specs, fold decisions, fold or archive the change; refuses without evidence |
-| `keelson cancel <name>` | Archive a change as cancelled, nothing merged |
-| `keelson validate` | Structural checks, non-zero on errors |
-| `keelson retro` | Ledger metrics and pruning suggestions |
-| `keelson models` | Effort tier to model alias resolution |
-| `keelson doctor` | Diagnose the install and report knowledge health |
-| `keelson platforms` | List supported tools, their file locations, and which are installed |
-| `keelson ablate` / `restore` | Remove every surface for an A/B comparison, then bring it back |
-| `keelson uninstall` | Remove generated surfaces; `--purge` removes `.keelson/` too |
+- not a project manager — your tracker still owns priority;
+- not an agent runtime — it has no daemon or model calls of its own;
+- not a replacement for tests or CI;
+- not a correctness proof;
+- not a reason to document everything;
+- not another workflow the user must operate manually.
 
-Full reference: [docs/cli.md](docs/cli.md).
+It is the layer that keeps **intent, current truth, in-flight state, and evidence** coherent while coding agents come and go.
 
-## Docs
+## Documentation
+
+**Start here:** [Documentation home](docs/README.md)
 
 - [Getting started](docs/getting-started.md)
+- [Complete user flow](docs/user-flow.md)
 - [Concepts](docs/concepts.md)
 - [How it works](docs/how-it-works.md)
 - [Existing projects](docs/existing-projects.md)
-- [Collaboration: sessions, people, agents](docs/collaboration.md)
+- [Collaboration](docs/collaboration.md)
 - [Verification](docs/verification.md)
 - [Configuration](docs/configuration.md)
 - [CLI reference](docs/cli.md)
@@ -232,8 +196,10 @@ Full reference: [docs/cli.md](docs/cli.md).
 
 ## Contributing
 
-Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md). The repository uses Keelson on itself; look in `.keelson/` for a live example.
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Keelson uses itself. The repository's `.keelson/` is a live example of a mature project where optional artifacts exist because they carry real information—not because init created placeholders.
 
 ## License
 
-[MIT](LICENSE)
+MIT — see [LICENSE](LICENSE).
