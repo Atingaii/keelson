@@ -26,14 +26,14 @@ At-least-once with idempotent consumers. Exactly-once would need a broker featur
 Implemented paged query; reviewer accepted. Verify `npm test -- orders.repo` exit 0.
 ```
 
-同一层级验证失败两次，就升一级重新分派，并记录：
+任务的验证在同一层级失败两次，就升一级重新分派，并记录：
 
 ```markdown
 ### Escalate: task 2 light → standard
 Two failures on boundary handling; light-tier output ignored the empty-page case.
 ```
 
-`deep` 失败则停下来问。任务紧耦合，或没有子代理工具：自己内联执行，仍然一次一个任务，仍然记 ledger。
+升级只针对"做出来但做错了"的工作，不针对根本没跑起来的分派：限流、超时、工具报错，在同一层级稍等后重试一次，再不行就由你自己内联完成并记一条（`### Note: task 3 inline after two dispatch errors`）。`deep` 是最高层级，没有更高可升；`deep` 的验证失败则停下来问。任务紧耦合，或没有子代理工具：自己内联执行，仍然一次一个任务，仍然记 ledger。
 
 ## 工作过程中让工件保持真实
 <!-- keelson: id=build.update-artifacts | without: tasks.md 和 change.md 描述的是计划而非实际发生的事；下一个会话信了过时的文字 | sunset: never -->

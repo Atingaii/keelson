@@ -27,6 +27,9 @@ No. The `verify` reference asks for fresh evidence before any claim of completio
 **What does it cost in tokens?**
 The resident block is under 20 lines. The session-start hook prints a few hundred tokens once. The per-prompt line is a few dozen tokens and empty when idle. The skill is read one reference at a time, each about 30 to 60 lines. Rules are read only when their glob matches. Nothing else is injected.
 
+**What happens in a scripted run where nobody can approve?**
+The agent does not stall. It writes the understanding and the plan with its assumptions, builds and verifies under them, and stops before landing. `NOW.md` says the change awaits review. You then read the plan and the diff together and run `keelson land <name>` or discard the change.
+
 **What if the agent ignores it?**
 Check that the skill directory exists for your tool and that the resident block is in the instructions file; `keelson update` regenerates both. On Claude Code, confirm the hooks are in `.claude/settings.json` and that `node` is on the path. If the agent sizes a change wrongly, say "treat this as spec" or "just do it".
 

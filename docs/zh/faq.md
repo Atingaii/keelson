@@ -29,6 +29,9 @@
 **它消耗多少 token？**
 常驻块不到 20 行。session-start hook 每个会话打印一次几百个 token。每次提示的那一行只有几十个 token，空闲时为空。技能一次只读一份 reference，每份约 30 到 60 行。rules 只在 glob 匹配时才读。此外什么都不注入。
 
+**脚本化运行、没人能批准时会怎样？**
+代理不会停滞。它写下理解和计划并注明假设，在这些假设下构建和验证，落地前停下。`NOW.md` 会说明该变更等待审阅。你随后把计划和 diff 一起看完，运行 `keelson land <name>` 或丢弃这个变更。
+
 **代理不理它怎么办？**
 检查你的工具对应的技能目录是否存在、常驻块是否在指令文件里；`keelson update` 会重新生成两者。在 Claude Code 上，确认 hooks 在 `.claude/settings.json` 里且 `node` 在 PATH 上。如果代理把变更大小判错了，说"按 spec 处理"或"直接做"。
 

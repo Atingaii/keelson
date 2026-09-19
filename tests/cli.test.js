@@ -162,3 +162,24 @@ test('retro reads ledgers and reports metrics', () => {
   assert.ok(j.guidance.some((g) => g.id === 'debug.reproduce-first'));
 });
 
+
+test('the user-level ~/.keelson is never mistaken for a project root', async () => {
+  const { findProjectRoot } = await import('../src/lib/paths.js');
+  const home = tmpProject({ '.keelson/models.cache.json': '{}' });
+  const nested = path.join(home, 'work', 'proj');
+  fs.mkdirSync(nested, { recursive: true });
+  const prev = process.env.HOME;
+  process.env.HOME = home;
+  try {
+    assert.equal(findProjectRoot(nested), null);
+  } finally {
+    process.env.HOME = prev;
+  }
+});
+
+test('per-command --help prints that command only', () => {
+  const dir = tmpProject({});
+  const out = run(dir, ['new', '--help'], { env }).stdout;
+  assert.match(out, /^Usage: keelson new <name>/);
+  assert.doesNotMatch(out, /keelson land/);
+});

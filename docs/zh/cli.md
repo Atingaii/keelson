@@ -2,7 +2,7 @@
 
 # CLI 参考
 
-所有命令可在项目内任意位置运行；Keelson 会向上查找 `.keelson/`。退出码 0 表示成功，1 表示错误或检查失败，2 表示未知命令。多数命令支持 `--json` 输出机器可读结果。`--help` 和 `--version` 随处可用。
+所有命令可在项目内任意位置运行；Keelson 会向上查找 `.keelson/`。退出码 0 表示成功，1 表示错误或检查失败，2 表示未知命令。多数命令支持 `--json` 输出机器可读结果。`--help` 和 `--version` 随处可用；`keelson <command> --help` 打印该命令的用法行。
 
 布尔标志：`--json`、`--force`、`--dry-run`、`--no-hooks`、`--onboard`、`--refresh`、`--detect`、`--keep`、`--quiet`。取值标志接受 `--key value` 或 `--key=value`。
 

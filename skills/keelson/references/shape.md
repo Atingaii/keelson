@@ -16,6 +16,11 @@ Example:
 
 > Understood as: add offset pagination to `/orders` (`page`, `size`, default 20) using the shared response envelope from `rules/api.md`; table gets a pager, no infinite scroll. Assumed: sort stays by `created_at desc`. Done when `npm test -- orders` passes and the pager renders.
 
+## When nobody can answer
+<!-- keelson: id=shape.unattended | without: an unattended session either blocks forever on a question or silently lands a change nobody approved | sunset: never -->
+
+In a scripted or unattended session there is no one to confirm a write-back or approve a plan. Do not stall, and do not skip the artifacts: write the understanding and the plan with your assumptions stated, build and verify under them, and stop before landing. Say in `NOW.md` that the change awaits review. The reviewer then sees the plan and the diff together and lands or rejects with one command.
+
 ## Interview (spec changes, or when the user says "grill me")
 <!-- keelson: id=shape.interview | without: architectural ambiguity is resolved silently by the agent instead of by the owner | sunset: never -->
 

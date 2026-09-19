@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+### Changed
+
+- Escalation is only for work that failed verification; dispatches that never ran (rate limits, timeouts, tool errors) are retried once and then done inline.
+- New guidance for unattended sessions: build under stated assumptions, stop before landing.
+- `SKILL.md` lists the CLI commands the agent will use; `keelson <command> --help` prints per-command usage.
+- Task titles in `keelson status` no longer include prose that follows the verify command.
+- The user-level `~/.keelson/` directory is never mistaken for a project root.
+
 ## [0.1.0] - 2026-09-19
 
 Initial release.

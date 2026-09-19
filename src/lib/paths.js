@@ -7,11 +7,18 @@ export const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)
 export const KEELSON_DIR = '.keelson';
 export const USER_HOME = path.join(os.homedir(), '.keelson');
 
+/** A project root is a directory whose .keelson/ holds config.yaml or INTENT.md. The user-level ~/.keelson never counts. */
+export const isProjectRoot = (dir) => {
+  const k = path.join(dir, KEELSON_DIR);
+  if (path.resolve(k) === path.resolve(USER_HOME)) return false;
+  return exists(path.join(k, 'config.yaml')) || exists(path.join(k, 'INTENT.md'));
+};
+
 /** Walk up from cwd to find the project root containing .keelson/. */
 export function findProjectRoot(start = process.cwd()) {
   let dir = path.resolve(start);
   for (;;) {
-    if (exists(path.join(dir, KEELSON_DIR))) return dir;
+    if (isProjectRoot(dir)) return dir;
     const parent = path.dirname(dir);
     if (parent === dir) return null;
     dir = parent;

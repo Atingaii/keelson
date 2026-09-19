@@ -33,6 +33,10 @@ export async function main(argv) {
     console.log(version);
     return 0;
   }
+  if (flags.help && cmd && COMMANDS[cmd]) {
+    console.log(`Usage: keelson ${COMMANDS[cmd][0]}\n\n  ${COMMANDS[cmd][1]}`);
+    return 0;
+  }
   if (!cmd || flags.help || cmd === 'help') {
     console.log(help());
     return 0;

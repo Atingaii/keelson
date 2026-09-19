@@ -21,7 +21,11 @@ Keelson 是垫在你正常工作方式之下的一层薄结构。项目在 `.kee
 | quick | 涉及多个文件、意图清楚、行为契约不变 | 用 3 到 6 行写回你的理解，创建 change，继续 | `references/shape.md` |
 | spec | 行为契约变化、新增或删除能力、放弃显而易见的方案、任何用户想在写代码前先审阅的事 | 访谈以消除歧义，起草 `change.md` 和 delta specs，等待批准 | `references/shape.md`、`references/plan.md` |
 
-大小由你判断。用户可以用"按 spec 处理"或"直接做"覆盖。若用户希望 quick 变更也先批准，`config.yaml` 可设 `confirm.quick: wait`。
+大小由你判断。用户可以用"按 spec 处理"或"直接做"覆盖。若用户希望 quick 变更也先批准，`config.yaml` 可设 `confirm.quick: wait`。没有人能回答时（脚本化运行），在写明假设的前提下继续构建，落地前停下；规则见 `references/shape.md`。
+
+## 你会用到的 CLI
+
+`keelson context --paths <files>` · `keelson new <name> --tier quick|spec [--capability <cap>]` · `keelson status` · `keelson check` · `keelson validate` · `keelson models --resolve <tier>` · `keelson land <name> [--now "<text>"]`。每条命令都接受 `--json`；`keelson <command> --help` 打印该命令的参数。
 
 ## 按阶段
 

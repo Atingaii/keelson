@@ -36,7 +36,7 @@ Keelson 由代理环境中的三个小表面和仓库里的一个事实目录组
 
 | Reference | 何时阅读 |
 |---|---|
-| `shape.md` | 把请求变成共同理解：先探索、写回、访谈、定大小 |
+| `shape.md` | 把请求变成共同理解：先探索、写回、无人值守的会话、访谈、定大小 |
 | `plan.md` | 创建 `change.md`、delta specs、带 effort 层级的 `tasks.md`、`ledger.md` |
 | `build.md` | 执行任务：裁定、按层级分派子代理、升级、保持产物真实 |
 | `verify.md` | 新鲜证据、对照 specs 和 rules 评审、陌生读者评审、完成报告 |

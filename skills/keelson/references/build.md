@@ -26,14 +26,14 @@ After each task, a reviewer subagent (tier ≥ `standard`, never below the imple
 Implemented paged query; reviewer accepted. Verify `npm test -- orders.repo` exit 0.
 ```
 
-If verification fails twice at a tier, escalate one tier and re-dispatch; log it:
+If the task's verification fails twice at a tier, escalate one tier and re-dispatch; log it:
 
 ```markdown
 ### Escalate: task 2 light → standard
 Two failures on boundary handling; light-tier output ignored the empty-page case.
 ```
 
-`deep` failures stop and ask. Tightly coupled tasks, or no subagent tool: run inline yourself, still one task at a time, still ledgered.
+Escalation is for work that came back wrong. It is not for dispatches that never ran: a rate limit, a timeout, or a tool error is retried once at the same tier after a short pause, then the task is done inline by you and noted (`### Note: task 3 inline after two dispatch errors`). `deep` is the top tier; nothing escalates above it, and a `deep` verification failure stops and asks. Tightly coupled tasks, or no subagent tool: run inline yourself, still one task at a time, still ledgered.
 
 ## Keep the artifacts true while you work
 <!-- keelson: id=build.update-artifacts | without: tasks.md and change.md describe the plan, not what happened; the next session trusts stale text | sunset: never -->

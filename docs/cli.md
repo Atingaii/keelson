@@ -1,6 +1,6 @@
 # CLI reference
 
-All commands run from anywhere inside the project; Keelson walks up to find `.keelson/`. Exit code 0 means success, 1 means an error or a failed check, 2 means an unknown command. `--json` on most commands prints machine-readable output. `--help` and `--version` work everywhere.
+All commands run from anywhere inside the project; Keelson walks up to find `.keelson/`. Exit code 0 means success, 1 means an error or a failed check, 2 means an unknown command. `--json` on most commands prints machine-readable output. `--help` and `--version` work everywhere; `keelson <command> --help` prints that command's usage line.
 
 Boolean flags: `--json`, `--force`, `--dry-run`, `--no-hooks`, `--onboard`, `--refresh`, `--detect`, `--keep`, `--quiet`. Value flags accept `--key value` or `--key=value`.
 

@@ -34,7 +34,7 @@ Pass `--no-hooks` to `init` to skip them. Existing hooks in `settings.json` are 
 
 | Reference | Read when |
 |---|---|
-| `shape.md` | Turning a request into a shared understanding: explore first, write back, interview, sizing |
+| `shape.md` | Turning a request into a shared understanding: explore first, write back, unattended sessions, interview, sizing |
 | `plan.md` | Creating `change.md`, delta specs, `tasks.md` with effort tiers, `ledger.md` |
 | `build.md` | Executing tasks: rulings, subagent dispatch by tier, escalation, keeping artifacts true |
 | `verify.md` | Fresh evidence, review against specs and rules, fresh-reader review, completion report |

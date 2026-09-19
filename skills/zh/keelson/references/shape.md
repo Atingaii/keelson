@@ -16,6 +16,11 @@
 
 > 我的理解是：给 `/orders` 加偏移分页（`page`、`size`，默认 20），沿用 `rules/api.md` 里的统一响应封装；表格加分页器，不做无限滚动。假设：排序仍为 `created_at desc`。完成标准：`npm test -- orders` 通过且分页器能渲染。
 
+## 没有人能回答时
+<!-- keelson: id=shape.unattended | without: 无人值守的会话要么永远卡在一个问题上，要么悄悄落地一个没人批准过的变更 | sunset: never -->
+
+脚本化或无人值守的会话里，没有人能确认写回、批准计划。不要停滞，也不要跳过工件：写下理解和计划并注明假设，在这些假设下构建和验证，落地前停下。在 `NOW.md` 里说明该变更等待审阅。审阅者随后可以同时看到计划和 diff，用一条命令落地或拒绝。
+
 ## 访谈（spec 变更，或用户说 "grill me"）
 <!-- keelson: id=shape.interview | without: 架构层面的歧义被代理悄悄决定，而不是由负责人决定 | sunset: never -->
 

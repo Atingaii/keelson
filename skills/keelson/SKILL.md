@@ -21,7 +21,11 @@ Run `keelson context --paths <files you expect to touch>` (or read `.keelson/INT
 | quick | several files, intent clear, no behaviour contract changes | write back your understanding in 3–6 lines, create a change, proceed | `references/shape.md` |
 | spec | behaviour contract changes, new or removed capability, abandoning an obvious approach, anything the user will want to review before code | interview to remove ambiguity, draft `change.md` and delta specs, wait for approval | `references/shape.md`, `references/plan.md` |
 
-You decide the size. The user can override with "treat this as spec" or "just do it". `config.yaml` may set `confirm.quick: wait` if they prefer to approve quick changes too.
+You decide the size. The user can override with "treat this as spec" or "just do it". `config.yaml` may set `confirm.quick: wait` if they prefer to approve quick changes too. When nobody can answer (a scripted run), build under stated assumptions and stop before landing; `references/shape.md` has the rule.
+
+## CLI you will use
+
+`keelson context --paths <files>` · `keelson new <name> --tier quick|spec [--capability <cap>]` · `keelson status` · `keelson check` · `keelson validate` · `keelson models --resolve <tier>` · `keelson land <name> [--now "<text>"]`. Every command accepts `--json`; `keelson <command> --help` prints its flags.
 
 ## By phase
 

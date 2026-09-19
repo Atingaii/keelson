@@ -38,7 +38,7 @@ When a task fails verification twice at its tier, the agent re-dispatches it one
 Two failures on boundary handling.
 ```
 
-Failures at `deep` stop and ask the user. Escalation makes a wrong tag cheap and lets `light` take on more work as models improve without anyone editing the repository.
+Failures at `deep` stop and ask the user. Escalation applies to work that came back wrong. A dispatch that never ran, because of a rate limit, a timeout, or a tool error, is retried once at the same tier and then done inline by the agent, with a `Note:` in the ledger. Escalation makes a wrong tag cheap and lets `light` take on more work as models improve without anyone editing the repository.
 
 ## Resolution order
 

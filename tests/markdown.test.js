@@ -42,3 +42,12 @@ test('frontmatter and sections', () => {
   assert.equal(data.tier, 'spec');
   assert.deepEqual(sections(body).map((s) => s.title), ['Why', 'What']);
 });
+
+test('parseTasks keeps the title clean when prose follows the verify command', () => {
+  const [t] = parseTasks('- [x] 2. Add the branch (effort: light) — verify: `keelson check` plus a smoke run against `TODO_FILE`');
+  assert.equal(t.title, 'Add the branch');
+  assert.equal(t.verify, 'keelson check');
+  const [u] = parseTasks('- [ ] 3. Review — verify: `npm test` (effort: deep)');
+  assert.equal(u.title, 'Review');
+  assert.equal(u.effort, 'deep');
+});

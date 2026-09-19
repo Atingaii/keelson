@@ -52,11 +52,8 @@ export function parseTasks(text) {
     const effort = (rest.match(/\(effort:\s*(light|standard|deep)\)/i) || [])[1]?.toLowerCase() ?? null;
     const verify = (rest.match(/verify:\s*`([^`]+)`/i) || [])[1] ?? null;
     const id = (rest.match(/^(\d+(?:\.\d+)*)[.)]?\s+/) || [])[1] ?? null;
-    const title = rest
-      .replace(/\(effort:[^)]*\)/i, '')
-      .replace(/[—-]\s*verify:\s*`[^`]+`/i, '')
-      .replace(/^(\d+(?:\.\d+)*)[.)]?\s+/, '')
-      .trim();
+    const cut = rest.search(/\s*(?:[—–-]\s*verify:|\(effort:)/i);
+    const title = (cut === -1 ? rest : rest.slice(0, cut)).replace(/^(\d+(?:\.\d+)*)[.)]?\s+/, '').trim();
     tasks.push({ id, title, done, effort, verify, raw: line });
   }
   return tasks;
