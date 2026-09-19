@@ -63,7 +63,7 @@ effort:
 | `confirm.spec` | `wait` | Spec changes always wait unless you set `proceed` |
 | `land` | `fold` | `fold` removes the change directory after merging. `keep` moves it to `changes/archive/` |
 | `check` | detected | What `keelson check` runs, in order, from the project root through the shell. Each entry is a command string, or an object `{name, command, kind}` where `kind` is one of `test`, `lint`, `typecheck`, `build`, `fitness`, `check`. For a plain string the kind is guessed from the command. Detected from `package.json` scripts, `pyproject.toml`, `pytest.ini`, `go.mod`, or `Cargo.toml` on first init |
-| `guide` | `false` | `true` when the owner is learning engineering. Adds a guided-mode line to the resident block and a note to `keelson context`; the skill then explains with scenarios and trade-offs and closes spec changes with a short teaching note. `keelson init --guide` sets it |
+| `guide` | `false` | `true` when the owner is learning engineering. Adds a guided-mode line to `.keelson/workflow.md` and a note to `keelson context`; the skill then explains with scenarios and trade-offs and closes spec changes with a short teaching note. `keelson init --guide` sets it |
 | `budgets` | see below | Line budgets per document type. `keelson doctor` reports a document over its budget and asks for a compaction; nothing is rewritten automatically |
 | `context` | `""` | Free text printed at the top of `keelson context` output. Use it for facts that do not fit INTENT.md, such as a tech stack summary |
 | `paths.specs` | `.keelson/specs` | Directory of behaviour contracts, one `<capability>/spec.md` each. Point it at an existing contracts directory to reuse it |
@@ -102,7 +102,7 @@ Budgets are in lines. Crossing one is a signal to compact that document (rewrite
 
 ### Platform overrides
 
-Where each tool reads its instructions and skills comes from the registry shipped with the package; `keelson platforms` prints it. The built-in registry is standards-first: a host that already reads `AGENTS.md` + `.agents/skills/` reuses that portable surface instead of receiving another copy. A project can override any key of a tool's entry under `platforms.<id>` when an older/local install needs a different path:
+Where each tool reads its instructions and skills comes from the registry shipped with the package; `keelson platforms` prints it. The built-in registry is standards-first: the canonical runtime always stays under `.keelson/`; platform paths describe discovery shims only. A host that already reads `AGENTS.md` + `.agents/skills/` reuses that portable discovery surface. A project can override any key of a tool's entry under `platforms.<id>` when an older/local install needs a different path:
 
 ```yaml
 platforms:
@@ -114,7 +114,7 @@ platforms:
     instructionsFormat: kiro
 ```
 
-Keys: `instructions` (the file that receives the resident block), `instructionsFormat` (`kiro` writes a standalone steering file with an inclusion header instead of a marked block), `skillsDir` (where the `keelson/` skill directory is installed), `rulesFile` and `rulesFormat` (`mdc` for a rule file with frontmatter, `md` for plain Markdown), and `hooks` (`true` only for a tool that runs hooks the way Claude Code does). Overrides apply to `init`, `update`, `doctor`, `uninstall`, and `ablate`. Use them when a tool moves its directories, or when a `convention` entry does not match your install.
+Keys: `instructions` (the file that receives the resident block), `instructionsFormat` (`kiro` writes a standalone steering file with an inclusion header instead of a marked block), `skillsDir` (where the one-file `keelson/SKILL.md` discovery shim is installed), `rulesFile` and `rulesFormat` (`mdc` for a rule file with frontmatter, `md` for plain Markdown), and `hooks` (`true` only for a tool that runs hooks the way Claude Code does). Overrides apply to `init`, `update`, `doctor`, `uninstall`, and `ablate`. Use them when a tool moves its directories, or when a `convention` entry does not match your install.
 
 ### Migration
 
