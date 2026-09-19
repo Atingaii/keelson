@@ -11,7 +11,12 @@ All notable changes to this project are documented here. The format follows Keep
 
 ### Changed
 
-- Generated surfaces are now reconciled as desired state through `.keelson/.managed.json`: switching hosts removes stale Keelson adapters and hook registrations without touching neighboring user files.
+- Fresh init is now a minimal standing control plane: `README.md`, `INTENT.md`, `NOW.md`, `config.yaml`, `manifest.json`, `workflow.md`, and `skill/`. Empty ROADMAP/GLOSSARY/rules/specs/changes trees are no longer pre-created.
+- Change workspaces now grow progressively: quick changes start with `change.md` only; spec changes add `tasks.md` and behavior deltas; `ledger.md` and `handoff.md` appear only after the corresponding event or session boundary.
+- The canonical Skill routes requests through six user intents — Explore, Change, Fix, Resume, Finish, Improve — while detailed references remain an internal capability library.
+- Top-level CLI help now separates the small user command surface from agent workflow and advanced maintenance commands.
+- README and documentation were reorganized around one golden path, with a documentation home and complete end-to-end user flow in English and Chinese.
+- Generated surfaces are now reconciled as desired state through `.keelson/manifest.json`: switching hosts removes stale Keelson adapters and hook registrations without touching neighboring user files.
 - Canonical skill/shim directories are replaced recoverably: the last complete directory remains available until the new one is fully populated, and interrupted temp/backup residue is recovered on the next update.
 - `keelson doctor` now detects package-owned runtime, shim, managed-state, rule-file, and registered-hook drift rather than checking only file presence/version.
 - `--no-hooks` is persistent (`hooks: false`) and can be reversed with `--hooks`; config schema is version 4. Fresh init falls back to portable `agents` instead of assuming Claude Code when no first-class host is detected.
@@ -20,7 +25,7 @@ All notable changes to this project are documented here. The format follows Keep
 - The canonical `SKILL.md` is now a thin on-demand router rather than a second copy of the resident ORIENT → BOUND → BUILD → SENSE → RECONCILE loop; a repository test caps it at 60 lines.
 - Markdown parsing and generated agent surfaces are now line-ending agnostic: LF and CRLF parse identically, while package-owned rendered Markdown emits LF for stable cross-platform output.
 - BOUND now performs an assumption audit before ambiguous non-trivial work: established facts stay separate from plan-required assumptions, reality-owned gaps are investigated, user-owned load-bearing gaps produce one highest-value question, and material results route into existing change/spec/rule artifacts instead of a new prompt diary.
-- `keelson init` is the only step. It auto-detects the coding tools installed on the machine when none is named, accepts one flag per tool (`--claude`, `--cursor`, `--kiro`, …) or `--tools a,b`, and writes a first-contact task into `NOW.md` so the agent drafts `INTENT.md` (and specs and rules for an existing codebase) and confirms them with the owner. The user is never asked to edit `INTENT.md` by hand; `--onboard` is no longer needed.
+- `keelson init` is the only setup step. It auto-detects first-class hosts, writes a first-contact task that infers and confirms `INTENT.md`, and deliberately avoids a whole-repository spec/rule inventory; durable contracts grow only when real work needs them.
 - Official support is intentionally narrowed to seven first-class CLI hosts — Claude Code, Codex CLI, OpenCode, Pi, Gemini CLI, Kiro CLI, and CodeBuddy CLI — plus the portable `AGENTS.md` + `.agents/skills/` fallback. First-class paths must be verified or host-documented and pass the shared lifecycle contract; guessed convention-only adapters are retired and signature-matched legacy Keelson surfaces are cleaned during update.
 - New `keelson platforms` command lists the tools, their locations, and which are installed or configured.
 - The binary no longer calls `process.exit()` after printing, which truncated large `--json` output on macOS.
