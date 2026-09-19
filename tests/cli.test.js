@@ -568,7 +568,8 @@ test('init is the only step: first-class platform flags, standards-first surface
     assert.ok(!exists(dir, path.join(path.dirname(shim), 'references')), `${shim} should be discovery-only`);
   }
   const list = JSON.parse(run(dir, ['platforms', '--json'], { env }).stdout);
-  assert.ok(list.length >= 20);
+  assert.equal(list.length, 8);
+  assert.deepEqual(list.map((p) => p.id).sort(), ['claude', 'codex', 'opencode', 'pi', 'gemini', 'kiro', 'codebuddy', 'agents'].sort());
   assert.ok(list.find((p) => p.id === 'kiro').configured);
   run(dir, ['uninstall'], { env });
   assert.ok(!exists(dir, '.kiro/steering/keelson.md'));
