@@ -32,6 +32,15 @@ export function detectRefs(root) {
   return { refs, specsCandidate: specs };
 }
 
+export function chooseDetectedTools(detected = {}) {
+  const installed = PLATFORM_IDS.filter((id) => detected[id]?.installed);
+  const reliable = installed.filter((id) => PLATFORMS[id]?.confidence !== 'convention');
+  const conventionDetected = installed.filter((id) => PLATFORMS[id]?.confidence === 'convention');
+  return reliable.length
+    ? { tools: reliable, conventionDetected, portableFallback: false }
+    : { tools: ['agents'], conventionDetected, portableFallback: true };
+}
+
 export function detectChecks(root) {
   const pkg = readOr(path.join(root, 'package.json'), '');
   const checks = [];
@@ -71,17 +80,11 @@ export async function init({ flags }, cwd = process.cwd()) {
   let portableFallback = false;
   let conventionDetected = [];
   if (!tools.length) {
-    const det = detectLocal().tools;
-    const installed = PLATFORM_IDS.filter((id) => det[id]?.installed);
-    const reliable = installed.filter((id) => PLATFORMS[id]?.confidence !== 'convention');
-    conventionDetected = installed.filter((id) => PLATFORMS[id]?.confidence === 'convention');
-    if (reliable.length) {
-      tools = reliable;
-      detectedTools = true;
-    } else {
-      tools = ['agents'];
-      portableFallback = true;
-    }
+    const detected = chooseDetectedTools(detectLocal().tools);
+    tools = detected.tools;
+    conventionDetected = detected.conventionDetected;
+    portableFallback = detected.portableFallback;
+    detectedTools = !portableFallback;
   }
   for (const t of tools) if (!PLATFORMS[t]) throw new Error(`unknown tool "${t}". Known: ${PLATFORM_IDS.join(', ')}`);
   cfg.tools = [...new Set(tools)];
