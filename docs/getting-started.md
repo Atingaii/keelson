@@ -18,7 +18,7 @@ cd your-project
 keelson init
 ```
 
-With no flags it picks the coding tools installed on this machine. Name the ones you use with one flag per tool (`keelson platforms` lists them):
+With no flags it picks installed hosts whose discovery paths are verified or documented. Convention-only detections are shown as opt-in candidates rather than silently enabled; if no reliable host is found, init uses the portable `AGENTS.md` + `.agents/skills/` layer. Name the ones you use with one flag per tool (`keelson platforms` lists them):
 
 ```bash
 keelson init --claude --codex --cursor
@@ -52,7 +52,7 @@ Done. Open your agent in this directory and start talking.
   On first contact it reads the repository, drafts .keelson/INTENT.md, the specs, and the rules, and asks you to confirm before anything lands.
 ```
 
-`init` never overwrites project-fact files such as INTENT, NOW, specs, rules, or active changes. Package-owned runtime files — `.keelson/README.md`, `.keelson/workflow.md`, and `.keelson/skill/` — are refreshed by `keelson update`. Outside `.keelson/`, init only appends/replaces a marked discovery block in `CLAUDE.md` (or `AGENTS.md`, `GEMINI.md`) and writes one-file skill shims; user-authored content outside the marked block is left alone. Existing material it finds (architecture notes, decision records, CI, a GitHub issues page) is recorded under `refs` in `config.yaml` and referenced, never copied. If `package.json` has `lint`, `typecheck`, or `test` scripts, they become check commands. `keelson init --dry-run` lists what would be written without writing it.
+`init` never overwrites project-fact files such as INTENT, NOW, specs, rules, or active changes. It also records which generated adapters it owns in `.keelson/.managed.json`, so later `update`, `uninstall`, and `ablate` can remove stale Keelson surfaces without guessing. Package-owned runtime files — `.keelson/README.md`, `.keelson/workflow.md`, and `.keelson/skill/` — are refreshed by `keelson update`. Outside `.keelson/`, init only appends/replaces a marked discovery block in `CLAUDE.md` (or `AGENTS.md`, `GEMINI.md`) and writes one-file skill shims; user-authored content outside the marked block is left alone. Existing material it finds (architecture notes, decision records, CI, a GitHub issues page) is recorded under `refs` in `config.yaml` and referenced, never copied. If `package.json` has `lint`, `typecheck`, or `test` scripts, they become check commands. `keelson init --dry-run` lists what would be written without writing it.
 
 ## First contact
 
