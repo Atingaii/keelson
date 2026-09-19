@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { replaceDirSafe, walk } from '../src/lib/fs.js';
 import { datedIdPatterns } from '../src/lib/models.js';
@@ -22,7 +23,7 @@ test('no dated model IDs in registry, skills, hooks, or docs', () => {
 });
 
 test('generated directory replacement preserves the last good copy across failure and interrupted residue', () => {
-  const root = fs.mkdtempSync(path.join(process.env.TMPDIR || process.env.TEMP || '/tmp', 'keelson-replace-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'keelson-replace-'));
   const dest = path.join(root, 'skill');
   fs.mkdirSync(dest, { recursive: true });
   fs.writeFileSync(path.join(dest, 'state.txt'), 'old');
