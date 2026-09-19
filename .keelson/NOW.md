@@ -1,15 +1,13 @@
 # Now
 
-The golden-path redesign is implemented and cross-platform verified. Keelson now presents one user-facing workflow: initialize once, then keep using the coding agent normally. The standing `.keelson/` control plane is intentionally minimal; optional project knowledge and change artifacts appear only when they carry real information. The canonical Skill routes six user intents (Explore, Change, Fix, Resume, Finish, Improve), while detailed references remain an internal capability library.
+The continuous-conversation lifecycle redesign is implemented on top of the golden path. Keelson now separates three lifetimes: project truth, durable change/work item, and ephemeral conversation focus. Users can keep asking questions indefinitely; session/window lifetime never marks work complete. A change becomes `ready` only when durable acceptance/gates and current-tree verification say so, and the Agent lands it without waiting for a “done” phrase.
 
-The reliability foundation remains unchanged: one canonical runtime, seven first-class CLI hosts plus the portable Agent Skills layer, `manifest.json` desired-state ownership, recoverable update, drift diagnostics, revision-bound verification, and explicit landing gates.
-
-Verification for this redesign passed the full Ubuntu/macOS/Windows × Node 20/22 matrix, repository self-validation, and package smoke.
+Claude Code has a verified native session bridge: raw host session ids are never stored, an opaque local pointer lives under `.keelson/.runtime/sessions/`, and later Keelson CLI commands in that conversation resolve the same focus. Other first-class hosts currently expose degraded session focus until a host-specific bridge is implemented and verified; durable work remains correct and ambiguous selection is never guessed.
 
 ## Blocked / uncertain
-- Claude Code has end-to-end usage evidence; Codex has Skill-loading evidence. OpenCode, Pi, Gemini CLI, Kiro CLI, and CodeBuddy CLI still rely on host documentation plus the shared lifecycle contract rather than a claimed end-to-end field run.
-- Long-run continuous evolution across several real changes, interrupted updates, host switching, and later resumption still needs broader field evidence.
-- Two agents writing the same branch at the same moment has not been exercised; Keelson exposes semantic overlap but is not a distributed lock.
+- OpenCode, Pi, Gemini CLI, Kiro CLI, CodeBuddy CLI and Codex still need verified Keelson session adapters before they can move from `degraded` to `native`; Kiro and CodeBuddy document session ids in hooks, while Codex hook behavior differs by mode/version and must be exercised before being promoted.
+- Long-run continuous evolution across parallel sessions, changed requirements, interrupted updates, host switching, and merge conflicts still needs field evidence.
+- A session pointer improves routing only; it is intentionally not a distributed lock or project-management ownership system.
 
 ## Next
-Exercise one real end-to-end change on each remaining first-class host. Then run the continuous-evolution scenario with session breaks, requirement revision, parallel work, host switching, interrupted/retried update, and merge conflict. Use that field evidence to remove ineffective guidance before adding any new control.
+Pass the full Ubuntu/macOS/Windows matrix for the session-runtime redesign. Then implement/field-test session adapters one host at a time, promoting a host to `native` only after real lifecycle evidence. Run parallel-session and long-running conversational scenarios specifically looking for cross-wired verification/landing.
