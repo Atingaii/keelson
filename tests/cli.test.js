@@ -9,10 +9,11 @@ import { tmpProject, run, read, exists, write } from './helpers.js';
 const HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'keelson-home-'));
 const env = { HOME };
 
-test('init creates .keelson, skill, resident block, hooks; update is idempotent', () => {
+test('init creates a minimal control plane; update is idempotent', () => {
   const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"echo ok"}}', 'CLAUDE.md': '# Mine\n' });
   run(dir, ['init', '--tools', 'claude,opencode'], { env });
-  for (const f of ['.keelson/README.md', '.keelson/INTENT.md', '.keelson/NOW.md', '.keelson/config.yaml', '.keelson/.managed.json', '.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/skill/references/build.md', '.keelson/rules/index.md', '.keelson/rules/general.md', '.keelson/hooks/session-start.mjs', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', 'AGENTS.md']) assert.ok(exists(dir, f), f);
+  for (const f of ['.keelson/README.md', '.keelson/INTENT.md', '.keelson/NOW.md', '.keelson/config.yaml', '.keelson/manifest.json', '.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/skill/references/build.md', '.keelson/hooks/session-start.mjs', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', 'AGENTS.md']) assert.ok(exists(dir, f), f);
+  for (const f of ['.keelson/ROADMAP.md', '.keelson/GLOSSARY.md', '.keelson/rules', '.keelson/specs', '.keelson/changes']) assert.ok(!exists(dir, f), `fresh init should not create optional ${f}`);
   assert.ok(!exists(dir, '.claude/skills/keelson/references'), 'host skill directory is a shim only');
   assert.ok(!exists(dir, '.agents/skills/keelson/references'), 'portable skill directory is a shim only');
   assert.ok(!exists(dir, '.keelson/skill/templates'), 'templates are not installed into the canonical runtime skill');
@@ -37,7 +38,7 @@ test('claude-only init installs the portable agents layer and a refreshable huma
   run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env });
   for (const f of ['CLAUDE.md', 'AGENTS.md', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', '.keelson/README.md', '.keelson/workflow.md', '.keelson/skill/SKILL.md']) assert.ok(exists(dir, f), f);
   const map = read(dir, '.keelson/README.md');
-  assert.match(map, /If you have 30 seconds/);
+  assert.match(map, /## Start here/);
   assert.match(map, /NOW\.md/);
   assert.match(map, /INTENT\.md/);
   write(dir, '.keelson/README.md', '# stale map\n');
@@ -68,7 +69,7 @@ test('changing configured tools removes stale generated adapters but preserves u
   assert.match(read(dir, 'AGENTS.md'), /\.keelson\/workflow\.md/);
   const settings = JSON.parse(read(dir, '.claude/settings.json'));
   assert.equal(settings.hooks, undefined);
-  const managed = JSON.parse(read(dir, '.keelson/.managed.json'));
+  const managed = JSON.parse(read(dir, '.keelson/manifest.json'));
   assert.doesNotMatch(JSON.stringify(managed), /claude|kiro/);
   run(dir, ['doctor', '--json'], { env });
 });
@@ -136,7 +137,7 @@ test('every registered platform installs around one canonical runtime and passes
   for (const [id, platform] of Object.entries(reg.platforms)) {
     const dir = tmpProject({});
     run(dir, ['init', '--tools', id, '--no-hooks'], { env });
-    for (const canonical of ['.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/.managed.json']) assert.ok(exists(dir, canonical), `${id}: ${canonical}`);
+    for (const canonical of ['.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/manifest.json']) assert.ok(exists(dir, canonical), `${id}: ${canonical}`);
     const shim = path.join(platform.skillsDir, 'keelson', 'SKILL.md');
     assert.ok(exists(dir, shim), `${id}: ${shim}`);
     assert.match(read(dir, shim), /\.keelson\/skill\/SKILL\.md/, id);
@@ -217,6 +218,27 @@ test('guided profile keeps guided blocks; lang zh installs the Chinese skill whe
   run(dir, ['init', '--profile', 'guided', '--no-hooks'], { env });
   assert.match(read(dir, '.keelson/skill/references/build.md'), /Test-first when behaviour is specified/);
   assert.ok(!exists(dir, '.claude/settings.json'));
+});
+
+test('change artifacts grow progressively instead of starting empty', () => {
+  const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"true"}}' });
+  run(dir, ['init', '--no-hooks'], { env });
+
+  run(dir, ['new', 'quick-fix', '--tier', 'quick'], { env });
+  assert.ok(exists(dir, '.keelson/changes/quick-fix/change.md'));
+  assert.ok(!exists(dir, '.keelson/changes/quick-fix/tasks.md'));
+  assert.ok(!exists(dir, '.keelson/changes/quick-fix/ledger.md'));
+  assert.ok(!exists(dir, '.keelson/changes/quick-fix/handoff.md'));
+
+  write(dir, '.keelson/changes/quick-fix/change.md', read(dir, '.keelson/changes/quick-fix/change.md').replace('- [ ] … — check: `…`', '- [x] works — check: `npm test`'));
+  run(dir, ['check', '--record', 'quick works', '--change', 'quick-fix', '--quiet'], { env });
+  assert.ok(exists(dir, '.keelson/changes/quick-fix/ledger.md'));
+
+  run(dir, ['new', 'new-contract', '--tier', 'spec', '--capability', 'orders'], { env });
+  assert.ok(exists(dir, '.keelson/changes/new-contract/change.md'));
+  assert.ok(exists(dir, '.keelson/changes/new-contract/tasks.md'));
+  assert.ok(exists(dir, '.keelson/changes/new-contract/specs/orders/spec.md'));
+  assert.ok(!exists(dir, '.keelson/changes/new-contract/ledger.md'));
 });
 
 test('change lifecycle: new → gates → check --record → land folds specs and decisions', () => {
@@ -308,6 +330,7 @@ test('context routes rules by path', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--no-hooks'], { env });
   write(dir, '.keelson/rules/index.md', '- `**` → general.md\n- `src/api/**` → api.md\n');
+  write(dir, '.keelson/rules/general.md', '# General\n- keep changes scoped\n');
   write(dir, '.keelson/rules/api.md', '# API\n- envelope\n');
   const hit = run(dir, ['context', '--paths', 'src/api/x.js'], { env }).stdout;
   assert.match(hit, /rules\/api.md/);
@@ -337,7 +360,7 @@ test('hooks print a snapshot and a one-line state', () => {
   assert.equal(empty, '');
   run(dir, ['new', 'thing'], { env });
   const line = execFileSync('node', [path.join(dir, '.keelson/hooks/prompt-state.mjs')], { env: { ...process.env, CLAUDE_PROJECT_DIR: dir }, encoding: 'utf8' });
-  assert.match(line, /^\[keelson\] active: thing · in-progress · verify not-run · 0\/2 tasks\n$/);
+  assert.match(line, /^\[keelson\] active: thing · in-progress · verify not-run\n$/);
 });
 
 test('handoff and session hook tolerate CRLF files', () => {
@@ -409,6 +432,15 @@ test('the user-level ~/.keelson is never mistaken for a project root', async () 
   }
 });
 
+test('top-level help separates the human golden path from agent mechanics', () => {
+  const dir = tmpProject({});
+  const out = run(dir, ['--help'], { env }).stdout;
+  assert.match(out, /Normal use: run `keelson init` once/);
+  assert.match(out, /Your commands:/);
+  assert.match(out, /Agent workflow:/);
+  assert.match(out, /Maintenance \/ advanced:/);
+});
+
 test('per-command --help prints that command only', () => {
   const dir = tmpProject({});
   const out = run(dir, ['new', '--help'], { env }).stdout;
@@ -428,7 +460,7 @@ test('init references existing project material and ignores .keelson/.local', ()
   assert.match(cfg, /tasks: https:\/\/github\.com\/acme\/shop\/issues/);
   assert.match(cfg, /ci: \.github\/workflows/);
   assert.match(read(dir, '.gitignore'), /^node_modules\n[\s\S]*\.keelson\/\.local\/$/m);
-  assert.ok(exists(dir, '.keelson/ROADMAP.md'));
+  assert.ok(!exists(dir, '.keelson/ROADMAP.md'));
   const ctx = run(dir, ['context'], { env }).stdout;
   assert.match(ctx, /Existing project material[\s\S]*decisions: docs\/adr/);
   assert.match(read(dir, '.claude/skills/keelson/SKILL.md'), /^version: \d+\.\d+\.\d+$/m);
@@ -530,7 +562,7 @@ test('guide flag adds the guided line; named checks run with kinds; doctor repor
   assert.match(read(dir, '.keelson/workflow.md'), /Guided mode:/);
   assert.doesNotMatch(read(dir, 'CLAUDE.md'), /Guided mode:/);
   assert.match(read(dir, '.keelson/config.yaml'), /^guide: true$/m);
-  assert.ok(exists(dir, '.keelson/GLOSSARY.md'));
+  assert.ok(!exists(dir, '.keelson/GLOSSARY.md'));
   write(dir, '.keelson/config.yaml', read(dir, '.keelson/config.yaml').replace(/^check: \[\]$/m, 'check:\n  - name: unit\n    command: "exit 0"\n    kind: test\n  - name: deps\n    command: "exit 0"\n    kind: fitness\n'));
   const tailJson = (out) => JSON.parse(out.slice(out.indexOf('\n{') + 1));
   const r = tailJson(run(dir, ['check', '--quiet', '--json'], { env }).stdout);
@@ -558,7 +590,7 @@ test('init is the only step: first-class platform flags, standards-first surface
   for (const f of ['.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/skill/references/verify.md', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', '.kiro/skills/keelson/SKILL.md', 'AGENTS.md', 'CLAUDE.md']) assert.ok(exists(dir, f), f);
   for (const f of ['.cursor/skills/keelson', '.cursor/rules/keelson.mdc', '.kiro/steering/keelson.md']) assert.ok(!exists(dir, f), `standards-first init should not create ${f}`);
   assert.match(read(dir, '.keelson/NOW.md'), /^First contact with /m);
-  assert.match(read(dir, '.keelson/NOW.md'), /write one spec per capability/);
+  assert.match(read(dir, '.keelson/NOW.md'), /Do not inventory the whole repository/);
   assert.match(read(dir, '.keelson/config.yaml'), /- kiro/);
   const v = JSON.parse(run(dir, ['validate', '--json'], { env }).stdout);
   assert.ok(!v.warnings.some((w) => /placeholder/.test(w)), 'no INTENT placeholder nag before first contact');
