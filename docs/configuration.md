@@ -102,7 +102,7 @@ Budgets are in lines. Crossing one is a signal to compact that document (rewrite
 
 ### Platform overrides
 
-Where each tool reads its instructions and skills comes from the registry shipped with the package; `keelson platforms` prints it. A project can override any key of a tool's entry under `platforms.<id>`:
+Where each tool reads its instructions and skills comes from the registry shipped with the package; `keelson platforms` prints it. The built-in registry is standards-first: a host that already reads `AGENTS.md` + `.agents/skills/` reuses that portable surface instead of receiving another copy. A project can override any key of a tool's entry under `platforms.<id>` when an older/local install needs a different path:
 
 ```yaml
 platforms:
