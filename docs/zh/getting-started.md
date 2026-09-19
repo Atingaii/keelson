@@ -34,6 +34,7 @@ Keelson init in /home/you/your-project
 ✓ referencing existing decisions: docs/adr
 ✓ referencing existing tasks: https://github.com/you/your-project/issues
 ✓ referencing existing ci: .github/workflows
+✓ .keelson/README.md (human project map; created by Keelson)
 ✓ .keelson/INTENT.md (the agent drafts it from the code on first contact; confirm it when it asks)
 ✓ .keelson/NOW.md
 ✓ .keelson/ROADMAP.md (current milestone; link your tracker instead of duplicating it)
@@ -43,6 +44,7 @@ Keelson init in /home/you/your-project
 ✓ .gitignore: .keelson/.local/ (session state and evidence stay on this machine)
 ✓ .keelson/config.yaml
 ✓ Claude Code: skill → .claude/skills/keelson; instructions → CLAUDE.md
+✓ cross-tool layer: skill → .agents/skills/keelson; instructions → AGENTS.md
 ✓ Claude Code: hooks → .claude/settings.json (session snapshot + per-prompt state line)
 · model detection cached in ~/.keelson/models.cache.json (keelson models)
 ✓ .keelson/NOW.md: first-contact task written for the agent (draft INTENT, specs, and rules from the code)
@@ -51,13 +53,13 @@ Done. Open your agent in this directory and start talking.
   On first contact it reads the repository, drafts .keelson/INTENT.md, the specs, and the rules, and asks you to confirm before anything lands.
 ```
 
-`init` 从不覆盖 `.keelson/` 里已有的文件。它往 `CLAUDE.md`（或 `AGENTS.md`、`GEMINI.md`）追加一个带标记的块，文件其余部分原样保留。它找到的既有资料（架构说明、决策记录、CI、GitHub issues 页面）记录在 `config.yaml` 的 `refs` 下，只引用、不复制。如果 `package.json` 有 `lint`、`typecheck` 或 `test` 脚本，它们会成为检查命令。`keelson init --dry-run` 列出将要写入的内容而不真正写入。
+`init` 从不覆盖 `.keelson/` 里已有的项目事实文件。唯一例外是 `.keelson/README.md`：它是 Keelson 自己维护的人类导航，`keelson update` 会刷新。它往 `CLAUDE.md`（或 `AGENTS.md`、`GEMINI.md`）追加一个带标记的块，文件其余部分原样保留。它找到的既有资料（架构说明、决策记录、CI、GitHub issues 页面）记录在 `config.yaml` 的 `refs` 下，只引用、不复制。如果 `package.json` 有 `lint`、`typecheck` 或 `test` 脚本，它们会成为检查命令。`keelson init --dry-run` 列出将要写入的内容而不真正写入。
 
 `keelson init --lang zh` 安装中文版的代理技能。
 
 ## 首次接触
 
-在项目目录下打开你的代理，随便说点什么，或者只说"你好"。`NOW.md` 里有一个首次接触任务，于是代理读取仓库，起草 `.keelson/INTENT.md`（项目为什么存在、边界、硬约束、代理可以自行决定什么）；对已有代码的项目，还会为每个能力写一份 spec，为有约定的路径写 rules。它用一次简短的交流请你确认或修正，并保留你的回答。如果你一上来就提了需求，它会在整理那个变更的过程中顺带完成，并一起确认。这些文件你永远不需要手写。
+如果你是人直接打开 `.keelson/`，先看 `.keelson/README.md`；它会告诉你接下来该看 `NOW.md`、`INTENT.md`、对应 spec 还是活动变更。在项目目录下打开你的代理，随便说点什么，或者只说"你好"。`NOW.md` 里有一个首次接触任务，于是代理读取仓库，起草 `.keelson/INTENT.md`（项目为什么存在、边界、硬约束、代理可以自行决定什么）；对已有代码的项目，还会为每个能力写一份 spec，为有约定的路径写 rules。它用一次简短的交流请你确认或修正，并保留你的回答。如果你一上来就提了需求，它会在整理那个变更的过程中顺带完成，并一起确认。这些文件你永远不需要手写。
 
 
 ## 第一个 quick 变更
