@@ -56,6 +56,8 @@ Keelson 是代理环境里的三个表面，加上仓库里的一个事实目录
 
 `profile` 决定发出多少文本。`lean` 剥掉标记为 `<!-- guided -->` 的块。`guided` 保留它们。
 
+Keelson 渲染或安装的包内 Markdown 统一规范为 LF。解析器和 hook 把 LF 与 CRLF 当作相同语义，因此 Windows checkout 或用户编辑出的 CRLF 文件不会改变 Keelson 看到的项目状态；Keelson 也不会仅仅为了换行格式去重写用户文件。
+
 ## 变更目录
 
 `keelson new <name> --tier quick|spec [--capability a,b] [--touches globs] [--depends other] [--worktree]` 创建 `.keelson/changes/<name>/`：
