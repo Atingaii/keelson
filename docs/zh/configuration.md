@@ -104,7 +104,7 @@ effort:
 
 ### 平台覆盖
 
-每个工具从哪里读取说明和技能，来自随包附带的注册表；`keelson platforms` 会打印它。项目可以在 `platforms.<id>` 下覆盖某个工具条目的任意键：
+每个工具从哪里读取说明和技能，来自随包附带的注册表；`keelson platforms` 会打印它。内置注册表采用标准层优先：已经读取 `AGENTS.md` + `.agents/skills/` 的宿主直接复用通用表面，不再生成另一份副本。若旧版本或本地安装需要不同路径，项目可以在 `platforms.<id>` 下覆盖某个工具条目的任意键：
 
 ```yaml
 platforms:

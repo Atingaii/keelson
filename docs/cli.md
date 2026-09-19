@@ -11,7 +11,7 @@ keelson init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided]
              [--lang en|zh] [--no-hooks] [--dry-run] [--dir <path>]
 ```
 
-The only step. Creates `.keelson/` with `INTENT.md`, `ROADMAP.md`, `NOW.md`, `GLOSSARY.md`, `rules/index.md`, `rules/general.md`, `config.yaml`, and an empty `changes/`. Installs the skill, the instructions block, and (Claude Code) the hooks for each selected tool, plus the cross-tool layer (`AGENTS.md` + `.agents/skills/`) for every non-Claude selection. Detects check commands and existing project material on first run. Writes a first-contact task into `NOW.md`: the agent drafts `INTENT.md` (and, for an existing codebase, specs and rules) from the repository and confirms them with the owner. Never overwrites existing `.keelson/` files.
+The only step. Creates `.keelson/` with `INTENT.md`, `ROADMAP.md`, `NOW.md`, `GLOSSARY.md`, `rules/index.md`, `rules/general.md`, `config.yaml`, and an empty `changes/`. Installs the skill, the instructions block, and (Claude Code) the hooks for each selected tool, plus the cross-tool layer (`AGENTS.md` + `.agents/skills/`) on every init. Detects check commands and existing project material on first run. Writes a first-contact task into `NOW.md`: the agent drafts `INTENT.md` (and, for an existing codebase, specs and rules) from the repository and confirms them with the owner. Never overwrites existing `.keelson/` files.
 
 Tool selection, in order of precedence: `--tools a,b`; one flag per tool (`--claude`, `--codex`, `--cursor`, `--opencode`, `--gemini`, `--copilot`, `--kiro`, `--kilo`, `--antigravity`, `--devin`, `--qoder`, `--codebuddy`, `--droid`, `--pi`, `--ohmypi`, `--reasonix`, `--zcode`, `--trae`, `--grok`, `--kimi`, `--snow`, `--agents`); the tools already in `config.yaml` on an update; the tools whose command is found on this machine; Claude Code.
 
@@ -221,7 +221,7 @@ keelson ablate [--dry-run]
 keelson restore [--force] [--dry-run] [--dir <path>]
 ```
 
-`ablate` copies every Keelson surface (instructions files, skill directories, `.cursor/rules/keelson.mdc`, `.claude/settings.json`, `.keelson/`) to `~/.keelson/ablations/<hash>/`, records a hash of the stash and of each path after removal, then removes them. `restore` verifies the stash is intact, refuses if any managed path changed while ablated (unless `--force`), copies everything back, and deletes the stash.
+`ablate` copies every Keelson surface (generated instruction files, skill directories, host-specific rule files when configured, `.claude/settings.json`, `.keelson/`) to `~/.keelson/ablations/<hash>/`, records a hash of the stash and of each path after removal, then removes them. `restore` verifies the stash is intact, refuses if any managed path changed while ablated (unless `--force`), copies everything back, and deletes the stash.
 
 ## `keelson uninstall`
 
@@ -229,4 +229,4 @@ keelson restore [--force] [--dry-run] [--dir <path>]
 keelson uninstall [--purge]
 ```
 
-Removes the generated surfaces: skill directories, resident blocks, `.cursor/rules/keelson.mdc`, hook entries in `.claude/settings.json`, `.keelson/hooks/`, and `.keelson/.local/`. Keeps `.keelson/` (INTENT, NOW, ROADMAP, rules, specs, changes). `--purge` removes `.keelson/` as well; specs stored outside it are untouched.
+Removes the generated surfaces: skill directories, resident blocks, host-specific rule files when configured, hook entries in `.claude/settings.json`, `.keelson/hooks/`, and `.keelson/.local/`. Keeps `.keelson/` (INTENT, NOW, ROADMAP, rules, specs, changes). `--purge` removes `.keelson/` as well; specs stored outside it are untouched.

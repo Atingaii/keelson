@@ -32,7 +32,7 @@ test('English and Chinese skills have the same files and the same guidance ids',
 test('every guidance section carries without and sunset; SKILL.md stays short', () => {
   for (const lang of ['skills/keelson', 'skills/zh/keelson']) {
     const skill = fs.readFileSync(path.join(ROOT, lang, 'SKILL.md'), 'utf8');
-    assert.ok(skill.split('\n').length <= 80, `${lang}/SKILL.md ≤ 80 lines`);
+    assert.ok(skill.split('\n').length <= 60, `${lang}/SKILL.md ≤ 60 lines`);
     assert.match(skill, /^name: keelson$/m);
     for (const f of walk(path.join(ROOT, lang, 'references'))) {
       const txt = fs.readFileSync(path.join(ROOT, lang, 'references', f), 'utf8');
@@ -54,6 +54,12 @@ test('resident instructions stay a small map into the skill', () => {
     assert.match(block, /keelson retro/);
     assert.match(block, /skill/i);
   }
+});
+
+test('repository dogfood skill exposes every canonical reference', () => {
+  const canonical = walk(path.join(ROOT, 'skills', 'keelson', 'references'));
+  const dogfood = walk(path.join(ROOT, '.claude', 'skills', 'keelson', 'references'));
+  assert.deepEqual(dogfood, canonical);
 });
 
 test('shaping audits assumptions without turning clarification into ceremony', () => {
@@ -99,6 +105,25 @@ test('platform registry keeps the portable Agent Skills fallback and detects Cop
     assert.match(map, /INTENT\.md/);
     assert.match(map, /changes/);
   }
+});
+
+test('documented hosts reuse the portable surface unless a native skill path adds capability', () => {
+  const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'platforms.json'), 'utf8'));
+
+  for (const id of ['cursor', 'copilot', 'kilo']) {
+    assert.equal(reg.platforms[id].instructions, 'AGENTS.md', `${id} should reuse AGENTS.md`);
+    assert.equal(reg.platforms[id].skillsDir, '.agents/skills', `${id} should reuse .agents/skills`);
+    assert.equal(reg.platforms[id].rulesFile, undefined, `${id} should not add a duplicate always-on rule`);
+  }
+
+  assert.equal(reg.platforms.kiro.instructions, 'AGENTS.md');
+  assert.equal(reg.platforms.kiro.skillsDir, '.kiro/skills');
+  assert.equal(reg.platforms.kiro.instructionsFormat, undefined);
+
+  assert.equal(reg.platforms.qoder.instructions, 'AGENTS.md');
+  assert.equal(reg.platforms.qoder.skillsDir, '.qoder/skills');
+  assert.equal(reg.platforms.qoder.confidence, 'documented');
+  assert.equal(reg.platforms.qoder.rulesFile, undefined);
 });
 
 test('registry tiers point at aliases that exist in the platform rank', () => {

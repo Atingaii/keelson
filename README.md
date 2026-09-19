@@ -176,21 +176,21 @@ The project's documents are kept small the same way. Each document type has a li
 
 ## Supported tools
 
-`keelson init` takes one flag per tool, or `--tools a,b`, or nothing (it detects what is installed). Every project also installs the portable cross-tool layer: `AGENTS.md` plus `.agents/skills/`, which Codex, Gemini CLI, GitHub Copilot, and any other compatible agent can pick up even when it was not selected at init. `keelson platforms` prints the full table with what is installed on your machine.
+`keelson init` takes one flag per tool, or `--tools a,b`, or nothing (it detects what is installed). Every project installs the portable cross-tool layer: `AGENTS.md` plus `.agents/skills/`. Hosts that already read this standard surface reuse it; Keelson adds a native surface only when it provides capability the shared layer does not. `keelson platforms` prints the full table with what is installed on your machine.
 
 | Tool | Instructions | Skills | Hooks | Confidence |
 |---|---|---|---|---|
 | Claude Code `--claude` | `CLAUDE.md` | `.claude/skills/` | session start and per prompt | verified |
 | Codex CLI `--codex` | `AGENTS.md` | `.agents/skills/` | | verified |
-| Cursor `--cursor` | `AGENTS.md`, `.cursor/rules/keelson.mdc` | `.cursor/skills/` | | documented |
+| Cursor `--cursor` | `AGENTS.md` | `.agents/skills/` | | documented |
 | OpenCode `--opencode` | `AGENTS.md` | `.agents/skills/` | | documented |
 | Gemini CLI `--gemini` | `GEMINI.md` | `.agents/skills/` | | documented |
-| GitHub Copilot `--copilot` | `.github/copilot-instructions.md` | `.github/skills/` | | documented |
-| Kiro `--kiro` | `.kiro/steering/keelson.md` | `.kiro/skills/` | | documented |
-| Kilo Code `--kilo` | `AGENTS.md`, `.kilocode/rules/keelson.md` | `.kilocode/skills/` | | documented |
+| GitHub Copilot `--copilot` | `AGENTS.md` | `.agents/skills/` | | documented |
+| Kiro `--kiro` | `AGENTS.md` | `.kiro/skills/` | | documented |
+| Kilo Code `--kilo` | `AGENTS.md` | `.agents/skills/` | | documented |
 | Antigravity `--antigravity` | `AGENTS.md`, `.agent/rules/keelson.md` | `.agent/skills/` | | convention |
 | Devin `--devin` | `AGENTS.md` | `.devin/skills/` | | convention |
-| Qoder `--qoder` | `AGENTS.md`, `.qoder/rules/keelson.md` | `.qoder/skills/` | | convention |
+| Qoder `--qoder` | `AGENTS.md` | `.qoder/skills/` | | documented |
 | CodeBuddy `--codebuddy` | `AGENTS.md`, `.codebuddy/rules/keelson.md` | `.codebuddy/skills/` | | convention |
 | Droid `--droid` | `AGENTS.md` | `.factory/skills/` | | convention |
 | Pi Agent `--pi`, Oh My Pi `--ohmypi` | `AGENTS.md` | `.pi/skills/` | | convention |

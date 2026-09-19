@@ -21,6 +21,17 @@ Every initialized project SHALL contain `AGENTS.md` and `.agents/skills/keelson/
 - WHEN `keelson init --claude` runs
 - THEN Claude-specific surfaces exist and the portable `AGENTS.md` + `.agents/skills/keelson/` surface also exists for compatible future agents
 
+## Requirement: Standards-first host adapters
+When a documented host already reads the portable `AGENTS.md` + `.agents/skills/` surface, Keelson SHALL reuse that surface rather than install a second copy of the same resident instructions or skill. A host-specific surface SHALL exist only when it adds capability the portable layer does not provide.
+
+### Scenario: Standard-compatible hosts stay clean
+- WHEN `keelson init` selects Cursor, GitHub Copilot, or Kilo Code
+- THEN the Keelson resident instructions and skill are provided by `AGENTS.md` + `.agents/skills/keelson/`, without an additional Keelson copy under that host's native directory
+
+### Scenario: Native skill path fills a real gap
+- WHEN `keelson init --kiro` runs
+- THEN the portable layer exists and `.kiro/skills/keelson/` also exists, because the documented Kiro project skill path adds host-specific discovery while a duplicate Kiro steering file is not generated
+
 ## Requirement: Change directory lifecycle
 A change SHALL live in `changes/<name>/` with `change.md` (why, what, acceptance, open questions, decisions with states), `tasks.md` (slices and tasks), `ledger.md`, optional `handoff.md`, and optional delta specs, and SHALL leave `changes/` when it lands or is cancelled.
 
@@ -51,3 +62,4 @@ The agent SHALL be able to find every rule that applies to a path from `rules/in
 - project-layout: decisions carry a state (confirmed or assumed) inside change.md rather than in a separate approvals file; a separate file was rejected because approval and decision would drift apart
 - project-layout: changes fold into specs and git history by default; a permanent archive directory was rejected because it duplicates what git already keeps and grows without bound
 - project-layout: decisions live inside the affected spec rather than in a separate decision log, so the reason for a behaviour sits next to the behaviour
+- project-layout: the portable `AGENTS.md` + `.agents/skills/` surface is canonical for hosts that document support for it; duplicate native copies were rejected because they add repository noise and ambiguous discovery precedence without adding capability

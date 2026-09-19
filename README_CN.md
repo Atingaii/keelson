@@ -179,21 +179,21 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 
 ## 支持的工具
 
-`keelson init` 接受每个工具一个标志，或 `--tools a,b`，或什么都不给（它探测本机已安装的工具）。每个项目都会同时安装通用兼容层：`AGENTS.md` 加 `.agents/skills/`；Codex、Gemini CLI、GitHub Copilot 以及其他读取这一约定的 Agent 即使初始化时没有被点名，也能拾取 Keelson。`keelson platforms` 打印完整表格，并标出本机已安装的工具。
+`keelson init` 接受每个工具一个标志，或 `--tools a,b`，或什么都不给（它探测本机已安装的工具）。每个项目都会安装通用兼容层：`AGENTS.md` 加 `.agents/skills/`。已经读取这套标准表面的宿主直接复用它；只有共享层缺少能力时，Keelson 才增加宿主原生表面。`keelson platforms` 打印完整表格，并标出本机已安装的工具。
 
 | 工具 | 说明文件 | 技能 | Hook | 可信度 |
 |---|---|---|---|---|
 | Claude Code `--claude` | `CLAUDE.md` | `.claude/skills/` | 会话启动和每个提示词 | verified |
 | Codex CLI `--codex` | `AGENTS.md` | `.agents/skills/` | | verified |
-| Cursor `--cursor` | `AGENTS.md`、`.cursor/rules/keelson.mdc` | `.cursor/skills/` | | documented |
+| Cursor `--cursor` | `AGENTS.md` | `.agents/skills/` | | documented |
 | OpenCode `--opencode` | `AGENTS.md` | `.agents/skills/` | | documented |
 | Gemini CLI `--gemini` | `GEMINI.md` | `.agents/skills/` | | documented |
-| GitHub Copilot `--copilot` | `.github/copilot-instructions.md` | `.github/skills/` | | documented |
-| Kiro `--kiro` | `.kiro/steering/keelson.md` | `.kiro/skills/` | | documented |
-| Kilo Code `--kilo` | `AGENTS.md`、`.kilocode/rules/keelson.md` | `.kilocode/skills/` | | documented |
+| GitHub Copilot `--copilot` | `AGENTS.md` | `.agents/skills/` | | documented |
+| Kiro `--kiro` | `AGENTS.md` | `.kiro/skills/` | | documented |
+| Kilo Code `--kilo` | `AGENTS.md` | `.agents/skills/` | | documented |
 | Antigravity `--antigravity` | `AGENTS.md`、`.agent/rules/keelson.md` | `.agent/skills/` | | convention |
 | Devin `--devin` | `AGENTS.md` | `.devin/skills/` | | convention |
-| Qoder `--qoder` | `AGENTS.md`、`.qoder/rules/keelson.md` | `.qoder/skills/` | | convention |
+| Qoder `--qoder` | `AGENTS.md` | `.qoder/skills/` | | documented |
 | CodeBuddy `--codebuddy` | `AGENTS.md`、`.codebuddy/rules/keelson.md` | `.codebuddy/skills/` | | convention |
 | Droid `--droid` | `AGENTS.md` | `.factory/skills/` | | convention |
 | Pi Agent `--pi`、Oh My Pi `--ohmypi` | `AGENTS.md` | `.pi/skills/` | | convention |
