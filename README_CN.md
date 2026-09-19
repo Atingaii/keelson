@@ -85,7 +85,7 @@ keelson init                 # 自动选用本机已安装的编码工具
 keelson init --cursor --codex   # 或者点名你在用的那些
 ```
 
-这是唯一的一步。每次 init 都会额外写入通用的 `AGENTS.md` + `.agents/skills/keelson` 兼容层，所以以后即使换成今天没有点名的兼容 Agent，也可以直接拾取 Keelson。在该目录下打开你的代理，开始对话。首次接触时，它读取仓库，起草 `.keelson/INTENT.md`（项目为什么存在、明确不做什么、代理可以自行决定什么）；对已有代码的项目，还会为每个能力写一份 spec，为有约定的路径写 rules。然后用一次简短的交流请你确认。这些文件你永远不需要手写。
+这是唯一的一步。canonical 运行时统一位于 `.keelson/`：`workflow.md` 加 `skill/` 与其 references。init 只在外部写入很薄的发现入口，例如 `AGENTS.md` 和 `.agents/skills/keelson/SKILL.md`，所以以后换 Agent 也只会找到同一份真源，不会复制整套规则。在该目录下打开你的代理，开始对话。首次接触时，它读取仓库，起草 `.keelson/INTENT.md`（项目为什么存在、明确不做什么、代理可以自行决定什么）；对已有代码的项目，还会为每个能力写一份 spec，为有约定的路径写 rules。然后用一次简短的交流请你确认。这些文件你永远不需要手写。
 
 `keelson init` 还会引用它找到的架构说明、决策记录、CI 和 issue 跟踪器，而不是复制它们。见[已有项目](docs/zh/existing-projects.md)。
 
@@ -98,6 +98,8 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 | 路径 | 内容 | 谁来写 |
 |---|---|---|
 | `.keelson/README.md` | 人类导航：先看什么、每个 Keelson 文件干什么、落地后什么会留下 | Keelson；`update` 刷新 |
+| `.keelson/workflow.md` | canonical 常驻执行主回路 | Keelson；`update` 刷新 |
+| `.keelson/skill/` | canonical `SKILL.md` 与按需 references | Keelson；`update` 刷新 |
 | `.keelson/INTENT.md` | 项目为什么存在、边界、硬约束、代理可以自行决定什么 | Agent 起草；负责人确认 |
 | `.keelson/ROADMAP.md` | 当前里程碑；之后的工作只写方向。有跟踪器时链接过去 | 你和代理 |
 | `.keelson/NOW.md` | 在做什么、卡在哪、下一步。现在时，整体重写 | 代理，在停下或落地时 |
@@ -135,9 +137,9 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 
 ## 它如何工作
 
-1. **一个常驻块**，不到 20 行，写在 `CLAUDE.md`、`AGENTS.md` 或 `GEMINI.md` 里。它说明 `.keelson/` 里有什么、如何给变更定大小、如何证明工作完成。
+1. **一个极薄的发现块**，写在 `CLAUDE.md`、`AGENTS.md` 或 `GEMINI.md` 里。它只把宿主指向 `.keelson/workflow.md` 和 `.keelson/skill/SKILL.md`，不再复制工作流。
 2. **两个 hook**（Claude Code）。一个在会话启动时打印路线图的 `Now`、`NOW.md`、活动变更和交接的下一步。另一个在每个提示词前打印一行 work 与 verification 状态，项目空闲时什么都不打印。Hook 注入状态，从不注入指令。
-3. **一个技能**，按需要路由。`SKILL.md` 约 50 行，为发现需求、定型需求、领域模型与术语表、上下文与影响、按纵向切片规划、工程视角、构建、验证、交接、落地、把新事实收敛回项目、调试各指向一个 reference。代理只读它需要的那一个。
+3. **一个 canonical 技能**，位于 `.keelson/skill/SKILL.md`，按需要路由到 references。各宿主的 skill 目录只留一个发现 shim，不再各复制一套 references。
 4. **一个薄 CLI**，只做机械性工作：搭脚手架、算指纹、合并 specs、记录证据、拒绝没有证据的落地。理解需求、分析影响、评审代码仍然由代理完成。
 
 技能里没有任何东西是对代理的门禁。门禁作用于工件。
@@ -179,7 +181,7 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 
 ## 支持的工具
 
-`keelson init` 接受每个工具一个标志，或 `--tools a,b`，或什么都不给（它探测本机已安装的工具）。每个项目都会安装通用兼容层：`AGENTS.md` 加 `.agents/skills/`。已经读取这套标准表面的宿主直接复用它；只有共享层缺少能力时，Keelson 才增加宿主原生表面。`keelson platforms` 打印完整表格，并标出本机已安装的工具。
+`keelson init` 接受每个工具一个标志，或 `--tools a,b`，或什么都不给（它探测本机已安装的工具）。每个项目都把 canonical 指导放在 `.keelson/`，外部只安装通用发现层：`AGENTS.md` 加 `.agents/skills/`。已有标准发现能力的宿主直接复用；必须增加宿主原生路径时，也只生成指向同一 `.keelson/` 真源的 shim。`keelson platforms` 打印完整表格，并标出本机已安装的工具。
 
 | 工具 | 说明文件 | 技能 | Hook | 可信度 |
 |---|---|---|---|---|
@@ -206,7 +208,7 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 
 | 命令 | 用途 |
 |---|---|
-| `keelson init` / `update` | 创建或刷新 `.keelson/`、引用、技能、常驻块、hook。`--dry-run` 预览 |
+| `keelson init` / `update` | 创建或刷新 canonical `.keelson/` 运行时、宿主发现 shim 与 hook。`--dry-run` 预览 |
 | `keelson context --paths <files>` | INTENT、ROADMAP、NOW、活动变更、引用、命中的 rules |
 | `keelson impact <files>` | 引用方、受影响的 specs 和 rules、重叠的活动变更 |
 | `keelson new <name>` | 搭建带 owner、分支、delta 基线的变更；`--worktree` 隔离 |
