@@ -153,18 +153,18 @@ changes/rename-buyer/
 
 官方矩阵有意控制在 7 个 CLI + 通用标准层：
 
-| 宿主 | 说明发现 | Skill 发现 | 依据 |
-|---|---|---|---|
-| Claude Code | `CLAUDE.md` | `.claude/skills/` | verified |
-| Codex CLI | `AGENTS.md` | `.agents/skills/` | verified |
-| OpenCode | `AGENTS.md` | `.agents/skills/` | documented |
-| Pi | `AGENTS.md` | `.agents/skills/` | documented |
-| Gemini CLI | `GEMINI.md` | `.agents/skills/` | documented |
-| Kiro CLI | `AGENTS.md` | `.kiro/skills/` | documented |
-| CodeBuddy CLI | `CODEBUDDY.md` | `.codebuddy/skills/` | documented |
-| 通用 Agent Skills 读取器 | `AGENTS.md` | `.agents/skills/` | fallback |
+| 宿主 | 说明发现 | Skill 发现 | Session focus | 依据 |
+|---|---|---|---|---|
+| Claude Code | `CLAUDE.md` | `.claude/skills/` | **native** | verified |
+| Codex CLI | `AGENTS.md` | `.agents/skills/` | degraded | verified |
+| OpenCode | `AGENTS.md` | `.agents/skills/` | degraded | documented |
+| Pi | `AGENTS.md` | `.agents/skills/` | degraded | documented |
+| Gemini CLI | `GEMINI.md` | `.agents/skills/` | degraded | documented |
+| Kiro CLI | `AGENTS.md` | `.kiro/skills/` | degraded | documented |
+| CodeBuddy CLI | `CODEBUDDY.md` | `.codebuddy/skills/` | degraded | documented |
+| 通用 Agent Skills 读取器 | `AGENTS.md` | `.agents/skills/` | degraded | fallback |
 
-只有发现路径经过真实验证或宿主官方文档支撑，并且通过相同 init/update/doctor/uninstall 契约的宿主，才叫 first-class。
+只有 discovery/lifecycle 路径经过真实验证或宿主官方文档支撑，并通过统一契约的宿主才叫 first-class。Session focus 是独立能力：`native` 表示 Keelson 已验证稳定 identity bridge；`degraded` 表示长期 work 仍正确，但有歧义的对话必须显式选择 change。
 
 ## 高可用不是附加项
 
