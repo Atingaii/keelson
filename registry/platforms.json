@@ -1,7 +1,7 @@
 {
   "version": 2,
   "updated": "2026-09-19",
-  "note": "First-class host adapters only. Every initialized project keeps canonical workflow/skill guidance under `.keelson/` and always installs the portable `AGENTS.md` + `.agents/skills/` discovery layer. `first-class` means the host's instruction/skill discovery paths are verified or documented, init/update/uninstall ownership is deterministic, and the shared adapter contract is covered by tests. Other Agent-Skills/AGENTS.md readers use the portable `agents` fallback rather than a guessed host-specific directory.",
+  "note": "First-class host adapters only. Every initialized project keeps canonical workflow/skill guidance under `.keelson/` and always installs the portable `AGENTS.md` + `.agents/skills/` discovery layer. `first-class` means the host's instruction/skill discovery paths are verified or documented, init/update/uninstall ownership is deterministic, and the shared adapter contract is covered by tests. Other Agent-Skills/AGENTS.md readers use the portable `agents` fallback rather than a guessed host-specific directory. Session focus is a separate capability: native means Keelson has a verified session-identity bridge; degraded means durable work remains correct but ambiguous sessions require explicit focus/change selection.",
   "platforms": {
     "claude": {
       "label": "Claude Code",
@@ -10,7 +10,8 @@
       "skillsDir": ".claude/skills",
       "hooks": true,
       "confidence": "verified",
-      "support": "first-class"
+      "support": "first-class",
+      "sessionFocus": "native"
     },
     "codex": {
       "label": "Codex CLI",
@@ -19,7 +20,8 @@
       "skillsDir": ".agents/skills",
       "hooks": false,
       "confidence": "verified",
-      "support": "first-class"
+      "support": "first-class",
+      "sessionFocus": "degraded"
     },
     "opencode": {
       "label": "OpenCode",
@@ -28,7 +30,8 @@
       "skillsDir": ".agents/skills",
       "hooks": false,
       "confidence": "documented",
-      "support": "first-class"
+      "support": "first-class",
+      "sessionFocus": "degraded"
     },
     "pi": {
       "label": "Pi coding agent",
@@ -37,7 +40,8 @@
       "skillsDir": ".agents/skills",
       "hooks": false,
       "confidence": "documented",
-      "support": "first-class"
+      "support": "first-class",
+      "sessionFocus": "degraded"
     },
     "gemini": {
       "label": "Gemini CLI",
@@ -46,7 +50,8 @@
       "skillsDir": ".agents/skills",
       "hooks": false,
       "confidence": "documented",
-      "support": "first-class"
+      "support": "first-class",
+      "sessionFocus": "degraded"
     },
     "kiro": {
       "label": "Kiro CLI",
@@ -55,7 +60,8 @@
       "skillsDir": ".kiro/skills",
       "hooks": false,
       "confidence": "documented",
-      "support": "first-class"
+      "support": "first-class",
+      "sessionFocus": "degraded"
     },
     "codebuddy": {
       "label": "CodeBuddy CLI",
@@ -64,7 +70,8 @@
       "skillsDir": ".codebuddy/skills",
       "hooks": false,
       "confidence": "documented",
-      "support": "first-class"
+      "support": "first-class",
+      "sessionFocus": "degraded"
     },
     "agents": {
       "label": "Portable AGENTS.md + Agent Skills",
@@ -74,7 +81,8 @@
       "hooks": false,
       "confidence": "documented",
       "support": "portable",
-      "examples": "Any host that reads AGENTS.md and/or the open Agent Skills `.agents/skills/` convention"
+      "examples": "Any host that reads AGENTS.md and/or the open Agent Skills `.agents/skills/` convention",
+      "sessionFocus": "degraded"
     }
   }
 }
