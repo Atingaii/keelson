@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { walk } from '../src/lib/fs.js';
 import { datedIdPatterns } from '../src/lib/models.js';
-import { applyProfile, stampVersion } from '../src/platforms/index.js';
+import { applyProfile, renderSkillFiles, stampVersion, workflowContent } from '../src/platforms/index.js';
 
 const ROOT = path.resolve('.');
 const patterns = datedIdPatterns();
@@ -55,10 +55,14 @@ test('resident instructions are discovery-only shims into .keelson', () => {
   }
 });
 
-test('repository dogfood runtime keeps canonical guidance under .keelson and only shims outside', () => {
-  const canonical = walk(path.join(ROOT, 'skills', 'keelson', 'references'));
-  const runtime = walk(path.join(ROOT, '.keelson', 'skill', 'references'));
-  assert.deepEqual(runtime, canonical);
+test('repository dogfood runtime exactly matches the generated lean canonical runtime and only shims outside', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  const rendered = renderSkillFiles('en', 'lean', pkg.version);
+  assert.deepEqual(walk(path.join(ROOT, '.keelson', 'skill')), rendered.map((f) => f.rel).sort());
+  for (const f of rendered) {
+    assert.equal(fs.readFileSync(path.join(ROOT, '.keelson', 'skill', f.rel), 'utf8'), f.content, `.keelson/skill/${f.rel}`);
+  }
+  assert.equal(fs.readFileSync(path.join(ROOT, '.keelson', 'workflow.md'), 'utf8'), workflowContent('en', false));
   for (const shim of ['.claude/skills/keelson', '.agents/skills/keelson']) {
     assert.deepEqual(walk(path.join(ROOT, shim)), ['SKILL.md']);
     assert.match(fs.readFileSync(path.join(ROOT, shim, 'SKILL.md'), 'utf8'), /\.keelson\/skill\/SKILL\.md/);
