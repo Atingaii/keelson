@@ -38,7 +38,7 @@ export function installTargets(tools, cfg = null) {
   for (const id of tools) {
     const p = platformFor(id, cfg);
     if (!p) throw new Error(`unknown tool "${id}". Known: ${PLATFORM_IDS.join(', ')}`);
-    push(p);
+    push({ ...p, hooks: Boolean(p.hooks && cfg?.hooks !== false) });
   }
   push(CROSS_TOOL);
   return targets;
