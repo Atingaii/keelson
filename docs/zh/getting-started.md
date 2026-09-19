@@ -20,7 +20,7 @@ cd your-project
 keelson init
 ```
 
-不带标志时，它选用本机已安装的编码工具。用每个工具一个标志点名你在用的那些（`keelson platforms` 列出全部）：
+不带标志时，它只自动选择本机已安装且发现路径已经 `verified/documented` 的宿主；`convention` 宿主只提示、不会静默开启。一个可靠宿主也没找到时，使用通用 `AGENTS.md` + `.agents/skills/` 层。用每个工具一个标志点名你在用的那些（`keelson platforms` 列出全部）：
 
 ```bash
 keelson init --claude --codex --cursor
@@ -54,7 +54,7 @@ Done. Open your agent in this directory and start talking.
   On first contact it reads the repository, drafts .keelson/INTENT.md, the specs, and the rules, and asks you to confirm before anything lands.
 ```
 
-`init` 从不覆盖 INTENT、NOW、specs、rules、活动 changes 等项目事实。由 Keelson 维护的运行时文件——`.keelson/README.md`、`.keelson/workflow.md`、`.keelson/skill/`——会被 `keelson update` 刷新。`.keelson/` 外只追加/替换 `CLAUDE.md`（或 `AGENTS.md`、`GEMINI.md`）中的发现块，并写入单文件 skill shim；标记块之外的用户内容原样保留。它找到的既有资料（架构说明、决策记录、CI、GitHub issues 页面）记录在 `config.yaml` 的 `refs` 下，只引用、不复制。如果 `package.json` 有 `lint`、`typecheck` 或 `test` 脚本，它们会成为检查命令。`keelson init --dry-run` 列出将要写入的内容而不真正写入。
+`init` 从不覆盖 INTENT、NOW、specs、rules、活动 changes 等项目事实。它还会把自己生成并负责的适配表面记录到 `.keelson/.managed.json`，这样后续 `update`、`uninstall`、`ablate` 能精确清理旧 Keelson 文件而不靠猜。由 Keelson 维护的运行时文件——`.keelson/README.md`、`.keelson/workflow.md`、`.keelson/skill/`——会被 `keelson update` 刷新。`.keelson/` 外只追加/替换 `CLAUDE.md`（或 `AGENTS.md`、`GEMINI.md`）中的发现块，并写入单文件 skill shim；标记块之外的用户内容原样保留。它找到的既有资料（架构说明、决策记录、CI、GitHub issues 页面）记录在 `config.yaml` 的 `refs` 下，只引用、不复制。如果 `package.json` 有 `lint`、`typecheck` 或 `test` 脚本，它们会成为检查命令。`keelson init --dry-run` 列出将要写入的内容而不真正写入。
 
 `keelson init --lang zh` 让 `.keelson/workflow.md`、canonical skill 和各宿主发现 shim 使用中文版。
 
