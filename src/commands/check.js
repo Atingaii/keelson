@@ -6,6 +6,7 @@ import { write, mkdirp, readOr } from '../lib/fs.js';
 import { loadAllChanges } from '../lib/changes.js';
 import { worktreeFingerprint } from '../lib/git.js';
 import { ok, fail, warn, heading, info } from '../lib/out.js';
+import { readSession } from '../lib/session.js';
 
 export function verifyLine(claim, results, tree) {
   return `### Verify: ${claim}\n${results.map((r) => `\`${r.cmd}\` exit ${r.exit}`).join('; ')}${tree ? ` · tree ${tree}` : ''}`;
@@ -44,9 +45,11 @@ export async function check({ flags, positional }, cwd = process.cwd()) {
   console.log(failed.length ? `${failed.length} failed` : 'all checks passed');
   if (flags.record !== undefined) {
     const all = loadAllChanges(p.changes);
-    const name = flags.change ?? (all.length === 1 ? all[0].name : null);
+    const focused = readSession(root).state?.change;
+    const focusedActive = focused && all.some((c) => c.name === focused) ? focused : null;
+    const name = flags.change ?? focusedActive ?? (all.length === 1 ? all[0].name : null);
     if (!name) {
-      warn(all.length ? `several active changes (${all.map((c) => c.name).join(', ')}); pass --change <name>` : 'no active change to record into');
+      warn(all.length ? `several active changes (${all.map((c) => c.name).join(', ')}); bind this session with \`keelson focus <name>\` or pass --change <name>` : 'no active change to record into');
     } else {
       const ledger = path.join(p.changes, name, 'ledger.md');
       const cur = readOr(ledger, `# Ledger — ${name}\n`);
