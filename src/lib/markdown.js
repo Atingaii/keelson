@@ -23,30 +23,7 @@ export function renderFrontmatter(data) {
 /** Split into sections by heading level (default: h2). Returns [{title, level, body}]. */
 export function sections(text, level = 2) {
   text = normalizeNewlines(text);
-  const re = new RegExp(`^#{${level}}\\s+(.+)/** Small, dependency-free helpers for the Markdown shapes Keelson relies on. */
-
-const normalizeNewlines = (text) => String(text ?? '').replace(/\r\n?/g, '\n');
-
-export function parseFrontmatter(text) {
-  text = normalizeNewlines(text);
-  const m = text.match(/^---\n([\s\S]*?)\n---\n?/);
-  if (!m) return { data: {}, body: text };
-  const data = {};
-  for (const line of m[1].split('\n')) {
-    const mm = line.match(/^([A-Za-z_][\w-]*):\s*(.*)$/);
-    if (mm) data[mm[1]] = mm[2].trim().replace(/^["']|["']$/g, '');
-  }
-  return { data, body: text.slice(m[0].length) };
-}
-
-export function renderFrontmatter(data) {
-  return `---\n${Object.entries(data)
-    .map(([k, v]) => `${k}: ${v}`)
-    .join('\n')}\n---\n`;
-}
-
-/** Split into sections by heading level (default: h2). Returns [{title, level, body}]. */
-, 'm');
+  const re = new RegExp(`^#{${level}}\\s+(.+)$`, 'm');
   const lines = text.split('\n');
   const out = [];
   let cur = null;
