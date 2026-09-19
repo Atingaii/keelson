@@ -155,24 +155,25 @@ test('no-hooks is persistent and can be explicitly re-enabled', () => {
   run(dir, ['doctor', '--json'], { env });
 });
 
-test('fresh init without a reliable detected host uses the portable agents layer', async () => {
+test('fresh init auto-detects only first-class hosts and otherwise uses the portable layer', async () => {
   const { chooseDetectedTools } = await import('../src/commands/init.js');
   const none = chooseDetectedTools({});
   assert.deepEqual(none.tools, ['agents']);
   assert.equal(none.portableFallback, true);
 
-  const conventionOnly = chooseDetectedTools({
+  const retiredOrUnknown = chooseDetectedTools({
+    cursor: { installed: true },
     snow: { installed: true },
-    reasonix: { installed: true },
   });
-  assert.deepEqual(conventionOnly.tools, ['agents']);
-  assert.deepEqual(conventionOnly.conventionDetected.sort(), ['reasonix', 'snow']);
+  assert.deepEqual(retiredOrUnknown.tools, ['agents']);
+  assert.equal(retiredOrUnknown.portableFallback, true);
 
   const reliable = chooseDetectedTools({
     codex: { installed: true },
-    snow: { installed: true },
+    pi: { installed: true },
+    cursor: { installed: true },
   });
-  assert.deepEqual(reliable.tools, ['codex']);
+  assert.deepEqual(reliable.tools.sort(), ['codex', 'pi']);
   assert.equal(reliable.portableFallback, false);
 });
 
