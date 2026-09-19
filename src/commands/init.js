@@ -67,7 +67,6 @@ export function ensureGitignore(root) {
   if (!hasLegacy) add += '.keelson/.local/\n';
   write(gi, `${cur.replace(/\n*$/, cur ? '\n' : '')}# Keelson: per-machine runtime state and check evidence\n${add}`);
   return true;
-  return true;
 }
 
 export async function init({ flags }, cwd = process.cwd()) {
