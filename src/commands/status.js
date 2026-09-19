@@ -2,7 +2,8 @@ import path from 'node:path';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { readOr, listDirs } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
-import { loadAllChanges, verificationStatus, sharedContracts } from '../lib/changes.js';
+import { loadAllChanges, verificationStatus, derivedWorkStatus, sharedContracts } from '../lib/changes.js';
+import { readSession } from '../lib/session.js';
 import { worktreeFingerprint, headSha, lastTag, foldedSince, gitStatusShort, isGitRepo } from '../lib/git.js';
 import { heading, dim, warn } from '../lib/out.js';
 
@@ -14,6 +15,8 @@ export function projectStatus(root) {
   const head = headSha(root);
   const tag = lastTag(root);
   const dirty = gitStatusShort(root) ?? [];
+  const session = readSession(root);
+  const focus = session.state?.change && changes.some((c) => c.name === session.state.change) ? session.state.change : null;
   const rows = changes.map((c) => {
     const verification = verificationStatus(c, fp);
     const blockedBy = c.depends.filter((d) => changes.some((x) => x.name === d));
@@ -23,7 +26,7 @@ export function projectStatus(root) {
       tier: c.tier,
       owner: c.owner,
       branch: c.branch,
-      work: c.work,
+      work: derivedWorkStatus(c, fp),
       verification,
       release: c.release ?? 'unreleased',
       progress: c.progress,
@@ -47,6 +50,8 @@ export function projectStatus(root) {
     specs: listDirs(p.specs),
     specsPath: p.specsRel,
     now: readOr(p.now).trim(),
+    focus,
+    sessionAvailable: session.available,
     changes: rows,
     conflicts: sharedContracts(changes),
     release: tag ? { lastTag: tag, landedSince: foldedSince(root, tag) } : null,
@@ -63,7 +68,7 @@ export async function status({ flags }, cwd = process.cwd()) {
     return 0;
   }
   heading(`Keelson — ${path.basename(root)}`);
-  console.log(`${s.specs.length} capabilit${s.specs.length === 1 ? 'y' : 'ies'} in ${s.specsPath} · ${s.changes.length} active change${s.changes.length === 1 ? '' : 's'}${s.head ? ` · HEAD ${s.head}` : ''}${s.dirty ? ` · ${s.dirty} uncommitted` : ''}`);
+  console.log(`${s.specs.length} capabilit${s.specs.length === 1 ? 'y' : 'ies'} in ${s.specsPath} · ${s.changes.length} active change${s.changes.length === 1 ? '' : 's'}${s.focus ? ` · focus ${s.focus}` : ''}${s.head ? ` · HEAD ${s.head}` : ''}${s.dirty ? ` · ${s.dirty} uncommitted` : ''}`);
   console.log('');
   if (!s.changes.length) console.log(dim('No change in flight.'));
   for (const c of s.changes) {
