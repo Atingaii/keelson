@@ -15,7 +15,7 @@ Keelson is three surfaces in the agent's environment and one human-readable dire
 - to write `handoff.md` when stopping and check the worktree when resuming;
 - that the `keelson` skill holds the details.
 
-For Cursor the same text is also written to `.cursor/rules/keelson.mdc` with `alwaysApply: true`. Independently of the selected host, every initialized project also receives `AGENTS.md` plus `.agents/skills/keelson/` as the portable compatibility layer.
+Independently of the selected host, every initialized project receives `AGENTS.md` plus `.agents/skills/keelson/` as the portable compatibility layer. A host that already reads this surface reuses it instead of receiving a duplicate copy. Native instruction or skill paths are generated only where they add host-specific capability.
 
 ## Hooks (Claude Code)
 
