@@ -6,7 +6,7 @@ Keelson 面向用户只有一条流程：
 
 > **运行一次 `keelson init`，之后继续像原来一样和 Coding Agent 对话。**
 
-从 Explore、quick/spec 变更、handoff、验证、落地、bug 修复，到升级和卸载的完整故事见[完整用户流程](user-flow.md)。
+从连续追问、session 恢复、quick/spec 变更、显式 transfer handoff、验证、自动 ready/land、bug 修复，到升级和卸载的完整故事见[完整用户流程](user-flow.md)。
 
 ## 安装
 
@@ -92,16 +92,17 @@ Fresh init 刻意保持很小：
 - `rules/` —— 稳定的路径作用域工程不变量需要跨会话保存；
 - `specs/` —— 可观察行为需要长期契约；
 - `changes/` —— 非平凡工作正在进行；
-- `.local/` —— 产生本机验证证据。
+- `.runtime/sessions/` —— 宿主/session identity 可以保存本地 focus pointer 时；
+- `.runtime/evidence/` —— 产生本机验证输出时。
 
-quick change 最开始只有 `change.md`。spec 级变更还会有任务计划和行为 delta。真正发生验证事件或跨会话交接之后，ledger/handoff 才出现。
+quick change 最开始只有 `change.md`。spec 级变更还会有任务计划和行为 delta。真正发生验证事件后 ledger 才出现；handoff 只在显式换人/换机器交接时出现，普通新聊天使用本地 session focus/candidate 恢复。
 
 ## 用户可能会主动运行的命令
 
 ```bash
 keelson status
 ```
-查看活动工作、verification 是否新鲜、open questions、handoff 和 release 状态。
+查看活动工作（包括机械推导的 `ready`）、当前 session focus、verification 新鲜度、open questions、transfer handoff 和 release 状态。
 
 ```bash
 keelson doctor
