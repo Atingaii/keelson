@@ -11,6 +11,6 @@
 - **RECONCILE** —— 把稳定事实折叠回 specs/rules/glossary/NOW；跨会话未完成工作用 `keelson handoff <name>`。
 - **工件按需出现。** 空文档不是进度。ROADMAP、GLOSSARY、rules、specs、tasks、ledger、handoff 只有在承载下一位人或下一会话需要的信息时才创建。
 - 同类失败反复出现时用 `keelson retro` 提升为作用域 rule 或可执行 fitness check；自动化接管不变量后删掉重复提示词。
-- 如果 `NOW.md` 以“First contact”开头，就从仓库起草 `INTENT.md`，并只创建有真实证据支撑的 specs/rules，然后让所有者确认或纠正。
+- 如果 `NOW.md` 以“First contact”开头，就从仓库起草 `INTENT.md` 并让所有者确认或纠正。不要盘点整个仓库；只有真实工作暴露出长期契约或不变量时才创建 specs/rules。
 
 canonical 任务路由器是 `.keelson/skill/SKILL.md`。它先识别用户意图，再只加载该意图需要的 references。
