@@ -153,7 +153,7 @@ export function parseDecisions(body) {
     .filter((d) => d.text && !/^…|\{\{|^<[a-z]/.test(d.text));
 }
 
-export const WORK_STATUSES = ['clarifying', 'in-progress', 'blocked', 'in-review', 'integrated', 'cancelled'];
+export const WORK_STATUSES = ['clarifying', 'in-progress', 'blocked', 'ready', 'in-review', 'integrated', 'cancelled'];
 
 export const EFFORT_TIERS = ['light', 'standard', 'deep'];
 export const effortRank = (t) => EFFORT_TIERS.indexOf(t);
