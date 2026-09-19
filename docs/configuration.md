@@ -108,15 +108,14 @@ Where each tool reads its instructions and skills comes from the registry shippe
 
 ```yaml
 platforms:
-  cursor:
-    skillsDir: .cursor/skills
-    rulesFile: .cursor/rules/keelson.mdc
+  opencode:
+    skillsDir: .opencode/skills
   kiro:
     instructions: .kiro/steering/keelson.md
     instructionsFormat: kiro
 ```
 
-Keys: `instructions` (the file that receives the resident block), `instructionsFormat` (`kiro` writes a standalone steering file with an inclusion header instead of a marked block), `skillsDir` (where the one-file `keelson/SKILL.md` discovery shim is installed), `rulesFile` and `rulesFormat` (`mdc` for a rule file with frontmatter, `md` for plain Markdown), and `hooks` (`true` only for a tool that runs hooks the way Claude Code does). Overrides apply to `init`, `update`, `doctor`, `uninstall`, and `ablate`. Use them when a tool moves its directories, or when a `convention` entry does not match your install.
+Keys: `instructions` (the file that receives the discovery block), `instructionsFormat` (`kiro` writes a standalone steering file with an inclusion header instead of a marked block), `skillsDir` (where the one-file `keelson/SKILL.md` discovery shim is installed), `rulesFile` and `rulesFormat` (`mdc` for a rule file with frontmatter, `md` for plain Markdown), and `hooks` (`true` only for a tool that runs hooks the way Claude Code does). Overrides apply to `init`, `update`, `doctor`, `uninstall`, and `ablate`. Use them when a tool moves its directories, or when a `convention` entry does not match your install.
 
 ### Migration
 
