@@ -8,6 +8,7 @@ import { parseSpec, parseDelta, renderSpec, parseFrontmatter } from '../lib/mark
 import { worktreeFingerprint } from '../lib/git.js';
 import { specBase } from './new.js';
 import { ok, warn, info, heading } from '../lib/out.js';
+import { clearChangeBindings, readSession } from '../lib/session.js';
 
 export function mergeDelta(mainText, deltaText, capability) {
   const main = mainText ? parseSpec(mainText) : { purpose: '', requirements: [], decisions: [] };
@@ -83,8 +84,10 @@ export async function land({ flags, positional }, cwd = process.cwd()) {
   let name = positional[0];
   if (!name) {
     const all = loadAllChanges(p.changes);
-    if (all.length === 1) name = all[0].name;
-    else throw new Error(all.length ? `several active changes (${all.map((c) => c.name).join(', ')}); name one` : 'no active change to land');
+    const focused = readSession(root).state?.change;
+    if (focused && all.some((c) => c.name === focused)) name = focused;
+    else if (all.length === 1) name = all[0].name;
+    else throw new Error(all.length ? `several active changes (${all.map((c) => c.name).join(', ')}); bind one with \`keelson focus <name>\` or name one` : 'no active change to land');
   }
   const c = loadChange(p.changes, name);
   if (!c) throw new Error(`no change named "${name}"`);
@@ -138,12 +141,13 @@ export async function land({ flags, positional }, cwd = process.cwd()) {
     if (!dry) rmrf(c.dir);
     ok(`removed .keelson/changes/${name} (ledger and handoff stay in git history)`);
   }
+  if (!dry) clearChangeBindings(root, name);
   if (flags.now) {
     // Accept text with or without its own "# Now" heading; never write the heading twice.
     const body = String(flags.now).trim().replace(/^#\s*Now\s*\n+/i, '');
     if (!dry) write(p.now, `# Now\n\n${body}\n`);
     ok('NOW.md rewritten');
-  } else info('rewrite .keelson/NOW.md now (present tense: active / blocked / next), or pass --now "<text>"');
+  } else info('session focus was cleared for the landed change; NOW.md is optional project-level context, not the source of work lifecycle state');
   info('commit the landing together with the last code change; release status is derived from git tags');
   if (dry) warn('dry run: nothing written');
   return 0;
@@ -153,8 +157,14 @@ export async function cancel({ flags, positional }, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
   const cfg = loadConfig(projectPaths(root).config);
   const p = projectPaths(root, cfg);
-  const name = positional[0];
-  if (!name) throw new Error('usage: keelson cancel <name> [--reason "<why>"]');
+  let name = positional[0];
+  if (!name) {
+    const all = loadAllChanges(p.changes);
+    const focused = readSession(root).state?.change;
+    if (focused && all.some((c) => c.name === focused)) name = focused;
+    else if (all.length === 1) name = all[0].name;
+    else throw new Error('usage: keelson cancel <name> [--reason "<why>"]');
+  }
   const c = loadChange(p.changes, name);
   if (!c) throw new Error(`no change named "${name}"`);
   const reason = flags.reason ? String(flags.reason) : 'no reason given';
@@ -163,6 +173,7 @@ export async function cancel({ flags, positional }, cwd = process.cwd()) {
   const dest = path.join(p.archive, `${new Date().toISOString().slice(0, 10)}-${name}-cancelled`);
   mkdirp(p.archive);
   fs.renameSync(c.dir, dest);
+  clearChangeBindings(root, name);
   ok(`cancelled ${name} → ${path.relative(root, dest)} (nothing merged into specs)`);
   info('if a decision was ruled out for good, record it in the affected spec\'s Decisions so the path is not retried');
   return 0;
