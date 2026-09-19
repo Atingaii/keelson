@@ -50,16 +50,6 @@ Walk the decision tree front to back: resolve the blocking decision before its d
 
 Open with the assumption check when the change is architectural: "What are we assuming here that, if false, changes the answer?" State your own answer before asking for theirs.
 
-<!-- guided -->
-### Question order that usually works
-1. Outcome and who it is for.
-2. Scope boundary: what is out.
-3. Existing behaviour that must not change.
-4. Data shape and lifecycle.
-5. Failure modes and their handling.
-6. Migration, rollback, compatibility.
-7. Acceptance: what the user will check.
-<!-- /guided -->
 
 ## Authorization
 <!-- keelson: id=shape.authorization | without: either every step waits for approval or the agent decides product questions and production actions by itself | sunset: never -->
