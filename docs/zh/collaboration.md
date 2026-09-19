@@ -43,7 +43,7 @@ by: ann
 4. 在旧验证上继续构建之前先重新运行 `keelson check --record`；任何编辑之后它都算过期。
 5. 从**下一步**接着做；再次停下时更新 `handoff.md` 和 `NOW.md`。
 
-会话启动 hook 打印每个活动变更的下一步，所以在 Claude Code 上代理在读任何东西之前就看到了它。在其他工具上，常驻块要求它先运行 `keelson context`。
+会话启动 hook 打印每个活动变更的下一步，所以在 Claude Code 上代理在读任何东西之前就看到了它。在其他工具上，发现块先把它指向 `.keelson/workflow.md`，其中 ORIENT 步骤要求先运行 `keelson context`。
 
 ### 什么提交、什么留在本地
 
