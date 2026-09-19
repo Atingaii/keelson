@@ -174,13 +174,7 @@ export async function init({ flags }, cwd = process.cwd()) {
   };
   if (seed('INTENT.md', p.intent)) ok('.keelson/INTENT.md (the agent drafts it from the code on first contact; confirm it when it asks)');
   if (seed('NOW.md', p.now)) ok('.keelson/NOW.md');
-  if (seed('ROADMAP.md', p.roadmap)) ok('.keelson/ROADMAP.md (current milestone; link your tracker instead of duplicating it)');
-  if (seed('GLOSSARY.md', p.glossary)) ok('.keelson/GLOSSARY.md (shared vocabulary; fill it when two words start meaning the same thing)');
-  if (seed('rules-index.md', p.rulesIndex)) ok('.keelson/rules/index.md');
-  if (seed('rules-general.md', path.join(p.rules, 'general.md'))) ok('.keelson/rules/general.md');
-  mkdirp(p.specs);
-  mkdirp(p.changes);
-  if (!exists(path.join(p.changes, '.gitkeep'))) write(path.join(p.changes, '.gitkeep'), '');
+  // Progressive disclosure: ROADMAP, GLOSSARY, rules/, specs/, and changes/ are created only when the project actually needs them.
   if (ensureGitignore(root)) ok('.gitignore: .keelson/.local/ (session state and evidence stay on this machine)');
   saveConfig(p.config, cfg);
   ok(`.keelson/config.yaml${rawVersion < CONFIG_VERSION ? ` (migrated v${rawVersion} → v${CONFIG_VERSION})` : ''}`);
@@ -201,7 +195,7 @@ export async function init({ flags }, cwd = process.cwd()) {
     }
   }
   writeManagedState(root, targets, PKG_VERSION);
-  ok('.keelson/.managed.json (generated-surface ownership)');
+  ok('.keelson/manifest.json (generated-surface ownership)');
 
   try {
     detectAndCache();
