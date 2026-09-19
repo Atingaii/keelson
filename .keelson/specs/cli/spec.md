@@ -8,7 +8,7 @@ Running `keelson init` or `keelson update` twice SHALL produce the same files as
 
 ### Scenario: Second run
 - WHEN `keelson update` runs on an initialised project
-- THEN the instructions file contains exactly one resident block and `.claude/settings.json` contains exactly one Keelson hook per event
+- THEN `.keelson/workflow.md` and `.keelson/skill/` contain one canonical runtime, each host skill directory contains only its discovery `SKILL.md`, the instructions file contains exactly one discovery block, and `.claude/settings.json` contains exactly one Keelson hook per event
 
 ## Requirement: Landing requires evidence that matches the code
 `keelson land` SHALL refuse a change while any task or acceptance item is unchecked, an open question remains, verification is missing, failed, partial, or stale, an assumed decision is unconfirmed, a delta's base spec has drifted, or a breaking change has no Rollout section, unless `--force` is passed; each blocker is named.
