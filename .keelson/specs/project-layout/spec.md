@@ -4,7 +4,7 @@
 The on-disk contract between a project and every agent that works in it.
 
 ## Requirement: Minimal standing control plane
-A fresh `.keelson/` SHALL contain only package-owned navigation/runtime (`README.md`, `workflow.md`, `skill/`), user-controlled `config.yaml`, package-owned `manifest.json`, and the two core project facts `INTENT.md` and `NOW.md`. ROADMAP, GLOSSARY, rules, specs, changes, ledger, tasks, handoff, hooks, and local evidence SHALL appear only when they carry information or the selected host requires them.
+A fresh `.keelson/` SHALL contain only package-owned navigation/runtime (`README.md`, `workflow.md`, `skill/`), user-controlled `config.yaml`, package-owned `manifest.json`, and the two core project facts `INTENT.md` and `NOW.md`. ROADMAP, GLOSSARY, rules, specs, changes, ledger, tasks, transfer handoff, hooks, and local runtime/evidence SHALL appear only when they carry information or the selected host requires them. `.keelson/.runtime/` SHALL be gitignored and SHALL never be authoritative for durable work completion.
 
 ### Scenario: Fresh init
 - WHEN `keelson init` runs in a directory without `.keelson/`
@@ -58,8 +58,34 @@ Keelson SHALL track the generated discovery surfaces it owns and reconcile actua
 ### Scenario: Doctor detects drift
 - WHEN a package-owned canonical reference, discovery shim, or registered hook script differs from the version Keelson would generate
 - THEN `keelson doctor` reports actionable drift and `keelson update` can restore the package-owned surface
+## Requirement: Session focus is not work state
+Keelson SHALL model an AI conversation/session as an ephemeral machine-local pointer to a durable active change. Session creation, loss, idle time, topic explanation, compaction, or window close SHALL NOT complete, cancel, archive, or land a change.
+
+### Scenario: Close a conversation mid-change
+- GIVEN a durable active change is focused by one session
+- WHEN that session ends or its runtime pointer disappears
+- THEN the change remains active with unchanged work/verification state
+
+### Scenario: Parallel conversations
+- GIVEN two sessions have stable identities
+- WHEN each session focuses a different active change
+- THEN session-local pointers are stored separately under `.keelson/.runtime/sessions/`, and change-targeting commands prefer only the caller's focus
+
+### Scenario: Ambiguous degraded host
+- GIVEN session identity is unavailable and multiple active changes are plausible
+- WHEN `keelson focus --auto` runs
+- THEN Keelson SHALL NOT persist a shared/global focus and SHALL require explicit disambiguation
+
+### Scenario: Mechanical readiness
+- GIVEN the active change has complete required tasks/acceptance, no blocking open questions or assumptions, required rollout, and fresh passing verification on the current tree
+- WHEN status is evaluated
+- THEN its derived work state is `ready` without requiring the owner to say that the task is finished
+
+### Scenario: Land clears focus
+- WHEN a change lands or is cancelled
+- THEN every local session pointer that referenced that change is removed without affecting other sessions
 ## Requirement: Progressive change workspace
-Every non-trivial change SHALL start with `changes/<name>/change.md`. Additional artifacts SHALL be created only when they carry state: `tasks.md` for an explicit multi-step/spec plan, `ledger.md` after the first ruling/failure/dispatch/verification event, `handoff.md` when work crosses a session/person boundary, and delta specs only for behaviour-contract changes. The change SHALL leave active `changes/` when it lands or is cancelled.
+Every non-trivial change SHALL start with `changes/<name>/change.md`. Additional artifacts SHALL be created only when they carry state: `tasks.md` for an explicit multi-step/spec plan, `ledger.md` after the first ruling/failure/dispatch/verification event, `handoff.md` only for explicit ownership/machine transfer, and delta specs only for behaviour-contract changes. The change SHALL leave active `changes/` when it lands or is cancelled.
 
 ### Scenario: Quick change starts small
 - WHEN `keelson new <name> --tier quick` runs
@@ -70,8 +96,8 @@ Every non-trivial change SHALL start with `changes/<name>/change.md`. Additional
 - THEN `change.md`, `tasks.md`, and the delta spec exist, while `ledger.md` remains absent until an event is recorded
 
 ### Scenario: Handoff
-- WHEN `keelson handoff <name>` runs
-- THEN `handoff.md` exists with `at`, `updated`, and `by` in its frontmatter, and the session-start hook prints its next step
+- WHEN `keelson handoff <name>` runs for an explicit ownership/machine transfer
+- THEN `handoff.md` exists with `at`, `updated`, and `by` in its frontmatter; ordinary session resume does not require this artifact
 
 ## Requirement: Existing material is referenced, not copied
 `keelson init` SHALL detect existing architecture documents, decision records, CI configuration, and a GitHub issue tracker, record them under `config.yaml → refs`, and print them in `keelson context`.
@@ -92,8 +118,9 @@ The agent SHALL be able to find every rule that applies to a path from `rules/in
 - THEN the output includes the content of `rules/api.md`
 
 ## Decisions
+- project-layout: session focus is ephemeral and machine-local while change state is durable and committed; using chat-window lifetime or a global current-task pointer as work state was rejected because users keep asking questions, close sessions unpredictably, and may run parallel agents
 - project-layout: optional knowledge and change artifacts are lazy; pre-creating empty ROADMAP/GLOSSARY/rules/specs/tasks/ledger/handoff was rejected because empty scaffolding increases cognitive load without preserving any truth
-- project-layout: continuation state that another machine needs (handoff.md, NOW.md) is committed; check output and session scratch stay in `.keelson/.local/`; gitignoring everything was rejected because a team cannot resume from files that never leave one laptop
+- project-layout: continuation state that another machine needs (handoff.md, NOW.md) is committed; check output and session focus stay in `.keelson/.runtime/`; gitignoring everything was rejected because a team cannot resume from files that never leave one laptop
 - project-layout: decisions carry a state (confirmed or assumed) inside change.md rather than in a separate approvals file; a separate file was rejected because approval and decision would drift apart
 - project-layout: changes fold into specs and git history by default; a permanent archive directory was rejected because it duplicates what git already keeps and grows without bound
 - project-layout: decisions live inside the affected spec rather than in a separate decision log, so the reason for a behaviour sits next to the behaviour
