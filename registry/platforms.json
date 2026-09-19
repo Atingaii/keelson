@@ -1,7 +1,7 @@
 {
-  "version": 1,
+  "version": 2,
   "updated": "2026-09-19",
-  "note": "Where each coding tool discovers Keelson instructions and the one-file skill shim. Canonical workflow and skill guidance live only under `.keelson/` in each initialized project. `confidence` says how a discovery path was established: verified = exercised in a real session by the maintainers; documented = taken from the tool's published documentation; convention = follows the tool's directory convention and should be confirmed with `keelson doctor` in your project. Every project installs the portable discovery layer (`AGENTS.md` + `.agents/skills/`). Host-specific surfaces exist only when they add discovery capability. Override any discovery path under `platforms.<id>` in config.yaml.",
+  "note": "First-class host adapters only. Every initialized project keeps canonical workflow/skill guidance under `.keelson/` and always installs the portable `AGENTS.md` + `.agents/skills/` discovery layer. `first-class` means the host's instruction/skill discovery paths are verified or documented, init/update/uninstall ownership is deterministic, and the shared adapter contract is covered by tests. Other Agent-Skills/AGENTS.md readers use the portable `agents` fallback rather than a guessed host-specific directory.",
   "platforms": {
     "claude": {
       "label": "Claude Code",
@@ -9,7 +9,8 @@
       "instructions": "CLAUDE.md",
       "skillsDir": ".claude/skills",
       "hooks": true,
-      "confidence": "verified"
+      "confidence": "verified",
+      "support": "first-class"
     },
     "codex": {
       "label": "Codex CLI",
@@ -17,15 +18,8 @@
       "instructions": "AGENTS.md",
       "skillsDir": ".agents/skills",
       "hooks": false,
-      "confidence": "verified"
-    },
-    "cursor": {
-      "label": "Cursor",
-      "bin": "cursor-agent",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".agents/skills",
-      "hooks": false,
-      "confidence": "documented"
+      "confidence": "verified",
+      "support": "first-class"
     },
     "opencode": {
       "label": "OpenCode",
@@ -33,7 +27,17 @@
       "instructions": "AGENTS.md",
       "skillsDir": ".agents/skills",
       "hooks": false,
-      "confidence": "documented"
+      "confidence": "documented",
+      "support": "first-class"
+    },
+    "pi": {
+      "label": "Pi coding agent",
+      "bin": "pi",
+      "instructions": "AGENTS.md",
+      "skillsDir": ".agents/skills",
+      "hooks": false,
+      "confidence": "documented",
+      "support": "first-class"
     },
     "gemini": {
       "label": "Gemini CLI",
@@ -41,150 +45,36 @@
       "instructions": "GEMINI.md",
       "skillsDir": ".agents/skills",
       "hooks": false,
-      "confidence": "documented"
-    },
-    "copilot": {
-      "label": "GitHub Copilot",
-      "bin": "copilot",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".agents/skills",
-      "hooks": false,
-      "confidence": "documented"
+      "confidence": "documented",
+      "support": "first-class"
     },
     "kiro": {
-      "label": "Kiro",
+      "label": "Kiro CLI",
       "bin": "kiro-cli",
       "instructions": "AGENTS.md",
       "skillsDir": ".kiro/skills",
       "hooks": false,
-      "confidence": "documented"
-    },
-    "kilo": {
-      "label": "Kilo Code",
-      "bin": null,
-      "instructions": "AGENTS.md",
-      "skillsDir": ".agents/skills",
-      "hooks": false,
-      "confidence": "documented"
-    },
-    "antigravity": {
-      "label": "Antigravity",
-      "bin": "agy",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".agent/skills",
-      "rulesFile": ".agent/rules/keelson.md",
-      "rulesFormat": "md",
-      "hooks": false,
-      "confidence": "convention"
-    },
-    "devin": {
-      "label": "Devin",
-      "bin": "devin",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".devin/skills",
-      "hooks": false,
-      "confidence": "convention"
-    },
-    "qoder": {
-      "label": "Qoder",
-      "bin": "qoder",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".qoder/skills",
-      "hooks": false,
-      "confidence": "documented"
+      "confidence": "documented",
+      "support": "first-class"
     },
     "codebuddy": {
-      "label": "CodeBuddy",
+      "label": "CodeBuddy CLI",
       "bin": "codebuddy",
-      "instructions": "AGENTS.md",
+      "instructions": "CODEBUDDY.md",
       "skillsDir": ".codebuddy/skills",
-      "rulesFile": ".codebuddy/rules/keelson.md",
-      "rulesFormat": "md",
       "hooks": false,
-      "confidence": "convention"
-    },
-    "droid": {
-      "label": "Droid",
-      "bin": "droid",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".factory/skills",
-      "hooks": false,
-      "confidence": "convention"
-    },
-    "pi": {
-      "label": "Pi Agent",
-      "bin": "pi",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".pi/skills",
-      "hooks": false,
-      "confidence": "convention"
-    },
-    "ohmypi": {
-      "label": "Oh My Pi",
-      "bin": "omp",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".pi/skills",
-      "hooks": false,
-      "confidence": "convention"
-    },
-    "reasonix": {
-      "label": "Reasonix",
-      "bin": "reasonix",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".reasonix/skills",
-      "hooks": false,
-      "confidence": "convention"
-    },
-    "zcode": {
-      "label": "ZCode",
-      "bin": "zcode",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".zcode/skills",
-      "hooks": false,
-      "confidence": "convention"
-    },
-    "trae": {
-      "label": "Trae",
-      "bin": "trae",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".trae/skills",
-      "rulesFile": ".trae/rules/keelson.md",
-      "rulesFormat": "md",
-      "hooks": false,
-      "confidence": "convention"
-    },
-    "grok": {
-      "label": "Grok Build",
-      "bin": "grok",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".grok/skills",
-      "hooks": false,
-      "confidence": "convention"
-    },
-    "kimi": {
-      "label": "Kimi Code",
-      "bin": "kimi",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".kimi/skills",
-      "hooks": false,
-      "confidence": "convention"
-    },
-    "snow": {
-      "label": "Snow CLI",
-      "bin": "snow",
-      "instructions": "AGENTS.md",
-      "skillsDir": ".snow/skills",
-      "hooks": false,
-      "confidence": "convention"
+      "confidence": "documented",
+      "support": "first-class"
     },
     "agents": {
-      "label": "AGENTS.md + .agents/skills readers",
+      "label": "Portable AGENTS.md + Agent Skills",
       "bin": null,
       "instructions": "AGENTS.md",
       "skillsDir": ".agents/skills",
       "hooks": false,
       "confidence": "documented",
-      "examples": "Amp, Cline, Deep Agents, Firebender, Warp"
+      "support": "portable",
+      "examples": "Any host that reads AGENTS.md and/or the open Agent Skills `.agents/skills/` convention"
     }
   }
 }
