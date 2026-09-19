@@ -47,7 +47,7 @@ The session-start hook prints each active change's next step, so on Claude Code 
 
 | Information | Location | In git |
 |---|---|---|
-| `NOW.md`, `handoff.md`, `ledger.md`, change artifacts | `.keelson/` | Yes |
+| `NOW.md` and whichever change artifacts actually exist (`handoff.md`, `ledger.md`, etc.) | `.keelson/` | Yes |
 | Check output, per-machine state | `.keelson/.local/` | No, added to `.gitignore` by `init` |
 
 Anything a colleague on another machine would need is committed.

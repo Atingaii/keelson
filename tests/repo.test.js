@@ -70,6 +70,23 @@ test('every guidance section carries without and sunset; SKILL.md stays short', 
   }
 });
 
+test('canonical skill exposes a six-intent user mental model', () => {
+  for (const lang of ['skills/keelson', 'skills/zh/keelson']) {
+    const skill = fs.readFileSync(path.join(ROOT, lang, 'SKILL.md'), 'utf8');
+    for (const intent of ['Explore', 'Change', 'Fix', 'Resume', 'Finish', 'Improve']) assert.match(skill, new RegExp(`\\b${intent}\\b`), `${lang}: ${intent}`);
+    assert.match(skill, /Artifacts are containers for information|工件是信息容器/);
+  }
+});
+
+test('documentation home and complete user-flow guide exist in both languages', () => {
+  for (const file of ['README.md', 'user-flow.md']) {
+    assert.ok(fs.existsSync(path.join(ROOT, 'docs', file)), `docs/${file}`);
+    assert.ok(fs.existsSync(path.join(ROOT, 'docs', 'zh', file)), `docs/zh/${file}`);
+  }
+  assert.match(fs.readFileSync(path.join(ROOT, 'docs', 'user-flow.md'), 'utf8'), /init once, talk normally/i);
+  assert.match(fs.readFileSync(path.join(ROOT, 'docs', 'zh', 'user-flow.md'), 'utf8'), /init 一次，正常对话/);
+});
+
 test('resident instructions are discovery-only shims into .keelson', () => {
   for (const lang of ['skills/keelson', 'skills/zh/keelson']) {
     const block = fs.readFileSync(path.join(ROOT, lang, 'templates', 'resident-block.md'), 'utf8');

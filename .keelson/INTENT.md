@@ -1,7 +1,7 @@
 # keelson
 
 ## Why this exists
-Coding agents are good at one task and bad at a project that lasts years: they forget why things were decided, let specs drift from code, treat green tests as met requirements, cannot resume each other's work, and collide when they run in parallel. Keelson is the engineering collaboration layer that keeps those facts in the repository in a form agents read at the right moment, keeps work, verification, and release state apart, and refuses to call anything done without evidence that matches the code. The user manages a conversation, not a process.
+Coding agents are good at one task and bad at a project that lasts years: they forget why things were decided, let specs drift from code, treat green tests as met requirements, cannot resume each other's work, and collide when they run in parallel. Keelson is the project-local engineering control plane that keeps those facts in the repository in a form agents read at the right moment, keeps work, verification, and release state apart, and refuses to call anything done without evidence that matches the code. The user manages a conversation, not a process.
 
 ## Boundaries
 - In scope: the `.keelson/` directory contract, the CLI that reconciles it, one canonical skill/runtime with thin discovery adapters for the seven first-class CLI hosts plus the portable Agent Skills layer, hook scripts where a host has a proven lifecycle API, and the effort-tier registry.

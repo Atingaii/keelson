@@ -1,112 +1,140 @@
 [English](../how-it-works.md)
 
-# 它如何工作
+# 工作原理
 
-Keelson 是代理环境里的三个表面，加上仓库里一个人也能直接读懂的项目事实目录。`.keelson/README.md` 是这个目录的导航；它由 Keelson 维护并在 `keelson update` 时刷新，而项目事实文件不会因为升级 Keelson 被覆盖。本页精确描述每个机制。
+Keelson 分成两层：
 
-## Canonical 运行时与发现 shim
+1. `.keelson/` 下**很小的常驻控制面**；
+2. 只有真实工作产生值得保留的信息时才出现的**按需项目工件**。
 
-`keelson init` 把完整的运行时指导统一放到一个项目本地根目录：
+Keelson 自己维护的 runtime 文件可以由 `keelson update` 重新生成；项目事实不会因为升级 Keelson 而被覆盖。
+
+## 最小常驻控制面
+
+Fresh init 创建：
 
 ```text
 .keelson/
+├── README.md
+├── INTENT.md
+├── NOW.md
+├── config.yaml
+├── manifest.json
 ├── workflow.md
 └── skill/
     ├── SKILL.md
     └── references/
 ```
 
-`.keelson/workflow.md` 是执行内核；`.keelson/skill/SKILL.md` 是任务路由器，references 只在命中时按需读取。初始化后的项目中，完整 Keelson 指导只有这一份。
+职责刻意分开：
 
-不同宿主仍然只能从它们认识的固定路径发现规则，所以 Keelson 会在 `.keelson/` 外写极薄适配：`CLAUDE.md`、`AGENTS.md`、`GEMINI.md`、`CODEBUDDY.md` 中的标记块，以及 `.claude/skills/keelson/SKILL.md`、`.agents/skills/keelson/SKILL.md` 等单文件 skill shim。这些入口只指向 `.keelson/workflow.md` 和 `.keelson/skill/SKILL.md`，不再携带 references。`keelson update` 原地刷新它们，并保留标记块之外的用户内容。
+- `INTENT.md` —— 项目目的、边界、硬约束、所有者与 Agent 权限；
+- `NOW.md` —— 当前状态、不确定性和下一具体步骤；
+- `config.yaml` —— 用户控制的机械配置；
+- `manifest.json` —— Keelson 负责的宿主生成表面清单；
+- `workflow.md` —— 小型执行内核；
+- `skill/SKILL.md` —— 把用户意图路由到按需工程能力；
+- `README.md` —— 人类项目地图。
 
-每次 init 都安装通用的 `AGENTS.md` + `.agents/skills/keelson/SKILL.md` 发现层；只有确实能补充宿主发现能力时才增加原生 shim。实现不使用 symlink，因此 Windows、macOS、Linux 使用相同布局。
+ROADMAP、Glossary、rules、specs、活动 changes、ledger、handoff、evidence 和 hooks 都不是常驻要求。只有真的承载信息或已选宿主集成需要时才出现。
 
-## 受管目标状态与恢复
+## Canonical runtime 与宿主发现
 
-生成的集成文件不再靠“磁盘上碰巧有什么”来推断。`.keelson/.managed.json` 记录当前安装真正负责的发现表面。运行 `update` 时，Keelson 从 `config.yaml` 计算目标状态，移除已经不需要且**能够确认由 Keelson 拥有**的旧适配，刷新当前宿主，再重写所有权清单。已知的历史路径只有在内容带有 Keelson 签名时才会清理，因此同目录下的用户文件不会被顺带删除。
+完整 Agent 指导只存在一份：
 
-Keelson 更新自己维护的 Skill 目录时也不会“先删后写”。它先完整写入同级临时目录，替换期间保留上一份完整目录作为备份；如果失败就恢复。下一次 `update` 还能处理上一次中断留下的临时/备份残留。
+```text
+.keelson/workflow.md
+.keelson/skill/
+```
 
-`keelson doctor` 检查的不只是“文件存在”：它会把 canonical workflow、canonical skill 的文件集合/内容、发现 shim、受管目标状态和已注册 hook 脚本，与当前 CLI 本应生成的结果比较。错误会指出具体漂移表面和修复方式，通常就是 `keelson update`。
+各宿主通过它们本来就会读取的路径发现它。Keelson 按需往 `CLAUDE.md`、`AGENTS.md`、`GEMINI.md`、`CODEBUDDY.md` 写一个很薄的标记块，并在宿主文档规定的 Skill 目录写一个单文件 shim。
+
+这些都是指针，不是副本。Skill shim 只告诉 Agent 去读 `.keelson/skill/SKILL.md`，不会复制 references。
+
+每个项目始终还有通用 `AGENTS.md + .agents/skills/keelson/SKILL.md` 发现层。只有宿主确实需要时才增加原生路径。
+
+实现不使用 symlink，因此 Windows、macOS、Linux 采用同一套布局。
+
+## Desired state、manifest 与恢复
+
+`.keelson/manifest.json` 是安装清单，不是项目知识。它记录当前 Keelson 安装真正负责的生成发现表面。
+
+运行 `update` 时：
+
+1. config 定义目标宿主集合；
+2. manifest 描述之前由 Keelson 拥有的生成表面；
+3. 清除已经不需要且**能够确认属于 Keelson**的 adapter；
+4. 目标状态仍需要的共享路径原地保留；
+5. 刷新当前 adapter；
+6. 重写 manifest。
+
+已知旧路径只有在内容带有 Keelson 签名时才清理，因此同目录下的用户文件不会被连带删除。旧版 `.keelson/.managed.json` 仍可作为兼容输入读取，并迁移成 `manifest.json`。
+
+Keelson 对 package-owned Skill 目录采用可恢复替换：先完整生成同级临时目录，旧完整版本一直保留到新版本准备好，再进行替换；失败时上一份仍可使用。下一次 update 还能恢复上一次中断留下的 temp/backup。
+
+`keelson doctor` 会把 canonical workflow、Skill 文件集合/内容、发现 shim、manifest 状态和已注册 hook 脚本，与当前 CLI 本应生成的结果比较。漂移报告会指出具体表面和修复路径。
 
 ## Hook（Claude Code）
 
-`init` 把两个自包含的 Node 脚本复制到 `.keelson/hooks/`，并在 `.claude/settings.json` 里注册。它们不依赖 CLI 是否安装。
+Claude Code 启用 hook 时，init 把两个自包含 Node 脚本复制到 `.keelson/hooks/` 并注册到 `.claude/settings.json`。运行时不依赖全局 Keelson 常驻进程。
 
-| Hook | 事件 | 打印 |
+| Hook | 事件 | 用途 |
 |---|---|---|
-| `session-start.mjs` | `SessionStart`，在 `startup`、`resume`、`clear`、`compact` 时 | 一行标题；`ROADMAP.md → Now`（最多 400 字符，仍是模板占位符时跳过）；`NOW.md`（最多 900 字符）；活动变更及其层级、状态、任务进度和 owner；每个活动变更交接里的 `Next step`（最多 200 字符） |
-| `prompt-state.mjs` | `UserPromptSubmit` | 一行：`[keelson] active: <name> · <work> · verify <state> · <done>/<total> tasks · <n> open`。没有活动变更时什么都不打印 |
+| `session-start.mjs` | `SessionStart` | 紧凑当前状态：NOW、活动 changes、handoff 下一步 |
+| `prompt-state.mjs` | `UserPromptSubmit` | 一行活动 change / verification 状态；空闲时不输出 |
 
-会话快照每个会话花费几百 token 一次。每个提示词的那一行花费几十 token，空闲时为零。两个 hook 都不打印指令；它们打印状态。
+Hook 注入的是**状态，不是工作流指令**。工作流仍然来自 canonical runtime。
 
-`--no-hooks` 会把 `hooks: false` 持久写入项目配置，之后 `update` 也保持关闭；`--hooks` 可重新开启。`settings.json` 里已有的 hook 被保留；Keelson 只增删命令路径包含 `.keelson/hooks/` 的条目。
+`--no-hooks` 会把 `hooks: false` 持久写进项目 config，之后 update 保持关闭；`--hooks` 显式重新开启。宿主设置文件里其他人的 hooks 不会被覆盖。
 
-## 技能
+## 意图路由与内部能力
 
-`init` 只在 `.keelson/skill/` 安装一份完整技能，并把包版本写入其 `SKILL.md` frontmatter；宿主 skill 目录只收到一个带版本的发现 `SKILL.md`，指向这份 canonical 副本。canonical 技能包含 `SKILL.md` 和十三个 reference：
+canonical Skill 不再把 13 个 reference 暴露成 13 条用户工作流，而是先把请求归为六种意图：
 
-| Reference | 何时阅读 |
+| 意图 | 路由 |
 |---|---|
-| `discover.md` | 所有者不确定自己想要什么，或者正在学习：先场景后技术、缺口归属、一个最高价值问题、范围守卫、承诺前先探索、引导模式 |
-| `shape.md` | 理解想要什么：先查事实、假设审计、写回、决策状态、停止规则、单问题访谈、授权、无人值守运行、定大小 |
-| `model.md` | 用词或边界开始漂移：术语表与限界上下文、边界与不变量、深模块、设计两次 |
-| `context.md` | 知道代码触及什么：三层上下文、影响分析、预算 |
-| `plan.md` | 创建 `change.md`、纵向切片、验收、delta specs、effort 层级、与已有跟踪器配合 |
-| `engineer.md` | 一个设计或可靠性问题：按交付、结构、演进、运行分组的工程视角；作为词汇的命名模式；作为数字的质量目标 |
-| `build.md` | 执行任务：裁定、按层级分派子代理、升级、并行工作、让工件保持真实 |
-| `verify.md` | 记录有效性、内容有效性、不悄悄弱化测试、陌生读者评审、完成报告 |
-| `harness.md` | 演进控制系统：不变量、前馈/反馈放置、重复失败升级、baseline、sunset 条件 |
-| `handoff.md` | 什么放哪里、写交接、安全恢复、`NOW.md` |
-| `land.md` | 落地门禁、代码与 specs 一起评审、相撞、发布状态、经验提升 |
-| `reconcile.md` | 把新事实写回并保持项目精简：每条事实的去处、重写不追加、预算与压缩、整理节奏 |
-| `debug.md` | 复现、定位、修复、命名根因类别 |
+| Explore | discover + shape，只读 |
+| Change | shape → context → 需要时 plan → build |
+| Fix | debug → verify |
+| Resume | handoff + 当前上下文 |
+| Finish | verify → land → reconcile |
+| Improve | harness → reconcile |
 
-`SKILL.md` 按需要路由。代理一次读一个 reference。BOUND 阶段遇到有实质歧义的工作时，会先做紧凑的假设审计，并且一次最多只问一个由用户掌握、真正阻塞结果的问题；审计过程本身不落盘，真正有长期价值的结果才会路由进 `change.md`、specs、rules 或术语表。每条准则带一段隐藏的 HTML 注释，含 `id`、它防止的失败（`without`）和删除条件（`sunset`）。`keelson retro` 读取这些注释。
+`model.md` 和 `engineer.md` 是二级 lens：只有术语/边界漂移，或存在真实设计/可靠性取舍时才读取。
 
-`profile` 决定发出多少文本。`lean` 剥掉标记为 `<!-- guided -->` 的块。`guided` 保留它们。
+因此渐进披露同时发生在两侧：用户只需要一个很小的心智模型；Agent 遇到复杂任务时仍能进入更深工程能力。
 
-Keelson 渲染或安装的包内 Markdown 统一规范为 LF。解析器和 hook 把 LF 与 CRLF 当作相同语义，因此 Windows checkout 或用户编辑出的 CRLF 文件不会改变 Keelson 看到的项目状态；Keelson 也不会仅仅为了换行格式去重写用户文件。
+## 渐进式 change workspace
 
-## 变更目录
-
-`keelson new <name> --tier quick|spec [--capability a,b] [--touches globs] [--depends other] [--worktree]` 创建 `.keelson/changes/<name>/`：
+每个非平凡变更先只有一个长期边界：
 
 ```text
-change.md      frontmatter (tier, created, status, owner, branch, worktree, depends, touches)
-               + Why, What（结果 + 非目标）[, How, Alternatives, Impact], Acceptance, Open questions [, Rollout], Decisions
-tasks.md       "## Slice: name" + "Delivers: …" + checkbox tasks with (effort: tier) and verify: `cmd`
-ledger.md      append-only ### entries
-handoff.md     created by `keelson handoff`, stamped with at/updated/by
-specs/<cap>/spec.md   delta spec with a base: stamp, created per --capability
+.keelson/changes/<name>/
+└── change.md
 ```
 
-`owner` 是 git 用户名（或操作系统用户），`branch` 是当前分支。`--worktree` 运行 `git worktree add -b <name> ../<repo>-<name>` 并记录 `branch: <name>` 和 `worktree:`。`--touches` 声明变更将编辑的路径 glob；`--depends` 指出它等待的其他活动变更。
+quick change 可能直到验证前都不需要其他文件。
 
-### 生命周期
+spec 级变更需要显式计划和行为 delta，因此创建时有：
 
 ```text
-keelson new  →  build and tick tasks  →  keelson check --record  →  (keelson handoff when stopping)
-             →  keelson land   (fold or archive, specs merged)
-             →  keelson cancel (archive as cancelled, nothing merged)
+changes/<name>/
+├── change.md
+├── tasks.md
+└── specs/<capability>/spec.md
 ```
 
-`config.yaml → land: fold`（默认）在合并后删除变更目录；它的 ledger 和 handoff 留在 git 历史里，`keelson retro` 从那里读取。`land: keep`，或 `keelson land --keep`，把目录移到 `.keelson/changes/archive/YYYY-MM-DD-<name>/`，并写 `status: integrated`。`keelson cancel` 把它移到 `archive/YYYY-MM-DD-<name>-cancelled/`，写 `status: cancelled` 和一段 `## Cancelled` 说明。
+其他文件由事件触发：
 
-### 落地门禁
+- 第一次发生 Ruling、Root cause、Dispatch、Escalate 或 Verify 时才有 `ledger.md`；
+- 工作需要穿过会话/人员边界时才有 `handoff.md`；
+- 只有受影响能力才有额外 delta spec；
+- 检查真正产生本机输出时才有 `.local/evidence/`。
 
-以下任一情况成立时，`keelson land` 拒绝并列出每一个原因：
+这样文件存在本身就有含义，而不是空模板。
 
-- 任何任务未勾选；
-- 任何验收项未勾选，或 spec 变更没有 `## Acceptance` 列表；
-- 还有未决问题；
-- verification 为 `not-run`、`failed`、`partial` 或 `stale`；
-- 存在 `(assumed)` 决策而没有传 `--confirm-assumptions`；
-- 某条 `What` 项以 `**BREAKING**` 开头而没有 `## Rollout` 段；
-- 某个 delta spec 的 `base:` 与主 spec 不再匹配而没有传 `--accept-drift`。
+`change.md` 是可评审边界：why、outcome/non-goal、acceptance；spec 级再包含 approach、alternatives、impact、open questions、rollout、decisions。`tasks.md` 是执行状态，不是 design doc。Delta specs 只描述可观察行为。
 
-`--dry-run` 预览合并。`--force` 越过所有门禁并打印越过了什么；它留给所有者的明确决定。
 
 ## Spec 合并语义
 

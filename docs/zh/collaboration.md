@@ -49,7 +49,7 @@ by: ann
 
 | 信息 | 位置 | 进 git |
 |---|---|---|
-| `NOW.md`、`handoff.md`、`ledger.md`、变更工件 | `.keelson/` | 是 |
+| `NOW.md` 与实际存在的变更工件（`handoff.md`、`ledger.md` 等） | `.keelson/` | 是 |
 | 检查输出、本机状态 | `.keelson/.local/` | 否，由 `init` 加入 `.gitignore` |
 
 另一台机器上的同事需要的一切都提交。

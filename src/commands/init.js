@@ -174,13 +174,7 @@ export async function init({ flags }, cwd = process.cwd()) {
   };
   if (seed('INTENT.md', p.intent)) ok('.keelson/INTENT.md (the agent drafts it from the code on first contact; confirm it when it asks)');
   if (seed('NOW.md', p.now)) ok('.keelson/NOW.md');
-  if (seed('ROADMAP.md', p.roadmap)) ok('.keelson/ROADMAP.md (current milestone; link your tracker instead of duplicating it)');
-  if (seed('GLOSSARY.md', p.glossary)) ok('.keelson/GLOSSARY.md (shared vocabulary; fill it when two words start meaning the same thing)');
-  if (seed('rules-index.md', p.rulesIndex)) ok('.keelson/rules/index.md');
-  if (seed('rules-general.md', path.join(p.rules, 'general.md'))) ok('.keelson/rules/general.md');
-  mkdirp(p.specs);
-  mkdirp(p.changes);
-  if (!exists(path.join(p.changes, '.gitkeep'))) write(path.join(p.changes, '.gitkeep'), '');
+  // Progressive disclosure: ROADMAP, GLOSSARY, rules/, specs/, and changes/ are created only when the project actually needs them.
   if (ensureGitignore(root)) ok('.gitignore: .keelson/.local/ (session state and evidence stay on this machine)');
   saveConfig(p.config, cfg);
   ok(`.keelson/config.yaml${rawVersion < CONFIG_VERSION ? ` (migrated v${rawVersion} → v${CONFIG_VERSION})` : ''}`);
@@ -201,7 +195,7 @@ export async function init({ flags }, cwd = process.cwd()) {
     }
   }
   writeManagedState(root, targets, PKG_VERSION);
-  ok('.keelson/.managed.json (generated-surface ownership)');
+  ok('.keelson/manifest.json (generated-surface ownership)');
 
   try {
     detectAndCache();
@@ -210,14 +204,14 @@ export async function init({ flags }, cwd = process.cwd()) {
     warn(`model detection skipped: ${e.message}`);
   }
 
-  // A fresh project always starts with the onboarding note: the agent drafts INTENT (and specs and rules for an existing
-  // codebase) from what it finds, and asks the owner to confirm. Nothing is a chore for the user.
+  // A fresh project starts with one onboarding task: infer and confirm project intent.
+  // Specs and rules grow later, only when real work exposes a durable contract or invariant.
   if (fresh || flags.onboard) writeOnboardNote(p, project, cfg, hasCode(root));
 
   console.log('');
   if (fresh) {
     heading('Done. Open your agent in this directory and start talking.');
-    console.log(dim('  On first contact it reads the repository, drafts .keelson/INTENT.md' + (hasCode(root) ? ', the specs, and the rules' : '') + ', and asks you to confirm before anything lands.'));
+    console.log(dim('  On first contact it drafts .keelson/INTENT.md from the repository and confirms it with you; specs/rules grow only when real work needs them.'));
   }
   return 0;
 }
@@ -242,22 +236,22 @@ function hasCode(root) {
 
 function writeOnboardNote(p, project, cfg, existingCode) {
   const refs = Object.entries(cfg.refs ?? {}).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`);
-  const intent = `Draft \`.keelson/INTENT.md\` from what the repository shows (README, package manifest, directory layout${existingCode ? ', the code' : ''}): why it exists, its boundaries, hard constraints, and a first Authorizations section. Ask the owner to confirm or correct it in one short exchange; keep their answers, drop your guesses.`;
-  const specs = existingCode
-    ? ` Then list the capabilities the code already has, write one spec per capability (present tense, observable behaviour only) under \`${cfg.paths.specs}/\`, and propose rules for the paths that have conventions. Where a document already describes a contract or a decision, link to it from the spec instead of restating it.`
+  const intent = `Draft \`.keelson/INTENT.md\` from what the repository already shows (README, package manifest, directory layout${existingCode ? ', and the code' : ''}): why it exists, its boundaries, hard constraints, and a first Authorizations section. Ask the owner to confirm or correct it in one short exchange; keep their answers, drop your guesses.`;
+  const grow = existingCode
+    ? ' Do not inventory the whole repository into specs or rules. As the first real task touches a capability or stable engineering invariant, create only the spec/rule needed to preserve that truth across future sessions.'
     : '';
   write(
     p.now,
     `# Now
 
-First contact with ${project}: Keelson was just initialised and nothing has been drafted yet.
+First contact with ${project}: Keelson was just initialised and project intent has not been confirmed yet.
 
 ## Blocked / uncertain
-INTENT.md${existingCode ? ', the specs, and the rules' : ''} are drafts until the owner confirms them. Existing documents${refs.length ? ` (${refs.join(', ')})` : ''} are referenced, never copied.
+INTENT.md is a draft until the owner confirms it. Existing documents${refs.length ? ` (${refs.join(', ')})` : ''} are referenced, never copied.
 
 ## Next
-${intent}${specs} Do this before, or as part of, the first thing the owner asks for; if they ask for a change right away, draft INTENT from what you learn while shaping that change and confirm both together. Then rewrite this file.
+${intent}${grow} Do this before, or together with, the first non-trivial thing the owner asks for. Then rewrite this file to the actual current state.
 `,
   );
-  ok(`.keelson/NOW.md: first-contact task written for the agent${existingCode ? ' (draft INTENT, specs, and rules from the code)' : ' (draft INTENT)'}`);
+  ok('.keelson/NOW.md: first-contact task written for the agent (confirm project intent; grow contracts only when work needs them)');
 }

@@ -10,19 +10,23 @@
 
 ```text
 keelson init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided]
-             [--lang en|zh] [--no-hooks] [--dry-run] [--dir <path>]
+             [--lang en|zh] [--hooks|--no-hooks] [--dry-run] [--dir <path>]
 ```
 
-唯一的一步。创建 `.keelson/`，其中既包含项目事实，也包含 canonical `workflow.md` 与 `skill/` 运行时。宿主固定路径只安装发现块/skill shim；Claude Code 另安装 hook；每次 init 都会存在通用 `AGENTS.md` + `.agents/skills/` 发现层。首次运行时探测检查命令和既有项目资料。往 `NOW.md` 写入一个首次接触任务：代理根据仓库起草 `INTENT.md`（已有代码的项目还有 specs 和 rules），并请所有者确认。从不覆盖 `.keelson/` 里已有的文件。
+正常情况下只需要执行一次。创建最小常驻控制面：Keelson 维护的 `README.md`、`workflow.md`、`skill/`，用户控制的 `config.yaml`，Keelson 维护的 `manifest.json`，以及核心项目事实 `INTENT.md` + `NOW.md`。**不会**预先生成空 ROADMAP、Glossary、rules、specs、changes、tasks、ledger 或 handoff。
 
-工具选择按优先级：`--tools a,b`；7 个一等公民宿主标志（`--claude`、`--codex`、`--opencode`、`--pi`、`--gemini`、`--kiro`、`--codebuddy`）或 `--agents`；更新时 `config.yaml` 中已有的宿主；然后探测本机已安装的一等公民。一个也没探测到时使用通用 `agents` 层。旧配置里的已退役适配器 id 会在 update 时被移除，不再重新生成。
+只安装已选宿主真正需要的发现块/Skill shim；每个项目始终还有通用 `AGENTS.md + .agents/skills/` 层。首次运行探测检查命令和已有项目材料。
 
-- `--guide` 为正在学习工程的所有者打开引导模式。
-- `--no-hooks` 会持久写入 `hooks: false`，后续 `update` 也保持关闭；`--hooks` 可显式重新开启。
-- `--dry-run` 列出将被创建、更新或迁移的内容，不写入任何东西。
+首次接触任务只要求 Agent 推断并确认项目意图，不会把既有仓库一次性盘点成 specs/rules；这些内容以后在真实工作暴露出长期行为契约或工程不变量时才增长。
+
+工具选择优先级：`--tools a,b`；一等公民标志（`--claude`、`--codex`、`--opencode`、`--pi`、`--gemini`、`--kiro`、`--codebuddy`）或 `--agents`；update 时的项目 config；然后探测本机已安装的一等公民。一个也没有时使用通用 `agents` 层。
+
+- `--guide` 开启引导式对话风格。
+- `--no-hooks` 持久写入 `hooks: false`；`--hooks` 重新开启。
+- `--dry-run` 预览创建/更新/删除/迁移动作，不写磁盘。
 - `--dir` 指定另一个目录。
 
-工具或 profile 未知时以 1 退出。
+未知/退役宿主或无效 profile 时以 1 退出。
 
 ## `keelson platforms`
 
@@ -76,9 +80,22 @@ keelson new <name> [--tier quick|spec] [--capability a,b] [--touches globs]
                    [--depends change[,change]] [--worktree] [--owner who] [--json]
 ```
 
-把名字转成 slug，创建 `.keelson/changes/<name>/`，含 `change.md`、`tasks.md`、`ledger.md`，以及每个 `--capability` 一个 delta spec，各自盖有 `base:`（当前主 spec 的哈希，或 `new`）。frontmatter 记录 `tier`、`created`、`status`（spec 为 `clarifying`，quick 为 `in-progress`）、`owner`（除非 `--owner`，否则为 git 用户名）、`branch`，以及任何 `depends` 和 `touches`。`--worktree` 运行 `git worktree add -b <name> ../<repo>-<name>`，并记录 `branch: <name>` 和 `worktree:`。
+创建**最小有用**的 change workspace。
 
-变更已存在、层级未知，或在 git 之外使用 `--worktree` 时以 1 退出。
+`quick`：
+
+```text
+changes/<name>/
+└── change.md
+```
+
+`spec` 还会创建 `tasks.md`；每个 `--capability` 创建一份 delta spec，并带 `base:` 戳（当前主 spec 哈希，或 `new`）。
+
+`new` **不会**创建 `ledger.md`；第一次发生验证/裁定/根因/分派事件时它才出现。`handoff.md` 只有真正调用 `keelson handoff` 时才出现。
+
+frontmatter 记录 tier、创建日期、work status、owner、branch，以及可选依赖/触及路径。`--worktree` 创建隔离 Git worktree/branch。
+
+change 已存在、tier 未知，或在非 Git 项目使用 `--worktree` 时以 1 退出。
 
 ## `keelson status`
 
@@ -197,7 +214,7 @@ keelson models rank <alias> <light|standard|deep>
 keelson doctor [--json]
 ```
 
-报告 Node 版本、待执行的配置迁移、canonical `.keelson/workflow.md`/`.keelson/skill/` 是否存在且版本一致，以及每个配置工具的发现 shim 是否存在/版本正确/指向 canonical、说明块是否存在、hook 注册和脚本是否存在。然后是每条 `validate` 发现、过期的验证、交接后 HEAD 移动、对活动变更的依赖、共享契约冲突、知识健康，以及 PATH 上缺失的工具 CLI。任何发现是错误时以 1 退出。
+报告 Node 版本、待执行的配置迁移、canonical runtime 完整性、`.keelson/manifest.json` desired-state 完整性，以及每个已配置宿主的发现 shim 目标/内容、说明块、hook 注册与已注册 hook 脚本完整性。然后是每条 `validate` 发现、过期的验证、交接后 HEAD 移动、对活动变更的依赖、共享契约冲突、知识健康，以及 PATH 上缺失的工具 CLI。任何发现是错误时以 1 退出。
 
 ### 知识健康
 

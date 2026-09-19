@@ -8,19 +8,23 @@ Boolean flags: `--json`, `--force`, `--dry-run`, `--hooks`, `--no-hooks`, `--ref
 
 ```text
 keelson init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided]
-             [--lang en|zh] [--no-hooks] [--dry-run] [--dir <path>]
+             [--lang en|zh] [--hooks|--no-hooks] [--dry-run] [--dir <path>]
 ```
 
-The only step. Creates `.keelson/` with project facts plus the canonical `workflow.md` and `skill/` runtime. Installs only discovery blocks/skill shims at host-known paths, and (Claude Code) hooks; the portable `AGENTS.md` + `.agents/skills/` discovery layer is present on every init. Detects check commands and existing project material on first run. Writes a first-contact task into `NOW.md`: the agent drafts `INTENT.md` (and, for an existing codebase, specs and rules) from the repository and confirms them with the owner. Never overwrites existing `.keelson/` files.
+The normal one-time setup. Creates the minimal standing control plane: package-owned `README.md`, `workflow.md`, `skill/`, user-controlled `config.yaml`, package-owned `manifest.json`, and core project facts `INTENT.md` + `NOW.md`. It does **not** pre-create empty ROADMAP, glossary, rules, specs, changes, tasks, ledgers, or handoffs.
 
-Tool selection, in order of precedence: `--tools a,b`; one flag per first-class host (`--claude`, `--codex`, `--opencode`, `--pi`, `--gemini`, `--kiro`, `--codebuddy`) or `--agents`; the hosts already in `config.yaml` on update; then installed first-class hosts. If no first-class host is detected, Keelson uses the portable `agents` layer. Retired adapter ids from older configs are removed during update rather than regenerated.
+Installs only the discovery blocks/Skill shims required by the selected hosts; every project also gets the portable `AGENTS.md + .agents/skills/` layer. Detects check commands and existing project material on first run.
 
-- `--guide` turns on guided mode for an owner who is learning engineering.
-- `--no-hooks` persists `hooks: false` in project config; later `update` keeps hooks off. `--hooks` explicitly re-enables them.
-- `--dry-run` lists what would be created, updated, or migrated and writes nothing.
+The first-contact task asks the agent to infer and confirm project intent. It does not inventory an existing repository into specs/rules; those grow later when real work exposes a durable behavior contract or engineering invariant.
+
+Tool selection precedence: `--tools a,b`; first-class flags (`--claude`, `--codex`, `--opencode`, `--pi`, `--gemini`, `--kiro`, `--codebuddy`) or `--agents`; saved project config on update; then detected installed first-class hosts. If none are found, the portable `agents` layer is used.
+
+- `--guide` enables guided conversation style.
+- `--no-hooks` persists `hooks: false`; `--hooks` re-enables host hooks.
+- `--dry-run` previews create/update/remove/migrate actions and writes nothing.
 - `--dir` targets another directory.
 
-Exit 1 on an unknown tool or profile.
+Exit 1 for an unknown/retired host or invalid profile.
 
 ## `keelson platforms`
 
@@ -74,9 +78,22 @@ keelson new <name> [--tier quick|spec] [--capability a,b] [--touches globs]
                    [--depends change[,change]] [--worktree] [--owner who] [--json]
 ```
 
-Slugifies the name and creates `.keelson/changes/<name>/` with `change.md`, `tasks.md`, `ledger.md`, and one delta spec per `--capability`, each stamped with `base:` (a hash of the current main spec, or `new`). Frontmatter records `tier`, `created`, `status` (`clarifying` for spec, `in-progress` for quick), `owner` (git user name unless `--owner`), `branch`, and any `depends` and `touches`. `--worktree` runs `git worktree add -b <name> ../<repo>-<name>` and records `branch: <name>` and `worktree:`.
+Creates the smallest useful change workspace.
 
-Exit 1 if the change exists, the tier is unknown, or `--worktree` is used outside git.
+For `quick`:
+
+```text
+changes/<name>/
+└── change.md
+```
+
+For `spec`, Keelson also creates `tasks.md`; each `--capability` creates one delta spec with a `base:` stamp (hash of the current main spec, or `new`).
+
+`ledger.md` is **not** created by `new`; it appears when the first verification/ruling/root-cause/dispatch event is recorded. `handoff.md` appears only when `keelson handoff` is used.
+
+Frontmatter records tier, created date, work status, owner, branch, and optional dependencies/touched paths. `--worktree` creates an isolated Git worktree/branch.
+
+Exit 1 when the change exists, the tier is unknown, or `--worktree` is used outside Git.
 
 ## `keelson status`
 
@@ -193,7 +210,7 @@ Default: a table of tier to alias with the source of each resolution, plus the l
 keelson doctor [--json]
 ```
 
-Reports the Node version, pending config migration, canonical `.keelson/workflow.md`/`.keelson/skill/` presence and version, and per configured tool: discovery shim presence/version/target, instruction block presence, hook registration and script presence. Then every `validate` finding, stale verification, HEAD moved since a handoff, dependencies on active changes, shared-contract conflicts, knowledge health, and tool CLIs missing from the path. Exit 1 when any finding is an error.
+Reports the Node version, pending config migration, canonical runtime integrity, `.keelson/manifest.json` desired-state integrity, and per configured host: discovery shim target/content, instruction block, hook registration, and registered hook script integrity. Then every `validate` finding, stale verification, HEAD moved since a handoff, dependencies on active changes, shared-contract conflicts, knowledge health, and tool CLIs missing from the path. Exit 1 when any finding is an error.
 
 ### Knowledge health
 

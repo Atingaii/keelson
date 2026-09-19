@@ -51,8 +51,8 @@ export async function newChange({ flags, positional }, cwd = process.cwd()) {
   const body = fill(read(path.join(tpl, tier === 'quick' ? 'change-quick.md' : 'change.md')), vars).replace(/^---\n[\s\S]*?\n---\n/, '');
   mkdirp(dir);
   write(path.join(dir, 'change.md'), `---\n${front.join('\n')}\n---\n${body}`);
-  write(path.join(dir, 'tasks.md'), fill(read(path.join(tpl, 'tasks.md')), vars));
-  write(path.join(dir, 'ledger.md'), fill(read(path.join(tpl, 'ledger.md')), vars));
+  if (tier === 'spec') write(path.join(dir, 'tasks.md'), fill(read(path.join(tpl, 'tasks.md')), vars));
+  // ledger.md and handoff.md are event artifacts: create them only when evidence or a handoff actually exists.
   for (const cap of caps) {
     const mainPath = path.join(p.specs, cap, 'spec.md');
     const main = readOr(mainPath, '');
@@ -61,7 +61,7 @@ export async function newChange({ flags, positional }, cwd = process.cwd()) {
     write(path.join(dir, 'specs', cap, 'spec.md'), `---\nbase: ${main ? specBase(main) : 'new'}\n---\n${delta}`);
   }
   ok(`created ${path.relative(root, dir)} (${tier}${owner ? `, owner ${owner}` : ''}${branch && !worktree ? `, branch ${branch}` : ''})`);
-  info(`fill change.md${caps.length ? ', specs/<capability>/spec.md' : ''}, then tasks.md — see the keelson skill's references/plan.md`);
+  info(tier === 'spec' ? `fill change.md${caps.length ? ', specs/<capability>/spec.md' : ''}, then tasks.md — see references/plan.md` : 'fill change.md acceptance; tasks.md is optional for a quick change');
   if (tier === 'spec' && !caps.length) warn('spec tier without --capability: add specs/<capability>/spec.md by hand if behaviour changes');
   if (flags.json) console.log(JSON.stringify({ name, tier, dir, owner, branch: worktree ? name : branch, worktree, capabilities: caps }));
   return 0;

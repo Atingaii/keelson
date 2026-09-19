@@ -3,16 +3,21 @@
 ## Purpose
 The on-disk contract between a project and every agent that works in it.
 
-## Requirement: Standing facts
-The `.keelson/` directory SHALL contain a package-owned human map `README.md`, canonical runtime `workflow.md` and `skill/`, plus `INTENT.md`, `ROADMAP.md`, `NOW.md`, `config.yaml`, `rules/`, and `changes/`; specs live at `config.yaml → paths.specs`; `.keelson/.local/` holds per-machine state and is ignored by git; nothing under specs or `rules/` is generated.
+## Requirement: Minimal standing control plane
+A fresh `.keelson/` SHALL contain only package-owned navigation/runtime (`README.md`, `workflow.md`, `skill/`), user-controlled `config.yaml`, package-owned `manifest.json`, and the two core project facts `INTENT.md` and `NOW.md`. ROADMAP, GLOSSARY, rules, specs, changes, ledger, tasks, handoff, hooks, and local evidence SHALL appear only when they carry information or the selected host requires them.
 
 ### Scenario: Fresh init
 - WHEN `keelson init` runs in a directory without `.keelson/`
-- THEN those files and directories exist; `.keelson/README.md` explains the structure to people; full Keelson workflow/skill guidance exists only under `.keelson/`; and outside `.keelson/` only discovery shims plus (for Claude Code) `.claude/settings.json` may be modified
+- THEN the minimal standing files exist; empty ROADMAP/GLOSSARY/rules/specs/changes directories are not created; full Keelson workflow/skill guidance exists only under `.keelson/`; and outside `.keelson/` only discovery shims plus selected host integration files may be modified
+
+### Scenario: Knowledge grows on demand
+- GIVEN a project has no glossary, rules, specs, or active changes
+- WHEN real work first needs a durable term, scoped invariant, behaviour contract, or reviewable change boundary
+- THEN only the corresponding artifact is created; unrelated empty artifacts remain absent
 
 ### Scenario: Update human map
 - WHEN `keelson update` runs after the package changes its project-map documentation
-- THEN `.keelson/README.md` is refreshed while project-fact files such as `INTENT.md`, `NOW.md`, specs, and rules are not overwritten
+- THEN `.keelson/README.md` is refreshed while project-fact files such as `INTENT.md`, `NOW.md`, existing specs, and rules are not overwritten
 
 ## Requirement: Single runtime authority
 Every initialized project SHALL keep its canonical workflow in `.keelson/workflow.md` and its canonical skill plus references in `.keelson/skill/`. `AGENTS.md`, `.agents/skills/keelson/SKILL.md`, and any tool-specific instruction/skill locations SHALL be discovery shims that point into `.keelson/` rather than duplicate the guidance.
@@ -43,7 +48,7 @@ Keelson SHALL track the generated discovery surfaces it owns and reconcile actua
 ### Scenario: Host selection changes
 - GIVEN a project was initialized for Claude Code and Kiro CLI
 - WHEN the owner updates the configured hosts to Codex CLI
-- THEN stale Claude/Kiro discovery surfaces and Claude hook registrations are removed, user-authored content outside Keelson markers remains, and `.keelson/.managed.json` records only the new desired surfaces
+- THEN stale Claude/Kiro discovery surfaces and Claude hook registrations are removed, user-authored content outside Keelson markers remains, and `.keelson/manifest.json` records only the new desired surfaces
 
 ### Scenario: Interrupted directory replacement
 - GIVEN the previous canonical skill directory is complete
@@ -53,8 +58,16 @@ Keelson SHALL track the generated discovery surfaces it owns and reconcile actua
 ### Scenario: Doctor detects drift
 - WHEN a package-owned canonical reference, discovery shim, or registered hook script differs from the version Keelson would generate
 - THEN `keelson doctor` reports actionable drift and `keelson update` can restore the package-owned surface
-## Requirement: Change directory lifecycle
-A change SHALL live in `changes/<name>/` with `change.md` (why, what, acceptance, open questions, decisions with states), `tasks.md` (slices and tasks), `ledger.md`, optional `handoff.md`, and optional delta specs, and SHALL leave `changes/` when it lands or is cancelled.
+## Requirement: Progressive change workspace
+Every non-trivial change SHALL start with `changes/<name>/change.md`. Additional artifacts SHALL be created only when they carry state: `tasks.md` for an explicit multi-step/spec plan, `ledger.md` after the first ruling/failure/dispatch/verification event, `handoff.md` when work crosses a session/person boundary, and delta specs only for behaviour-contract changes. The change SHALL leave active `changes/` when it lands or is cancelled.
+
+### Scenario: Quick change starts small
+- WHEN `keelson new <name> --tier quick` runs
+- THEN `change.md` exists and empty `tasks.md`, `ledger.md`, and `handoff.md` do not
+
+### Scenario: Spec change has a plan surface
+- WHEN `keelson new <name> --tier spec --capability orders` runs
+- THEN `change.md`, `tasks.md`, and the delta spec exist, while `ledger.md` remains absent until an event is recorded
 
 ### Scenario: Handoff
 - WHEN `keelson handoff <name>` runs
@@ -79,6 +92,7 @@ The agent SHALL be able to find every rule that applies to a path from `rules/in
 - THEN the output includes the content of `rules/api.md`
 
 ## Decisions
+- project-layout: optional knowledge and change artifacts are lazy; pre-creating empty ROADMAP/GLOSSARY/rules/specs/tasks/ledger/handoff was rejected because empty scaffolding increases cognitive load without preserving any truth
 - project-layout: continuation state that another machine needs (handoff.md, NOW.md) is committed; check output and session scratch stay in `.keelson/.local/`; gitignoring everything was rejected because a team cannot resume from files that never leave one laptop
 - project-layout: decisions carry a state (confirmed or assumed) inside change.md rather than in a separate approvals file; a separate file was rejected because approval and decision would drift apart
 - project-layout: changes fold into specs and git history by default; a permanent archive directory was rejected because it duplicates what git already keeps and grows without bound

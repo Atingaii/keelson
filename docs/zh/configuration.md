@@ -58,7 +58,7 @@ effort:
 | 键 | 默认值 | 含义 |
 |---|---|---|
 | `version` | `4` | 配置结构版本。旧文件每次读取时在内存中迁移，由 `keelson update` 重写 |
-| `tools` | `[agents]` 兜底 | 为哪些宿主生成发现适配。首次 init 自动选择本机已安装且 `verified/documented` 的宿主；一个也没有时只使用通用 `agents` 层。`convention` 宿主必须显式选择，不靠猜测。`keelson init --tools` 设置它 |
+| `tools` | `[agents]` 兜底 | 为哪些宿主生成发现适配。首次 init 自动选择本机已安装且 `verified/documented` 的宿主；一个也没有时只使用通用 `agents` 层。`keelson init --tools` 设置它 |
 | `lang` | `en` | 安装的技能和模板的语言：`en` 或 `zh`。`keelson init --lang` 设置它 |
 | `profile` | `lean` | `lean` 只发出姿态和原则。`guided` 保留额外的步骤清单和示例。`keelson init --profile` 设置它 |
 | `default_tier` | `auto` | 仅供参考。`auto` 表示代理给每个变更定大小。设为 `quick` 或 `spec` 可在代理读的文件里表明偏好 |
@@ -117,7 +117,7 @@ platforms:
     instructionsFormat: kiro
 ```
 
-键：`instructions`（接收发现块的文件）、`instructionsFormat`（`kiro` 写一个带 inclusion 头的独立 steering 文件，而不是带标记的块）、`skillsDir`（单文件 `keelson/SKILL.md` 发现 shim 安装到哪里）、`rulesFile` 和 `rulesFormat`（`mdc` 为带 frontmatter 的 rule 文件，`md` 为纯 Markdown）、`hooks`（只对像 Claude Code 那样运行 hook 的工具设为 `true`）。覆盖对 `init`、`update`、`doctor`、`uninstall` 和 `ablate` 生效。当某个工具挪动了目录，或某个 `convention` 条目与你的安装不符时使用它。
+键：`instructions`（接收发现块的文件）、`instructionsFormat`（`kiro` 写一个带 inclusion 头的独立 steering 文件，而不是带标记的块）、`skillsDir`（单文件 `keelson/SKILL.md` 发现 shim 安装到哪里）、`rulesFile` 和 `rulesFormat`（`mdc` 为带 frontmatter 的 rule 文件，`md` 为纯 Markdown）、`hooks`（只对像 Claude Code 那样运行 hook 的工具设为 `true`）。覆盖对 `init`、`update`、`doctor`、`uninstall` 和 `ablate` 生效。当一等公民宿主的旧版/本地安装使用不同的已知路径时使用它。
 
 ### 迁移
 

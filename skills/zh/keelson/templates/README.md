@@ -1,53 +1,56 @@
-<!-- 由 Keelson 生成；`keelson update` 会刷新。项目事实请写入下面对应文件，不要写进这份导航。 -->
+<!-- 由 Keelson 生成；`keelson update` 会刷新。项目事实写入各自负责的文件，不要写进这份地图。 -->
 # Keelson 项目地图 — {{project}}
 
-这个目录既给 Agent 读，也应该让人能直接读懂。它同时是项目的**当前工程状态与 Keelson 运行时真源**，不是聊天记录的存档。`.keelson/` 之外的文件只负责宿主发现。
+`.keelson/` 是项目的工程控制面：给人看的当前事实、给 Agent 的 canonical 指导，以及工作进行中才存在的临时变更状态。只有真正值得保留的信息出现时，它才增长。
 
-## 只有 30 秒时先看什么
+## 从这里开始
 
-1. Agent 开始工作先看 **`workflow.md`**；人查看项目状态先看 **`NOW.md`** —— 现在在做什么、哪里阻塞、下一步是什么。
-2. 看 **`INTENT.md`** —— 项目为什么存在、边界、硬约束，以及 Agent 可以自行决定什么。
-3. 看对应的 **`specs/<capability>/spec.md`** —— 这一能力今天到底应该怎样工作。
-4. 看 **`rules/index.md`**，再只读取与你要改的路径匹配的 rule。
-5. 如果有进行中的工作，再看 **`changes/<name>/change.md`** 和 **`handoff.md`**。
+- **Agent 开始工作：** `workflow.md` → `skill/SKILL.md`。
+- **人想知道“现在怎样了”：** `NOW.md`。
+- **项目为什么存在 / 边界 / 权限：** `INTENT.md`。
+- **某个能力今天怎样工作：** 有契约时看 `specs/<capability>/spec.md`。
+- **已有进行中的工作：** 先看 `changes/<name>/change.md`，再只看旁边实际存在的工件。
 
-## 每个路径是干什么的
+## init 后始终存在
 
-| 路径 | 它回答的问题 | 生命周期 |
-|---|---|---|
-| `README.md` | 从哪里开始看？每个文件是什么意思？ | Keelson 维护的导航；会被刷新 |
-| `workflow.md` | 每个非平凡变更都遵循什么执行主回路？ | Keelson 维护的 canonical 工作流；会被刷新 |
-| `skill/SKILL.md` | 当前任务需要哪一类更深指导？ | Keelson 维护的 canonical 任务路由器；会被刷新 |
-| `skill/references/*.md` | 路由命中后具体应遵循什么？ | Keelson 维护；仅按需读取 |
-| `INTENT.md` | 项目为什么存在？什么明确不做？哪些事必须让负责人决定？ | 长期；意图变化时重写 |
-| `ROADMAP.md` | 当前最重要的里程碑是什么？后面的大方向是什么？ | 中期；写方向，不堆任务 |
-| `NOW.md` | 此刻正在发生什么？哪里受阻？下一步是什么？ | 短期当前状态；整体重写，不写成日记 |
-| `GLOSSARY.md` | 项目里的关键术语在这里具体是什么意思？ | 长期共享词汇 |
-| `config.yaml` | Keelson 使用哪些工具、检查、引用、预算和路径？ | 机械配置 |
-| `.managed.json` | 当前 Keelson 安装负责哪些生成的发现表面？ | Keelson 维护的 desired-state 所有权清单；`init`/`update` 重写 |
-| `specs/<capability>/spec.md` | 某个能力**今天**的行为契约是什么？ | 长期当前真相；需求、场景、稳定决策 |
-| `rules/index.md` | 某个路径应该读哪些工程规则？ | 长期路由表 |
-| `rules/*.md` | 这一范围内有哪些约定/不变量？ | 长期；优先可检查 |
-| `changes/<name>/change.md` | 为什么改？改什么/不改什么？怎样才算验收？ | 临时；一次活动变更 |
-| `changes/<name>/tasks.md` | 还剩哪些纵向切片和任务？ | 临时执行计划 |
-| `changes/<name>/ledger.md` | 做过哪些裁定、根因分析、分派和验证？ | 临时证据轨迹；fold 后由 git 历史保留 |
-| `changes/<name>/handoff.md` | 换一个人或 Agent 后怎样安全继续？ | 临时当前交接 |
-| `changes/<name>/specs/**` | 这次落地后行为契约会怎样变化？ | 临时 delta；落地时合并入主 spec |
-| `.local/` | 本机验证输出和会话状态放在哪里？ | 仅本机；gitignored |
-| `hooks/` | Keelson 为支持的工具安装的适配脚本 | Keelson 维护的集成层 |
+| 路径 | 用途 |
+|---|---|
+| `README.md` | 这份项目地图 |
+| `workflow.md` | 小型、始终适用的执行内核 |
+| `skill/` | canonical Keelson 路由器与按需 references |
+| `INTENT.md` | 项目目的、边界、硬约束、Agent 权限 |
+| `NOW.md` | 当前状态、阻塞、下一具体步骤 |
+| `config.yaml` | 用户控制的 Keelson 配置 |
+| `manifest.json` | Keelson 维护的安装清单：它负责哪些宿主生成表面 |
 
-## 一次变更完成后最终留下什么
+## 只有真正需要时才出现
 
-完成一项工作后，理想结果是**脚手架变少，真相变多**：
+| 路径 | 创建时机 |
+|---|---|
+| `ROADMAP.md` | 项目存在 tracker 没有清楚表达的里程碑/方向 |
+| `GLOSSARY.md` | 共享术语开始重要或出现歧义 |
+| `specs/<capability>/spec.md` | 某能力的可观察行为值得成为契约 |
+| `rules/index.md` + `rules/*.md` | 稳定工程不变量适用于某路径，并且不适合直接变成 check |
+| `changes/<name>/change.md` | 非平凡工作需要可评审的边界 |
+| `changes/<name>/tasks.md` | 工作需要明确的多步骤 / 多切片计划 |
+| `changes/<name>/ledger.md` | 真正发生了裁定、根因、分派或验证事件 |
+| `changes/<name>/handoff.md` | 工作必须跨会话 / 跨人继续 |
+| `changes/<name>/specs/**` | spec 级变更修改行为契约 |
+| `.local/` | 产生本机验证证据时；gitignored |
+| `hooks/` | 已选宿主存在 Keelson 生命周期 hook 集成 |
 
-- 可观察行为 → 主 `specs/`；
-- 稳定工程约束 → 对应 `rules/` 或可执行 check；
-- 稳定术语 → `GLOSSARY.md`；
-- 当前接续状态 → `NOW.md`；
-- 完整历史 → 交给 git，而不是让 `.keelson/` 变成长年累积的日记。
+## 一次变更完成后留下什么
 
-临时的 `changes/<name>/` 在工作落地后会 fold 或 archive。没有进行中工作时，`changes/` 应基本为空。
+理想结果是**脚手架变少、真相变多**：
+
+- 可观察行为 → 主 specs；
+- 稳定约束 → 作用域 rules 或可执行 checks；
+- 稳定术语 → glossary；
+- 当前接续状态 → NOW；
+- 完整时间线 → git 历史。
+
+临时 change 工件在落地后 fold 或 archive。空的可选工件应该删除，而不是为了“以后也许用到”长期保留。
 
 ## 人类阅读原则
 
-这些文件刻意保持为短小 Markdown。某份文件开始难扫读时，`keelson doctor` 会依据知识预算提示压缩。优先写“现在是什么”，不要写“过去按时间发生了什么”。
+优先写现在时的当前真相。某份文件开始难扫读时，`keelson doctor` 会给出 knowledge-health 信号；应压缩或拆分，而不是继续追加历史段落。

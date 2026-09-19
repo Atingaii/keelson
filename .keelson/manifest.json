@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "schema": 1,
   "packageVersion": "0.3.0",
   "targets": [
     {

@@ -1,6 +1,6 @@
 ---
 name: keelson
-description: Engineering collaboration layer for coding work in repositories that have a .keelson/ directory. Use whenever the user asks to build, add, change, refactor, fix, debug, plan, continue, hand off, wrap up, review, or release work in such a project, and when they say "grill me", "status", "hand off", "land it", or "retro". Keeps specs as the source of truth, routes scoped rules, records decisions and open questions, separates work/verification/release state, and turns recurring mistakes into progressively stronger checks.
+description: Engineering control plane for coding work in repositories with a .keelson/ directory. Use for exploring an idea, building or changing code, fixing/debugging, continuing prior work, reviewing/finishing/landing, or improving recurring engineering failures. Routes the task into the smallest Keelson workflow while keeping project truth, evidence, and continuation state current.
 version: 0.3.0
 ---
 
