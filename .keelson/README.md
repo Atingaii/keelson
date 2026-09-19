@@ -34,9 +34,10 @@
 | `changes/<name>/change.md` | Non-trivial work needs a reviewable boundary |
 | `changes/<name>/tasks.md` | The work needs an explicit multi-step / multi-slice plan |
 | `changes/<name>/ledger.md` | A ruling, failure cause, dispatch, or verification event actually happened |
-| `changes/<name>/handoff.md` | Work must survive a session/person boundary |
+| `changes/<name>/handoff.md` | Work ownership moves across people/machines or needs an explicit transfer package |
 | `changes/<name>/specs/**` | A spec-sized change modifies behavior contracts |
-| `.local/` | Machine-local evidence is produced; gitignored |
+| `.runtime/sessions/` | A host/session can expose a stable identity; stores only local focus pointers, never completion state |
+| `.runtime/evidence/` | Checks produce machine-local output; gitignored |
 | `hooks/` | A selected host has a Keelson lifecycle hook integration |
 
 ## What survives a completed change
@@ -46,7 +47,8 @@ A completed change should leave **less scaffolding and more truth**:
 - observable behavior → main specs;
 - durable constraints → scoped rules or executable checks;
 - durable vocabulary → glossary;
-- current continuation state → NOW;
+- ordinary session continuation → durable change state + local session focus;
+- explicit ownership transfer → handoff;
 - chronology → git history.
 
 Temporary change files fold or archive when work lands. Empty optional artifacts should be deleted rather than kept “just in case”.
