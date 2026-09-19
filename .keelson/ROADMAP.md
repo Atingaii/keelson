@@ -1,11 +1,11 @@
 # Roadmap
 
 ## Now
-0.3.x harness hardening is complete: thin always-on instructions; ORIENT → BOUND → BUILD → SENSE → RECONCILE; an assumption audit at the decision frontier; one highest-value user question only when a load-bearing user-owned gap remains; durable answers routed into existing truth; and LF/CRLF-equivalent Markdown semantics. English/Chinese guidance is mirrored, the assumption-routing contract has regression tests, and the GitHub Actions matrix is green on Ubuntu, macOS, and Windows with Node 20 and 22.
+0.3.x usability and portability is complete: human-readable project map; thin always-on instructions; ORIENT → BOUND → BUILD → SENSE → RECONCILE; assumption frontier; LF/CRLF-equivalent Markdown; host-specific surfaces plus an always-installed `AGENTS.md` + `.agents/skills/` compatibility layer. The platform registry retains the 21 named hosts plus the generic Agent Skills host, and the GitHub Actions matrix is green on Ubuntu, macOS, and Windows with Node 20 and 22.
 
 ## Next
 - Continuous-evolution test: several changes in one project with session breaks, a requirement revision, a parallel branch, and a merge conflict; compare against a bare agent.
-- Codex end-to-end run when the account limit lifts; then confirm registry alias conventions for Codex, Cursor, and OpenCode.
+- Codex end-to-end run when the account limit lifts; exercise more `convention` platform adapters and promote only observed/documented paths to higher confidence.
 - Retro thresholds tuned on real ledgers rather than guesses.
 
 ## Later

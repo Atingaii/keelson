@@ -12,7 +12,7 @@ const env = { HOME };
 test('init creates .keelson, skill, resident block, hooks; update is idempotent', () => {
   const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"echo ok"}}', 'CLAUDE.md': '# Mine\n' });
   run(dir, ['init', '--tools', 'claude,cursor'], { env });
-  for (const f of ['.keelson/INTENT.md', '.keelson/NOW.md', '.keelson/config.yaml', '.keelson/rules/index.md', '.keelson/rules/general.md', '.keelson/hooks/session-start.mjs', '.claude/skills/keelson/SKILL.md', '.claude/skills/keelson/references/build.md', '.agents/skills/keelson/SKILL.md', '.cursor/rules/keelson.mdc', 'AGENTS.md']) assert.ok(exists(dir, f), f);
+  for (const f of ['.keelson/README.md', '.keelson/INTENT.md', '.keelson/NOW.md', '.keelson/config.yaml', '.keelson/rules/index.md', '.keelson/rules/general.md', '.keelson/hooks/session-start.mjs', '.claude/skills/keelson/SKILL.md', '.claude/skills/keelson/references/build.md', '.agents/skills/keelson/SKILL.md', '.cursor/rules/keelson.mdc', 'AGENTS.md']) assert.ok(exists(dir, f), f);
   assert.ok(!exists(dir, '.claude/skills/keelson/templates'), 'templates are not installed into the skill');
   const claude = read(dir, 'CLAUDE.md');
   assert.match(claude, /^# Mine/);
@@ -26,6 +26,21 @@ test('init creates .keelson, skill, resident block, hooks; update is idempotent'
   assert.equal(JSON.parse(read(dir, '.claude/settings.json')).hooks.SessionStart.length, 1);
   // lean profile strips guided blocks
   assert.doesNotMatch(read(dir, '.claude/skills/keelson/references/build.md'), /guided/);
+});
+
+test('claude-only init installs the portable agents layer and a refreshable human map', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env });
+  for (const f of ['CLAUDE.md', 'AGENTS.md', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', '.keelson/README.md']) assert.ok(exists(dir, f), f);
+  const map = read(dir, '.keelson/README.md');
+  assert.match(map, /If you have 30 seconds/);
+  assert.match(map, /NOW\.md/);
+  assert.match(map, /INTENT\.md/);
+  write(dir, '.keelson/README.md', '# stale map\n');
+  run(dir, ['update', '--no-hooks'], { env });
+  assert.doesNotMatch(read(dir, '.keelson/README.md'), /stale map/);
+  const rows = JSON.parse(run(dir, ['platforms', '--json'], { env }).stdout);
+  assert.equal(rows.find((p) => p.id === 'agents').configured, true);
 });
 
 test('guided profile keeps guided blocks; lang zh installs the Chinese skill when present', () => {

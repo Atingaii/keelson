@@ -6,6 +6,7 @@ All notable changes to this project are documented here. The format follows Keep
 
 ### Added
 
+- `.keelson/README.md`: a package-owned human project map that explains what to read first, what every Keelson artifact means, and what survives landing; `keelson update` refreshes it without overwriting project facts.
 - New `harness.md` skill reference: feedforward/feedback controls, mechanical invariants, repeated-failure promotion, verification baselines, and sunset conditions for model-specific guidance.
 
 ### Changed
@@ -13,7 +14,7 @@ All notable changes to this project are documented here. The format follows Keep
 - Markdown parsing and generated agent surfaces are now line-ending agnostic: LF and CRLF parse identically, while package-owned rendered Markdown emits LF for stable cross-platform output.
 - BOUND now performs an assumption audit before ambiguous non-trivial work: established facts stay separate from plan-required assumptions, reality-owned gaps are investigated, user-owned load-bearing gaps produce one highest-value question, and material results route into existing change/spec/rule artifacts instead of a new prompt diary.
 - `keelson init` is the only step. It auto-detects the coding tools installed on the machine when none is named, accepts one flag per tool (`--claude`, `--cursor`, `--kiro`, …) or `--tools a,b`, and writes a first-contact task into `NOW.md` so the agent drafts `INTENT.md` (and specs and rules for an existing codebase) and confirms them with the owner. The user is never asked to edit `INTENT.md` by hand; `--onboard` is no longer needed.
-- Supported tools grow from five to twenty-two, defined in `registry/platforms.json` with per-tool instruction and skill locations, a rules file where the tool has one, a Kiro steering format, and a confidence label (verified, documented, convention). Every non-Claude selection also installs the cross-tool layer (`AGENTS.md` + `.agents/skills/`). Paths can be overridden per project under `config.yaml → platforms.<id>`.
+- Supported tools grow from five to twenty-two, defined in `registry/platforms.json` with per-tool instruction and skill locations, a rules file where the tool has one, a Kiro steering format, and a confidence label (verified, documented, convention). Every initialized project now also installs the portable cross-tool layer (`AGENTS.md` + `.agents/skills/`), including Claude-only projects; Copilot CLI is auto-detected via the `copilot` binary. Paths can be overridden per project under `config.yaml → platforms.<id>`.
 - New `keelson platforms` command lists the tools, their locations, and which are installed or configured.
 - The binary no longer calls `process.exit()` after printing, which truncated large `--json` output on macOS.
 

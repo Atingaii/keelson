@@ -4,11 +4,22 @@
 The on-disk contract between a project and every agent that works in it.
 
 ## Requirement: Standing facts
-The `.keelson/` directory SHALL contain `INTENT.md`, `ROADMAP.md`, `NOW.md`, `config.yaml`, `rules/`, and `changes/`; specs live at `config.yaml → paths.specs`; `.keelson/.local/` holds per-machine state and is ignored by git; nothing under specs or `rules/` is generated.
+The `.keelson/` directory SHALL contain a package-owned human map `README.md`, plus `INTENT.md`, `ROADMAP.md`, `NOW.md`, `config.yaml`, `rules/`, and `changes/`; specs live at `config.yaml → paths.specs`; `.keelson/.local/` holds per-machine state and is ignored by git; nothing under specs or `rules/` is generated.
 
 ### Scenario: Fresh init
 - WHEN `keelson init` runs in a directory without `.keelson/`
-- THEN those files and directories exist and no existing file outside `.keelson/` is modified except the tool's instructions file, its skills directory, and (for Claude Code) `.claude/settings.json`
+- THEN those files and directories exist; `.keelson/README.md` explains the structure to people; and outside `.keelson/` only instruction/skill surfaces, the portable `AGENTS.md` + `.agents/skills/` layer, and (for Claude Code) `.claude/settings.json` may be modified
+
+### Scenario: Update human map
+- WHEN `keelson update` runs after the package changes its project-map documentation
+- THEN `.keelson/README.md` is refreshed while project-fact files such as `INTENT.md`, `NOW.md`, specs, and rules are not overwritten
+
+## Requirement: Portable agent surface
+Every initialized project SHALL contain `AGENTS.md` and `.agents/skills/keelson/` in addition to any tool-specific surfaces selected by the owner.
+
+### Scenario: Claude-only init remains portable
+- WHEN `keelson init --claude` runs
+- THEN Claude-specific surfaces exist and the portable `AGENTS.md` + `.agents/skills/keelson/` surface also exists for compatible future agents
 
 ## Requirement: Change directory lifecycle
 A change SHALL live in `changes/<name>/` with `change.md` (why, what, acceptance, open questions, decisions with states), `tasks.md` (slices and tasks), `ledger.md`, optional `handoff.md`, and optional delta specs, and SHALL leave `changes/` when it lands or is cancelled.

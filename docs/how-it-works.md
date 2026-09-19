@@ -1,6 +1,6 @@
 # How it works
 
-Keelson is three surfaces in the agent's environment and one directory of facts in the repository. This page describes each mechanism precisely.
+Keelson is three surfaces in the agent's environment and one human-readable directory of project facts in the repository. `.keelson/README.md` is the map into that directory; it is package-owned and refreshed by `keelson update`, while project facts are never overwritten just to upgrade Keelson. This page describes each mechanism precisely.
 
 ## The resident block
 
@@ -15,7 +15,7 @@ Keelson is three surfaces in the agent's environment and one directory of facts 
 - to write `handoff.md` when stopping and check the worktree when resuming;
 - that the `keelson` skill holds the details.
 
-For Cursor the same text is also written to `.cursor/rules/keelson.mdc` with `alwaysApply: true`.
+For Cursor the same text is also written to `.cursor/rules/keelson.mdc` with `alwaysApply: true`. Independently of the selected host, every initialized project also receives `AGENTS.md` plus `.agents/skills/keelson/` as the portable compatibility layer.
 
 ## Hooks (Claude Code)
 

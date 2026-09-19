@@ -19,10 +19,10 @@ export function platformFor(id, cfg = null) {
   return over && typeof over === 'object' ? { ...base, ...over } : base;
 }
 
-/** The cross-tool layer every non-Claude selection also gets: AGENTS.md + .agents/skills. */
+/** Portable cross-tool layer installed for every project: AGENTS.md + .agents/skills. */
 export const CROSS_TOOL = { id: 'agents', label: 'cross-tool layer', instructions: 'AGENTS.md', skillsDir: '.agents/skills', hooks: false };
 
-/** Expand a tool selection into the concrete targets to install: dedupe by path, add the cross-tool layer where it applies. */
+/** Expand a tool selection into concrete targets. Every project also gets the portable cross-tool layer. */
 export function installTargets(tools, cfg = null) {
   const targets = [];
   const seen = new Set();
@@ -36,8 +36,8 @@ export function installTargets(tools, cfg = null) {
     const p = platformFor(id, cfg);
     if (!p) throw new Error(`unknown tool "${id}". Known: ${PLATFORM_IDS.join(', ')}`);
     push(p);
-    if (id !== 'claude') push(CROSS_TOOL);
   }
+  push(CROSS_TOOL);
   return targets;
 }
 

@@ -35,7 +35,7 @@ Agent: Understood as: a share link per album, opened by anyone who has it,
        with revoke and expiry. Out: per-account permissions. Found: the auth
        rule in rules/api.md says every read goes through canView(). This adds
        a capability, so it is a spec change.
-       Two questions before I plan. Should a revoked link keep thumbnails
+       One question before I plan: should a revoked link keep thumbnails
        cached? I recommend no; a leaked link then leaks nothing after revoke.
 
 You:   No thumbnails after revoke. Expiry I have not decided.
@@ -84,7 +84,7 @@ keelson init                 # picks the coding tools installed on this machine
 keelson init --cursor --codex   # or name the ones you use
 ```
 
-That is the only step. Open your agent in the directory and talk to it. On first contact it reads the repository, drafts `.keelson/INTENT.md` (why the project exists, what it will not do, what the agent may decide alone), and, for an existing codebase, one spec per capability and rules for the paths that have conventions. It asks you to confirm in one short exchange. You never write those files by hand.
+That is the only step. Every init also writes the portable `AGENTS.md` + `.agents/skills/keelson` layer, so compatible agents can pick Keelson up later even if they were not selected today. Open your agent in the directory and talk to it. On first contact it reads the repository, drafts `.keelson/INTENT.md` (why the project exists, what it will not do, what the agent may decide alone), and, for an existing codebase, one spec per capability and rules for the paths that have conventions. It asks you to confirm in one short exchange. You never write those files by hand.
 
 `keelson init` also references the architecture notes, decision records, CI, and issue tracker it finds, instead of copying them. See [Existing projects](docs/existing-projects.md).
 
@@ -94,7 +94,8 @@ Claude Code users can also install the skill from the plugin marketplace (`/plug
 
 | Path | Holds | Written by |
 |---|---|---|
-| `.keelson/INTENT.md` | Why the project exists, boundaries, hard constraints, what the agent may decide alone | You, once |
+| `.keelson/README.md` | Human map: what to read first, what every Keelson file means, and what survives landing | Keelson; refreshed by `update` |
+| `.keelson/INTENT.md` | Why the project exists, boundaries, hard constraints, what the agent may decide alone | Agent drafts; owner confirms |
 | `.keelson/ROADMAP.md` | The current milestone; later work as direction only. Links the tracker when there is one | You and the agent |
 | `.keelson/NOW.md` | What is in flight, what is blocked, the next step. Present tense, rewritten in full | The agent, when it stops or lands |
 | `.keelson/GLOSSARY.md` | One meaning per term, used by specs, code, and conversation alike | You and the agent, as words drift |
@@ -175,7 +176,7 @@ The project's documents are kept small the same way. Each document type has a li
 
 ## Supported tools
 
-`keelson init` takes one flag per tool, or `--tools a,b`, or nothing (it detects what is installed). Every selection except Claude Code also installs the cross-tool layer: `AGENTS.md` plus `.agents/skills/`, which any agent that reads that convention picks up. `keelson platforms` prints the full table with what is installed on your machine.
+`keelson init` takes one flag per tool, or `--tools a,b`, or nothing (it detects what is installed). Every project also installs the portable cross-tool layer: `AGENTS.md` plus `.agents/skills/`, which Codex, Gemini CLI, GitHub Copilot, and any other compatible agent can pick up even when it was not selected at init. `keelson platforms` prints the full table with what is installed on your machine.
 
 | Tool | Instructions | Skills | Hooks | Confidence |
 |---|---|---|---|---|

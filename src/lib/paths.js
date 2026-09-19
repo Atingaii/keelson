@@ -42,6 +42,7 @@ export const projectPaths = (root, cfg = null) => {
     root,
     keelson: k,
     config,
+    readme: path.join(k, 'README.md'),
     intent: path.join(k, 'INTENT.md'),
     now: path.join(k, 'NOW.md'),
     roadmap: path.join(k, 'ROADMAP.md'),
