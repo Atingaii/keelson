@@ -1,171 +1,127 @@
 # Getting started
 
-This page walks one project from `keelson init` through a quick change, a spec change with an open question, a handoff, a second session, and a landing. It takes about twenty minutes.
+Keelson has one user-facing workflow:
+
+> **Run `keelson init` once, then keep talking to your coding agent normally.**
+
+For the full start-to-finish example—including Explore, quick/spec changes, handoff, verification, landing, bugs, upgrades, and uninstall—read [Complete user flow](user-flow.md).
 
 ## Install
 
-Keelson needs Node.js 20 or newer.
+Requires Node.js 20+.
 
 ```bash
 npm install -g keelson
 keelson --version
 ```
 
-## Initialise a project
+## Initialize
 
 ```bash
 cd your-project
 keelson init
 ```
 
-With no flags it picks installed hosts whose discovery paths are verified or documented. Convention-only detections are shown as opt-in candidates rather than silently enabled; if no reliable host is found, init uses the portable `AGENTS.md` + `.agents/skills/` layer. Name the ones you use with one flag per tool (`keelson platforms` lists them):
+With no host flags, Keelson detects installed first-class CLIs whose discovery paths are verified or documented. If none are found, it uses the portable `AGENTS.md + .agents/skills/` layer.
+
+You can be explicit:
 
 ```bash
-keelson init --claude --codex --cursor
+keelson init --claude
+keelson init --codex --opencode
+keelson init --gemini --kiro
 ```
 
-Sample output on a repository that already has decision records and CI:
+First-class hosts are listed by:
+
+```bash
+keelson platforms
+```
+
+## What init creates
+
+Fresh init is intentionally small:
 
 ```text
-Keelson init in /home/you/your-project
-· tools detected on this machine: Claude Code (override with --tools or --<platform>)
-✓ referencing existing decisions: docs/adr
-✓ referencing existing tasks: https://github.com/you/your-project/issues
-✓ referencing existing ci: .github/workflows
-✓ .keelson/README.md (human project map; created by Keelson)
-✓ .keelson/INTENT.md (the agent drafts it from the code on first contact; confirm it when it asks)
-✓ .keelson/NOW.md
-✓ .keelson/ROADMAP.md (current milestone; link your tracker instead of duplicating it)
-✓ .keelson/GLOSSARY.md (shared vocabulary; fill it when two words start meaning the same thing)
-✓ .keelson/rules/index.md
-✓ .keelson/rules/general.md
-✓ .gitignore: .keelson/.local/ (session state and evidence stay on this machine)
-✓ .keelson/config.yaml
-✓ canonical runtime → .keelson/workflow.md; .keelson/skill
-✓ Claude Code: discovery shim → .claude/skills/keelson; instructions → CLAUDE.md
-✓ cross-tool layer: discovery shim → .agents/skills/keelson; instructions → AGENTS.md
-✓ Claude Code: hooks → .claude/settings.json (session snapshot + per-prompt state line)
-· model detection cached in ~/.keelson/models.cache.json (keelson models)
-✓ .keelson/NOW.md: first-contact task written for the agent (draft INTENT, specs, and rules from the code)
-
-Done. Open your agent in this directory and start talking.
-  On first contact it reads the repository, drafts .keelson/INTENT.md, the specs, and the rules, and asks you to confirm before anything lands.
+.keelson/
+├── README.md
+├── INTENT.md
+├── NOW.md
+├── config.yaml
+├── manifest.json
+├── workflow.md
+└── skill/
+    ├── SKILL.md
+    └── references/
 ```
 
-`init` never overwrites project-fact files such as INTENT, NOW, specs, rules, or active changes. It also records which generated adapters it owns in `.keelson/.managed.json`, so later `update`, `uninstall`, and `ablate` can remove stale Keelson surfaces without guessing. Package-owned runtime files — `.keelson/README.md`, `.keelson/workflow.md`, and `.keelson/skill/` — are refreshed by `keelson update`. Outside `.keelson/`, init only appends/replaces a marked discovery block in `CLAUDE.md` (or `AGENTS.md`, `GEMINI.md`) and writes one-file skill shims; user-authored content outside the marked block is left alone. Existing material it finds (architecture notes, decision records, CI, a GitHub issues page) is recorded under `refs` in `config.yaml` and referenced, never copied. If `package.json` has `lint`, `typecheck`, or `test` scripts, they become check commands. `keelson init --dry-run` lists what would be written without writing it.
+It does **not** pre-create empty ROADMAP, glossary, rules, specs, changes, task lists, ledgers, or handoffs.
+
+Outside `.keelson/`, Keelson writes only the thin discovery surfaces the selected hosts need. Full guidance still lives once under `.keelson/`.
+
+`manifest.json` records which generated host surfaces Keelson owns, so later `update`, `uninstall`, and host switches can reconcile them without guessing.
 
 ## First contact
 
-If you are a person opening `.keelson/` directly, start with `.keelson/README.md`; it maps both the human project state and the canonical runtime. Agents enter through `.keelson/workflow.md` and `.keelson/skill/SKILL.md`; people usually continue with `NOW.md`, `INTENT.md`, the relevant spec, and any active change. Open your agent in the project directory and say anything, or just "hello". `NOW.md` holds a first-contact task, so the agent reads the repository, drafts `.keelson/INTENT.md` (why the project exists, its boundaries, hard constraints, and what the agent may decide alone) and, for an existing codebase, one spec per capability plus rules for paths with conventions. It asks you to confirm or correct in one short exchange and keeps your answers. If you ask for a change right away, it does this while shaping that change and confirms both together. You never write these files by hand.
+Open your normal coding agent and ask for real work.
 
+On the first non-trivial conversation the agent:
 
-## Your first quick change
+1. reads the repository and existing referenced material;
+2. drafts `.keelson/INTENT.md` from evidence already present;
+3. asks you to confirm or correct the project boundary in one short exchange;
+4. shapes the actual request.
 
-Say what you want in plain language:
+It does **not** inventory the whole repository into specs and rules. Those appear later only when current work exposes a behavior contract or durable invariant worth preserving.
 
-```text
-Add pagination to the orders list.
-```
+Example:
 
-The agent runs `keelson context --paths` for the files it expects to touch, reads `INTENT.md`, `NOW.md`, and the matched rules, and writes back its understanding in a few lines. Then it runs `keelson new add-order-pagination`, fills `change.md` (Why, What, Acceptance) and `tasks.md`, and proceeds. When the tasks are done it runs:
+> **You:** Add search to the orders page.  
+> **Agent:** I understand this as filtering the existing orders list by order number and customer name; no global search and no public API change. I found the existing pagination contract and will preserve it. Is that boundary right?
 
-```bash
-keelson check --record "pagination on /orders"
-```
+Once confirmed, work continues normally.
 
-That runs the check commands, saves their output under `.keelson/.local/evidence/`, and appends a `Verify:` entry to the ledger with each exit code and the worktree fingerprint. The agent ticks the acceptance items whose checks ran, then runs `keelson land add-order-pagination --now "…"` and tells you what changed.
+## What grows later
 
-If you would rather approve quick changes before work starts, set this in `.keelson/config.yaml`:
+Project knowledge appears only when useful:
 
-```yaml
-confirm:
-  quick: wait
-```
+- `ROADMAP.md` — when a milestone/direction belongs in the repo rather than the tracker;
+- `GLOSSARY.md` — when vocabulary becomes load-bearing;
+- `rules/` — when a stable path-scoped engineering invariant must survive future sessions;
+- `specs/` — when observable behavior needs a durable contract;
+- `changes/` — while non-trivial work is in flight;
+- `.local/` — when machine-local verification evidence is produced.
 
-## Your first spec change
+A quick change starts with only `change.md`. A spec-sized change also starts with a task plan and behavior delta. Ledger and handoff files appear only after an event or a session boundary actually exists.
 
-A spec change alters a behaviour contract, adds or removes a capability, involves a migration, or abandons the obvious approach. Say something like:
-
-```text
-Let people share an album with a link.
-```
-
-The agent recognises the size and asks the questions that block the next slice, one round at a time, with a recommendation and its trade-off for each. It then runs `keelson new share-links --tier spec --capability sharing --touches src/api/**` and drafts:
-
-- `change.md` with Why, What, How, Alternatives, Impact, Acceptance, Open questions, and Decisions;
-- `specs/sharing/spec.md` holding only the delta: added, modified, and removed requirements, with a `base:` stamp of the main spec;
-- `tasks.md` with slices, each stating what it delivers, and an effort tier per task;
-- `ledger.md` for rulings, dispatches, root causes, and verification evidence.
-
-Say you have not decided on link expiry. The agent records it:
-
-```markdown
-## Open questions
-- default expiry for share links? — blocks: Revoke and expiry
-
-## Decisions
-- sharing: links are unguessable tokens; sequential ids rejected because they leak album count
-- (assumed) sharing: links expire after 7 days by default
-```
-
-The open question blocks only the slice named after it. The agent waits for your approval of the plan, then builds the "Create and access" slice, records evidence, and stops before landing because an open question and an assumed decision remain. `keelson status` shows:
-
-```text
-share-links  [spec]  work: in-progress  verify: ✓ passed  release: unreleased  (ann)
-   ✓ slice Create and access 2/2 — a link can be created and opens the album
-   · slice Revoke and expiry 0/3 — revoked or expired links refuse every access path
-   acceptance 2/4
-   open: default expiry for share links? (blocks Revoke and expiry)
-   1 assumed decision awaiting the owner
-```
-
-## Stopping and resuming
-
-When the agent stops mid-change it runs `keelson handoff share-links` and fills the six sections: goal and confirmed decisions, done, open and blocked, ruled out, next step, verification. It rewrites `NOW.md` to match.
-
-Open a new session and say "continue". On Claude Code the session-start hook has already printed `NOW.md`, the active change, and the handoff's next step. On other tools the agent runs `keelson context` first. It checks `keelson status` for uncommitted files and whether HEAD moved since the handoff, never resets uncommitted work, and continues from the next step.
-
-Answer the open question:
-
-```text
-continue. Expiry is 30 days.
-```
-
-The agent updates `change.md` (open question removed, decision confirmed), the delta spec, and the slice, builds it, and records fresh evidence. Old evidence is stale by definition after any edit; `keelson land` would say so.
-
-## Landing
-
-When every task and acceptance item is checked, no open question remains, and the last `Verify:` entry matches the current worktree, the agent runs:
-
-```bash
-keelson land share-links --confirm-assumptions --now "Nothing in flight. Next: watch share-link error rate for a week."
-```
-
-`--confirm-assumptions` is your decision, not the agent's: it folds `(assumed)` decisions into the spec as confirmed. Delta specs merge into `specs/sharing/spec.md`. Decision lines fold into its `Decisions` section. The change directory is removed. `NOW.md` is rewritten. The agent commits the landing together with the last code change so specs and code share a revision.
-
-If landing is refused, the message lists every reason:
-
-```text
-keelson: cannot land "share-links":
-  - 1 open question(s): default expiry for share links?
-  - verification stale (verified at tree 5bcb829dae, worktree is 9a92f4bead)
-  - 1 assumed decision(s) would be folded as confirmed; pass --confirm-assumptions once the owner agrees
-```
-
-You can watch any of this yourself:
+## The commands you may care about
 
 ```bash
 keelson status
-keelson validate
-keelson doctor
 ```
-
-## Teams and CI
-
-Add one line to your pull request template asking for a change directory on non-trivial work, and run these in CI:
+Shows active work, verification freshness, open questions, handoffs, and release state.
 
 ```bash
-keelson validate && keelson check
+keelson doctor
 ```
+Diagnoses runtime/shim/manifest drift, project validation, stale evidence, conflicts, and knowledge health.
 
-`validate` exits non-zero on structural errors: missing sections, unknown statuses, dated model IDs, broken rule references. `check` exits non-zero when any configured command fails. Release state comes from git tags: `keelson status` lists changes landed since the last tag. See [Collaboration](collaboration.md).
+```bash
+npm install -g keelson@latest
+keelson update
+```
+Refreshes package-owned guidance and reconciles generated host surfaces after an upgrade or host change.
+
+```bash
+keelson uninstall
+```
+Removes generated integration/runtime surfaces while keeping project facts. Add `--purge` only when you explicitly want the whole `.keelson/` directory removed.
+
+You do not need to memorize the agent-facing commands.
+
+## Next
+
+- [Complete user flow](user-flow.md) — the full worked lifecycle.
+- [Concepts](concepts.md) — the mental model.
+- [How it works](how-it-works.md) — on-disk and runtime mechanics.
+- [Existing projects](existing-projects.md) — brownfield adoption.
