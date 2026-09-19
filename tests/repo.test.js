@@ -54,3 +54,12 @@ test('registry tiers point at aliases that exist in the platform rank', () => {
     }
   }
 });
+
+test('config migration is pure and idempotent', async () => {
+  const { parseConfig, CONFIG_VERSION } = await import('../src/lib/config.js');
+  const v1 = parseConfig('version: 1\ncheck:\n  - npm test\n');
+  assert.equal(v1.version, CONFIG_VERSION);
+  assert.deepEqual(v1.check, ['npm test']);
+  assert.equal(v1.paths.specs, '.keelson/specs');
+  assert.equal(parseConfig('').version, CONFIG_VERSION);
+});

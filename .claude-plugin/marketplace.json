@@ -1,6 +1,8 @@
 {
   "name": "keelson",
-  "owner": { "name": "Atingaii" },
+  "owner": {
+    "name": "Atingaii"
+  },
   "metadata": {
     "description": "Keelson plugin marketplace",
     "version": "1.0.0"
@@ -10,10 +12,17 @@
       "name": "keelson",
       "source": "./",
       "description": "A load-bearing workflow layer for coding agents. Install the CLI (npm i -g keelson) and run `keelson init` in your project for hooks and the resident block.",
-      "version": "0.1.0",
-      "author": { "name": "Atingaii" },
+      "version": "0.2.0",
+      "author": {
+        "name": "Atingaii"
+      },
       "category": "workflow",
-      "keywords": ["workflow", "specs", "subagents", "memory"]
+      "keywords": [
+        "workflow",
+        "specs",
+        "subagents",
+        "memory"
+      ]
     }
   ]
 }

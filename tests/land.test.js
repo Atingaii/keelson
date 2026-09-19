@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mergeDelta, extractDecisions, appendDecisions } from '../src/commands/land.js';
-import { parseSpec } from '../src/lib/markdown.js';
+import { mergeDelta, appendDecisions } from '../src/commands/land.js';
+import { parseSpec, parseDecisions } from '../src/lib/markdown.js';
 
 const main = `# messaging\n\n## Purpose\nEvents.\n\n## Requirement: Delivery\nold\n### Scenario: s\n- WHEN a\n- THEN b\n\n## Requirement: CSV\ncsv\n\n## Decisions\n- messaging: existing\n`;
 const delta = `## ADDED Requirements\n### Requirement: Durable\ndur\n## MODIFIED Requirements\n### Requirement: Delivery\nnew\n## REMOVED Requirements\n### Requirement: CSV\n`;
@@ -24,7 +24,7 @@ test('mergeDelta into an empty main creates the spec', () => {
 
 test('decisions extraction and folding are idempotent', () => {
   const body = `## Why\nw\n## Decisions\n- messaging: NATS over Kafka; Kafka rejected for cost\n- no prefix line\n- …\n`;
-  const d = extractDecisions(body);
+  const d = parseDecisions(body);
   assert.equal(d.length, 2);
   assert.equal(d[0].capability, 'messaging');
   assert.equal(d[1].capability, null);

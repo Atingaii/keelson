@@ -1,7 +1,7 @@
 {
   "name": "keelson",
-  "version": "0.1.0",
-  "description": "A load-bearing workflow layer for AI coding agents: specs as truth, scoped rules, session memory, effort-tiered subagents. Init once, then just talk.",
+  "version": "0.2.0",
+  "description": "An engineering collaboration layer for coding agents on long-lived projects: a small kernel, engineering capability that unfolds on demand, reviewable project state, and verification wired into the Git, tests, and CI you already have.",
   "type": "module",
   "bin": {
     "keelson": "bin/keelson.js"

@@ -1,48 +1,61 @@
 import path from 'node:path';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
-import { readOr, listDirs } from '../lib/fs.js';
+import { readOr, listDirs, exists } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
 import { matchRules } from '../lib/rules.js';
-import { loadAllChanges } from '../lib/changes.js';
-import { gitStatusShort, recentCommits } from '../lib/git.js';
+import { loadAllChanges, verificationStatus } from '../lib/changes.js';
+import { gitStatusShort, recentCommits, worktreeFingerprint } from '../lib/git.js';
 import { list } from '../lib/args.js';
 
 export async function context({ flags, positional }, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
-  const p = projectPaths(root);
-  const cfg = loadConfig(p.config);
+  const cfg = loadConfig(projectPaths(root).config);
+  const p = projectPaths(root, cfg);
   const paths = [...list(flags.paths), ...positional].map((x) => path.relative(root, path.resolve(root, x)).replace(/\\/g, '/'));
-  const rules = matchRules(p.rules, paths.length ? paths : []);
+  const rules = matchRules(p.rules, paths);
+  const fp = worktreeFingerprint(root);
   const changes = loadAllChanges(p.changes);
   const specs = listDirs(p.specs);
+  const refs = Object.entries(cfg.refs ?? {}).filter(([, v]) => v);
   const data = {
     root,
     intent: readOr(p.intent).trim(),
     now: readOr(p.now).trim(),
+    roadmap: exists(p.roadmap) ? readOr(p.roadmap).trim() : '',
     context: cfg.context?.trim() ?? '',
+    refs: Object.fromEntries(refs),
     paths,
     rules: rules.map((r) => ({ file: `.keelson/rules/${r.file}`, globs: r.globs, content: r.content.trim(), missing: !r.exists })),
-    specs,
-    changes: changes.map((c) => ({ name: c.name, tier: c.tier, phase: c.phase, progress: c.progress })),
+    specs: specs.map((s) => `${p.specsRel}/${s}/spec.md`),
+    changes: changes.map((c) => ({ name: c.name, tier: c.tier, owner: c.owner, work: c.work, verification: verificationStatus(c, fp).state, progress: c.progress, open: c.open.map((o) => o.text), handoffNext: c.handoff?.next ?? null })),
     git: { dirty: gitStatusShort(root), recent: recentCommits(root, 5) },
   };
   if (flags.json) {
     console.log(JSON.stringify(data, null, 2));
     return 0;
   }
-  const out = [];
-  out.push(`# Keelson context — ${path.basename(root)}`, '');
+  const out = [`# Keelson context — ${path.basename(root)}`, ''];
   if (data.context) out.push('## Project context (config.yaml)', '', data.context, '');
   out.push('## INTENT.md', '', data.intent || '(empty — fill in .keelson/INTENT.md)', '');
+  if (data.roadmap) out.push('## ROADMAP.md', '', data.roadmap, '');
   out.push('## NOW.md', '', data.now || '(empty)', '');
-  out.push('## Active changes', '', ...(changes.length ? changes.map((c) => `- ${c.name} · ${c.tier} · ${c.phase} · ${c.progress.done}/${c.progress.total} tasks`) : ['none']), '');
-  out.push('## Capabilities with specs', '', specs.length ? specs.map((s) => `- ${s} → .keelson/specs/${s}/spec.md`).join('\n') : 'none yet', '');
+  if (refs.length) out.push('## Existing project material (read, do not duplicate)', '', ...refs.map(([k, v]) => `- ${k}: ${v}`), '');
+  out.push('## Active changes', '');
+  if (!changes.length) out.push('none');
+  for (const c of data.changes) {
+    out.push(`- ${c.name} · ${c.tier} · work ${c.work} · verify ${c.verification} · ${c.progress.done}/${c.progress.total} tasks${c.owner ? ` · ${c.owner}` : ''}`);
+    if (c.open.length) out.push(`  open: ${c.open.join('; ')}`);
+    if (c.handoffNext) out.push(`  handoff next: ${c.handoffNext.split('\n')[0]}`);
+  }
+  out.push('');
+  out.push(`## Capabilities with specs (${p.specsRel})`, '', specs.length ? specs.map((s) => `- ${s}`).join('\n') : 'none yet', '');
   out.push(`## Rules matched${paths.length ? ` for ${paths.join(', ')}` : ' (always-on only; pass --paths to route)'}`, '');
   if (!rules.length) out.push('none');
   for (const r of rules) {
     out.push(`### .keelson/rules/${r.file}  (${r.globs.join(', ')})`, '');
     out.push(r.exists ? r.content.trim() : '(file missing — referenced in index.md but not found)', '');
   }
+  if (paths.length) out.push('Path routing is navigation, not proof: run `keelson impact <files>` for callers and affected specs, then check other entry points by reading.', '');
   if (data.git.dirty?.length) out.push('## Uncommitted', '', ...data.git.dirty.slice(0, 20).map((l) => `- ${l}`), '');
   console.log(out.join('\n'));
   return 0;

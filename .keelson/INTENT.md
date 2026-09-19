@@ -1,16 +1,22 @@
 # keelson
 
 ## Why this exists
-Coding agents start every session without the project's reasons, conventions, or state, and every task runs on the same model regardless of difficulty. Keelson keeps those facts in the repository in a form agents read at the right moment, and routes effort by task difficulty, without adding ceremony the user has to drive by hand.
+Coding agents are good at one task and bad at a project that lasts years: they forget why things were decided, let specs drift from code, treat green tests as met requirements, cannot resume each other's work, and collide when they run in parallel. Keelson is the engineering collaboration layer that keeps those facts in the repository in a form agents read at the right moment, keeps work, verification, and release state apart, and refuses to call anything done without evidence that matches the code. The user manages a conversation, not a process.
 
 ## Boundaries
 - In scope: the `.keelson/` directory contract, the CLI that maintains it, one skill per supported tool, hook scripts for tools that support them, the effort-tier registry.
 - Explicitly not: a task runner, a test framework, a hosted service, per-tool plugins beyond files the tool already reads, any behaviour gate on the agent itself.
 
+## Authorizations
+- Decides alone: implementation choices inside a confirmed change; test structure; naming that follows existing patterns; which reference to read.
+- Recommends, owner decides: anything that changes the `.keelson/` layout, the ledger or spec format, a CLI flag, or the skill's guidance; new dependencies.
+- Always confirms: publishing to npm, pushing tags, force-landing a change, deleting user files.
+
 ## Hard constraints
 - Node ≥ 20, one runtime dependency (`yaml`). Hook scripts have zero dependencies.
 - No dated model IDs anywhere in this repository or in generated files.
-- Every piece of agent guidance carries a `without:` and a `sunset:` annotation.
+- Every piece of agent guidance carries a `without:` and a `sunset:` annotation, and the Chinese mirror carries the same ids.
+- No other project, framework, or tool is named as a source or comparison anywhere in the repository.
 - Generated surfaces are re-creatable from the package (`keelson update`) and removable (`keelson ablate`).
 
 ## Working defaults

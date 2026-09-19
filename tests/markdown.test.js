@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseTasks, parseLedger, parseSpec, parseDelta, renderSpec, parseFrontmatter, sections } from '../src/lib/markdown.js';
+import { parseTasks, parseSlices, parseAcceptance, parseOpenQuestions, parseDecisions, parseHandoff, parseLedger, parseSpec, parseDelta, renderSpec, parseFrontmatter, sections } from '../src/lib/markdown.js';
 
 test('parseTasks reads state, id, effort, verify', () => {
   const t = parseTasks(`# Tasks\n- [ ] 1. Add thing (effort: light) — verify: \`npm test -- a\`\n- [x] 2.1 Other (effort: deep)\n- plain bullet`);
@@ -56,4 +56,22 @@ test('dispatch result comes only from the Result line', () => {
   const [a, b] = parseLedger(`### Dispatch: task 3 → deep (fable)\nReviewer named its rejected option; no blockers.\n\n### Dispatch: task 4 → light (haiku)\nResult: pass\nfailed attempts earlier were retried.`);
   assert.equal(a.result, null);
   assert.equal(b.result, 'pass');
+});
+
+test('slices, acceptance, open questions, decision states, handoff parse; placeholders are ignored', () => {
+  const tasks = '## Slice: …\nDelivers: …\n- [ ] 1. x (effort: light)\n\n## Slice: Paging\nDelivers: pages work\n- [x] 2. y (effort: deep)\n';
+  assert.deepEqual(parseSlices(tasks), [{ name: 'Paging', delivers: 'pages work', done: 1, total: 1 }]);
+  assert.equal(parseTasks(tasks)[0].slice, null);
+  assert.equal(parseTasks(tasks)[1].slice, 'Paging');
+  const body = '## Acceptance\n- [ ] … — test: `…`\n- [x] links open — test: share.create\n- [ ] expired links refuse — manual: open one\n## Open questions\n- … — blocks: <slice>\n- public download? — blocks: Download, Page\n## Decisions\n- {{capability}}: …\n- (assumed) share: expires in 7 days\n- share: tokens are random; sequential rejected\n';
+  assert.deepEqual(parseAcceptance(body).map((a) => [a.done, a.kind]), [[true, 'test'], [false, 'manual']]);
+  assert.deepEqual(parseOpenQuestions(body), [{ text: 'public download?', blocks: ['Download', 'Page'] }]);
+  assert.deepEqual(parseDecisions(body).map((d) => d.state), ['assumed', 'confirmed']);
+  const h = parseHandoff('---\nat: abc1234\nupdated: 2026-01-01 10:00\nby: Ann\n---\n# H\n## Next step\nDo the thing.\n## Verification\nnone\n');
+  assert.deepEqual([h.at, h.by, h.next], ['abc1234', 'Ann', 'Do the thing.']);
+});
+
+test('verify entries carry the worktree tree hash', () => {
+  const [v] = parseLedger('### Verify: e2e\n`npm test` exit 0; `npm run lint` exit 2 · tree 5bcb829dae\n');
+  assert.deepEqual([v.exit, v.tree, v.command], [2, '5bcb829dae', 'npm test']);
 });

@@ -35,33 +35,59 @@ test('guided profile keeps guided blocks; lang zh installs the Chinese skill whe
   assert.ok(!exists(dir, '.claude/settings.json'));
 });
 
-test('change lifecycle: new → validate → land folds specs and decisions', () => {
+test('change lifecycle: new → gates → check --record → land folds specs and decisions', () => {
   const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"echo ok"}}' });
+  execFileSync('git', ['init', '-q'], { cwd: dir });
   run(dir, ['init', '--no-hooks'], { env });
   write(dir, '.keelson/INTENT.md', '# x\n\n## Why this exists\nReal text.\n');
   write(dir, '.keelson/specs/orders/spec.md', '# orders\n\n## Requirement: Listing\nlists\n### Scenario: s\n- WHEN a\n- THEN b\n');
-  run(dir, ['new', 'Add pagination', '--tier', 'spec', '--capability', 'orders'], { env });
-  assert.ok(exists(dir, '.keelson/changes/add-pagination/specs/orders/spec.md'));
-  write(dir, '.keelson/changes/add-pagination/change.md', `---\ntier: spec\ncreated: 2026-01-01\n---\n# Add pagination\n\n## Why\nw\n\n## What\n- x\n\n## How\nh\n\n## Alternatives\n- **offset (chosen)** — a\n- **cursor** — strongest: b. Rejected because: c\n\n## Impact\n- i\n\n## Decisions\n- orders: offset pagination over cursor; cursor rejected because page jumps are required\n`);
-  write(dir, '.keelson/changes/add-pagination/specs/orders/spec.md', `## ADDED Requirements\n### Requirement: Page size\nThe API SHALL cap size at 200.\n#### Scenario: big\n- WHEN size=500\n- THEN 400\n`);
-  write(dir, '.keelson/changes/add-pagination/tasks.md', '- [ ] 1. Do it (effort: light) — verify: `echo ok`\n');
+  run(dir, ['new', 'Add pagination', '--tier', 'spec', '--capability', 'orders', '--touches', 'src/api/**'], { env });
+  const front = read(dir, '.keelson/changes/add-pagination/change.md');
+  assert.match(front, /^status: clarifying$/m);
+  assert.match(front, /^owner: /m);
+  assert.match(front, /^touches: \[src\/api\/\*\*\]$/m);
+  assert.match(read(dir, '.keelson/changes/add-pagination/specs/orders/spec.md'), /^base: [0-9a-f]{10}$/m);
+  write(dir, '.keelson/changes/add-pagination/change.md', `---\ntier: spec\ncreated: 2026-01-01\nstatus: in-progress\n---\n# Add pagination\n\n## Why\nw\n\n## What\n- x\n\n## How\nh\n\n## Alternatives\n- **offset (chosen)** — a\n- **cursor** — strongest: b. Rejected because: c\n\n## Impact\n- i\n\n## Acceptance\n- [ ] default page is 20 — test: orders.default\n\n## Open questions\n- clamp or reject oversized pages? — blocks: Limits\n\n## Decisions\n- orders: offset pagination over cursor; cursor rejected because page jumps are required\n- (assumed) orders: oversized pages are clamped\n`);
+  write(dir, '.keelson/changes/add-pagination/specs/orders/spec.md', `---\nbase: ${read(dir, '.keelson/changes/add-pagination/specs/orders/spec.md').match(/^base: (\S+)/m)[1]}\n---\n## ADDED Requirements\n### Requirement: Page size\nThe API SHALL cap size at 200.\n#### Scenario: big\n- WHEN size=500\n- THEN 400\n`);
+  write(dir, '.keelson/changes/add-pagination/tasks.md', '# Tasks\n\n## Slice: Paging\nDelivers: pages work\n- [ ] 1. Do it (effort: light) — verify: `echo ok`\n');
   write(dir, '.keelson/changes/add-pagination/ledger.md', '# Ledger\n');
-  const v = run(dir, ['validate', '--json'], { env });
-  assert.equal(JSON.parse(v.stdout).ok, true);
-  // land refuses while unchecked / unverified
+  assert.equal(JSON.parse(run(dir, ['validate', '--json'], { env }).stdout).ok, true);
+  const st = JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes[0];
+  assert.equal(st.work, 'in-progress');
+  assert.equal(st.verification.state, 'not-run');
+  assert.equal(st.slices[0].name, 'Paging');
+  assert.equal(st.open[0].blocks[0], 'Limits');
+  // every gate fires
   const refused = run(dir, ['land'], { env, allowFail: true });
   assert.equal(refused.code, 1);
-  assert.match(refused.stderr, /unchecked/);
-  write(dir, '.keelson/changes/add-pagination/tasks.md', '- [x] 1. Do it (effort: light) — verify: `echo ok`\n');
-  write(dir, '.keelson/changes/add-pagination/ledger.md', '# Ledger\n\n### Verify: done\n`echo ok` exit 0\n');
-  const st = JSON.parse(run(dir, ['status', '--json'], { env }).stdout);
-  assert.equal(st.changes[0].phase, 'landing');
-  run(dir, ['land', '--now', 'Nothing in flight.'], { env });
+  for (const re of [/task\(s\) unchecked/, /acceptance item\(s\) unchecked/, /open question/, /verification not-run/, /assumed decision/]) assert.match(refused.stderr, re);
+  // finish the work
+  write(dir, '.keelson/changes/add-pagination/tasks.md', '# Tasks\n\n## Slice: Paging\nDelivers: pages work\n- [x] 1. Do it (effort: light) — verify: `echo ok`\n');
+  let cm = read(dir, '.keelson/changes/add-pagination/change.md').replace('- [ ] default', '- [x] default').replace(/## Open questions\n- [^\n]+\n/, '## Open questions\n- none\n');
+  write(dir, '.keelson/changes/add-pagination/change.md', cm);
+  const rec = run(dir, ['check', '--record', 'pagination', '--quiet'], { env });
+  assert.match(rec.stdout, /recorded in/);
+  assert.match(read(dir, '.keelson/changes/add-pagination/ledger.md'), /### Verify: pagination\n`npm run test` exit 0 · tree [0-9a-f]{10}/);
+  assert.ok(fs.readdirSync(path.join(dir, '.keelson/.local/evidence')).length >= 1);
+  assert.equal(JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes[0].verification.state, 'passed');
+  const onlyAssumed = run(dir, ['land'], { env, allowFail: true });
+  assert.match(onlyAssumed.stderr, /assumed decision/);
+  assert.doesNotMatch(onlyAssumed.stderr, /unchecked|open question|verification/);
+  // code edit → stale
+  write(dir, 'src/x.js', 'export const x = 1;\n');
+  assert.equal(JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes[0].verification.state, 'stale');
+  assert.match(run(dir, ['land', '--confirm-assumptions'], { env, allowFail: true }).stderr, /verification stale/);
+  run(dir, ['check', '--record', 'after edit', '--quiet'], { env });
+  // main spec moved → drift
+  write(dir, '.keelson/specs/orders/spec.md', read(dir, '.keelson/specs/orders/spec.md') + '\n## Requirement: Extra\nx\n### Scenario: y\n- WHEN\n- THEN\n');
+  assert.match(run(dir, ['land', '--confirm-assumptions'], { env, allowFail: true }).stderr, /changed since this delta was written/);
+  run(dir, ['land', '--confirm-assumptions', '--accept-drift', '--now', 'Nothing in flight.'], { env });
   assert.ok(!exists(dir, '.keelson/changes/add-pagination'));
   const spec = read(dir, '.keelson/specs/orders/spec.md');
   assert.match(spec, /## Requirement: Page size/);
-  assert.match(spec, /### Scenario: big/);
+  assert.match(spec, /## Requirement: Extra/);
   assert.match(spec, /- orders: offset pagination over cursor/);
+  assert.match(spec, /- orders: oversized pages are clamped/);
   assert.match(read(dir, '.keelson/NOW.md'), /Nothing in flight/);
 });
 
@@ -70,8 +96,10 @@ test('land --keep archives instead of folding', () => {
   run(dir, ['init', '--no-hooks'], { env });
   run(dir, ['new', 'tidy', '--tier', 'quick'], { env });
   write(dir, '.keelson/changes/tidy/tasks.md', '- [x] 1. a (effort: light)\n');
+  write(dir, '.keelson/changes/tidy/change.md', read(dir, '.keelson/changes/tidy/change.md').replace(/## Acceptance[\s\S]*$/, '## Acceptance\n- [x] done — check: `true`\n'));
   write(dir, '.keelson/changes/tidy/ledger.md', '### Verify: ok\n`true` exit 0\n');
   run(dir, ['land', 'tidy', '--keep'], { env });
+  assert.match(read(dir, path.join('.keelson/changes/archive', fs.readdirSync(path.join(dir, '.keelson/changes/archive'))[0], 'change.md')), /^status: integrated$/m);
   const archived = fs.readdirSync(path.join(dir, '.keelson/changes/archive'));
   assert.equal(archived.length, 1);
   assert.match(archived[0], /^\d{4}-\d{2}-\d{2}-tidy$/);
@@ -124,7 +152,7 @@ test('hooks print a snapshot and a one-line state', () => {
   assert.equal(empty, '');
   run(dir, ['new', 'thing'], { env });
   const line = execFileSync('node', [path.join(dir, '.keelson/hooks/prompt-state.mjs')], { env: { ...process.env, CLAUDE_PROJECT_DIR: dir }, encoding: 'utf8' });
-  assert.match(line, /^\[keelson\] active: thing · ready · 0\/2 tasks\n$/);
+  assert.match(line, /^\[keelson\] active: thing · in-progress · verify not-run · 0\/2 tasks\n$/);
 });
 
 test('ablate removes every surface and restore brings it back byte-for-byte', () => {
@@ -182,4 +210,103 @@ test('per-command --help prints that command only', () => {
   const out = run(dir, ['new', '--help'], { env }).stdout;
   assert.match(out, /^Usage: keelson new <name>/);
   assert.doesNotMatch(out, /keelson land/);
+});
+
+test('init references existing project material and ignores .keelson/.local', () => {
+  const dir = tmpProject({ 'docs/adr/0001.md': '# ADR', 'ARCHITECTURE.md': '# arch', '.github/workflows/ci.yml': 'x', '.gitignore': 'node_modules\n' });
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  execFileSync('git', ['remote', 'add', 'origin', 'git@github.com:acme/shop.git'], { cwd: dir });
+  run(dir, ['init', '--no-hooks'], { env });
+  const cfg = read(dir, '.keelson/config.yaml');
+  assert.match(cfg, /^version: 2$/m);
+  assert.match(cfg, /decisions: docs\/adr/);
+  assert.match(cfg, /architecture: ARCHITECTURE\.md/);
+  assert.match(cfg, /tasks: https:\/\/github\.com\/acme\/shop\/issues/);
+  assert.match(cfg, /ci: \.github\/workflows/);
+  assert.match(read(dir, '.gitignore'), /^node_modules\n[\s\S]*\.keelson\/\.local\/$/m);
+  assert.ok(exists(dir, '.keelson/ROADMAP.md'));
+  const ctx = run(dir, ['context'], { env }).stdout;
+  assert.match(ctx, /Existing project material[\s\S]*decisions: docs\/adr/);
+  assert.match(read(dir, '.claude/skills/keelson/SKILL.md'), /^version: \d+\.\d+\.\d+$/m);
+});
+
+test('update migrates a v1 config and --dry-run writes nothing', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--no-hooks'], { env });
+  write(dir, '.keelson/config.yaml', 'version: 1\ntools:\n  - claude\ncheck:\n  - echo hi\n');
+  const dry = run(dir, ['update', '--dry-run'], { env }).stdout;
+  assert.match(dry, /migrate\s+\.keelson\/config\.yaml v1 → v2/);
+  assert.match(read(dir, '.keelson/config.yaml'), /^version: 1$/m);
+  run(dir, ['update'], { env });
+  const cfg = read(dir, '.keelson/config.yaml');
+  assert.match(cfg, /^version: 2$/m);
+  assert.match(cfg, /- echo hi/);
+  assert.match(cfg, /specs: \.keelson\/specs/);
+});
+
+test('status exposes shared contracts and impact lists importers', () => {
+  const dir = tmpProject({ 'src/api/orders.js': 'export const a = 1;\n', 'src/web.js': "import { a } from './api/orders.js';\n" });
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  run(dir, ['init', '--no-hooks'], { env });
+  write(dir, '.keelson/specs/orders/spec.md', '# orders\n\n## Requirement: L\nl\n### Scenario: s\n- WHEN\n- THEN\n');
+  run(dir, ['new', 'a', '--tier', 'spec', '--capability', 'orders'], { env });
+  run(dir, ['new', 'b', '--tier', 'spec', '--capability', 'orders'], { env });
+  const st = JSON.parse(run(dir, ['status', '--json'], { env }).stdout);
+  assert.equal(st.conflicts.length, 1);
+  assert.deepEqual(st.conflicts[0].capabilities, ['orders']);
+  const im = JSON.parse(run(dir, ['impact', 'src/api/orders.js', '--json'], { env }).stdout);
+  assert.deepEqual(im.callers, ['src/web.js']);
+  assert.equal(im.specs[0].capability, 'orders');
+  assert.equal(im.activeChanges.length, 2);
+});
+
+test('handoff stamps at/updated/by and the session hook prints its next step', () => {
+  const dir = tmpProject({});
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  execFileSync('git', ['-c', 'user.email=a@b', '-c', 'user.name=Ann', 'commit', '--allow-empty', '-qm', 'init'], { cwd: dir });
+  run(dir, ['init'], { env });
+  run(dir, ['new', 'share-links'], { env });
+  run(dir, ['handoff', 'share-links', '--by', 'Ann'], { env });
+  const h = read(dir, '.keelson/changes/share-links/handoff.md');
+  assert.match(h, /^at: [0-9a-f]{7,}$/m);
+  assert.match(h, /^by: Ann$/m);
+  write(dir, '.keelson/changes/share-links/handoff.md', h.replace(/## Next step\n…/, '## Next step\nWire the revoke endpoint.'));
+  const snap = execFileSync('node', [path.join(dir, '.keelson/hooks/session-start.mjs')], { env: { ...process.env, CLAUDE_PROJECT_DIR: dir }, encoding: 'utf8' });
+  assert.match(snap, /share-links handoff → next: Wire the revoke endpoint\./);
+  const st = JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes[0];
+  assert.equal(st.handoff.headMoved, false);
+  execFileSync('git', ['-c', 'user.email=a@b', '-c', 'user.name=Ann', 'commit', '--allow-empty', '-qm', 'moved'], { cwd: dir });
+  assert.equal(JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes[0].handoff.headMoved, true);
+});
+
+test('cancel archives without merging; doctor and uninstall behave', () => {
+  const dir = tmpProject({ 'package.json': '{"name":"x"}' });
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  run(dir, ['init'], { env });
+  write(dir, '.keelson/INTENT.md', '# x\n\n## Why this exists\nReal.\n');
+  run(dir, ['new', 'dead-end', '--tier', 'spec', '--capability', 'orders'], { env });
+  run(dir, ['cancel', 'dead-end', '--reason', 'superseded'], { env });
+  const arch = fs.readdirSync(path.join(dir, '.keelson/changes/archive'));
+  assert.match(arch[0], /-dead-end-cancelled$/);
+  assert.match(read(dir, `.keelson/changes/archive/${arch[0]}/change.md`), /^status: cancelled$/m);
+  assert.ok(!exists(dir, '.keelson/specs/orders/spec.md'));
+  const doc = run(dir, ['doctor', '--json'], { env, allowFail: true });
+  assert.equal(doc.code, 0, doc.stdout + doc.stderr);
+  run(dir, ['uninstall'], { env });
+  assert.ok(!exists(dir, '.claude/skills/keelson'));
+  assert.ok(exists(dir, '.keelson/INTENT.md'));
+  assert.doesNotMatch(read(dir, 'CLAUDE.md'), /keelson:start/);
+  run(dir, ['init', '--no-hooks'], { env });
+  run(dir, ['uninstall', '--purge'], { env });
+  assert.ok(!exists(dir, '.keelson'));
+});
+
+test('breaking change without Rollout is refused at landing', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--no-hooks'], { env });
+  run(dir, ['new', 'drop-v1'], { env });
+  write(dir, '.keelson/changes/drop-v1/change.md', '---\ntier: quick\ncreated: 2026-01-01\n---\n# Drop v1\n\n## Why\nw\n\n## What\n- **BREAKING** remove /v1\n\n## Acceptance\n- [x] gone — check: `true`\n');
+  write(dir, '.keelson/changes/drop-v1/tasks.md', '- [x] 1. a (effort: light)\n');
+  write(dir, '.keelson/changes/drop-v1/ledger.md', '### Verify: ok\n`true` exit 0\n');
+  assert.match(run(dir, ['land'], { env, allowFail: true }).stderr, /BREAKING.*Rollout/);
 });

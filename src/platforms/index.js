@@ -40,20 +40,48 @@ export function removeBlock(existing) {
   return stripped.replace(/\n{3,}/g, '\n\n').replace(/\n*$/, '\n');
 }
 
-export function installSkill(root, platformId, { lang, profile }) {
-  const p = PLATFORMS[platformId];
+/** Stamp the package version into SKILL.md frontmatter so `keelson doctor` can spot a stale install. */
+export function stampVersion(text, version) {
+  if (!version) return text;
+  if (/^version:\s*/m.test(text.split('\n---')[0] ?? '')) return text.replace(/^version:.*$/m, `version: ${version}`);
+  return text.replace(/^---\n([\s\S]*?)\n---/, (_, fm) => `---\n${fm}\nversion: ${version}\n---`);
+}
+
+/** The files installSkill would write, with their content, without touching disk. */
+export function renderSkillFiles(lang, profile, version) {
   const src = skillSource(lang);
-  const dest = path.join(root, p.skillsDir, 'keelson');
-  rmrf(dest);
-  copyDir(src, dest, { filter: (f) => !f.includes(`${path.sep}templates`) });
-  const walk = (d) => {
+  const out = [];
+  const visit = (d, rel) => {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
-      const f = path.join(d, e.name);
-      if (e.isDirectory()) walk(f);
-      else if (f.endsWith('.md')) fs.writeFileSync(f, applyProfile(fs.readFileSync(f, 'utf8'), profile));
+      if (e.name === 'templates') continue;
+      const r = rel ? `${rel}/${e.name}` : e.name;
+      if (e.isDirectory()) visit(path.join(d, e.name), r);
+      else {
+        let content = fs.readFileSync(path.join(d, e.name), 'utf8');
+        if (r.endsWith('.md')) content = applyProfile(content, profile);
+        if (r === 'SKILL.md') content = stampVersion(content, version);
+        out.push({ rel: r, content });
+      }
     }
   };
-  walk(dest);
+  visit(src, '');
+  return out;
+}
+
+export function plannedSkillFiles(root, platformId, { lang, profile, version }) {
+  const dest = path.join(root, PLATFORMS[platformId].skillsDir, 'keelson');
+  return renderSkillFiles(lang, profile, version).map((f) => {
+    const target = path.join(dest, f.rel);
+    const status = !exists(target) ? 'create' : fs.readFileSync(target, 'utf8') === f.content ? 'unchanged' : 'update';
+    return { path: path.relative(root, target), status };
+  });
+}
+
+export function installSkill(root, platformId, { lang, profile, version }) {
+  const p = PLATFORMS[platformId];
+  const dest = path.join(root, p.skillsDir, 'keelson');
+  rmrf(dest);
+  for (const f of renderSkillFiles(lang, profile, version)) write(path.join(dest, f.rel), f.content);
   return path.relative(root, dest);
 }
 

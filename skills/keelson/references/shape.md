@@ -1,30 +1,40 @@
 # Shaping
 
-Turn a request or an idea into a shared understanding before artifacts exist. Facts first, then questions, then a write-back.
+Turn a request or an idea into a shared understanding before artifacts exist. Facts first, then questions, then a write-back. Three layers need to be clear, and not all at once: the project (who it serves, what it will never do, in `INTENT.md`), the current goal (this milestone, in `ROADMAP.md` or the tracker), and this change (what behaviour changes and how anyone will know it is done).
 
 ## Explore first
 <!-- keelson: id=shape.explore-first | without: agent asks the user for facts it could read, wasting their time and training them to skip questions | sunset: never -->
 
-Read what answers the question: the code, tests, `INTENT.md`, `specs/`, matched `rules/`. Only questions about intent, priorities, and trade-offs belong to the user. If you can find it, do not ask it.
+Read what answers the question: the code, tests, `INTENT.md`, `ROADMAP.md`, the specs, the matched `rules/`, and the documents listed under `refs` in `config.yaml`. A decision already recorded in a spec's `Decisions` section or in `INTENT.md` is settled; do not ask it again. Only questions about intent, priorities, and trade-offs belong to the user.
 
 ## Write back your understanding
 <!-- keelson: id=shape.write-back | without: agent builds its own interpretation; mismatches surface after code exists | sunset: never -->
 
 For every non-trivial change, before creating anything, state in 3–6 lines: the outcome, the boundaries (what is explicitly out), the constraints you found, and the success check. Separate what the user said from what you assumed. For quick changes, proceed right after writing it unless `config.yaml` says `confirm.quick: wait`. For spec changes, wait.
 
-Example:
-
 > Understood as: add offset pagination to `/orders` (`page`, `size`, default 20) using the shared response envelope from `rules/api.md`; table gets a pager, no infinite scroll. Assumed: sort stays by `created_at desc`. Done when `npm test -- orders` passes and the pager renders.
 
-## When nobody can answer
-<!-- keelson: id=shape.unattended | without: an unattended session either blocks forever on a question or silently lands a change nobody approved | sunset: never -->
+## Four states for what you know
+<!-- keelson: id=shape.decision-states | without: a recommendation the agent made is later treated as something the owner chose, and nobody can tell which | sunset: never -->
 
-In a scripted or unattended session there is no one to confirm a write-back or approve a plan. Do not stall, and do not skip the artifacts: write the understanding and the plan with your assumptions stated, build and verify under them, and stop before landing. Say in `NOW.md` that the change awaits review. The reviewer then sees the plan and the diff together and lands or rejects with one command.
+Keep these apart, in the conversation and in `change.md`:
+
+- **Suggestion** — what you recommend, with its consequences. Not in effect until the owner picks it.
+- **Confirmed** — what the owner chose. A plain line under `## Decisions`.
+- **Authorized** — what `INTENT.md → Authorizations` lets you decide alone. Decide, record it as confirmed, move on.
+- **Open** — what still needs an answer. A line under `## Open questions` with `— blocks: <slice>`.
+
+When you must proceed without an answer, write the working assumption as `- (assumed) capability: …` under `## Decisions`. `keelson land` refuses to fold assumed lines until the owner passes `--confirm-assumptions`.
+
+## Stop asking when the next slice is deliverable
+<!-- keelson: id=shape.stop-rule | without: agent either exhausts the owner with questions about later slices, or starts building on a slice whose acceptance is undefined | sunset: never -->
+
+The bar is not "no unknowns in the project". It is: the next slice has a clear outcome, a boundary, and an acceptance check. Unresolved questions about later slices go under `## Open questions` with what they block, and the work they do not block continues. Example: download permissions undecided, link management list can be built, public download must not be defaulted on.
 
 ## Interview (spec changes, or when the user says "grill me")
 <!-- keelson: id=shape.interview | without: architectural ambiguity is resolved silently by the agent instead of by the owner | sunset: never -->
 
-Walk the decision tree. One question at a time, using the host's question tool when available, with 2–4 concrete options plus free text. Resolve the blocking decision before its dependents: outcome and scope before API and data model. After each answer, acknowledge in one sentence and ask the next. When the user says "grill me", continue until every branch is settled, then summarise all decisions. Otherwise stop when the remaining questions would not change the plan.
+Walk the decision tree front to back: resolve the blocking decision before its dependents (outcome and scope before API and data model). Questions that are independent of each other may share a round; a question whose answer depends on an unanswered one waits for the next round. Use the host's question tool when available, with 2–4 concrete options and a recommendation with its trade-off, plus free text. When the owner does not follow a term, offer a scenario, a sketch, or a small experiment instead of more vocabulary. After each answer, acknowledge in one sentence and continue. When the user says "grill me", continue until every branch is settled, then summarise the decisions; otherwise stop at the rule above.
 
 Open with the assumption check when the change is architectural: "What are we assuming here that, if false, changes the answer?" State your own answer before asking for theirs.
 
@@ -39,6 +49,24 @@ Open with the assumption check when the change is architectural: "What are we as
 7. Acceptance: what the user will check.
 <!-- /guided -->
 
+## Authorization
+<!-- keelson: id=shape.authorization | without: either every step waits for approval or the agent decides product questions and production actions by itself | sunset: never -->
+
+| Situation | Default |
+|---|---|
+| Local implementation choice inside a confirmed scope, following project conventions | Decide, verify, move on |
+| Intent still vague; the choice changes experience, scope, or a long-term commitment | Recommend with consequences; the owner chooses |
+| Irreversible data operation, production change, permission widening, breaking compatibility | Confirm explicitly, per `INTENT.md → Authorizations` |
+| Unrelated optimisation, extra feature, broad refactor | Suggest; do not widen the change |
+| Environment missing, key acceptance cannot run | Mark blocked or partially verified; never fake a pass |
+
+Stronger models widen the first row, never the third.
+
+## When nobody can answer
+<!-- keelson: id=shape.unattended | without: an unattended session either blocks forever on a question or silently lands a change nobody approved | sunset: never -->
+
+In a scripted or unattended session there is no one to confirm a write-back or approve a plan. Do not stall, and do not skip the artifacts: write the understanding and the plan, mark assumptions `(assumed)`, build and verify under them, and stop before landing. Say in `NOW.md` that the change awaits review. The reviewer then sees the plan and the diff together and lands with `--confirm-assumptions` or rejects.
+
 ## Exploring (the user is thinking, not asking)
 <!-- keelson: id=shape.explore-stance | without: agent forces a proposal on someone who wanted a thinking partner | sunset: never -->
 
@@ -47,7 +75,8 @@ If the user is weighing options rather than requesting work, take the thinking-p
 ## Sizing rules of thumb
 <!-- keelson: id=shape.sizing | without: agent runs ceremony on trivia or skips planning on contract changes | sunset: when 50 consecutive changes needed no tier override from the user -->
 
-- Would the user want to read a plan before code exists? → spec.
-- Does any `Requirement:` in `specs/` change, appear, or disappear? → spec.
+- Would the owner want to read a plan before code exists? → spec.
+- Does any `Requirement:` in the specs change, appear, or disappear? → spec.
+- Migration, external dependency, or work that will cross sessions? → spec.
 - Are you abandoning the obvious approach for a hidden constraint? → spec, and record the alternative.
 - Otherwise several files with clear intent → quick. One file, no behaviour change → trivial.

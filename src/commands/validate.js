@@ -3,71 +3,83 @@ import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { exists, readOr, listDirs, walk, read } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
 import { parseRulesIndex } from '../lib/rules.js';
-import { parseSpec, parseDelta, hasSection, EFFORT_TIERS } from '../lib/markdown.js';
+import { parseSpec, parseDelta, parseFrontmatter, hasSection, EFFORT_TIERS, ROOT_CAUSES, WORK_STATUSES } from '../lib/markdown.js';
 import { loadAllChanges } from '../lib/changes.js';
 import { datedIdPatterns } from '../lib/models.js';
 import { ok, fail, warn } from '../lib/out.js';
 
 export function validateProject(root) {
-  const p = projectPaths(root);
   const errors = [];
   const warnings = [];
-  const cfg = loadConfig(p.config);
+  const cfg = loadConfig(projectPaths(root).config);
+  const p = projectPaths(root, cfg);
 
   if (!exists(p.intent)) errors.push('missing .keelson/INTENT.md');
   else if (/^One paragraph\./m.test(readOr(p.intent))) warnings.push('INTENT.md still contains template placeholder text');
   if (!exists(p.now)) errors.push('missing .keelson/NOW.md');
   if (!['lean', 'guided'].includes(cfg.profile)) errors.push(`config.profile must be lean|guided (got ${cfg.profile})`);
   if (!['fold', 'keep'].includes(cfg.land)) errors.push(`config.land must be fold|keep (got ${cfg.land})`);
+  if (!exists(p.specs)) warnings.push(`paths.specs points at ${p.specsRel}, which does not exist`);
+  for (const [k, v] of Object.entries(cfg.refs ?? {})) if (v && !/^https?:\/\//.test(v) && !exists(path.join(root, v))) warnings.push(`refs.${k} points at ${v}, which does not exist`);
+  const gi = readOr(path.join(root, '.gitignore'), '');
+  if (exists(path.join(root, '.git')) && !/^\.keelson\/\.local\/?$/m.test(gi)) warnings.push('.gitignore does not exclude .keelson/.local/ (session state and evidence would be committed)');
 
-  // rules index → files exist
   const idx = parseRulesIndex(readOr(p.rulesIndex));
   for (const e of idx) if (!exists(path.join(p.rules, e.file))) errors.push(`rules/index.md references missing file: ${e.file}`);
   for (const f of walk(p.rules)) if (f !== 'index.md' && f.endsWith('.md') && !idx.some((e) => e.file === f)) warnings.push(`rules/${f} is not listed in rules/index.md (it will never be routed)`);
 
-  // specs
   for (const cap of listDirs(p.specs)) {
     const f = path.join(p.specs, cap, 'spec.md');
     if (!exists(f)) {
-      errors.push(`specs/${cap}/ has no spec.md`);
+      errors.push(`${p.specsRel}/${cap}/ has no spec.md`);
       continue;
     }
     const s = parseSpec(read(f));
-    if (!s.requirements.length) warnings.push(`specs/${cap}/spec.md has no "## Requirement:" sections`);
-    for (const r of s.requirements) if (!/###\s+Scenario:/i.test(r.body)) warnings.push(`specs/${cap}: requirement "${r.name}" has no scenario`);
+    if (!s.requirements.length) warnings.push(`${p.specsRel}/${cap}/spec.md has no "## Requirement:" sections`);
+    for (const r of s.requirements) if (!/###\s+Scenario:/i.test(r.body)) warnings.push(`${p.specsRel}/${cap}: requirement "${r.name}" has no scenario`);
     const names = s.requirements.map((r) => r.name.toLowerCase());
-    for (const n of new Set(names.filter((n, i) => names.indexOf(n) !== i))) errors.push(`specs/${cap}: duplicate requirement "${n}"`);
+    for (const n of new Set(names.filter((n, i) => names.indexOf(n) !== i))) errors.push(`${p.specsRel}/${cap}: duplicate requirement "${n}"`);
   }
 
-  // changes
-  for (const c of loadAllChanges(p.changes)) {
+  const active = loadAllChanges(p.changes);
+  for (const c of active) {
     const tag = `changes/${c.name}`;
     if (!['quick', 'spec'].includes(c.tier)) errors.push(`${tag}: tier must be quick|spec (got ${c.tier})`);
+    if (!WORK_STATUSES.includes(c.work)) errors.push(`${tag}: status must be one of ${WORK_STATUSES.join('|')}`);
     for (const sec of ['Why', 'What']) if (!hasSection(c.body, sec)) errors.push(`${tag}/change.md: missing "## ${sec}"`);
     if (c.tier === 'spec') {
       for (const sec of ['How', 'Alternatives', 'Impact']) if (!hasSection(c.body, sec)) errors.push(`${tag}/change.md: spec tier requires "## ${sec}"`);
       if (!c.deltaFiles.length) warnings.push(`${tag}: spec tier but no delta specs under specs/ (fine only if behaviour does not change)`);
       const alts = (c.body.match(/^##\s+Alternatives[\s\S]*?(?=^##\s|\Z)/m) || [''])[0];
-      const bullets = (alts.match(/^\s*[-*]\s+/gm) || []).length;
-      if (bullets < 2) errors.push(`${tag}/change.md: Alternatives needs at least two options`);
+      if ((alts.match(/^\s*[-*]\s+/gm) || []).length < 2) errors.push(`${tag}/change.md: Alternatives needs at least two options`);
+      if (!hasSection(c.body, 'Acceptance')) warnings.push(`${tag}/change.md: spec tier without "## Acceptance" — landing will refuse until each acceptance item maps to a check`);
     }
+    for (const a of c.acceptance) if (!a.kind) warnings.push(`${tag}/change.md: acceptance "${a.text}" does not say how it is checked (— check: \`cmd\` | test: name | manual: how)`);
+    for (const o of c.open) if (!o.blocks.length) warnings.push(`${tag}/change.md: open question "${o.text}" does not say what it blocks (— blocks: <slice>)`);
+    for (const d of c.depends) if (!active.some((x) => x.name === d)) warnings.push(`${tag}: depends on "${d}", which is not an active change (landed, or a typo)`);
+    if (c.breaking && !c.hasRollout) warnings.push(`${tag}/change.md: **BREAKING** without "## Rollout" — landing will refuse`);
     for (const t of c.tasks) {
       if (t.effort && !EFFORT_TIERS.includes(t.effort)) errors.push(`${tag}/tasks.md: bad effort on "${t.title}"`);
       if (!t.effort) warnings.push(`${tag}/tasks.md: "${t.title}" has no (effort: …) tag`);
     }
+    for (const sl of c.slices) if (!sl.delivers) warnings.push(`${tag}/tasks.md: slice "${sl.name}" has no "Delivers:" line`);
     if (/\{\{\w+\}\}|^…$/m.test(c.body)) warnings.push(`${tag}/change.md still has template placeholders`);
-    for (const e of c.ledger) if (e.kind === 'verify' && (e.exit === null || !e.command)) errors.push(`${tag}/ledger.md: Verify entry "${e.title}" needs a \`command\` and "exit N"`);
-    for (const e of c.ledger) if (e.kind === 'dispatch' && e.result === null) warnings.push(`${tag}/ledger.md: Dispatch "${e.title}" has no "Result: pass|fail" line, so retro cannot count it`);
-    for (const e of c.ledger) if (e.kind === 'root-cause' && !['missing-rule', 'cross-layer', 'propagation', 'test-gap', 'implicit-assumption', 'guessed-fix'].includes(e.category)) errors.push(`${tag}/ledger.md: unknown root cause category "${e.category}"`);
+    for (const e of c.ledger) {
+      if (e.kind === 'verify' && (e.exit === null || !e.command)) errors.push(`${tag}/ledger.md: Verify entry "${e.title}" needs a \`command\` and "exit N"`);
+      if (e.kind === 'verify' && !e.tree) warnings.push(`${tag}/ledger.md: Verify entry "${e.title}" has no "tree <hash>", so staleness cannot be detected (use \`keelson check --record\`)`);
+      if (e.kind === 'dispatch' && e.result === null) warnings.push(`${tag}/ledger.md: Dispatch "${e.title}" has no "Result: pass|fail" line, so retro cannot count it`);
+      if (e.kind === 'root-cause' && !ROOT_CAUSES.includes(e.category)) errors.push(`${tag}/ledger.md: unknown root cause category "${e.category}"`);
+    }
     for (const df of c.deltaFiles) {
-      const d = parseDelta(read(path.join(c.dir, 'specs', df)));
+      const raw = read(path.join(c.dir, 'specs', df));
+      const d = parseDelta(parseFrontmatter(raw).body);
       if (!d.added.length && !d.modified.length && !d.removed.length) warnings.push(`${tag}/specs/${df}: no ADDED/MODIFIED/REMOVED requirements`);
     }
+    if (c.handoff && !c.handoff.at) warnings.push(`${tag}/handoff.md has no "at:" commit; run \`keelson handoff ${c.name}\` to stamp it`);
   }
 
-  // no dated model IDs anywhere in .keelson (config included)
   const patterns = datedIdPatterns();
-  for (const f of walk(p.keelson)) {
+  for (const f of walk(p.keelson, { ignore: ['node_modules', '.git', '.local'] })) {
     if (!/\.(md|yaml|yml|json)$/.test(f) || f.startsWith('hooks/')) continue;
     const txt = read(path.join(p.keelson, f));
     for (const re of patterns) {

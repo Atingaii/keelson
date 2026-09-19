@@ -2,6 +2,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { exists } from './fs.js';
+import { loadConfig } from './config.js';
 
 export const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const KEELSON_DIR = '.keelson';
@@ -31,20 +32,27 @@ export function requireProjectRoot(start) {
   return root;
 }
 
-export const projectPaths = (root) => {
+/** Resolve every path Keelson uses. `paths.specs` in config.yaml may relocate the contracts. */
+export const projectPaths = (root, cfg = null) => {
   const k = path.join(root, KEELSON_DIR);
+  const config = path.join(k, 'config.yaml');
+  const c = cfg ?? (exists(config) ? loadConfig(config) : null);
+  const specsRel = c?.paths?.specs ?? '.keelson/specs';
   return {
     root,
     keelson: k,
-    config: path.join(k, 'config.yaml'),
+    config,
     intent: path.join(k, 'INTENT.md'),
     now: path.join(k, 'NOW.md'),
-    specs: path.join(k, 'specs'),
+    roadmap: path.join(k, 'ROADMAP.md'),
+    specs: path.resolve(root, specsRel),
+    specsRel,
     rules: path.join(k, 'rules'),
     rulesIndex: path.join(k, 'rules', 'index.md'),
     changes: path.join(k, 'changes'),
     archive: path.join(k, 'changes', 'archive'),
     hooks: path.join(k, 'hooks'),
-    templates: path.join(k, 'templates'),
+    local: path.join(k, '.local'),
+    evidence: path.join(k, '.local', 'evidence'),
   };
 };

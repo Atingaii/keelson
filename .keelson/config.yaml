@@ -1,6 +1,7 @@
 # Keelson project configuration. Every key is optional; defaults are shown.
+# paths.specs: where behaviour contracts live. refs.*: existing project material, referenced, never copied.
 # Docs: https://github.com/Atingaii/keelson/blob/main/docs/configuration.md
-version: 1
+version: 2
 tools:
   - claude
 lang: en
@@ -14,6 +15,13 @@ check:
   - npm run lint
   - npm run test
 context: ""
+paths:
+  specs: .keelson/specs
+refs:
+  architecture: docs/how-it-works.md
+  decisions: null
+  tasks: https://github.com/Atingaii/keelson/issues
+  ci: .github/workflows
 models: {}
 effort:
   review_min: standard

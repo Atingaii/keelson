@@ -1,9 +1,10 @@
 # Now
 
-Nothing in flight. 0.1.0 is being prepared for release.
+0.2.0 is being finished: code and skill are rewritten, English and Chinese docs are being regenerated, the demo project has not yet run on the new build.
 
 ## Blocked / uncertain
-Registry entries for tools other than Claude Code and Gemini CLI are empty until their alias conventions are confirmed.
+- Codex end-to-end run is blocked by the account usage limit until 2026-09-20 16:51.
+- Registry entries for Codex, Cursor, and OpenCode are empty until their alias conventions are confirmed.
 
 ## Next
-Publish 0.1.0; collect the first ledgers from real projects before tuning retro thresholds.
+Run the demo project on 0.2.0 (spec change with acceptance, open question, handoff, resume, land with --confirm-assumptions), record the outcome, then push and tag v0.2.0.
