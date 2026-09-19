@@ -1,9 +1,9 @@
+import path from 'node:path';
 import { PLATFORMS, PLATFORM_IDS } from '../platforms/index.js';
 import { detectLocal } from '../lib/models.js';
 import { findProjectRoot, projectPaths } from '../lib/paths.js';
 import { loadConfig } from '../lib/config.js';
 import { exists } from '../lib/fs.js';
-import path from 'node:path';
 import { heading, dim } from '../lib/out.js';
 
 export async function platforms({ flags }, cwd = process.cwd()) {
