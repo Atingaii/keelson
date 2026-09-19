@@ -56,7 +56,7 @@ effort:
 | Key | Default | Meaning |
 |---|---|---|
 | `version` | `4` | Config schema version. Older files are migrated in memory on every read and rewritten by `keelson update` |
-| `tools` | `[agents]` fallback | Discovery hosts to generate adapters for. On first init, verified/documented installed hosts are auto-selected; if none are found, the portable `agents` layer is used. `convention` hosts are opt-in, never guessed. `keelson init --tools` sets it |
+| `tools` | `[agents]` fallback | Discovery hosts to generate adapters for. On first init, verified/documented installed hosts are auto-selected; if none are found, the portable `agents` layer is used. `keelson init --tools` sets it |
 | `lang` | `en` | Language of the installed skill and templates: `en` or `zh`. `keelson init --lang` sets it |
 | `profile` | `lean` | `lean` ships stance and principles only. `guided` keeps the extra step lists and examples. `keelson init --profile` sets it |
 | `default_tier` | `auto` | Informational. `auto` means the agent sizes each change. Set `quick` or `spec` to state a preference in the file the agent reads |
@@ -115,7 +115,7 @@ platforms:
     instructionsFormat: kiro
 ```
 
-Keys: `instructions` (the file that receives the discovery block), `instructionsFormat` (`kiro` writes a standalone steering file with an inclusion header instead of a marked block), `skillsDir` (where the one-file `keelson/SKILL.md` discovery shim is installed), `rulesFile` and `rulesFormat` (`mdc` for a rule file with frontmatter, `md` for plain Markdown), and `hooks` (`true` only for a tool that runs hooks the way Claude Code does). Overrides apply to `init`, `update`, `doctor`, `uninstall`, and `ablate`. Use them when a tool moves its directories, or when a `convention` entry does not match your install.
+Keys: `instructions` (the file that receives the discovery block), `instructionsFormat` (`kiro` writes a standalone steering file with an inclusion header instead of a marked block), `skillsDir` (where the one-file `keelson/SKILL.md` discovery shim is installed), `rulesFile` and `rulesFormat` (`mdc` for a rule file with frontmatter, `md` for plain Markdown), and `hooks` (`true` only for a tool that runs hooks the way Claude Code does). Overrides apply to `init`, `update`, `doctor`, `uninstall`, and `ablate`. Use them when a supported host's local/older installation reads a different documented path.
 
 ### Migration
 
