@@ -44,15 +44,18 @@ The files must use Keelson's shape (`## Requirement:` sections with `### Scenari
 keelson init
 ```
 
-On a repository that already has code, `keelson init` writes a first-contact task into `NOW.md` that names the refs it found. Open your agent and say anything. The agent:
+On a repository that already has code, init records the existing material it can identify and writes a first-contact task into `NOW.md`.
 
-1. reads the codebase and the referenced documents;
-2. lists the capabilities it finds;
-3. writes one spec per capability under `paths.specs`, present tense, observable behaviour only, linking to existing documents rather than copying them;
-4. proposes rules for the paths that have conventions, registered in `rules/index.md`;
-5. asks you to confirm before landing anything.
+The agent then:
 
-Specs and rules are drafts until you confirm them. Ask the agent to show each spec before it lands.
+1. reads the repository and referenced material relevant to the first real request;
+2. drafts `INTENT.md` from evidence already present: purpose, boundaries, hard constraints, and authorizations;
+3. asks you to confirm or correct that project boundary in one short exchange;
+4. continues shaping the actual request.
+
+It does **not** inventory the whole repository into a second documentation system.
+
+As real work later touches a capability, the agent creates a Keelson spec only when an observable behavior contract is worth preserving. It creates a scoped rule only when a stable engineering invariant must survive future sessions and is not better expressed as an executable check. Existing architecture/decision/spec documents stay authoritative through `refs` or `paths.specs`.
 
 ## Keeping the tracker authoritative
 
