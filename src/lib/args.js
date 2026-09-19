@@ -12,7 +12,7 @@ export function parseArgs(argv) {
       const [k, v] = a.slice(2).split(/=(.*)/s);
       const key = k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
       if (v !== undefined) flags[key] = v;
-      else if (i + 1 < argv.length && !argv[i + 1].startsWith('--') && !['json', 'force', 'dryRun', 'hooks', 'noHooks', 'onboard', 'refresh', 'detect', 'help', 'version', 'yes', 'keep', 'withProviders'].includes(key)) flags[key] = argv[++i];
+      else if (i + 1 < argv.length && !argv[i + 1].startsWith('--') && !['json', 'force', 'dryRun', 'hooks', 'noHooks', 'onboard', 'refresh', 'detect', 'help', 'version', 'yes', 'keep', 'noProviders', 'quiet'].includes(key)) flags[key] = argv[++i];
       else flags[key] = true;
     } else if (a.startsWith('-') && a.length === 2) {
       flags[a[1]] = true;
