@@ -2,7 +2,7 @@
 
 All commands run from anywhere inside the project; Keelson walks up to find a `.keelson/` that holds `config.yaml` or `INTENT.md` (the user-level `~/.keelson/` never counts). Exit code 0 means success, 1 means an error or a failed check, 2 means an unknown command. `--json` on most commands prints machine-readable output. `--help` and `--version` work everywhere; `keelson <command> --help` prints that command's usage line.
 
-Boolean flags: `--json`, `--force`, `--dry-run`, `--no-hooks`, `--refresh`, `--detect`, `--keep`, `--quiet`, `--confirm-assumptions`, `--accept-drift`, `--worktree`, `--purge`, and one flag per platform (`--claude`, `--cursor`, …). Value flags accept `--key value` or `--key=value`. `--guide` is a value flag that also works bare: `--guide` and `--guide true` turn guided mode on, `--guide false` turns it off.
+Boolean flags: `--json`, `--force`, `--dry-run`, `--hooks`, `--no-hooks`, `--refresh`, `--detect`, `--keep`, `--quiet`, `--confirm-assumptions`, `--accept-drift`, `--worktree`, `--purge`, and one flag per first-class host (`--claude`, `--codex`, `--opencode`, `--pi`, `--gemini`, `--kiro`, `--codebuddy`) plus `--agents`. Value flags accept `--key value` or `--key=value`. `--guide` is a value flag that also works bare: `--guide` and `--guide true` turn guided mode on, `--guide false` turns it off.
 
 ## `keelson init`
 
@@ -13,10 +13,10 @@ keelson init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided]
 
 The only step. Creates `.keelson/` with project facts plus the canonical `workflow.md` and `skill/` runtime. Installs only discovery blocks/skill shims at host-known paths, and (Claude Code) hooks; the portable `AGENTS.md` + `.agents/skills/` discovery layer is present on every init. Detects check commands and existing project material on first run. Writes a first-contact task into `NOW.md`: the agent drafts `INTENT.md` (and, for an existing codebase, specs and rules) from the repository and confirms them with the owner. Never overwrites existing `.keelson/` files.
 
-Tool selection, in order of precedence: `--tools a,b`; one flag per tool (`--claude`, `--codex`, `--cursor`, `--opencode`, `--gemini`, `--copilot`, `--kiro`, `--kilo`, `--antigravity`, `--devin`, `--qoder`, `--codebuddy`, `--droid`, `--pi`, `--ohmypi`, `--reasonix`, `--zcode`, `--trae`, `--grok`, `--kimi`, `--snow`, `--agents`); the tools already in `config.yaml` on an update; the tools whose command is found on this machine; Claude Code.
+Tool selection, in order of precedence: `--tools a,b`; one flag per first-class host (`--claude`, `--codex`, `--opencode`, `--pi`, `--gemini`, `--kiro`, `--codebuddy`) or `--agents`; the hosts already in `config.yaml` on update; then installed first-class hosts. If no first-class host is detected, Keelson uses the portable `agents` layer. Retired adapter ids from older configs are removed during update rather than regenerated.
 
 - `--guide` turns on guided mode for an owner who is learning engineering.
-- `--no-hooks` skips hook installation.
+- `--no-hooks` persists `hooks: false` in project config; later `update` keeps hooks off. `--hooks` explicitly re-enables them.
 - `--dry-run` lists what would be created, updated, or migrated and writes nothing.
 - `--dir` targets another directory.
 
@@ -28,7 +28,7 @@ Exit 1 on an unknown tool or profile.
 keelson platforms [--json]
 ```
 
-Lists every supported tool with its instructions file, skills directory, rules file, hook support, confidence label, and whether it is installed on this machine or configured in this project.
+Lists the seven first-class hosts plus the portable fallback with support level, instruction and skill discovery paths, hook support, confidence, and installed/configured state.
 
 ## `keelson update`
 
