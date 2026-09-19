@@ -34,6 +34,7 @@ Keelson init in /home/you/your-project
 ✓ .keelson/INTENT.md (fill in why the project exists and what the agent may decide alone)
 ✓ .keelson/NOW.md
 ✓ .keelson/ROADMAP.md (current milestone; link your tracker instead of duplicating it)
+✓ .keelson/GLOSSARY.md (shared vocabulary; fill it when two words start meaning the same thing)
 ✓ .keelson/rules/index.md
 ✓ .keelson/rules/general.md
 ✓ .gitignore: .keelson/.local/ (session state and evidence stay on this machine)
@@ -62,6 +63,10 @@ Open `.keelson/INTENT.md`. The template asks for five things:
 - working defaults for change sizing and approvals.
 
 This file is read at the start of every non-trivial piece of work. Keep it to one page.
+
+`GLOSSARY.md` starts empty. Add a line when two words begin to mean the same thing, or one word two things; the agent uses those terms in specs and code from then on.
+
+If you are learning engineering as you build, run `keelson init --guide`. The agent then presents choices as scenarios with a recommendation and its trade-off, names the engineering idea after you decide, and closes each spec change with a short teaching note. Nothing else changes.
 
 ## Onboarding an existing codebase
 

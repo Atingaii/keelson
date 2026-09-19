@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-19
+
+The engineering judgment layer: how to find out what is wanted, keep vocabulary and boundaries straight, pick the design questions that matter, and keep the project's knowledge small.
+
+### Added
+
+- Skill references `discover.md` (scenario before technology, which unknowns to raise, scope guard, explore before committing, guided mode), `model.md` (glossary and bounded contexts, boundaries and invariants, deep modules, design it twice), `engineer.md` (engineering lenses by delivery, structure, evolution, and operation; named patterns as vocabulary; quality targets as numbers), and `reconcile.md` (where each new fact goes, rewrite not append, budgets and compaction, gardening cadence). `plan.md` gained "Slices are vertical".
+- `.keelson/GLOSSARY.md`, seeded by `keelson init` and printed by `keelson context` once it has content.
+- `keelson init --guide` and `config.yaml → guide`: guided mode for owners who are learning engineering; adds one line to the resident block and a note to `keelson context`.
+- `config.yaml → budgets`: line budgets per document type (`INTENT`, `ROADMAP`, `NOW`, `GLOSSARY`, `spec`, `rule`, `change`, `handoff`, `always-on`).
+- `keelson doctor` reports knowledge health: documents over budget, requirement text that reads like history, duplicated requirement names across capabilities, changes idle for 14 days or more, changes with more than 25 tasks, always-on rules over budget, and `docs/generated/` files older than the source tree. Findings are suggestions with a fix; nothing is rewritten.
+- `config.yaml → check` entries may be `{name, command, kind}` with `kind` in `test`, `lint`, `typecheck`, `build`, `fitness`, `check`; `keelson check` prints the name and kind, and guesses the kind for plain strings.
+- `keelson validate` warns when a slice is named after a layer.
+- `config.yaml` version 3; `keelson update` migrates version 1 and 2 files.
+
 ## [0.2.0] - 2026-09-19
 
 Keelson becomes an engineering collaboration layer for long-lived projects: reviewable state, evidence tied to the code it was produced on, and continuation across sessions and people.
@@ -46,6 +61,7 @@ Initial release.
 - `lean` and `guided` skill profiles; English and Chinese skills and docs.
 - Guidance annotations with sunset conditions, read by `keelson retro`.
 
-[Unreleased]: https://github.com/Atingaii/keelson/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Atingaii/keelson/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Atingaii/keelson/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Atingaii/keelson/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Atingaii/keelson/releases/tag/v0.1.0

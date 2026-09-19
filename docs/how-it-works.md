@@ -7,6 +7,7 @@ Keelson is three surfaces in the agent's environment and one directory of facts 
 `keelson init` appends a block to the tool's instructions file (`CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`) between `<!-- keelson:start -->` and `<!-- keelson:end -->` markers. `keelson update` replaces the block in place; `keelson uninstall` and `keelson ablate` remove it. Existing content in the file is never touched. The block is under 20 lines and says:
 
 - what `.keelson/` contains and that existing documents are referenced from `config.yaml`;
+- when `guide: true`, one more line: the owner is learning engineering, so explain with scenarios and trade-offs and close spec changes with a short teaching note;
 - to run `keelson context --paths <files>` before non-trivial work and `keelson impact <files>` before editing shared modules;
 - how to size a change (trivial, quick, spec);
 - to record decisions as confirmed or assumed, and that open questions block only dependent slices;
@@ -31,17 +32,21 @@ Pass `--no-hooks` to `init` to skip them. Existing hooks in `settings.json` are 
 
 ## The skill
 
-`init` copies the skill to the tool's skill directory (`.claude/skills/keelson/` or `.agents/skills/keelson/`) and stamps the package version into `SKILL.md`'s frontmatter so `keelson doctor` can spot a stale install. It contains `SKILL.md` and eight references:
+`init` copies the skill to the tool's skill directory (`.claude/skills/keelson/` or `.agents/skills/keelson/`) and stamps the package version into `SKILL.md`'s frontmatter so `keelson doctor` can spot a stale install. It contains `SKILL.md` and twelve references:
 
 | Reference | Read when |
 |---|---|
+| `discover.md` | The owner is not sure what they want, or is learning: scenario before technology, which unknowns to raise, scope guard, explore before committing, guided mode |
 | `shape.md` | Understanding what is wanted: facts first, write-back, decision states, stop rule, interviewing, authorization, unattended runs, sizing |
+| `model.md` | Words or boundaries are drifting: glossary and bounded contexts, boundaries and invariants, deep modules, design it twice |
 | `context.md` | Knowing what the code touches: three context layers, impact analysis, budget |
-| `plan.md` | Creating `change.md`, slices, acceptance, delta specs, effort tiers, working with an existing tracker |
+| `plan.md` | Creating `change.md`, vertical slices, acceptance, delta specs, effort tiers, working with an existing tracker |
+| `engineer.md` | A design or reliability question: engineering lenses by delivery, structure, evolution, and operation; named patterns as vocabulary; quality targets as numbers |
 | `build.md` | Executing tasks: rulings, subagent dispatch by tier, escalation, parallel work, keeping artifacts true |
 | `verify.md` | Record validity, content validity, no silent weakening of tests, fresh-reader review, completion report |
 | `handoff.md` | What goes where, writing a handoff, resuming safely, `NOW.md` |
 | `land.md` | Landing gates, code and specs reviewed together, collisions, release state, promoting learnings |
+| `reconcile.md` | Writing new facts back and keeping the project small: where each fact goes, rewrite not append, budgets and compaction, gardening cadence |
 | `debug.md` | Reproduce, locate, fix, name the root-cause category |
 
 `SKILL.md` routes by need. The agent reads one reference at a time. Every guideline carries a hidden HTML comment with an `id`, the failure it prevents (`without`), and its deletion condition (`sunset`). `keelson retro` reads those comments.
@@ -142,6 +147,26 @@ Drift: if the main spec changed after the delta was written, `base:` no longer m
 Verification staleness needs a stable identity for "the code as it is now". In a git repository Keelson builds a real tree object from a throw-away index: `git add -A` into a temporary `GIT_INDEX_FILE` with `.keelson/` excluded, then `git write-tree`, truncated to 10 characters. Tracked and untracked files count, `.gitignore` is respected, and appending to a ledger does not invalidate the evidence it records. Without git, the fingerprint is a content hash of every file outside `node_modules`, `.git`, and `.keelson`.
 
 `keelson check` writes the fingerprint into the `Verify:` entry as `tree <hash>`. `keelson status`, `land`, and `doctor` recompute it and compare.
+
+## GLOSSARY.md
+
+`.keelson/GLOSSARY.md` holds one line per term: the meaning that code, specs, and conversation all use. `init` seeds it with the template; `keelson context` prints it once it has real content (the template placeholder line is skipped). A term that means something different in another part of the system keeps both lines, each naming its part. It has a line budget like every other document.
+
+## Check entries
+
+`config.yaml → check` accepts a command string or an object `{name, command, kind}`. `keelson check` normalises both into name, command, and kind; for a string the name is the command and the kind is guessed from it (`lint` for lint and format tools, `typecheck` for type checkers, `build` for build steps, `fitness` for commands that mention architecture, dependencies, boundaries, compatibility, or contracts, `test` for test runners, otherwise `check`). Named entries print their name and kind in the output and in `--json`. A `fitness` check is a constraint made executable; the skill asks for one whenever a rule keeps being broken.
+
+## Knowledge health
+
+`keelson doctor` computes, without editing anything:
+
+- line counts of `INTENT.md`, `ROADMAP.md`, `NOW.md`, `GLOSSARY.md`, every spec, every rule file listed in `rules/index.md`, and every active `change.md` and `handoff.md`, compared with `config.yaml → budgets`; the rule files routed by `**` or `*` are also summed and compared with `always-on`;
+- requirement bodies in each spec matched against history phrasing (`used to be`, `was changed to`, `has been replaced by`, `we then/later moved`, `as of <year>`, a dated sentence with `changed`, `moved`, `switched`, or `replaced`) and headings named `Update`, `Changelog`, `History`, or `Migration notes`;
+- requirement names, case-insensitively, across capabilities, to find duplicates;
+- for each active change, the newest modification time among `change.md`, `tasks.md`, `ledger.md`, and `handoff.md` (idle after 14 days) and the task count (oversized above 25);
+- for files under `docs/generated/`, whether they are more than a day older than the newest file under `src/` (or the project root when there is no `src/`).
+
+Each finding carries a suggested fix. The output is a list of small compactions for a person or the agent to make and land like any other change.
 
 ## NOW.md
 

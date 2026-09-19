@@ -42,6 +42,12 @@ From git tags. `keelson land` marks integration; `keelson status` prints the las
 **Does it work in a monorepo?**
 Yes. Rules are routed by path glob, so `packages/api/**` and `packages/web/**` can each have their own rule file. Specs are organised by capability name, which can include a path segment such as `api/orders`. `touches` on a change uses the same globs.
 
+**I'm new to engineering. Does it help me learn?**
+Run `keelson init --guide` (or set `guide: true` in `config.yaml`). The agent then asks about scenarios before technology, presents each choice with a recommendation, the reason, the alternatives, and the trade-off, explains a rule in one sentence when it applies it, names the engineering idea after you have decided, and ends each spec change with a short teaching note. The files, gates, and states are the same as for anyone else, so what you build is not a beginner's version of the project.
+
+**Documents keep growing. What stops them?**
+Line budgets in `config.yaml → budgets` and `keelson doctor`. Doctor reports a document over its budget, requirement text that reads like history, duplicated requirement names, changes idle for two weeks, changes with more than 25 tasks, always-on rules over budget, and generated docs older than the code. Each finding suggests a compaction (rewrite in the present tense, split, delete what git keeps, move a checkable rule into `check:`). Nothing is rewritten for you; the skill's `reconcile.md` reference tells the agent where each fact belongs and how to compact.
+
 **Is it opinionated about test-driven development?**
 No. The `verify` reference asks for evidence that matches the code and covers the acceptance list. The `guided` profile adds a note suggesting test-first when a scenario exists in the delta spec and a prototype when the problem is visual or an unknown API. The `lean` profile leaves the method to the agent.
 

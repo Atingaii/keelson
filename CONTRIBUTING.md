@@ -30,7 +30,7 @@ keelson init
 bin/keelson.js        entry point
 src/cli.js            command table and dispatch
 src/commands/*.js     one file per command
-src/lib/              config, paths, glob, markdown parsers, changes, git, models
+src/lib/              config, paths, glob, markdown parsers, changes, git, models, health (knowledge-health findings for doctor)
 src/platforms/        per-tool generators (skill dir, instructions file, hooks)
 skills/keelson/       the English skill: SKILL.md, references/, templates/
 skills/zh/keelson/    the Chinese skill, same layout

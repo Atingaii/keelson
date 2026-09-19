@@ -2,18 +2,19 @@
 
 All commands run from anywhere inside the project; Keelson walks up to find a `.keelson/` that holds `config.yaml` or `INTENT.md` (the user-level `~/.keelson/` never counts). Exit code 0 means success, 1 means an error or a failed check, 2 means an unknown command. `--json` on most commands prints machine-readable output. `--help` and `--version` work everywhere; `keelson <command> --help` prints that command's usage line.
 
-Boolean flags: `--json`, `--force`, `--dry-run`, `--no-hooks`, `--onboard`, `--refresh`, `--detect`, `--keep`, `--quiet`, `--confirm-assumptions`, `--accept-drift`, `--worktree`, `--purge`. Value flags accept `--key value` or `--key=value`.
+Boolean flags: `--json`, `--force`, `--dry-run`, `--no-hooks`, `--onboard`, `--refresh`, `--detect`, `--keep`, `--quiet`, `--confirm-assumptions`, `--accept-drift`, `--worktree`, `--purge`. Value flags accept `--key value` or `--key=value`. `--guide` is a value flag that also works bare: `--guide` and `--guide true` turn guided mode on, `--guide false` turns it off.
 
 ## `keelson init`
 
 ```text
 keelson init [--tools claude,codex,cursor,opencode,gemini] [--profile lean|guided]
-             [--lang en|zh] [--no-hooks] [--onboard] [--dry-run] [--dir <path>]
+             [--lang en|zh] [--guide] [--no-hooks] [--onboard] [--dry-run] [--dir <path>]
 ```
 
-Creates `.keelson/` with `INTENT.md`, `NOW.md`, `ROADMAP.md`, `rules/index.md`, `rules/general.md`, `config.yaml`, an empty `changes/`, and the specs directory. On a fresh init it detects existing material (architecture notes, decision records, CI, GitHub issues) into `refs`, detects check commands, and adds `.keelson/.local/` to `.gitignore`. Installs the skill (stamped with the CLI version), the resident block, and (Claude Code) the hooks for each tool. Runs local model detection. Never overwrites existing `.keelson/` files.
+Creates `.keelson/` with `INTENT.md`, `NOW.md`, `ROADMAP.md`, `GLOSSARY.md`, `rules/index.md`, `rules/general.md`, `config.yaml`, an empty `changes/`, and the specs directory. On a fresh init it detects existing material (architecture notes, decision records, CI, GitHub issues) into `refs`, detects check commands, and adds `.keelson/.local/` to `.gitignore`. Installs the skill (stamped with the CLI version), the resident block, and (Claude Code) the hooks for each tool. Runs local model detection. Never overwrites existing `.keelson/` files.
 
 - `--onboard` rewrites `NOW.md` with an onboarding task for existing codebases.
+- `--guide` sets `guide: true` in `config.yaml` and adds one line to the resident block saying the owner is learning engineering; the skill then explains choices with scenarios and trade-offs. `--guide false` turns it off again.
 - `--no-hooks` skips hook installation.
 - `--dry-run` lists every skill file as create, update, or unchanged, whether the instructions file would be created, appended, or refreshed, and any pending config migration. Writes nothing.
 - `--dir` targets another directory.
@@ -24,7 +25,7 @@ Keelson update (dry run) in /home/you/shop
   unchanged .claude/skills/keelson/SKILL.md
   update    .claude/skills/keelson/references/verify.md
   refresh   CLAUDE.md
-  migrate   .keelson/config.yaml v1 → v2
+  migrate   .keelson/config.yaml v2 → v3
 nothing written
 ```
 
@@ -114,7 +115,11 @@ Creates `changes/<name>/handoff.md` from the template, or re-stamps an existing 
 keelson validate [--json]
 ```
 
-Structural checks over `.keelson/` and the specs directory. Errors (exit 1): missing `INTENT.md` or `NOW.md`; bad `profile` or `land`; rule files referenced but missing; spec directories without `spec.md`; duplicate requirements; bad tier or work status; missing `Why`/`What`; spec tier missing `How`/`Alternatives`/`Impact` or fewer than two alternatives; bad effort tags; `Verify:` entries without command or exit; unknown root-cause categories; dated model IDs anywhere under `.keelson/`. Warnings: template placeholders, rules not listed in the index, requirements without scenarios, acceptance items without a check kind, open questions without `blocks:`, dependencies on inactive changes, `**BREAKING**` without `Rollout`, slices without `Delivers:`, `Verify:` entries without `tree`, `Dispatch:` entries without `Result:`, handoffs without `at:`, missing refs paths, `.gitignore` without `.keelson/.local/`.
+Structural checks over `.keelson/` and the specs directory. Errors (exit 1): missing `INTENT.md` or `NOW.md`; bad `profile` or `land`; rule files referenced but missing; spec directories without `spec.md`; duplicate requirements; bad tier or work status; missing `Why`/`What`; spec tier missing `How`/`Alternatives`/`Impact` or fewer than two alternatives; bad effort tags; `Verify:` entries without command or exit; unknown root-cause categories; dated model IDs anywhere under `.keelson/`. Warnings: template placeholders, rules not listed in the index, requirements without scenarios, acceptance items without a check kind, open questions without `blocks:`, dependencies on inactive changes, `**BREAKING**` without `Rollout`, slices without `Delivers:`, `Verify:` entries without `tree`, `Dispatch:` entries without `Result:`, handoffs without `at:`, missing refs paths, `.gitignore` without `.keelson/.local/`, and a slice named after a layer (`database`, `backend`, `frontend`, `ui`, `api`, `model`, `storage`, `infra`, and their variants), because a slice should be one user-observable path through every layer.
+
+```text
+! changes/demo/tasks.md: slice "Backend" is named after a layer; a slice should be one user-observable path through all layers (tracer bullet)
+```
 
 ## `keelson check`
 
@@ -122,7 +127,14 @@ Structural checks over `.keelson/` and the specs directory. Errors (exit 1): mis
 keelson check [cmd...] [--record [claim]] [--change name] [--quiet] [--json]
 ```
 
-Runs the commands in `config.yaml → check` (or the single command given as positional arguments), saves each output to `.keelson/.local/evidence/<timestamp>-<n>.log`, and prints one exit code per command. Computes the worktree fingerprint and forms a `Verify:` entry naming every command, its exit code, and `tree <hash>`. Without `--record` the entry is printed; with `--record` it is appended to the active change's `ledger.md` (`--change` picks one when several are active). `--record "<claim>"` sets the entry title; otherwise it is `checks pass` or `checks failed`.
+Runs the entries in `config.yaml → check` (or the single command given as positional arguments), saves each output to `.keelson/.local/evidence/<timestamp>-<n>.log`, and prints one exit code per entry. An entry may be a command string or `{name, command, kind}`; named entries print their name and kind before the command:
+
+```text
+keelson check — 3 commands
+✓ unit (test) `npm run test` exit 0
+✓ boundaries (fitness) `npm run test:architecture` exit 0
+✓ `npm run lint` exit 0
+``` Computes the worktree fingerprint and forms a `Verify:` entry naming every command, its exit code, and `tree <hash>`. Without `--record` the entry is printed; with `--record` it is appended to the active change's `ledger.md` (`--change` picks one when several are active). `--record "<claim>"` sets the entry title; otherwise it is `checks pass` or `checks failed`.
 
 Exit 1 when any command failed; the entry is still recorded with the failing exit code.
 
@@ -182,7 +194,26 @@ Default: a table of tier to alias with the source of each resolution, plus the l
 keelson doctor [--json]
 ```
 
-Reports the Node version, pending config migration, and per configured tool: skill presence and version match, resident block presence, hook registration and script presence. Then every `validate` finding, stale verification, HEAD moved since a handoff, dependencies on active changes, shared-contract conflicts, and tool CLIs missing from the path. Exit 1 when any finding is an error.
+Reports the Node version, pending config migration, and per configured tool: skill presence and version match, resident block presence, hook registration and script presence. Then every `validate` finding, stale verification, HEAD moved since a handoff, dependencies on active changes, shared-contract conflicts, knowledge health, and tool CLIs missing from the path. Exit 1 when any finding is an error.
+
+### Knowledge health
+
+Findings about the project's documents, reported as warnings or information with a suggested fix, never applied automatically:
+
+| Kind | Reported when |
+|---|---|
+| `budget` | `INTENT.md`, `ROADMAP.md`, `NOW.md`, `GLOSSARY.md`, a spec, a rule file, an active `change.md` or `handoff.md` is over its line budget in `config.yaml → budgets`; or the rule files routed by `**` add up to more than the `always-on` budget |
+| `narrative` | a spec's requirement text reads like history (`used to be`, `was changed to`, `has been replaced by`, dated change sentences, a heading such as `Update` or `Changelog`) |
+| `duplicate` | the same requirement name appears in two capabilities |
+| `idle` | an active change has not been touched for 14 days or more |
+| `oversized` | an active change has more than 25 tasks |
+| `stale-generated` | a file under `docs/generated/` is older than the source tree by more than a day |
+
+```text
+knowledge health: findings are suggestions for small compactions, never automatic rewrites
+! budget: INTENT.md is 153 lines (budget 120) → compact: rewrite the current truth, split by capability or scope, delete history that git already keeps, move automatable rules into checks
+! narrative: .keelson/specs/orders/spec.md reads like history in places → current truth is present tense; reasons go to Decisions, the sequence of changes stays in git
+```
 
 ## `keelson ablate` / `keelson restore`
 

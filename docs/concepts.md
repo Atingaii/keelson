@@ -31,6 +31,27 @@ Keelson keeps the capabilities a long-lived project needs, and spreads them acro
 
 These are internal capability areas, not seven steps. A trivial change touches none of them visibly.
 
+## Discover, model, engineer, reconcile
+
+Four references in the skill carry the engineering judgment that the file layout alone cannot. None is a stage; each is read when the situation calls for it.
+
+| Reference | Read when | What it carries |
+|---|---|---|
+| `discover.md` | The owner is not sure what they want, or is learning | Scenario before technology: ask which use is at the centre before any storage or framework question. Which unknowns to raise: read what the code answers, follow existing conventions, decide the reversible, default the technical, ask only what changes the product, confirm what destroys data or touches production. A scope guard that names bundled domains and proposes an order. Explore before committing: a spike, prototype, mock, or benchmark when a cheap experiment beats an abstract decision |
+| `model.md` | Words or boundaries are drifting | One meaning per term in `.keelson/GLOSSARY.md`; a term that means two things in two parts of the system marks a boundary, and the two parts talk through an explicit translation. Invariants per capability. Interfaces that hide what changes rather than mirror the implementation. Two design sketches before choosing, the rejected one recorded with its strongest argument |
+| `engineer.md` | A design or reliability question | Engineering lenses grouped by delivery, structure, evolution, and operation; the agent picks the one to four that change this design and never runs the whole list. Named patterns are shared vocabulary for a shape that already fits, never a requirement. Quality targets are numbers with a scope, written as requirements with scenarios, and turned into a `fitness` check when a command can measure them |
+| `reconcile.md` | After landing, and when `keelson status` shows nothing in flight | Where each new fact goes: behaviour to the spec, reasons to `Decisions`, terms to the glossary, moved responsibilities to rules, checkable constraints to `check:`, defects to regression tests, remaining work to the tracker. Current truth is rewritten, never appended. Budgets and the compaction moves: rewrite, split, delete, move, automate, archive |
+
+Slices follow the same judgment: `plan.md` asks for vertical slices, one real user action carried through every layer, thin but complete, before the next action starts. `keelson validate` warns when a slice is named after a layer.
+
+### Guided mode
+
+`config.yaml → guide: true` (set by `keelson init --guide`) says the owner is learning engineering by building. The artifacts, gates, and states are identical. What changes is the conversation: choices are presented as scenarios with a recommendation, the reason, the alternatives, and the trade-off, in the owner's words; the engineering term comes after the decision, as a name for what was just chosen; a rule is explained in one sentence when it is applied; and a spec change closes with a short teaching note (the key decision, why, the idea it is an instance of, when to revisit it) that stays in the conversation and never in the project files.
+
+## Knowledge health
+
+Project material grows with the project; what is read per task must not grow with the whole history. `config.yaml → budgets` gives each document type a line budget, and `keelson doctor` reports documents over budget, requirement text that reads like history, duplicated requirement names across capabilities, changes idle for two weeks or more, changes with more than 25 tasks, always-on rules over budget, and generated documents older than the source tree. Every finding is a suggestion for a small, separately landable fix. Nothing is rewritten automatically.
+
 ## Decision states
 
 The agent keeps four states apart in conversation and in `change.md`:
@@ -78,7 +99,7 @@ Evidence fails in two independent ways.
 
 | Information | Location | In git |
 |---|---|---|
-| Project facts, specs, rules, roadmap, current state | `.keelson/` | Yes |
+| Project facts, specs, rules, roadmap, glossary, current state | `.keelson/` | Yes |
 | Change artifacts including `handoff.md` and `ledger.md` | `.keelson/changes/<name>/` | Yes, until the change folds; then in history |
 | Check output, per-machine state | `.keelson/.local/` | No |
 | Model detection cache, user tier overrides, ablation stashes | `~/.keelson/` | No |

@@ -100,10 +100,11 @@ Claude Code users can also install the skill from the plugin marketplace (`/plug
 | `.keelson/INTENT.md` | Why the project exists, boundaries, hard constraints, what the agent may decide alone | You, once |
 | `.keelson/ROADMAP.md` | The current milestone; later work as direction only. Links the tracker when there is one | You and the agent |
 | `.keelson/NOW.md` | What is in flight, what is blocked, the next step. Present tense, rewritten in full | The agent, when it stops or lands |
+| `.keelson/GLOSSARY.md` | One meaning per term, used by specs, code, and conversation alike | You and the agent, as words drift |
 | specs (`paths.specs`, default `.keelson/specs/<capability>/spec.md`) | How the system behaves today: requirements, scenarios, decisions with their rejected alternatives | The agent, merged at landing |
 | `.keelson/rules/` | Conventions routed by path glob from `rules/index.md` | You and the agent |
 | `.keelson/changes/<name>/` | One directory per change in flight: `change.md`, `tasks.md`, `ledger.md`, `handoff.md`, delta specs | The agent |
-| `.keelson/config.yaml` | Tools, profile, check commands, `paths.specs`, `refs` to existing material, model overrides | `keelson init` |
+| `.keelson/config.yaml` | Tools, profile, check commands, `paths.specs`, `refs` to existing material, document budgets, guided mode, model overrides | `keelson init` |
 | `.keelson/.local/` | Check evidence and per-machine state. Gitignored | `keelson check` |
 
 `changes/` is empty when nothing is in flight. Existing documents are referenced from `config.yaml → refs`, never copied.
@@ -135,10 +136,14 @@ So "implemented, tests pass, awaiting your review, not merged" and "merged, migr
 
 1. **A resident block** under 20 lines in `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`. It says what `.keelson/` contains, how to size a change, and how to prove work is done.
 2. **Two hooks** (Claude Code). One prints the roadmap's `Now`, `NOW.md`, active changes, and handoff next steps at session start. The other prints one line per prompt with work and verification state, and nothing when the project is idle. Hooks inject state, never instructions.
-3. **One skill**, routed by need. `SKILL.md` is under 50 lines and points to one reference each for shaping, context and impact, planning, building, verifying, handing off, landing, and debugging. The agent reads only the one it needs.
+3. **One skill**, routed by need. `SKILL.md` is about 50 lines and points to one reference each for discovering what is wanted, shaping it, the domain model and glossary, context and impact, planning in vertical slices, engineering lenses, building, verifying, handing off, landing, reconciling new facts into the project, and debugging. The agent reads only the one it needs.
 4. **A thin CLI** that does mechanical work: scaffolds, fingerprints, merges specs, records evidence, refuses a landing that lacks it. Understanding the request, analysing impact, and reviewing code stay with the agent.
 
 Nothing in the skill is a gate on the agent. The gates are on artifacts.
+
+### For people learning engineering
+
+`keelson init --guide` marks the owner as someone learning engineering by building. The agent then asks about scenarios before technology, presents each choice with a recommendation, the reason, the alternatives, and the trade-off, names the engineering idea after the decision, and closes each spec change with a short teaching note in the conversation. The files, gates, and states are the same as for everyone else.
 
 ## Change sizes
 
@@ -159,6 +164,8 @@ Tasks carry an effort tier: `light`, `standard`, or `deep`. When the host offers
 ## Designed to get thinner
 
 Every guideline in the skill carries a hidden annotation: the failure it prevents and the condition under which it should be deleted. `keelson retro` reads every ledger, including those of folded changes recovered from git history, and suggests which guidance to prune and which rules or checks to add. Two profiles ship from one source: `lean` (default) keeps stance and principles, `guided` adds step lists and examples.
+
+The project's documents are kept small the same way. Each document type has a line budget in `config.yaml`, and `keelson doctor` reports knowledge health: documents over budget, requirement text that reads like history, duplicated requirements across capabilities, changes idle for two weeks, changes with more than 25 tasks, always-on rules over budget, generated docs older than the code. Every finding is a suggestion for a small fix, never an automatic rewrite. The rule is that project material may grow with the project, but what is read per task must not grow with the whole history.
 
 ## Honest limits
 
@@ -195,7 +202,7 @@ Every guideline in the skill carries a hidden annotation: the failure it prevent
 | `keelson validate` | Structural checks, non-zero on errors |
 | `keelson retro` | Ledger metrics and pruning suggestions |
 | `keelson models` | Effort tier to model alias resolution |
-| `keelson doctor` | Diagnose the install |
+| `keelson doctor` | Diagnose the install and report knowledge health |
 | `keelson ablate` / `restore` | Remove every surface for an A/B comparison, then bring it back |
 | `keelson uninstall` | Remove generated surfaces; `--purge` removes `.keelson/` too |
 
