@@ -5,59 +5,48 @@ description: 面向带有 .keelson/ 目录的仓库的工程协作层。凡是�
 
 # Keelson
 
-Keelson 是项目的工程控制层。仓库把长期事实保存在 `.keelson/`：`INTENT.md`（为什么存在、边界、你可以独自决定什么）、`ROADMAP.md`（当前里程碑）、`NOW.md`（当前在做什么）、`GLOSSARY.md`（一个术语一个含义）、specs（系统今天的行为，路径在 `config.yaml` 中）、`rules/`（按路径作用的约定）、`changes/`（进行中的工作，空闲时为空）。项目已有文档通过 `config.yaml → refs` 引用，绝不复制。
+仓库说明文件里的常驻块是始终生效的小内核：**ORIENT → BOUND → BUILD → SENSE → RECONCILE**。这份 canonical Skill 只负责把任务路由到更深的指导；不要一次加载或复述所有 reference。先看 `.keelson/README.md` 获取人和 Agent 都能读懂的项目地图。长期项目事实放在 `.keelson/`；已有项目文档通过 `config.yaml → refs` 保持权威，不复制。
 
-Keelson 约束的是**状态转换，而不是实现方式**。怎么解决问题由你判断；但非平凡修改前不能跳过当前上下文，不能悄悄改变行为契约，不能拿过期证据宣布完成，也不能带着未关闭的验收直接落地。一个规则如果能被机器稳定检查，就优先把它做成可执行不变量，而不是再写一段提示词。用户指令和项目自身说明文件始终优先。
+Keelson 约束的是**状态转换，而不是实现方式**。用户指令和项目自身说明文件优先。一个规则若能稳定机械检查，就优先做成可执行不变量，而不是继续增加提示词。
 
-## 首次接触
+## 从当前状态开始
 
-如果 `NOW.md` 以 "First contact" 开头，说明还没有人起草过项目事实。阅读仓库（README、清单文件、目录布局、代码，以及 `config.yaml → refs` 指向的文档），起草 `INTENT.md`（为什么存在、边界、硬约束、一份初始的 Authorizations 段），已有代码的项目再为每个能力写一份 spec、为有约定的路径写 rules。然后用一次简短的交流请所有者确认或修正，保留他们的回答，重写 `NOW.md`。如果所有者一上来就提了需求，就在整理那个变更的过程中顺带完成，一起确认。永远不要让所有者手写这些文件。
+如果 `NOW.md` 以 "First contact" 开头，先检查仓库，起草 `INTENT.md`，已有代码时再起草能力 specs 与按路径作用的 rules，然后用一次简短交流请所有者确认或修正。永远不要让所有者手写脚手架。
 
-## 执行主回路
+非平凡任务遵循常驻主回路。如果本轮还没有基于当前工作树完成定向，运行 `keelson context --paths <files>`；修改共享模块前运行 `keelson impact <files>`。代码、specs、INTENT 或当前对话已经给出的事实，不再重复询问。
 
-每个非平凡变更都走 **ORIENT → BOUND → BUILD → SENSE → RECONCILE**。不要因为聊天记录里“好像已经有了”就跳过某一段。
+## 只使用与变更规模相称的流程
 
-- **ORIENT（定向）** — 先看工作树，再运行 `keelson context --paths <你预计会改的文件>`；改共享模块前运行 `keelson impact <files>`。直接读命中的 spec/rules，不依赖会话记忆。
-- **BOUND（定界）** — 按下表判断变更大小，写回你的理解，审计真正影响结果的假设，并在实现扩大之前把验收边界说清楚。如果仍有一个由用户掌握、足以改变下一个切片的信息缺口，写代码前只问一个最高价值问题。
-- **BUILD（构建）** — 一次只推进一个纵向切片；不要把无关清理塞进当前切片；决策变化时同步保持 change 工件真实。
-- **SENSE（感知）** — 工作中尽早运行最便宜且相关的 test/lint/type/fitness 检查；任何完成性结论前都要用 `keelson check --record` 重新取得当前工作树上的证据。
-- **RECONCILE（收敛）** — 把稳定事实写回 specs/rules/glossary/NOW；未完成就留下可恢复的 handoff；同一类失败反复出现时，把它提升为窄范围 rule 或可执行 check，而不是沉淀成聊天经验。
+| 大小 | 边界 | 动作 |
+|---|---|---|
+| trivial | 明确的单文件修复；行为不变 | 直接做；不建 change 目录 |
+| quick | 意图清楚；行为契约不变 | 写回理解，`keelson new`，继续 |
+| spec | 行为/契约/能力/迁移变化，或所有者要求写代码前评审 | 起草验收 + delta specs；等待批准 |
 
-## 先定大小，再选参考
+所有者可以覆盖大小。无人值守时，把尚未确认的所有者决策标成 `(assumed)`，并在落地前停下。
 
-| 大小 | 信号 | 做法 | 阅读 |
-|---|---|---|---|
-| trivial | 样式、错字、单文件显式修复、行为不变 | 直接做；不建 change 目录 | 不读 |
-| quick | 涉及多个文件、意图清楚、行为契约不变 | 用 3 到 6 行写回你的理解，`keelson new`，继续 | `references/shape.md` |
-| spec | 行为契约变化、新增或删除能力、放弃显而易见的方案、迁移、任何负责人想在写代码前先审阅的事 | 澄清到下一个切片可交付为止，起草含验收和 delta specs 的 `change.md`，等待批准 | `references/shape.md`、`references/plan.md` |
+## 只加载当前任务需要的 reference
 
-大小由你判断；用户可以用"按 spec 处理"或"直接做"覆盖。没有人能回答时（脚本化运行），在标为 `(assumed)` 的假设下构建，落地前停下。当 `config.yaml → guide` 为 true 时，负责人正在学习：用场景和取舍来解释，在决定之后再说出对应的工程思想，并在 spec 变更收尾时附一段简短的教学说明。
+- 产品意图不清 / 引导式发现 → `references/discover.md`
+- 需求、假设、授权 → `references/shape.md`
+- 术语、边界、不变量 → `references/model.md`
+- 上下文与影响 → `references/context.md`
+- 纵向切片计划 / delta specs → `references/plan.md`
+- 设计、可靠性、质量取舍 → `references/engineer.md`
+- 实现纪律 → `references/build.md`
+- 证据与验收 → `references/verify.md`
+- Harness 反复漏掉同一类问题 → `references/harness.md`
+- 停下 / 恢复 / 并行接续 → `references/handoff.md`
+- 集成 / 发布 → `references/land.md`
+- 回写稳定事实并压缩 → `references/reconcile.md`
+- 调试 → `references/debug.md`
 
-## 你现在需要什么？
+## 不变量
 
-- **负责人还不确定想要什么，或正在学习** → `references/discover.md`
-- **弄清要做什么** → `references/shape.md`
-- **词汇或边界在漂移** → `references/model.md`
-- **知道代码会牵动什么** → `references/context.md`
-- **规划变更** → `references/plan.md`
-- **设计或可靠性问题** → `references/engineer.md`
-- **构建** → `references/build.md`
-- **证明它能用** → `references/verify.md`
-- **Harness 总在漏掉同一类问题** → `references/harness.md`（前馈/反馈控制、升级阶梯、机械不变量、sunset）
-- **停下或继续** → `references/handoff.md`
-- **集成与发布** → `references/land.md`
-- **把新事实写回去，让项目保持小** → `references/reconcile.md`
-- **有东西坏了** → `references/debug.md`
-- **"retro"** → 运行 `keelson retro` 并按建议行动
+- 始终区分**代码现实**、**已确认事实**和**计划变更**；发现漂移就报告，不改 spec 去迁就缺陷。
+- 完成性结论必须有当前工作树上的新鲜 `keelson check --record` 证据。
+- 未决问题只阻塞依赖它的切片。
+- 重复失败应升级为窄范围 rule 或可执行 check，而不是增长聊天经验。
+- effort 只使用浮动层级 `light | standard | deep`；仓库里不持久化带日期的模型 ID。
 
-## 你会用到的 CLI
-
-`keelson context --paths <files>` · `keelson impact <files>` · `keelson new <name> --tier quick|spec [--capability cap] [--touches globs] [--depends change]` · `keelson status` · `keelson check --record "<claim>"` · `keelson validate` · `keelson handoff <name>` · `keelson land <name> [--now "<text>"] [--confirm-assumptions] [--accept-drift]` · `keelson cancel <name>` · `keelson models --resolve <tier>`。每条命令都接受 `--json`；`keelson <command> --help` 打印该命令的参数。
-
-## 基本规则（以及它们为什么存在）
-
-- **先查事实，再提问。** 提问之前先读代码、`.keelson/` 和被引用的文档。specs 或 INTENT 里已经记录的决策不再问第二次。
-- **三件事不是一回事：代码在做什么、什么已被确认、什么在计划中。** 三者不一致时，报告差距；绝不改 spec 去迁就缺陷。
-- **先有证据，再下结论。** "完成"、"通过"、"修好了"要跟在本会话的 `keelson check --record` 之后。最后一次改代码之前的证据已经过期，`land` 会指出来。
-- **未决问题只阻塞依赖它的部分。** 它不牵涉的切片继续建。
-- **仓库里不出现带日期的模型 ID。** effort 层级是 `light | standard | deep`；由宿主在运行时解析。
+机械操作查 `keelson <command> --help`。主要状态命令：`context`、`impact`、`new`、`status`、`check --record`、`handoff`、`land`、`cancel`、`retro`。
