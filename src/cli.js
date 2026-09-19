@@ -5,7 +5,7 @@ const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
 
 const COMMANDS = {
-  init: ['init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided] [--lang en|zh] [--no-hooks] [--dry-run]', 'Set up the canonical .keelson/ runtime for the tools you use (auto-detected when none given), plus discovery shims and hooks. The agent drafts INTENT, specs, and rules on first contact', () => import('./commands/init.js').then((m) => m.init)],
+  init: ['init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided] [--lang en|zh] [--no-hooks] [--dry-run]', 'Set up the minimal .keelson/ control plane and host discovery. Project artifacts grow only when the work needs them', () => import('./commands/init.js').then((m) => m.init)],
   platforms: ['platforms [--json]', 'List supported coding tools, their file locations, and which are installed or configured', () => import('./commands/platforms.js').then((m) => m.platforms)],
   update: ['update [--dry-run]', 'Refresh the canonical .keelson/ runtime, discovery shims, and hooks after upgrading; migrates config.yaml', () => import('./commands/init.js').then((m) => m.init)],
   context: ['context [--paths a/,b/**] [--json]', 'Print INTENT, ROADMAP, NOW, active changes, existing references, and the rules matching the given paths', () => import('./commands/context.js').then((m) => m.context)],
@@ -25,10 +25,27 @@ const COMMANDS = {
   uninstall: ['uninstall [--purge]', 'Remove generated surfaces; keep .keelson/ unless --purge', () => import('./commands/uninstall.js').then((m) => m.uninstall)],
 };
 
+const COMMAND_GROUPS = [
+  ['Your commands', ['init', 'status', 'doctor', 'update', 'platforms', 'uninstall']],
+  ['Agent workflow', ['context', 'impact', 'new', 'check', 'handoff', 'validate', 'land', 'cancel']],
+  ['Maintenance / advanced', ['retro', 'models', 'ablate', 'restore']],
+];
+
 export function help() {
-  const lines = [`keelson ${version} — an engineering collaboration layer for coding agents on long-lived projects`, '', 'Usage: keelson <command> [options]', ''];
-  for (const [, [usage, desc]] of Object.entries(COMMANDS)) lines.push(`  ${usage}`, `      ${desc}`);
-  lines.push('', 'Docs: https://github.com/Atingaii/keelson');
+  const lines = [
+    `keelson ${version} — an engineering control plane for coding agents`,
+    '',
+    'Usage: keelson <command> [options]',
+    'Normal use: run `keelson init` once, then talk to your coding agent as usual.',
+  ];
+  for (const [title, names] of COMMAND_GROUPS) {
+    lines.push('', `${title}:`);
+    for (const name of names) {
+      const [usage, desc] = COMMANDS[name];
+      lines.push(`  ${usage}`, `      ${desc}`);
+    }
+  }
+  lines.push('', 'Docs: https://github.com/Atingaii/keelson/tree/main/docs');
   return lines.join('\n');
 }
 
