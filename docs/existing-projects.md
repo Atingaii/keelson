@@ -41,10 +41,10 @@ The files must use Keelson's shape (`## Requirement:` sections with `### Scenari
 ## Onboarding
 
 ```bash
-keelson init --onboard
+keelson init
 ```
 
-This writes an onboarding task into `NOW.md` that names the refs it found. Open your agent and say "continue". The agent:
+On a repository that already has code, `keelson init` writes a first-contact task into `NOW.md` that names the refs it found. Open your agent and say anything. The agent:
 
 1. reads the codebase and the referenced documents;
 2. lists the capabilities it finds;

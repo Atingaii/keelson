@@ -21,7 +21,7 @@ keelson init
 By default this sets up Claude Code. Pass `--tools` for other agents, comma separated:
 
 ```bash
-keelson init --tools claude,codex,cursor
+keelson init --claude --codex --cursor
 ```
 
 Sample output on a repository that already has decision records and CI:
@@ -46,37 +46,16 @@ Keelson init in /home/you/your-project
 
 Next
   1. Edit .keelson/INTENT.md — why this project exists, what it will not do, what the agent may decide alone.
-  2. Existing codebase? Re-run with --onboard, or ask your agent: "draft specs and rules from the code".
+  2. Open your agent here and start talking; on first contact it drafts INTENT.md, the specs, and the rules from the code.
   3. Then just talk to your agent. Nothing else to type.
 ```
 
 `init` never overwrites files that already exist in `.keelson/`. It appends a marked block to `CLAUDE.md` (or `AGENTS.md`, `GEMINI.md`) and leaves the rest of the file alone. Existing material it finds (architecture notes, decision records, CI, a GitHub issues page) is recorded under `refs` in `config.yaml` and referenced, never copied. If `package.json` has `lint`, `typecheck`, or `test` scripts, they become check commands. `keelson init --dry-run` lists what would be written without writing it.
 
-## Write INTENT.md
+## First contact
 
-Open `.keelson/INTENT.md`. The template asks for five things:
+Open your agent in the project directory and say anything, or just "hello". `NOW.md` holds a first-contact task, so the agent reads the repository, drafts `.keelson/INTENT.md` (why the project exists, its boundaries, hard constraints, and what the agent may decide alone) and, for an existing codebase, one spec per capability plus rules for paths with conventions. It asks you to confirm or correct in one short exchange and keeps your answers. If you ask for a change right away, it does this while shaping that change and confirms both together. You never write these files by hand.
 
-- why the project exists, in one paragraph;
-- boundaries, including the tempting things you have decided not to do;
-- hard constraints such as runtime, compatibility, and licensing;
-- authorizations: what the agent decides alone, what it recommends for you to decide, what it always confirms;
-- working defaults for change sizing and approvals.
-
-This file is read at the start of every non-trivial piece of work. Keep it to one page.
-
-`GLOSSARY.md` starts empty. Add a line when two words begin to mean the same thing, or one word two things; the agent uses those terms in specs and code from then on.
-
-If you are learning engineering as you build, run `keelson init --guide`. The agent then presents choices as scenarios with a recommendation and its trade-off, names the engineering idea after you decide, and closes each spec change with a short teaching note. Nothing else changes.
-
-## Onboarding an existing codebase
-
-For a project that already has code, run:
-
-```bash
-keelson init --onboard
-```
-
-This writes an onboarding task into `NOW.md`. Open your agent and say "continue". The agent reads the codebase, lists its capabilities, writes one spec per capability, and proposes rules for paths that have conventions. Where a document under `refs` already describes a contract or a decision, the spec links to it instead of restating it. Specs and rules are drafts until you confirm them. See [Existing projects](existing-projects.md).
 
 ## Your first quick change
 

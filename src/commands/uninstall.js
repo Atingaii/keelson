@@ -10,7 +10,7 @@ export async function uninstall({ flags }, cwd = process.cwd()) {
   const cfg = loadConfig(projectPaths(root).config);
   const p = projectPaths(root, cfg);
   heading(`Uninstall Keelson surfaces from ${root}`);
-  const removed = removeSurfaces(root, cfg.tools ?? []);
+  const removed = removeSurfaces(root, cfg.tools ?? [], cfg);
   for (const r of removed) ok(`removed ${r}`);
   if (exists(p.hooks)) {
     rmrf(p.hooks);

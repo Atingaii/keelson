@@ -15,7 +15,7 @@ export function validateProject(root) {
   const p = projectPaths(root, cfg);
 
   if (!exists(p.intent)) errors.push('missing .keelson/INTENT.md');
-  else if (/^One paragraph\./m.test(readOr(p.intent))) warnings.push('INTENT.md still contains template placeholder text');
+  else if (/^One paragraph\./m.test(readOr(p.intent)) && !/^First contact with /m.test(readOr(p.now))) warnings.push('INTENT.md still contains template placeholder text (the agent drafts it on first contact; if that already happened, ask it to)');
   if (!exists(p.now)) errors.push('missing .keelson/NOW.md');
   if (!['lean', 'guided'].includes(cfg.profile)) errors.push(`config.profile must be lean|guided (got ${cfg.profile})`);
   if (!['fold', 'keep'].includes(cfg.land)) errors.push(`config.land must be fold|keep (got ${cfg.land})`);

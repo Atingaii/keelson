@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { exists, readOr, readJson } from '../lib/fs.js';
 import { loadConfig, CONFIG_VERSION } from '../lib/config.js';
-import { PLATFORMS } from '../platforms/index.js';
+import { PLATFORMS, installTargets } from '../platforms/index.js';
 import { validateProject } from './validate.js';
 import { projectStatus } from './status.js';
 import { parseFrontmatter } from '../lib/markdown.js';
@@ -28,12 +28,8 @@ export async function doctor({ flags }, cwd = process.cwd()) {
   const rawVersion = Number((readOr(p.config, '').match(/^version:\s*(\d+)/m) || [])[1] ?? 1);
   if (rawVersion < CONFIG_VERSION) add('warn', `config.yaml is v${rawVersion}; run \`keelson update\` to migrate to v${CONFIG_VERSION}`);
 
-  for (const t of cfg.tools ?? []) {
-    const pl = PLATFORMS[t];
-    if (!pl) {
-      add('error', `unknown tool "${t}" in config.yaml`);
-      continue;
-    }
+  for (const t of cfg.tools ?? []) if (!PLATFORMS[t]) add('error', `unknown tool "${t}" in config.yaml`);
+  for (const pl of installTargets((cfg.tools ?? []).filter((t) => PLATFORMS[t]), cfg)) {
     const skill = path.join(root, pl.skillsDir, 'keelson', 'SKILL.md');
     if (!exists(skill)) add('error', `${pl.label}: skill missing at ${pl.skillsDir}/keelson (run \`keelson update\`)`);
     else {
@@ -41,7 +37,9 @@ export async function doctor({ flags }, cwd = process.cwd()) {
       if (v && v !== PKG_VERSION) add('warn', `${pl.label}: installed skill is ${v}, CLI is ${PKG_VERSION} (run \`keelson update\`)`);
     }
     const ins = path.join(root, pl.instructions);
-    if (!readOr(ins, '').includes('<!-- keelson:start -->')) add('error', `${pl.label}: resident block missing from ${pl.instructions}`);
+    const insText = readOr(ins, '');
+    if (pl.instructionsFormat === 'kiro' ? !insText.includes('Keelson') : !insText.includes('<!-- keelson:start -->')) add('error', `${pl.label}: resident block missing from ${pl.instructions}`);
+    if (pl.confidence === 'convention') add('info', `${pl.label}: file locations follow the tool's convention and have not been exercised by the maintainers; if the agent does not pick up the skill, override platforms.${pl.id} in config.yaml`);
     if (pl.hooks) {
       const settings = readJson(path.join(root, '.claude', 'settings.json'), {}) ?? {};
       const has = (ev, script) => (settings.hooks?.[ev] ?? []).some((g) => (g.hooks ?? []).some((h) => String(h.command ?? '').includes(script)));

@@ -4,7 +4,7 @@
 Yes. Hooks exist only for Claude Code and only inject state. Without them, the resident block tells the agent to run `keelson context --paths <files>` before non-trivial work, and `NOW.md` plus each change's `handoff.md` are the first things it reads when you say "continue". Pass `--no-hooks` to `init` if you prefer that on Claude Code too.
 
 **Which tools are supported?**
-`claude`, `codex`, `cursor`, `opencode`, and `gemini`. Each gets the skill directory and a resident block in its instructions file. Cursor also gets `.cursor/rules/keelson.mdc`. Run `keelson init --tools a,b,c` for several at once. Other tools that read `AGENTS.md` and `.agents/skills/` can use the `codex` output as is.
+Twenty-two tools, listed by `keelson platforms` and in the README. Each gets the skill directory and an instructions block in the file it reads; some also get a rules file. Every non-Claude selection installs the cross-tool layer (`AGENTS.md` + `.agents/skills/`), which any agent that reads that convention picks up. Run `keelson init --cursor --codex` for several at once, or `keelson init` alone to use what is installed on your machine.
 
 **Do I have to type commands in chat?**
 No. You talk to the agent as before. The agent runs the CLI itself. Phrases such as "grill me", "status", "hand off", "land it", and "retro" have a defined meaning in the skill, but none is required.

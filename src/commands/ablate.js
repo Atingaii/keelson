@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import { requireProjectRoot, projectPaths, USER_HOME } from '../lib/paths.js';
 import { exists, isDir, copyDir, rmrf, readJson, writeJson, mkdirp, walk, read } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
-import { removeSurfaces, PLATFORMS } from '../platforms/index.js';
+import { removeSurfaces, PLATFORMS, installTargets } from '../platforms/index.js';
 import { ok, warn, heading, info } from '../lib/out.js';
 
 const stashDir = (root) => path.join(USER_HOME, 'ablations', crypto.createHash('sha1').update(root).digest('hex').slice(0, 12));
@@ -23,9 +23,7 @@ export async function ablate({ flags }, cwd = process.cwd()) {
   if (exists(path.join(stash, 'manifest.json'))) throw new Error(`an ablation for this project already exists (${stash}); run \`keelson restore\` first`);
   heading(`Ablate Keelson from ${root}`);
   const surfaces = [];
-  for (const t of cfg.tools ?? []) {
-    const pl = PLATFORMS[t];
-    if (!pl) continue;
+  for (const pl of installTargets((cfg.tools ?? []).filter((t) => PLATFORMS[t]), cfg)) {
     surfaces.push(pl.instructions, path.join(pl.skillsDir, 'keelson'));
     if (pl.rulesFile) surfaces.push(pl.rulesFile);
   }
@@ -45,7 +43,7 @@ export async function ablate({ flags }, cwd = process.cwd()) {
     manifest.files.push(s);
   }
   manifest.hash = hashTree(path.join(stash, 'files'));
-  removeSurfaces(root, cfg.tools ?? []);
+  removeSurfaces(root, cfg.tools ?? [], cfg);
   rmrf(p.keelson);
   // What each managed path looks like right after ablation (null = removed). Restore compares against this.
   manifest.after = Object.fromEntries(manifest.files.map((s) => [s, hashPath(path.join(root, s))]));

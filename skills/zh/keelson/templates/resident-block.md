@@ -9,4 +9,5 @@
 - 只在 `keelson check --record` 之后宣布"完成"；落地会拒绝过期或缺失的证据。已集成时 `keelson land <name>`；然后重写 `NOW.md`。
 - 变更中途停下：`keelson handoff <name>` 并填好。恢复：先检查工作树，再 `keelson status`。
 - 细节在 `keelson` 技能里；只读你需要的那份参考。
+- 如果 `NOW.md` 以 "First contact" 开头，就根据仓库起草 `INTENT.md`（已有代码的项目再加 specs 和 rules）并请所有者确认；永远不要让他们手写。
 <!-- keelson:end -->

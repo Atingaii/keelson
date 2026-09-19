@@ -5,7 +5,8 @@ const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
 
 const COMMANDS = {
-  init: ['init [--tools claude,codex,cursor,opencode,gemini] [--profile lean|guided] [--lang en|zh] [--no-hooks] [--onboard] [--dry-run]', 'Set up .keelson/, reference existing project material, install the skill, resident block, and hooks', () => import('./commands/init.js').then((m) => m.init)],
+  init: ['init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided] [--lang en|zh] [--no-hooks] [--dry-run]', 'Set up .keelson/ for the tools you use (auto-detected when none given) and install the skill, instructions, and hooks. The agent drafts INTENT, specs, and rules on first contact', () => import('./commands/init.js').then((m) => m.init)],
+  platforms: ['platforms [--json]', 'List supported coding tools, their file locations, and which are installed or configured', () => import('./commands/platforms.js').then((m) => m.platforms)],
   update: ['update [--dry-run]', 'Regenerate skill files, resident blocks, and hooks after upgrading; migrates config.yaml', () => import('./commands/init.js').then((m) => m.init)],
   context: ['context [--paths a/,b/**] [--json]', 'Print INTENT, ROADMAP, NOW, active changes, existing references, and the rules matching the given paths', () => import('./commands/context.js').then((m) => m.context)],
   impact: ['impact <file> [file...] [--json]', 'Mechanical impact hints: importers, specs and rules that may be affected, active changes that overlap', () => import('./commands/impact.js').then((m) => m.impact)],

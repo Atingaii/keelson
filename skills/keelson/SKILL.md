@@ -9,6 +9,10 @@ Keelson sits under your normal way of working on a project that will live for ye
 
 Nothing here is a gate on you. The gates are on artifacts: `keelson land` refuses stale evidence, unchecked acceptance, open questions, and unconfirmed assumptions. Every guideline states why it exists so you can judge when it does not apply. User instructions and the project's own instruction files always take precedence.
 
+## First contact
+
+If `NOW.md` starts with "First contact", nobody has drafted the project's facts yet. Read the repository (README, manifest, layout, code, and any document `config.yaml → refs` points at), draft `INTENT.md` (why, boundaries, hard constraints, a first Authorizations section), and for an existing codebase one spec per capability plus rules for paths with conventions. Then ask the owner to confirm or correct in one short exchange, keep their answers, and rewrite `NOW.md`. If the owner asks for a change right away, do this as part of shaping that change and confirm both together. Never ask the owner to write these files by hand.
+
 ## Before non-trivial work
 
 `keelson context --paths <files you expect to touch>` prints INTENT, ROADMAP, NOW, active changes, existing references, and the matched rules. Before editing a shared module, `keelson impact <files>` lists importers and affected specs; treat it as navigation, then read for callers it cannot see.

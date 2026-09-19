@@ -342,3 +342,25 @@ test('guide flag adds the guided line; named checks run with kinds; doctor repor
   const v = JSON.parse(run(dir, ['validate', '--json'], { env }).stdout);
   assert.ok(v.warnings.some((w) => /named after a layer/.test(w)));
 });
+
+test('init is the only step: platform flags, cross-tool layer, kiro steering, first-contact note; no INTENT chore', () => {
+  const dir = tmpProject({ 'package.json': '{"name":"shop"}', 'src/a.js': 'export const a = 1;\n' });
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  const out = run(dir, ['init', '--claude', '--cursor', '--kiro', '--no-hooks'], { env }).stdout;
+  assert.match(out, /Open your agent in this directory and start talking/);
+  assert.doesNotMatch(out, /Edit \.keelson\/INTENT\.md/);
+  for (const f of ['.claude/skills/keelson/SKILL.md', '.cursor/skills/keelson/SKILL.md', '.cursor/rules/keelson.mdc', '.agents/skills/keelson/SKILL.md', '.kiro/skills/keelson/SKILL.md', '.kiro/steering/keelson.md', 'AGENTS.md', 'CLAUDE.md']) assert.ok(exists(dir, f), f);
+  assert.match(read(dir, '.kiro/steering/keelson.md'), /^---\ninclusion: always\n---/);
+  assert.match(read(dir, '.keelson/NOW.md'), /^First contact with /m);
+  assert.match(read(dir, '.keelson/NOW.md'), /write one spec per capability/);
+  assert.match(read(dir, '.keelson/config.yaml'), /- kiro/);
+  const v = JSON.parse(run(dir, ['validate', '--json'], { env }).stdout);
+  assert.ok(!v.warnings.some((w) => /placeholder/.test(w)), 'no INTENT placeholder nag before first contact');
+  assert.match(read(dir, 'CLAUDE.md'), /First contact/);
+  const list = JSON.parse(run(dir, ['platforms', '--json'], { env }).stdout);
+  assert.ok(list.length >= 20);
+  assert.ok(list.find((p) => p.id === 'kiro').configured);
+  run(dir, ['uninstall'], { env });
+  assert.ok(!exists(dir, '.kiro/steering/keelson.md'));
+  assert.ok(!exists(dir, '.cursor/skills/keelson'));
+});

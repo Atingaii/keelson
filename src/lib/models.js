@@ -57,15 +57,14 @@ const version = (bin) => {
 export function detectLocal() {
   const home = os.homedir();
   const tools = {};
-  for (const [id, bin] of [
-    ['claude', 'claude'],
-    ['codex', 'codex'],
-    ['gemini', 'gemini'],
-    ['opencode', 'opencode'],
-    ['cursor', 'cursor-agent'],
-  ]) {
-    const present = which(bin);
-    tools[id] = { installed: present, version: present ? version(bin) : null, defaultModel: null };
+  const platforms = readJson(path.join(PKG_ROOT, 'registry', 'platforms.json'), { platforms: {} }).platforms;
+  for (const [id, p] of Object.entries(platforms)) {
+    if (!p.bin) {
+      tools[id] = { installed: null, version: null, defaultModel: null };
+      continue;
+    }
+    const present = which(p.bin);
+    tools[id] = { installed: present, version: present ? version(p.bin) : null, defaultModel: null };
   }
   const claudeSettings = readJson(path.join(home, '.claude', 'settings.json'), {});
   if (claudeSettings?.model) tools.claude.defaultModel = String(claudeSettings.model);

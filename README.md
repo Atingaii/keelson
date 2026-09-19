@@ -80,16 +80,13 @@ Requires Node.js 20 or newer.
 ```bash
 npm install -g keelson
 cd your-project
-keelson init                      # Claude Code by default
-keelson init --tools claude,codex # or several tools at once
+keelson init                 # picks the coding tools installed on this machine
+keelson init --cursor --codex   # or name the ones you use
 ```
 
-Then:
+That is the only step. Open your agent in the directory and talk to it. On first contact it reads the repository, drafts `.keelson/INTENT.md` (why the project exists, what it will not do, what the agent may decide alone), and, for an existing codebase, one spec per capability and rules for the paths that have conventions. It asks you to confirm in one short exchange. You never write those files by hand.
 
-1. Edit `.keelson/INTENT.md`: why the project exists, what it will not do, and what the agent may decide alone.
-2. Talk to your agent. Nothing else to type.
-
-Existing codebase? `keelson init` already references your architecture notes, decision records, CI, and issue tracker when it finds them. Run `keelson init --onboard` to have the agent draft specs and rules from the code for you to confirm. See [Existing projects](docs/existing-projects.md).
+`keelson init` also references the architecture notes, decision records, CI, and issue tracker it finds, instead of copying them. See [Existing projects](docs/existing-projects.md).
 
 Claude Code users can also install the skill from the plugin marketplace (`/plugin marketplace add Atingaii/keelson`, then `/plugin install keelson@keelson`). The CLI is still needed for `keelson init` and the other commands.
 
@@ -178,13 +175,28 @@ The project's documents are kept small the same way. Each document type has a li
 
 ## Supported tools
 
-| Tool | Skill location | Instructions file | Hooks |
-|---|---|---|---|
-| Claude Code (`claude`) | `.claude/skills/keelson/` | `CLAUDE.md` | Yes |
-| Codex CLI (`codex`) | `.agents/skills/keelson/` | `AGENTS.md` | No |
-| Cursor (`cursor`) | `.agents/skills/keelson/` | `AGENTS.md` and `.cursor/rules/keelson.mdc` | No |
-| OpenCode (`opencode`) | `.agents/skills/keelson/` | `AGENTS.md` | No |
-| Gemini CLI (`gemini`) | `.agents/skills/keelson/` | `GEMINI.md` | No |
+`keelson init` takes one flag per tool, or `--tools a,b`, or nothing (it detects what is installed). Every selection except Claude Code also installs the cross-tool layer: `AGENTS.md` plus `.agents/skills/`, which any agent that reads that convention picks up. `keelson platforms` prints the full table with what is installed on your machine.
+
+| Tool | Instructions | Skills | Hooks | Confidence |
+|---|---|---|---|---|
+| Claude Code `--claude` | `CLAUDE.md` | `.claude/skills/` | session start and per prompt | verified |
+| Codex CLI `--codex` | `AGENTS.md` | `.agents/skills/` | | verified |
+| Cursor `--cursor` | `AGENTS.md`, `.cursor/rules/keelson.mdc` | `.cursor/skills/` | | documented |
+| OpenCode `--opencode` | `AGENTS.md` | `.agents/skills/` | | documented |
+| Gemini CLI `--gemini` | `GEMINI.md` | `.agents/skills/` | | documented |
+| GitHub Copilot `--copilot` | `.github/copilot-instructions.md` | `.github/skills/` | | documented |
+| Kiro `--kiro` | `.kiro/steering/keelson.md` | `.kiro/skills/` | | documented |
+| Kilo Code `--kilo` | `AGENTS.md`, `.kilocode/rules/keelson.md` | `.kilocode/skills/` | | documented |
+| Antigravity `--antigravity` | `AGENTS.md`, `.agent/rules/keelson.md` | `.agent/skills/` | | convention |
+| Devin `--devin` | `AGENTS.md` | `.devin/skills/` | | convention |
+| Qoder `--qoder` | `AGENTS.md`, `.qoder/rules/keelson.md` | `.qoder/skills/` | | convention |
+| CodeBuddy `--codebuddy` | `AGENTS.md`, `.codebuddy/rules/keelson.md` | `.codebuddy/skills/` | | convention |
+| Droid `--droid` | `AGENTS.md` | `.factory/skills/` | | convention |
+| Pi Agent `--pi`, Oh My Pi `--ohmypi` | `AGENTS.md` | `.pi/skills/` | | convention |
+| Reasonix `--reasonix`, ZCode `--zcode`, Trae `--trae`, Grok Build `--grok`, Kimi Code `--kimi`, Snow CLI `--snow` | `AGENTS.md` (Trae also `.trae/rules/keelson.md`) | `.<tool>/skills/` | | convention |
+| Any `AGENTS.md` + `.agents/skills/` reader `--agents` (Amp, Cline, Deep Agents, Firebender, Warp, and others) | `AGENTS.md` | `.agents/skills/` | | documented |
+
+Confidence says how the file locations were established. *Verified* tools have run real sessions with the maintainers. *Documented* locations come from the tool's own documentation. *Convention* locations follow the tool's directory convention and have not been exercised; if a tool does not pick up the skill, override its paths under `platforms.<id>` in `config.yaml` and run `keelson doctor`. Hooks exist only where the tool offers them; everywhere else the resident block tells the agent to run `keelson context` itself.
 
 ## CLI
 
@@ -203,6 +215,7 @@ The project's documents are kept small the same way. Each document type has a li
 | `keelson retro` | Ledger metrics and pruning suggestions |
 | `keelson models` | Effort tier to model alias resolution |
 | `keelson doctor` | Diagnose the install and report knowledge health |
+| `keelson platforms` | List supported tools, their file locations, and which are installed |
 | `keelson ablate` / `restore` | Remove every surface for an A/B comparison, then bring it back |
 | `keelson uninstall` | Remove generated surfaces; `--purge` removes `.keelson/` too |
 

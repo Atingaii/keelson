@@ -2,34 +2,33 @@
 
 All commands run from anywhere inside the project; Keelson walks up to find a `.keelson/` that holds `config.yaml` or `INTENT.md` (the user-level `~/.keelson/` never counts). Exit code 0 means success, 1 means an error or a failed check, 2 means an unknown command. `--json` on most commands prints machine-readable output. `--help` and `--version` work everywhere; `keelson <command> --help` prints that command's usage line.
 
-Boolean flags: `--json`, `--force`, `--dry-run`, `--no-hooks`, `--onboard`, `--refresh`, `--detect`, `--keep`, `--quiet`, `--confirm-assumptions`, `--accept-drift`, `--worktree`, `--purge`. Value flags accept `--key value` or `--key=value`. `--guide` is a value flag that also works bare: `--guide` and `--guide true` turn guided mode on, `--guide false` turns it off.
+Boolean flags: `--json`, `--force`, `--dry-run`, `--no-hooks`, `--refresh`, `--detect`, `--keep`, `--quiet`, `--confirm-assumptions`, `--accept-drift`, `--worktree`, `--purge`, and one flag per platform (`--claude`, `--cursor`, …). Value flags accept `--key value` or `--key=value`. `--guide` is a value flag that also works bare: `--guide` and `--guide true` turn guided mode on, `--guide false` turns it off.
 
 ## `keelson init`
 
 ```text
-keelson init [--tools claude,codex,cursor,opencode,gemini] [--profile lean|guided]
-             [--lang en|zh] [--guide] [--no-hooks] [--onboard] [--dry-run] [--dir <path>]
+keelson init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided]
+             [--lang en|zh] [--no-hooks] [--dry-run] [--dir <path>]
 ```
 
-Creates `.keelson/` with `INTENT.md`, `NOW.md`, `ROADMAP.md`, `GLOSSARY.md`, `rules/index.md`, `rules/general.md`, `config.yaml`, an empty `changes/`, and the specs directory. On a fresh init it detects existing material (architecture notes, decision records, CI, GitHub issues) into `refs`, detects check commands, and adds `.keelson/.local/` to `.gitignore`. Installs the skill (stamped with the CLI version), the resident block, and (Claude Code) the hooks for each tool. Runs local model detection. Never overwrites existing `.keelson/` files.
+The only step. Creates `.keelson/` with `INTENT.md`, `ROADMAP.md`, `NOW.md`, `GLOSSARY.md`, `rules/index.md`, `rules/general.md`, `config.yaml`, and an empty `changes/`. Installs the skill, the instructions block, and (Claude Code) the hooks for each selected tool, plus the cross-tool layer (`AGENTS.md` + `.agents/skills/`) for every non-Claude selection. Detects check commands and existing project material on first run. Writes a first-contact task into `NOW.md`: the agent drafts `INTENT.md` (and, for an existing codebase, specs and rules) from the repository and confirms them with the owner. Never overwrites existing `.keelson/` files.
 
-- `--onboard` rewrites `NOW.md` with an onboarding task for existing codebases.
-- `--guide` sets `guide: true` in `config.yaml` and adds one line to the resident block saying the owner is learning engineering; the skill then explains choices with scenarios and trade-offs. `--guide false` turns it off again.
+Tool selection, in order of precedence: `--tools a,b`; one flag per tool (`--claude`, `--codex`, `--cursor`, `--opencode`, `--gemini`, `--copilot`, `--kiro`, `--kilo`, `--antigravity`, `--devin`, `--qoder`, `--codebuddy`, `--droid`, `--pi`, `--ohmypi`, `--reasonix`, `--zcode`, `--trae`, `--grok`, `--kimi`, `--snow`, `--agents`); the tools already in `config.yaml` on an update; the tools whose command is found on this machine; Claude Code.
+
+- `--guide` turns on guided mode for an owner who is learning engineering.
 - `--no-hooks` skips hook installation.
-- `--dry-run` lists every skill file as create, update, or unchanged, whether the instructions file would be created, appended, or refreshed, and any pending config migration. Writes nothing.
+- `--dry-run` lists what would be created, updated, or migrated and writes nothing.
 - `--dir` targets another directory.
 
+Exit 1 on an unknown tool or profile.
+
+## `keelson platforms`
+
 ```text
-$ keelson init --dry-run
-Keelson update (dry run) in /home/you/shop
-  unchanged .claude/skills/keelson/SKILL.md
-  update    .claude/skills/keelson/references/verify.md
-  refresh   CLAUDE.md
-  migrate   .keelson/config.yaml v2 → v3
-nothing written
+keelson platforms [--json]
 ```
 
-Exit 1 on an unknown tool or profile.
+Lists every supported tool with its instructions file, skills directory, rules file, hook support, confidence label, and whether it is installed on this machine or configured in this project.
 
 ## `keelson update`
 

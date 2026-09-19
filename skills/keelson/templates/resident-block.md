@@ -9,4 +9,5 @@ This repository keeps its working facts in `.keelson/`: `INTENT.md` (why it exis
 - Claim "done" only with `keelson check --record`; landing refuses stale or missing evidence. `keelson land <name>` when integrated; then rewrite `NOW.md`.
 - Stopping mid-change: `keelson handoff <name>` and fill it in. Resuming: check the worktree first, then `keelson status`.
 - The `keelson` skill has the details; read only the reference you need.
+- If `NOW.md` starts with "First contact", draft `INTENT.md` (and specs and rules for an existing codebase) from the repository and confirm with the owner; never ask them to write it.
 <!-- keelson:end -->
