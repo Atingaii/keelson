@@ -110,15 +110,14 @@ effort:
 
 ```yaml
 platforms:
-  cursor:
-    skillsDir: .cursor/skills
-    rulesFile: .cursor/rules/keelson.mdc
+  opencode:
+    skillsDir: .opencode/skills
   kiro:
     instructions: .kiro/steering/keelson.md
     instructionsFormat: kiro
 ```
 
-键：`instructions`（接收常驻块的文件）、`instructionsFormat`（`kiro` 写一个带 inclusion 头的独立 steering 文件，而不是带标记的块）、`skillsDir`（单文件 `keelson/SKILL.md` 发现 shim 安装到哪里）、`rulesFile` 和 `rulesFormat`（`mdc` 为带 frontmatter 的 rule 文件，`md` 为纯 Markdown）、`hooks`（只对像 Claude Code 那样运行 hook 的工具设为 `true`）。覆盖对 `init`、`update`、`doctor`、`uninstall` 和 `ablate` 生效。当某个工具挪动了目录，或某个 `convention` 条目与你的安装不符时使用它。
+键：`instructions`（接收发现块的文件）、`instructionsFormat`（`kiro` 写一个带 inclusion 头的独立 steering 文件，而不是带标记的块）、`skillsDir`（单文件 `keelson/SKILL.md` 发现 shim 安装到哪里）、`rulesFile` 和 `rulesFormat`（`mdc` 为带 frontmatter 的 rule 文件，`md` 为纯 Markdown）、`hooks`（只对像 Claude Code 那样运行 hook 的工具设为 `true`）。覆盖对 `init`、`update`、`doctor`、`uninstall` 和 `ablate` 生效。当某个工具挪动了目录，或某个 `convention` 条目与你的安装不符时使用它。
 
 ### 迁移
 
