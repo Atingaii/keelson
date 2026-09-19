@@ -12,8 +12,10 @@ const env = { HOME };
 test('init creates .keelson, skill, resident block, hooks; update is idempotent', () => {
   const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"echo ok"}}', 'CLAUDE.md': '# Mine\n' });
   run(dir, ['init', '--tools', 'claude,cursor'], { env });
-  for (const f of ['.keelson/README.md', '.keelson/INTENT.md', '.keelson/NOW.md', '.keelson/config.yaml', '.keelson/rules/index.md', '.keelson/rules/general.md', '.keelson/hooks/session-start.mjs', '.claude/skills/keelson/SKILL.md', '.claude/skills/keelson/references/build.md', '.agents/skills/keelson/SKILL.md', 'AGENTS.md']) assert.ok(exists(dir, f), f);
-  assert.ok(!exists(dir, '.claude/skills/keelson/templates'), 'templates are not installed into the skill');
+  for (const f of ['.keelson/README.md', '.keelson/INTENT.md', '.keelson/NOW.md', '.keelson/config.yaml', '.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/skill/references/build.md', '.keelson/rules/index.md', '.keelson/rules/general.md', '.keelson/hooks/session-start.mjs', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', 'AGENTS.md']) assert.ok(exists(dir, f), f);
+  assert.ok(!exists(dir, '.claude/skills/keelson/references'), 'host skill directory is a shim only');
+  assert.ok(!exists(dir, '.agents/skills/keelson/references'), 'portable skill directory is a shim only');
+  assert.ok(!exists(dir, '.keelson/skill/templates'), 'templates are not installed into the canonical runtime skill');
   const claude = read(dir, 'CLAUDE.md');
   assert.match(claude, /^# Mine/);
   assert.equal((claude.match(/keelson:start/g) || []).length, 1);
@@ -25,13 +27,15 @@ test('init creates .keelson, skill, resident block, hooks; update is idempotent'
   assert.equal((read(dir, 'CLAUDE.md').match(/keelson:start/g) || []).length, 1);
   assert.equal(JSON.parse(read(dir, '.claude/settings.json')).hooks.SessionStart.length, 1);
   // lean profile strips guided blocks
-  assert.doesNotMatch(read(dir, '.claude/skills/keelson/references/build.md'), /guided/);
+  assert.doesNotMatch(read(dir, '.keelson/skill/references/build.md'), /guided/);
+  assert.match(read(dir, '.claude/skills/keelson/SKILL.md'), /\.keelson\/skill\/SKILL\.md/);
+  assert.match(read(dir, 'CLAUDE.md'), /\.keelson\/workflow\.md/);
 });
 
 test('claude-only init installs the portable agents layer and a refreshable human map', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env });
-  for (const f of ['CLAUDE.md', 'AGENTS.md', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', '.keelson/README.md']) assert.ok(exists(dir, f), f);
+  for (const f of ['CLAUDE.md', 'AGENTS.md', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', '.keelson/README.md', '.keelson/workflow.md', '.keelson/skill/SKILL.md']) assert.ok(exists(dir, f), f);
   const map = read(dir, '.keelson/README.md');
   assert.match(map, /If you have 30 seconds/);
   assert.match(map, /NOW\.md/);
@@ -46,7 +50,7 @@ test('claude-only init installs the portable agents layer and a refreshable huma
 test('guided profile keeps guided blocks; lang zh installs the Chinese skill when present', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--profile', 'guided', '--no-hooks'], { env });
-  assert.match(read(dir, '.claude/skills/keelson/references/build.md'), /Test-first when behaviour is specified/);
+  assert.match(read(dir, '.keelson/skill/references/build.md'), /Test-first when behaviour is specified/);
   assert.ok(!exists(dir, '.claude/settings.json'));
 });
 
@@ -335,6 +339,8 @@ test('cancel archives without merging; doctor and uninstall behave', () => {
   assert.equal(doc.code, 0, doc.stdout + doc.stderr);
   run(dir, ['uninstall'], { env });
   assert.ok(!exists(dir, '.claude/skills/keelson'));
+  assert.ok(!exists(dir, '.keelson/skill'));
+  assert.ok(!exists(dir, '.keelson/workflow.md'));
   assert.ok(exists(dir, '.keelson/INTENT.md'));
   assert.doesNotMatch(read(dir, 'CLAUDE.md'), /keelson:start/);
   run(dir, ['init', '--no-hooks'], { env });
@@ -356,7 +362,8 @@ test('guide flag adds the guided line; named checks run with kinds; doctor repor
   const dir = tmpProject({ 'package.json': '{"name":"x"}' });
   execFileSync('git', ['init', '-q'], { cwd: dir });
   run(dir, ['init', '--no-hooks', '--guide'], { env });
-  assert.match(read(dir, 'CLAUDE.md'), /Guided mode is on/);
+  assert.match(read(dir, '.keelson/workflow.md'), /Guided mode is on/);
+  assert.doesNotMatch(read(dir, 'CLAUDE.md'), /Guided mode is on/);
   assert.match(read(dir, '.keelson/config.yaml'), /^guide: true$/m);
   assert.ok(exists(dir, '.keelson/GLOSSARY.md'));
   write(dir, '.keelson/config.yaml', read(dir, '.keelson/config.yaml').replace(/^check: \[\]$/m, 'check:\n  - name: unit\n    command: "exit 0"\n    kind: test\n  - name: deps\n    command: "exit 0"\n    kind: fitness\n'));
@@ -383,14 +390,19 @@ test('init is the only step: platform flags, standards-first surfaces, first-con
   const out = run(dir, ['init', '--claude', '--cursor', '--kiro', '--no-hooks'], { env }).stdout;
   assert.match(out, /Open your agent in this directory and start talking/);
   assert.doesNotMatch(out, /Edit \.keelson\/INTENT\.md/);
-  for (const f of ['.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', '.kiro/skills/keelson/SKILL.md', 'AGENTS.md', 'CLAUDE.md']) assert.ok(exists(dir, f), f);
+  for (const f of ['.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/skill/references/verify.md', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', '.kiro/skills/keelson/SKILL.md', 'AGENTS.md', 'CLAUDE.md']) assert.ok(exists(dir, f), f);
   for (const f of ['.cursor/skills/keelson', '.cursor/rules/keelson.mdc', '.kiro/steering/keelson.md']) assert.ok(!exists(dir, f), `standards-first init should not create ${f}`);
   assert.match(read(dir, '.keelson/NOW.md'), /^First contact with /m);
   assert.match(read(dir, '.keelson/NOW.md'), /write one spec per capability/);
   assert.match(read(dir, '.keelson/config.yaml'), /- kiro/);
   const v = JSON.parse(run(dir, ['validate', '--json'], { env }).stdout);
   assert.ok(!v.warnings.some((w) => /placeholder/.test(w)), 'no INTENT placeholder nag before first contact');
-  assert.match(read(dir, 'CLAUDE.md'), /First contact/);
+  assert.match(read(dir, 'CLAUDE.md'), /\.keelson\/workflow\.md/);
+  assert.match(read(dir, '.keelson/workflow.md'), /First contact/);
+  for (const shim of ['.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', '.kiro/skills/keelson/SKILL.md']) {
+    assert.match(read(dir, shim), /\.keelson\/skill\/SKILL\.md/);
+    assert.ok(!exists(dir, path.join(path.dirname(shim), 'references')), `${shim} should be discovery-only`);
+  }
   const list = JSON.parse(run(dir, ['platforms', '--json'], { env }).stdout);
   assert.ok(list.length >= 20);
   assert.ok(list.find((p) => p.id === 'kiro').configured);
