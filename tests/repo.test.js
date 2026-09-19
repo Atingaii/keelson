@@ -56,6 +56,25 @@ test('resident instructions stay a small map into the skill', () => {
   }
 });
 
+test('shaping audits assumptions without turning clarification into ceremony', () => {
+  const en = fs.readFileSync(path.join(ROOT, 'skills/keelson/references/shape.md'), 'utf8');
+  const zh = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/shape.md'), 'utf8');
+  const enDiscover = fs.readFileSync(path.join(ROOT, 'skills/keelson/references/discover.md'), 'utf8');
+  const zhDiscover = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/discover.md'), 'utf8');
+  const enPlan = fs.readFileSync(path.join(ROOT, 'skills/keelson/references/plan.md'), 'utf8');
+  const zhPlan = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/plan.md'), 'utf8');
+  assert.match(en, /id=shape\.assumption-audit/);
+  assert.match(zh, /id=shape\.assumption-audit/);
+  assert.match(enDiscover, /id=discover\.decision-frontier/);
+  assert.match(zhDiscover, /id=discover\.decision-frontier/);
+  assert.match(enPlan, /id=plan\.assumption-routing/);
+  assert.match(zhPlan, /id=plan\.assumption-routing/);
+  assert.match(en, /single highest-value question/);
+  assert.match(zh, /只问一个最高价值问题/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'skills/keelson/templates/change.md'), 'utf8'), /Non-goal:/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/templates/change.md'), 'utf8'), /非目标：/);
+});
+
 test('registry tiers point at aliases that exist in the platform rank', () => {
   const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'models.json'), 'utf8'));
   for (const [id, p] of Object.entries(reg.platforms)) {
