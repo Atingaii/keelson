@@ -149,9 +149,13 @@ test('platform registry exposes exactly seven first-class hosts plus the portabl
     assert.equal(reg.platforms[id].support, 'first-class', id);
     assert.notEqual(reg.platforms[id].confidence, 'convention', id);
     assert.equal(reg.platforms[id].rulesFile, undefined, `${id}: no duplicate host rule file`);
+    assert.ok(['native', 'degraded'].includes(reg.platforms[id].sessionFocus), `${id}: sessionFocus capability is explicit`);
   }
+  assert.equal(reg.platforms.claude.sessionFocus, 'native');
+  for (const id of firstClass.filter((x) => x !== 'claude')) assert.equal(reg.platforms[id].sessionFocus, 'degraded', id);
   assert.equal(reg.platforms.agents.support, 'portable');
   assert.equal(reg.platforms.agents.skillsDir, '.agents/skills');
+  assert.equal(reg.platforms.agents.sessionFocus, 'degraded');
   assert.match(reg.platforms.agents.examples, /Any host/);
 });
 
