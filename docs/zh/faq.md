@@ -6,7 +6,7 @@
 能。Hook 只在 Claude Code 上存在，而且只注入状态。没有 hook 时，发现块把代理指向 `.keelson/workflow.md`，其中 ORIENT 会要求它在非平凡工作前运行 `keelson context --paths <files>`；`NOW.md` 和每个变更的 `handoff.md` 保存接续状态。如果在 Claude Code 上也想这样，给 `init` 传 `--no-hooks`。
 
 **支持哪些工具？**
-22 个工具，由 `keelson platforms` 和 README 列出。完整工作流与技能只在 `.keelson/` 保存一份；每个宿主只得到它能发现的入口文件，有些还会得到宿主专用发现/rules 文件。每个项目都会安装通用的 `AGENTS.md` + `.agents/skills/` 发现层。`keelson init --cursor --codex` 一次配置多个，或者只运行 `keelson init`，使用本机已安装的工具。
+官方一等公民只有 7 个 CLI：Claude Code、Codex CLI、OpenCode、Pi、Gemini CLI、Kiro CLI、CodeBuddy CLI。每个适配器都使用真实验证或宿主官方文档明确的发现路径，并指向同一份 `.keelson/` 真源。每个项目仍安装通用 `AGENTS.md` + `.agents/skills/` 层，供其他兼容标准的 Agent 使用。`keelson init` 只自动探测这 7 个一等公民；也可以用 `keelson init --claude --codex` 等显式选择。
 
 **我必须在聊天里敲命令吗？**
 不必。你像以前一样和代理对话。CLI 由代理自己运行。"grill me"、"status"、"hand off"、"land it"、"retro" 这些短语在技能里有定义好的含义，但没有一个是必须的。
