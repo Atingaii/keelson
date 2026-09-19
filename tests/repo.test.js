@@ -45,6 +45,17 @@ test('every guidance section carries without and sunset; SKILL.md stays short', 
   }
 });
 
+test('resident instructions stay a small map into the skill', () => {
+  for (const lang of ['skills/keelson', 'skills/zh/keelson']) {
+    const block = fs.readFileSync(path.join(ROOT, lang, 'templates', 'resident-block.md'), 'utf8');
+    assert.ok(block.split('\n').length <= 20, `${lang}/templates/resident-block.md ≤ 20 lines`);
+    assert.match(block, /keelson context --paths/);
+    assert.match(block, /keelson check --record/);
+    assert.match(block, /keelson retro/);
+    assert.match(block, /skill/i);
+  }
+});
+
 test('registry tiers point at aliases that exist in the platform rank', () => {
   const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'models.json'), 'utf8'));
   for (const [id, p] of Object.entries(reg.platforms)) {
