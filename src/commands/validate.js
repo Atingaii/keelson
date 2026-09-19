@@ -82,7 +82,7 @@ export function validateProject(root) {
   }
 
   const patterns = datedIdPatterns();
-  for (const f of walk(p.keelson, { ignore: ['node_modules', '.git', '.local'] })) {
+  for (const f of walk(p.keelson, { ignore: ['node_modules', '.git', '.local', '.runtime'] })) {
     if (!/\.(md|yaml|yml|json)$/.test(f) || f.startsWith('hooks/')) continue;
     const txt = read(path.join(p.keelson, f));
     for (const re of patterns) {
