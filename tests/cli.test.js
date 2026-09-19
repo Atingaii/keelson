@@ -12,7 +12,7 @@ const env = { HOME };
 test('init creates .keelson, skill, resident block, hooks; update is idempotent', () => {
   const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"echo ok"}}', 'CLAUDE.md': '# Mine\n' });
   run(dir, ['init', '--tools', 'claude,cursor'], { env });
-  for (const f of ['.keelson/README.md', '.keelson/INTENT.md', '.keelson/NOW.md', '.keelson/config.yaml', '.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/skill/references/build.md', '.keelson/rules/index.md', '.keelson/rules/general.md', '.keelson/hooks/session-start.mjs', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', 'AGENTS.md']) assert.ok(exists(dir, f), f);
+  for (const f of ['.keelson/README.md', '.keelson/INTENT.md', '.keelson/NOW.md', '.keelson/config.yaml', '.keelson/.managed.json', '.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/skill/references/build.md', '.keelson/rules/index.md', '.keelson/rules/general.md', '.keelson/hooks/session-start.mjs', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', 'AGENTS.md']) assert.ok(exists(dir, f), f);
   assert.ok(!exists(dir, '.claude/skills/keelson/references'), 'host skill directory is a shim only');
   assert.ok(!exists(dir, '.agents/skills/keelson/references'), 'portable skill directory is a shim only');
   assert.ok(!exists(dir, '.keelson/skill/templates'), 'templates are not installed into the canonical runtime skill');
@@ -45,6 +45,71 @@ test('claude-only init installs the portable agents layer and a refreshable huma
   assert.doesNotMatch(read(dir, '.keelson/README.md'), /stale map/);
   const rows = JSON.parse(run(dir, ['platforms', '--json'], { env }).stdout);
   assert.equal(rows.find((p) => p.id === 'agents').configured, true);
+});
+
+test('changing configured tools removes stale generated adapters but preserves user content', () => {
+  const dir = tmpProject({ 'CLAUDE.md': '# Mine\n', 'AGENTS.md': '# Shared\n' });
+  run(dir, ['init', '--tools', 'claude,kiro'], { env });
+  assert.ok(exists(dir, '.claude/skills/keelson/SKILL.md'));
+  assert.ok(exists(dir, '.kiro/skills/keelson/SKILL.md'));
+  assert.ok(exists(dir, '.keelson/hooks/session-start.mjs'));
+
+  const dry = run(dir, ['update', '--tools', 'codex', '--dry-run'], { env }).stdout;
+  assert.match(dry, /remove\s+\.claude\/skills\/keelson/);
+  assert.match(dry, /remove\s+\.kiro\/skills\/keelson/);
+
+  run(dir, ['update', '--tools', 'codex'], { env });
+  assert.ok(!exists(dir, '.claude/skills/keelson'));
+  assert.ok(!exists(dir, '.kiro/skills/keelson'));
+  assert.ok(!exists(dir, '.keelson/hooks'));
+  assert.equal(read(dir, 'CLAUDE.md'), '# Mine\n');
+  assert.match(read(dir, 'AGENTS.md'), /^# Shared/);
+  assert.match(read(dir, 'AGENTS.md'), /\.keelson\/workflow\.md/);
+  const settings = JSON.parse(read(dir, '.claude/settings.json'));
+  assert.equal(settings.hooks, undefined);
+  const managed = JSON.parse(read(dir, '.keelson/.managed.json'));
+  assert.doesNotMatch(JSON.stringify(managed), /claude|kiro/);
+  run(dir, ['doctor', '--json'], { env });
+});
+
+test('every registered platform installs around one canonical runtime and passes doctor', () => {
+  const reg = JSON.parse(fs.readFileSync(path.resolve('registry/platforms.json'), 'utf8'));
+  for (const [id, platform] of Object.entries(reg.platforms)) {
+    const dir = tmpProject({});
+    run(dir, ['init', '--tools', id, '--no-hooks'], { env });
+    for (const canonical of ['.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/.managed.json']) assert.ok(exists(dir, canonical), `${id}: ${canonical}`);
+    const shim = path.join(platform.skillsDir, 'keelson', 'SKILL.md');
+    assert.ok(exists(dir, shim), `${id}: ${shim}`);
+    assert.match(read(dir, shim), /\.keelson\/skill\/SKILL\.md/, id);
+    assert.ok(!exists(dir, path.join(platform.skillsDir, 'keelson', 'references')), `${id}: host skill must stay discovery-only`);
+    assert.ok(exists(dir, platform.instructions), `${id}: ${platform.instructions}`);
+    assert.match(read(dir, platform.instructions), /\.keelson\/workflow\.md/, id);
+    if (platform.rulesFile) {
+      assert.ok(exists(dir, platform.rulesFile), `${id}: ${platform.rulesFile}`);
+      assert.match(read(dir, platform.rulesFile), /\.keelson\/workflow\.md/, id);
+    }
+    run(dir, ['doctor', '--json'], { env });
+  }
+});
+
+test('doctor detects package-owned runtime and shim drift and update repairs it', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--no-hooks'], { env });
+  write(dir, '.keelson/skill/references/build.md', read(dir, '.keelson/skill/references/build.md') + '\ncorrupted\n');
+  let doc = run(dir, ['doctor', '--json'], { env, allowFail: true });
+  assert.equal(doc.code, 1);
+  assert.match(doc.stdout + doc.stderr, /canonical skill drift/);
+
+  run(dir, ['update', '--no-hooks'], { env });
+  run(dir, ['doctor', '--json'], { env });
+
+  write(dir, '.agents/skills/keelson/SKILL.md', '# stale shim\n');
+  doc = run(dir, ['doctor', '--json'], { env, allowFail: true });
+  assert.equal(doc.code, 1);
+  assert.match(doc.stdout + doc.stderr, /skill discovery shim drifted/);
+
+  run(dir, ['update', '--no-hooks'], { env });
+  run(dir, ['doctor', '--json'], { env });
 });
 
 test('guided profile keeps guided blocks; lang zh installs the Chinese skill when present', () => {
