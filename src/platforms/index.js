@@ -24,7 +24,8 @@ export function platformFor(id, cfg = null) {
 export const CROSS_TOOL = { id: 'agents', label: 'cross-tool layer', instructions: 'AGENTS.md', skillsDir: '.agents/skills', hooks: false };
 export const CANONICAL_SKILL_DIR = path.join('.keelson', 'skill');
 export const CANONICAL_WORKFLOW = path.join('.keelson', 'workflow.md');
-export const MANAGED_STATE = path.join('.keelson', '.managed.json');
+export const MANAGED_STATE = path.join('.keelson', 'manifest.json');
+export const LEGACY_MANAGED_STATE = path.join('.keelson', '.managed.json');
 
 export const LEGACY_MANAGED_PATHS = [
   '.cursor/skills/keelson',
@@ -83,7 +84,7 @@ const managedTarget = (t) => ({
 const targetKey = (t) => [t.instructions, t.skillsDir, t.instructionsFormat ?? '', t.rulesFile ?? '', t.rulesFormat ?? '', Boolean(t.hooks)].join('|');
 
 export function readManagedState(root) {
-  return readJson(path.join(root, MANAGED_STATE), null);
+  return readJson(path.join(root, MANAGED_STATE), null) ?? readJson(path.join(root, LEGACY_MANAGED_STATE), null);
 }
 
 export function managedTargets(root) {
@@ -93,7 +94,7 @@ export function managedTargets(root) {
 
 export function managedStateMatches(root, targets) {
   const state = readManagedState(root);
-  if (!state || state.version !== 1) return false;
+  if (!state || Number(state.schema ?? state.version) !== 1) return false;
   const a = JSON.stringify((state.targets ?? []).map(managedTarget).sort((x, y) => targetKey(x).localeCompare(targetKey(y))));
   const b = JSON.stringify(targets.map(managedTarget).sort((x, y) => targetKey(x).localeCompare(targetKey(y))));
   return a === b;
@@ -101,10 +102,11 @@ export function managedStateMatches(root, targets) {
 
 export function writeManagedState(root, targets, packageVersion) {
   writeJson(path.join(root, MANAGED_STATE), {
-    version: 1,
+    schema: 1,
     packageVersion,
     targets: targets.map(managedTarget),
   });
+  if (exists(path.join(root, LEGACY_MANAGED_STATE))) rmrf(path.join(root, LEGACY_MANAGED_STATE));
   return MANAGED_STATE;
 }
 
@@ -388,9 +390,10 @@ export function removeSurfaces(root, tools, cfg = null) {
   const removed = [];
   for (const p of targets) removed.push(...removeTargetSurfaces(root, p));
   removeHooks(root);
-  if (exists(path.join(root, MANAGED_STATE))) {
-    rmrf(path.join(root, MANAGED_STATE));
-    removed.push(MANAGED_STATE);
+  for (const rel of [MANAGED_STATE, LEGACY_MANAGED_STATE]) {
+    if (!exists(path.join(root, rel))) continue;
+    rmrf(path.join(root, rel));
+    removed.push(rel);
   }
   return [...new Set(removed)];
 }
