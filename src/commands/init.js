@@ -204,8 +204,8 @@ export async function init({ flags }, cwd = process.cwd()) {
     warn(`model detection skipped: ${e.message}`);
   }
 
-  // A fresh project always starts with the onboarding note: the agent drafts INTENT (and specs and rules for an existing
-  // codebase) from what it finds, and asks the owner to confirm. Nothing is a chore for the user.
+  // A fresh project starts with one onboarding task: infer and confirm project intent.
+  // Specs and rules grow later, only when real work exposes a durable contract or invariant.
   if (fresh || flags.onboard) writeOnboardNote(p, project, cfg, hasCode(root));
 
   console.log('');
