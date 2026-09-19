@@ -1,103 +1,97 @@
 # Collaboration: sessions, people, agents
 
-The line between "did one task" and "kept a project moving" is whether the next session, the next person, or the next model can continue without redoing or undoing work, and whether two of them can work at once without overwriting each other. This page covers both.
+Keelson deliberately separates **conversation continuity** from **ownership transfer**.
 
-## Across sessions
+## Ordinary session continuity
 
-### NOW.md
+A normal AI window may close at any time. That is not a handoff and not a lifecycle transition.
 
-The project-level snapshot: what is in flight, what is blocked or uncertain (including "not yet checked: …"), and the next concrete step. Present tense, rewritten in full, never appended. `keelson land --now "<text>"` writes it at landing; the agent rewrites it whenever it stops. The session-start hook prints it.
+When the host exposes a stable session identity, Keelson keeps a gitignored pointer:
 
-### handoff.md
-
-The continuation state of one change, committed alongside it. `keelson handoff <name>` creates it from the template or re-stamps an existing one:
-
-```markdown
----
-at: 7a9f37c2b1
-updated: 2026-09-19 14:02
-by: ann
----
+```text
+.keelson/.runtime/sessions/<opaque-key>.json
+→ change: <active-change>
 ```
 
-`at` is the commit the handoff describes. The agent fills six sections:
+The pointer means only “this conversation is focused on this change”.
 
-| Section | Holds |
-|---|---|
-| Goal and confirmed decisions | One paragraph, present tense, linking `change.md` |
-| Done | Slices or tasks complete and verified, with the `Verify:` that proves it |
-| Open and blocked | Each item with what it blocks |
-| Ruled out | Assumptions or approaches rejected, with the evidence, so nobody retries them |
-| Next step | The first concrete action, small enough to start cold |
-| Verification | The last `Verify:` (command, exit code, tree) and what has not been checked |
+A new session can run:
 
-A handoff is a current-state summary. It is overwritten, never appended as a diary.
+```bash
+keelson focus --auto
+```
 
-### Resuming
+Resolution is conservative: valid existing focus → unique current-branch match → sole active change. Multiple candidates are never guessed.
 
-1. `keelson status`: work, verification, and release state per change; whether HEAD moved since the handoff; uncommitted files.
-2. If HEAD moved or the tree is dirty, read `git log` and `git diff` before trusting the handoff. Other work may have landed and shared contracts may have shifted.
-3. Never delete or reset uncommitted changes to "start clean". Ask, or work around them.
-4. Re-run `keelson check --record` before building on prior verification; it is stale after any edit.
-5. Continue from **Next step**; update `handoff.md` and `NOW.md` when stopping again.
+On a host without a verified identity bridge, the same candidate rules are shown but no shared/global focus is persisted; the agent uses the chosen change explicitly for commands. This prevents two simultaneous windows from accidentally sharing one mutable pointer.
 
-The session-start hook prints each active change's next step, so on Claude Code the agent sees it before reading anything. On other tools the discovery block points it to `.keelson/workflow.md`, whose ORIENT step runs `keelson context` first.
+## Parallel sessions
 
-### What is committed and what is local
+Two windows can therefore be:
 
-| Information | Location | In git |
+```text
+session A → order-search
+session B → billing-export
+```
+
+and remain isolated. `check --record`, `land`, `cancel`, and `handoff` prefer the current session focus when one is available.
+
+A new independent requested outcome creates a new durable change and moves only that session's focus. Switching focus never completes or cancels the old change.
+
+## Handoff is an explicit transfer
+
+`handoff.md` is committed and therefore reserved for information another machine/person genuinely needs.
+
+Use it when:
+
+- a different developer/agent takes ownership;
+- a worktree is intentionally transferred;
+- the owner wants a cold-start transfer package.
+
+```bash
+keelson handoff <change>
+```
+
+The file records the commit, confirmed decisions, done/blocked state, ruled-out approaches, next concrete step, and verification.
+
+Do **not** create a handoff merely because a chat window closed. Normal session recovery reads durable change artifacts and the local focus/candidate state.
+
+## Durable vs local
+
+| Information | Location | Git |
 |---|---|---|
-| `NOW.md` and whichever change artifacts actually exist (`handoff.md`, `ledger.md`, etc.) | `.keelson/` | Yes |
-| Check output, per-machine state | `.keelson/.local/` | No, added to `.gitignore` by `init` |
+| Work boundary, acceptance, plan, decisions, ledger | `.keelson/changes/<name>/` | Yes |
+| Explicit transfer package | `changes/<name>/handoff.md` | Yes |
+| Session focus | `.keelson/.runtime/sessions/` | No |
+| Check output | `.keelson/.runtime/evidence/` | No |
+| Project truth | specs/rules/INTENT/etc. | Yes |
 
-Anything a colleague on another machine would need is committed.
+## Parallel implementation and isolation
 
-## In parallel
-
-### Ownership and isolation
-
-`keelson new` records the owner (git user name) and the current branch in `change.md`. For a second writer, create the change on its own branch and worktree:
+`keelson new` records owner and branch. For a second writer, use a separate branch/worktree when useful:
 
 ```bash
 keelson new share-links --tier spec --capability sharing --worktree
 ```
 
-This runs `git worktree add -b share-links ../<repo>-share-links` and records `branch: share-links` and `worktree:` in the frontmatter. `keelson status` shows owner and branch next to each change.
-
-### Declaring what a change touches
+`touches` and capability deltas expose semantic overlap:
 
 ```bash
 keelson new order-export --touches "src/api/**,src/export/**" --depends add-order-pagination
 ```
 
-`touches` lists path globs the change will edit. `depends` names active changes it waits on; `status` prints "depends on active: …" while they exist and `validate` warns when a dependency is no longer active.
+Two active changes touching the same declared paths or capability produce shared-contract warnings. Keelson exposes the conflict; Git branches/worktrees isolate files; the tracker/PR/CI coordinates ownership and integration.
 
-### Shared contracts
+## After integrating someone else's work
 
-Two active changes that declare overlapping `touches`, or that both carry a delta spec (or a decision line) for the same capability, are a shared contract. `keelson status` warns:
-
-```text
-! shared contract: add-pagination and order-export both touch specs/orders — align the interface before implementing both
-```
-
-`keelson impact <files>` prints the same warning for any active change that declares the files. The response is to agree the contract first, in the delta spec, and land or reference it before both sides implement.
-
-### After integrating someone else's work
-
-Evidence recorded before a merge is stale by definition; `keelson status` shows it and `land` refuses it. If the other change modified a spec your delta was written against, `land` reports drift and asks you to re-read before `--accept-drift`.
-
-### Limits
-
-A file on disk is not a distributed lock. A branch does not remove semantic conflicts. Keelson exposes overlaps; it does not arbitrate them. Claiming work across machines and controlling merges belong to the tracker, pull requests, and CI, which is why `refs.tasks` and `refs.ci` exist and why `keelson validate && keelson check` is meant to run in CI.
+Verification recorded before a code merge may become stale because the worktree fingerprint changes. If another change modified a spec your delta was based on, `land` reports spec drift and requires re-reading before `--accept-drift`.
 
 ## Release state
 
-Implemented, integrated, and released are three states. `keelson land` marks integration: run it when the change is on the target branch (merged, or committed on the mainline in a solo repository). Release comes from git tags: `keelson status` prints the last tag and the changes folded since it as unreleased.
+Implementation readiness, integration, and release remain separate.
 
-```text
-last release v1.4.0; landed since: share-links, order-export
-```
+- `ready`: durable work gates + current verification are satisfied.
+- `keelson land`: integrates/folds the change.
+- Git tags: release boundary.
 
-### Rollout sections
-
-A `What` bullet that starts with `**BREAKING**` marks a breaking change, and `keelson land` refuses it without a `## Rollout` section describing the compatibility window, migration, and rollback. Migrations and production steps stay in `NOW.md → Next` until they have run. Keelson reminds; it never performs production operations.
+A breaking change still requires a Rollout section; Keelson never performs production operations itself.
