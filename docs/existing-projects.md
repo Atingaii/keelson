@@ -91,4 +91,4 @@ The skill's `plan.md` reference tells the agent to link, not restate.
 keelson doctor
 ```
 
-It reports the Node version, config migration state, whether the skill and resident block are present for each configured tool and match the CLI version, hook registration, every `validate` finding, stale verification, moved HEAD since a handoff, shared-contract conflicts, and which tool CLIs are on the path.
+It reports the Node version, config migration state, whether the canonical `.keelson/workflow.md` and `.keelson/skill/` are present, whether each configured tool's discovery shim points to them and matches the CLI version, hook registration, every `validate` finding, stale verification, moved HEAD since a handoff, shared-contract conflicts, and which tool CLIs are on the path.
