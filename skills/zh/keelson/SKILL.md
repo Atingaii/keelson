@@ -1,52 +1,34 @@
 ---
 name: keelson
-description: 面向带有 .keelson/ 目录的仓库的工程协作层。凡是用户要求在此类项目中构建、新增、修改、重构、修复、调试、规划、继续、交接、收尾、评审或发布工作时使用；用户说 "grill me"、"status"、"hand off"、"land it"、"retro"，或说"盘问我"、"进度"、"交接"、"收尾"、"复盘"时同样使用。它把 specs 当作当前行为真相、按路径路由 rules、记录决策与未决问题、分离工作/验证/发布状态，并把反复出现的错误逐步提升为更强的可执行检查。
+description: 面向含 .keelson/ 目录项目的工程控制层。用于探索想法、构建或修改代码、修复/调试、继续之前的工作、评审/收尾/落地，以及改进反复出现的工程失败。把任务路由到最小必要的 Keelson 工作流，同时保持项目事实、证据和接续状态真实。
 ---
 
 # Keelson
 
-`.keelson/workflow.md` 是项目本地的执行内核：**ORIENT → BOUND → BUILD → SENSE → RECONCILE**。初始化后，这份 canonical Skill 位于 `.keelson/skill/SKILL.md`，只负责把任务路由到更深的指导；不要一次加载或复述所有 reference。先看 `.keelson/README.md` 获取人和 Agent 都能读懂的项目地图。长期项目事实放在 `.keelson/`；已有项目文档通过 `config.yaml → refs` 保持权威，不复制。
+项目本地执行内核是 `.keelson/workflow.md`。Keelson 约束的是**状态转换与证据**，不是实现口味。用户指令和项目自身指令优先。需要项目地图时读取 `.keelson/README.md`。
 
-Keelson 约束的是**状态转换，而不是实现方式**。用户指令和项目自身说明文件优先。一个规则若能稳定机械检查，就优先做成可执行不变量，而不是继续增加提示词。
+## 先判断用户意图，再只加载需要的能力
 
-## 从当前状态开始
-
-如果 `NOW.md` 以 "First contact" 开头，先检查仓库，起草 `INTENT.md`，已有代码时再起草能力 specs 与按路径作用的 rules，然后用一次简短交流请所有者确认或修正。永远不要让所有者手写脚手架。
-
-非平凡任务遵循常驻主回路。如果本轮还没有基于当前工作树完成定向，运行 `keelson context --paths <files>`；修改共享模块前运行 `keelson impact <files>`。代码、specs、INTENT 或当前对话已经给出的事实，不再重复询问。
-
-## 只使用与变更规模相称的流程
-
-| 大小 | 边界 | 动作 |
+| 意图 | 常见请求 | 首先读取 |
 |---|---|---|
-| trivial | 明确的单文件修复；行为不变 | 直接做；不建 change 目录 |
-| quick | 意图清楚；行为契约不变 | 写回理解，`keelson new`，继续 |
-| spec | 行为/契约/能力/迁移变化，或所有者要求写代码前评审 | 起草验收 + delta specs；等待批准 |
+| **Explore** | “应该做什么”、比较方案、“grill me” | `discover.md` + `shape.md`；所有者明确要求改项目之前保持只读 |
+| **Change** | 构建、新增、重构、迁移 | `shape.md` → `context.md`；spec 级再加 `plan.md`，随后 `build.md` |
+| **Fix** | bug、测试失败、异常行为 | `debug.md`，随后 `verify.md` |
+| **Resume** | 继续、接着做、交接 | `handoff.md` + 当前上下文；从已确认的下一步继续，不重新规划 |
+| **Finish** | 评审、是否完成、收尾、落地、发布 | `verify.md` → `land.md` → `reconcile.md` |
+| **Improve** | 重复错误、Harness/rule/流程问题、retro | `harness.md` + `reconcile.md` |
 
-所有者可以覆盖大小。无人值守时，把尚未确认的所有者决策标成 `(assumed)`，并在落地前停下。
+术语或边界漂移时读取 `model.md`；只有存在真实设计/可靠性取舍时才读取 `engineer.md`。
 
-## 只加载当前任务需要的 reference
+## 执行规则
 
-- 产品意图不清 / 引导式发现 → `references/discover.md`
-- 需求、假设、授权 → `references/shape.md`
-- 术语、边界、不变量 → `references/model.md`
-- 上下文与影响 → `references/context.md`
-- 纵向切片计划 / delta specs → `references/plan.md`
-- 设计、可靠性、质量取舍 → `references/engineer.md`
-- 实现纪律 → `references/build.md`
-- 证据与验收 → `references/verify.md`
-- Harness 反复漏掉同一类问题 → `references/harness.md`
-- 停下 / 恢复 / 并行接续 → `references/handoff.md`
-- 集成 / 发布 → `references/land.md`
-- 回写稳定事实并压缩 → `references/reconcile.md`
-- 调试 → `references/debug.md`
+- 如果 `NOW.md` 写着“First contact”，先读仓库、起草 `INTENT.md`，只为仓库里真实存在的事实创建 specs/rules，然后让所有者确认或纠正；不要让所有者手写脚手架。
+- 非平凡工作从当前工作树开始：`keelson context --paths <files>`；修改共享模块前运行 `keelson impact <files>`。
+- 给变更定大小：**trivial** 直接做；**quick** 写回理解后建立轻量 change；**spec** 先写验收、delta specs 和计划，再等批准。
+- 工件是信息容器，不是仪式。不要因为存在模板就创建空 ROADMAP、GLOSSARY、rule、tasks、ledger、handoff 或 spec。
+- 始终区分**代码现实、已确认真相、计划变更**。未决问题只阻塞依赖它的切片。
+- 宣称完成前必须有当前工作树上的新鲜 `keelson check --record` 证据；不得静默削弱验收检查。
+- 重复失败提升为最窄的长期控制：spec → 作用域 rule → 可执行 fitness check；自动化接管不变量后删掉重复提示词。
+- 只使用浮动 effort 层级 `light | standard | deep`；绝不持久化带日期的模型 ID。
 
-## 不变量
-
-- 始终区分**代码现实**、**已确认事实**和**计划变更**；发现漂移就报告，不改 spec 去迁就缺陷。
-- 完成性结论必须有当前工作树上的新鲜 `keelson check --record` 证据。
-- 未决问题只阻塞依赖它的切片。
-- 重复失败应升级为窄范围 rule 或可执行 check，而不是增长聊天经验。
-- effort 只使用浮动层级 `light | standard | deep`；仓库里不持久化带日期的模型 ID。
-
-机械操作查 `keelson <command> --help`。主要状态命令：`context`、`impact`、`new`、`status`、`check --record`、`handoff`、`land`、`cancel`、`retro`。
+机械细节用 `keelson <command> --help`；用户通常只需要 `init`、`status`、`doctor`、`update`、`uninstall`。
