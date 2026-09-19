@@ -84,7 +84,7 @@ keelson init                 # picks the coding tools installed on this machine
 keelson init --cursor --codex   # or name the ones you use
 ```
 
-That is the only step. Every init also writes the portable `AGENTS.md` + `.agents/skills/keelson` layer, so compatible agents can pick Keelson up later even if they were not selected today. Open your agent in the directory and talk to it. On first contact it reads the repository, drafts `.keelson/INTENT.md` (why the project exists, what it will not do, what the agent may decide alone), and, for an existing codebase, one spec per capability and rules for the paths that have conventions. It asks you to confirm in one short exchange. You never write those files by hand.
+That is the only step. The canonical runtime lives under `.keelson/`: `workflow.md` plus `skill/` and its references. Init also writes tiny discovery shims such as `AGENTS.md` and `.agents/skills/keelson/SKILL.md`, so compatible agents can find that one runtime later without duplicating it. Open your agent in the directory and talk to it. On first contact it reads the repository, drafts `.keelson/INTENT.md` (why the project exists, what it will not do, what the agent may decide alone), and, for an existing codebase, one spec per capability and rules for the paths that have conventions. It asks you to confirm in one short exchange. You never write those files by hand.
 
 `keelson init` also references the architecture notes, decision records, CI, and issue tracker it finds, instead of copying them. See [Existing projects](docs/existing-projects.md).
 
@@ -95,6 +95,8 @@ Claude Code users can also install the skill from the plugin marketplace (`/plug
 | Path | Holds | Written by |
 |---|---|---|
 | `.keelson/README.md` | Human map: what to read first, what every Keelson file means, and what survives landing | Keelson; refreshed by `update` |
+| `.keelson/workflow.md` | Canonical always-applicable operating loop | Keelson; refreshed by `update` |
+| `.keelson/skill/` | Canonical `SKILL.md` plus on-demand references | Keelson; refreshed by `update` |
 | `.keelson/INTENT.md` | Why the project exists, boundaries, hard constraints, what the agent may decide alone | Agent drafts; owner confirms |
 | `.keelson/ROADMAP.md` | The current milestone; later work as direction only. Links the tracker when there is one | You and the agent |
 | `.keelson/NOW.md` | What is in flight, what is blocked, the next step. Present tense, rewritten in full | The agent, when it stops or lands |
@@ -132,9 +134,9 @@ So "implemented, tests pass, awaiting your review, not merged" and "merged, migr
 
 ## How it works
 
-1. **A resident block** under 20 lines in `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`. It says what `.keelson/` contains, how to size a change, and how to prove work is done.
+1. **A tiny discovery block** in `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`. It only points the host to `.keelson/workflow.md` and `.keelson/skill/SKILL.md`; it is not another copy of the workflow.
 2. **Two hooks** (Claude Code). One prints the roadmap's `Now`, `NOW.md`, active changes, and handoff next steps at session start. The other prints one line per prompt with work and verification state, and nothing when the project is idle. Hooks inject state, never instructions.
-3. **One skill**, routed by need. `SKILL.md` is about 50 lines and points to one reference each for discovering what is wanted, shaping it, the domain model and glossary, context and impact, planning in vertical slices, engineering lenses, building, verifying, handing off, landing, reconciling new facts into the project, and debugging. The agent reads only the one it needs.
+3. **One canonical skill** at `.keelson/skill/SKILL.md`, routed by need. It points to one reference for each class of task; the agent reads only the one it needs. Host skill directories contain a one-file discovery shim, never another reference tree.
 4. **A thin CLI** that does mechanical work: scaffolds, fingerprints, merges specs, records evidence, refuses a landing that lacks it. Understanding the request, analysing impact, and reviewing code stay with the agent.
 
 Nothing in the skill is a gate on the agent. The gates are on artifacts.
@@ -176,7 +178,7 @@ The project's documents are kept small the same way. Each document type has a li
 
 ## Supported tools
 
-`keelson init` takes one flag per tool, or `--tools a,b`, or nothing (it detects what is installed). Every project installs the portable cross-tool layer: `AGENTS.md` plus `.agents/skills/`. Hosts that already read this standard surface reuse it; Keelson adds a native surface only when it provides capability the shared layer does not. `keelson platforms` prints the full table with what is installed on your machine.
+`keelson init` takes one flag per tool, or `--tools a,b`, or nothing (it detects what is installed). Every project keeps canonical guidance under `.keelson/` and installs the portable discovery layer: `AGENTS.md` plus `.agents/skills/`. Hosts that already read this surface reuse it; native host paths, when needed, are also shims into the same `.keelson/` runtime. `keelson platforms` prints the full table with what is installed on your machine.
 
 | Tool | Instructions | Skills | Hooks | Confidence |
 |---|---|---|---|---|
@@ -203,7 +205,7 @@ Confidence says how the file locations were established. *Verified* tools have r
 
 | Command | Purpose |
 |---|---|
-| `keelson init` / `update` | Create or refresh `.keelson/`, references, skill, resident block, hooks. `--dry-run` previews |
+| `keelson init` / `update` | Create or refresh the canonical `.keelson/` runtime plus host discovery shims and hooks. `--dry-run` previews |
 | `keelson context --paths <files>` | INTENT, ROADMAP, NOW, active changes, references, matched rules |
 | `keelson impact <files>` | Importers, affected specs and rules, overlapping active changes |
 | `keelson new <name>` | Scaffold a change with owner, branch, delta base; `--worktree` for isolation |
