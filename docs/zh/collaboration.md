@@ -1,105 +1,99 @@
 [English](../collaboration.md)
 
-# 协作：会话、人与代理
+# 协作：Session、人与 Agent
 
-"做了一个任务"和"让项目持续推进"之间的分界线，是下一个会话、下一个人或下一个模型能否在不重做、不撤销的前提下接着做，以及两个人或两个代理能否同时工作而不互相覆盖。本页两者都讲。
+Keelson 刻意把**普通对话续接**与**真正所有权交接**分开。
 
-## 跨会话
+## 普通 Session 续接
 
-### NOW.md
+AI 窗口随时可能关闭。这既不是 handoff，也不是生命周期转换。
 
-项目级快照：在做什么、卡在哪或有什么不确定（包括"尚未检查：…"），以及下一步具体做什么。现在时，整体重写，从不追加。`keelson land --now "<text>"` 在落地时写它；代理每次停下时重写它。会话启动 hook 打印它。
+宿主能提供稳定 session identity 时，Keelson 在本地维护一个 gitignored 指针：
 
-### handoff.md
-
-一个变更的接续状态，与变更一起提交。`keelson handoff <name>` 从模板创建它，或给已有的重新盖戳：
-
-```markdown
----
-at: 7a9f37c2b1
-updated: 2026-09-19 14:02
-by: ann
----
+```text
+.keelson/.runtime/sessions/<opaque-key>.json
+→ change: <active-change>
 ```
 
-`at` 是这份交接所描述的 commit。代理填六个部分：
+它只表示“这个对话当前聚焦这个 change”。
 
-| 部分 | 内容 |
-|---|---|
-| 目标与已确认的决策 | 一段话，现在时，链接 `change.md` |
-| 已完成 | 已完成并验证的切片或任务，附证明它的 `Verify:` |
-| 未决与受阻 | 每项写明它阻塞什么 |
-| 已排除 | 被否的假设或方案，附证据，让后来者不再重试 |
-| 下一步 | 第一个具体动作，小到可以冷启动 |
-| 验证 | 最后一条 `Verify:`（命令、退出码、tree）和尚未检查的内容 |
+新 session 可以运行：
 
-交接是当前状态的摘要。它被覆盖，从不当作日记追加。
+```bash
+keelson focus --auto
+```
 
-### 恢复
+解析顺序保持保守：已有有效 focus → 当前 branch 唯一匹配 → 全局唯一 active change。多个候选永远不猜。
 
-1. `keelson status`：每个变更的 work、verification 和 release 状态；HEAD 是否在交接之后移动；未提交的文件。
-2. 如果 HEAD 移动过或工作树不干净，先读 `git log` 和 `git diff` 再信任交接。其他工作可能已落地，共享契约可能已变动。
-3. 从不为了"干净开始"而删除或重置未提交的改动。要么问，要么绕开它们。
-4. 在旧验证上继续构建之前先重新运行 `keelson check --record`；任何编辑之后它都算过期。
-5. 从**下一步**接着做；再次停下时更新 `handoff.md` 和 `NOW.md`。
+宿主没有经过验证的 identity bridge 时，也会给出同样的候选，但不会把它保存成共享/global focus；Agent 在后续命令中显式使用 change 名。这可以避免两个并行窗口意外共用一个可变 pointer。
 
-会话启动 hook 打印每个活动变更的下一步，所以在 Claude Code 上代理在读任何东西之前就看到了它。在其他工具上，发现块先把它指向 `.keelson/workflow.md`，其中 ORIENT 步骤要求先运行 `keelson context`。
+## 并行 Session
 
-### 什么提交、什么留在本地
+因此两个窗口可以分别：
 
-| 信息 | 位置 | 进 git |
+```text
+session A → order-search
+session B → billing-export
+```
+
+互不串线。有 focus 时，`check --record`、`land`、`cancel`、`handoff` 优先使用当前 session 的 change。
+
+独立的新修改目标创建新长期 change，并且只移动当前 session focus。切换 focus 永远不会自动完成或取消之前的 change。
+
+## Handoff 是显式交接
+
+`handoff.md` 会提交 Git，所以只用于另一台机器/另一个人真正需要的信息。
+
+适用场景：
+
+- 换开发者/Agent 所有权；
+- worktree 明确转交；
+- 所有者要求一个 cold-start transfer package。
+
+```bash
+keelson handoff <change>
+```
+
+它记录 commit、已确认决策、done/blocked、已排除方案、下一具体步骤和 verification。
+
+不要因为一个聊天窗口关了就创建 handoff。普通 session 恢复从长期 change 工件 + 本地 focus/candidate 状态重建。
+
+## 长期与本地
+
+| 信息 | 位置 | 进 Git |
 |---|---|---|
-| `NOW.md` 与实际存在的变更工件（`handoff.md`、`ledger.md` 等） | `.keelson/` | 是 |
-| 检查输出、本机状态 | `.keelson/.local/` | 否，由 `init` 加入 `.gitignore` |
+| 工作边界、验收、计划、决策、ledger | `.keelson/changes/<name>/` | 是 |
+| 明确交接包 | `changes/<name>/handoff.md` | 是 |
+| session focus | `.keelson/.runtime/sessions/` | 否 |
+| 检查输出 | `.keelson/.runtime/evidence/` | 否 |
+| 项目真相 | specs/rules/INTENT 等 | 是 |
 
-另一台机器上的同事需要的一切都提交。
+## 并行实现与隔离
 
-## 并行
-
-### 所有权与隔离
-
-`keelson new` 在 `change.md` 里记录 owner（git 用户名）和当前分支。第二个写代码的人，在自己的分支和 worktree 上创建变更：
+`keelson new` 记录 owner 和 branch。第二个写入者需要时使用独立 branch/worktree：
 
 ```bash
 keelson new share-links --tier spec --capability sharing --worktree
 ```
 
-这会运行 `git worktree add -b share-links ../<repo>-share-links`，并在 frontmatter 里记录 `branch: share-links` 和 `worktree:`。`keelson status` 在每个变更旁显示 owner 和分支。
-
-### 声明变更触及什么
+`touches` 与 capability delta 暴露语义重叠：
 
 ```bash
 keelson new order-export --touches "src/api/**,src/export/**" --depends add-order-pagination
 ```
 
-`touches` 列出变更将编辑的路径 glob。`depends` 指出它等待的活动变更；它们存在期间 `status` 打印"depends on active: …"，依赖不再活动时 `validate` 发出警告。
+两个 active change 触及同一声明路径或能力时会产生 shared-contract warning。Keelson 暴露冲突，Git branch/worktree 隔离文件，tracker/PR/CI 协调所有权和集成。
 
-### 共享契约
+## 集成别人工作以后
 
-两个活动变更声明了重叠的 `touches`，或都带有同一能力的 delta spec（或决策行），就是一个共享契约。`keelson status` 发出警告：
+代码 merge 后旧 verification 可能因为 fingerprint 改变而 stale。另一 change 改过你 delta 的主 spec 时，`land` 会报告 spec drift，必须重读之后才能 `--accept-drift`。
 
-```text
-! shared contract: add-pagination and order-export both touch specs/orders — align the interface before implementing both
-```
+## Release 状态
 
-`keelson impact <files>` 对声明了这些文件的任何活动变更打印同样的警告。应对方式是先在 delta spec 里把契约谈定，落地或引用它，然后两边再各自实现。
+实现 ready、integration 和 release 仍是三个不同事件。
 
-### 集成了别人的工作之后
+- `ready`：长期 work gate + 当前 verification 满足；
+- `keelson land`：集成/fold change；
+- Git tag：release boundary。
 
-合并之前记录的证据按定义已经过期；`keelson status` 显示它，`land` 拒绝它。如果另一个变更修改了你的 delta 所依据的 spec，`land` 报告漂移，要求你重读之后再传 `--accept-drift`。
-
-### 边界
-
-磁盘上的文件不是分布式锁。分支不消除语义冲突。Keelson 暴露重叠；它不仲裁重叠。跨机器认领工作和控制合并属于跟踪器、pull request 和 CI，这正是 `refs.tasks` 和 `refs.ci` 存在的原因，也是 `keelson validate && keelson check` 应该在 CI 里运行的原因。
-
-## 发布状态
-
-已实现、已集成、已发布是三个状态。`keelson land` 标记集成：在变更到达目标分支时运行它（已合并，或在单人仓库里已提交到主线）。发布来自 git tag：`keelson status` 打印最后一个 tag 以及其后折叠的变更，它们都是未发布。
-
-```text
-last release v1.4.0; landed since: share-links, order-export
-```
-
-### Rollout 段
-
-以 `**BREAKING**` 开头的 `What` 项标记一个破坏性变更，没有描述兼容窗口、迁移和回滚的 `## Rollout` 段时，`keelson land` 会拒绝它。迁移和生产步骤留在 `NOW.md → Next` 里直到执行完毕。Keelson 提醒；它从不执行生产操作。
+Breaking change 仍需 Rollout；Keelson 从不自行执行生产操作。
