@@ -29,7 +29,8 @@ export function loadChange(changesDir, name) {
   const acceptanceDone = acceptance.filter((a) => a.done).length;
 
   // Work status: explicit frontmatter wins; otherwise derived from the artifacts.
-  let work = String(data.status ?? '').toLowerCase();
+  const storedWork = String(data.status ?? '').toLowerCase();
+  let work = storedWork;
   if (!WORK_STATUSES.includes(work)) {
     if (open.length && tasks.length === 0) work = 'clarifying';
     else if (tasks.length === 0) work = 'clarifying';
@@ -64,12 +65,39 @@ export function loadChange(changesDir, name) {
     handoff,
     progress: { done, total: tasks.length },
     work,
+    storedWork: WORK_STATUSES.includes(storedWork) ? storedWork : null,
     lastVerify,
     hasDecisions: hasSection(body, 'Decisions'),
     hasRollout: hasSection(body, 'Rollout'),
     // Only a bullet that starts with **BREAKING** counts, so the template's own hint does not.
     breaking: /^\s*[-*]\s+\*\*BREAKING\*\*/m.test(body),
   };
+}
+
+export function derivedWorkStatus(change, fingerprint) {
+  const explicit = change.storedWork;
+  if (['blocked', 'integrated', 'cancelled'].includes(explicit)) return explicit;
+
+  const verification = verificationStatus(change, fingerprint);
+  const tasksComplete = change.progress.total === 0 || change.progress.done === change.progress.total;
+  const acceptanceComplete = change.acceptance.length
+    ? change.acceptanceProgress.done === change.acceptanceProgress.total
+    : change.tier === 'quick';
+  const contractComplete = change.tier === 'quick' || change.acceptance.length > 0;
+  const rolloutReady = !change.breaking || change.hasRollout;
+
+  if (
+    tasksComplete &&
+    acceptanceComplete &&
+    contractComplete &&
+    change.open.length === 0 &&
+    change.assumed.length === 0 &&
+    rolloutReady &&
+    verification.state === 'passed'
+  ) return 'ready';
+
+  if (explicit === 'clarifying' && change.progress.done === 0 && verification.state === 'not-run') return 'clarifying';
+  return 'in-progress';
 }
 
 /** Verification status for a change given the current worktree fingerprint. */
