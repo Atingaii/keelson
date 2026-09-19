@@ -32,7 +32,7 @@ Exit 1 for an unknown/retired host or invalid profile.
 keelson platforms [--json]
 ```
 
-Lists the seven first-class hosts plus the portable fallback with support level, instruction and skill discovery paths, hook support, confidence, and installed/configured state.
+Lists the seven first-class hosts plus the portable fallback with discovery support, `sessionFocus` capability (`native|degraded`), instruction/Skill paths, hooks, confidence, and installed/configured state.
 
 ## `keelson update`
 
