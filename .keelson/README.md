@@ -24,6 +24,7 @@ This directory is deliberately readable by people as well as agents. It is the p
 | `NOW.md` | What is happening right now? What is blocked? What is the next concrete step? | Short current-state snapshot; rewritten, never appended as a diary |
 | `GLOSSARY.md` | What do important project terms mean here? | Long-lived shared vocabulary |
 | `config.yaml` | Which tools, checks, refs, budgets, and paths does Keelson use? | Mechanical configuration |
+| `.managed.json` | Which generated discovery surfaces does this Keelson install own? | Package-owned desired-state manifest; rewritten by `init`/`update` |
 | `specs/<capability>/spec.md` | How does one capability behave **today**? | Long-lived current truth; requirements + scenarios + durable decisions |
 | `rules/index.md` | Which engineering rules apply to a path? | Long-lived routing table |
 | `rules/*.md` | What conventions/invariants apply in this scope? | Long-lived, preferably checkable |
