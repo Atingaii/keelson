@@ -10,6 +10,7 @@ const COMMANDS = {
   update: ['update [--dry-run]', 'Refresh the canonical .keelson/ runtime, discovery shims, and hooks after upgrading; migrates config.yaml', () => import('./commands/init.js').then((m) => m.init)],
   context: ['context [--paths a/,b/**] [--json]', 'Print INTENT, ROADMAP, NOW, active changes, existing references, and the rules matching the given paths', () => import('./commands/context.js').then((m) => m.context)],
   impact: ['impact <file> [file...] [--json]', 'Mechanical impact hints: importers, specs and rules that may be affected, active changes that overlap', () => import('./commands/impact.js').then((m) => m.impact)],
+  focus: ['focus [change] [--auto|--clear] [--json]', 'Bind this AI session to one active change without changing the change lifecycle', () => import('./commands/focus.js').then((m) => m.focus)],
   new: ['new <name> [--tier quick|spec] [--capability a,b] [--touches globs] [--depends change] [--worktree]', 'Scaffold a change directory (owner, branch, delta base recorded)', () => import('./commands/new.js').then((m) => m.newChange)],
   status: ['status [--json]', 'Work, verification, and release status per change; slices, open questions, conflicts, handoffs', () => import('./commands/status.js').then((m) => m.status)],
   handoff: ['handoff [name] [--by who]', 'Create or re-stamp handoff.md for a change (at, updated, by)', () => import('./commands/handoff.js').then((m) => m.handoff)],
@@ -27,7 +28,7 @@ const COMMANDS = {
 
 const COMMAND_GROUPS = [
   ['Your commands', ['init', 'status', 'doctor', 'update', 'platforms', 'uninstall']],
-  ['Agent workflow', ['context', 'impact', 'new', 'check', 'handoff', 'validate', 'land', 'cancel']],
+  ['Agent workflow', ['context', 'impact', 'focus', 'new', 'check', 'handoff', 'validate', 'land', 'cancel']],
   ['Maintenance / advanced', ['retro', 'models', 'ablate', 'restore']],
 ];
 
