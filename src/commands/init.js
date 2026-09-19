@@ -84,9 +84,12 @@ export async function init({ flags }, cwd = process.cwd()) {
 
   const project = path.basename(root);
   const tpl = path.join(skillSource(cfg.lang), 'templates');
+  const projectMap = fill(read(path.join(tpl, 'README.md')), { project });
 
   if (flags.dryRun) {
     heading(`Keelson ${fresh ? 'init' : 'update'} (dry run) in ${root}`);
+    const mapPath = path.join(root, '.keelson', 'README.md');
+    console.log(`  ${(!exists(mapPath) ? 'create' : read(mapPath) === projectMap ? 'unchanged' : 'update').padEnd(9)} .keelson/README.md`);
     for (const t of targets) {
       for (const f of plannedSkillFiles(root, t, { lang: cfg.lang, profile: cfg.profile })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
       const ins = path.join(root, t.instructions);
@@ -109,6 +112,11 @@ export async function init({ flags }, cwd = process.cwd()) {
     if (!cfg.check.length) cfg.check = detectChecks(root);
   }
   const p = projectPaths(root, cfg);
+  const mapState = !exists(p.readme) ? 'created' : read(p.readme) === projectMap ? null : 'refreshed';
+  if (mapState) {
+    write(p.readme, projectMap);
+    ok(`.keelson/README.md (human project map; ${mapState} by Keelson)`);
+  }
   const seed = (file, target, vars = {}) => {
     if (exists(target)) return false;
     write(target, fill(read(path.join(tpl, file)), { project, ...vars }));
