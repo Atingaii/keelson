@@ -45,21 +45,26 @@ test('every guidance section carries without and sunset; SKILL.md stays short', 
   }
 });
 
-test('resident instructions stay a small map into the skill', () => {
+test('resident instructions are discovery-only shims into .keelson', () => {
   for (const lang of ['skills/keelson', 'skills/zh/keelson']) {
     const block = fs.readFileSync(path.join(ROOT, lang, 'templates', 'resident-block.md'), 'utf8');
-    assert.ok(block.split('\n').length <= 20, `${lang}/templates/resident-block.md ≤ 20 lines`);
-    assert.match(block, /keelson context --paths/);
-    assert.match(block, /keelson check --record/);
-    assert.match(block, /keelson retro/);
-    assert.match(block, /skill/i);
+    assert.ok(block.split('\n').length <= 10, `${lang}/templates/resident-block.md ≤ 10 lines`);
+    assert.match(block, /\.keelson\/workflow\.md/);
+    assert.match(block, /\.keelson\/skill\/SKILL\.md/);
+    assert.doesNotMatch(block, /keelson context --paths/);
   }
 });
 
-test('repository dogfood skill exposes every canonical reference', () => {
+test('repository dogfood runtime keeps canonical guidance under .keelson and only shims outside', () => {
   const canonical = walk(path.join(ROOT, 'skills', 'keelson', 'references'));
-  const dogfood = walk(path.join(ROOT, '.claude', 'skills', 'keelson', 'references'));
-  assert.deepEqual(dogfood, canonical);
+  const runtime = walk(path.join(ROOT, '.keelson', 'skill', 'references'));
+  assert.deepEqual(runtime, canonical);
+  for (const shim of ['.claude/skills/keelson', '.agents/skills/keelson']) {
+    assert.deepEqual(walk(path.join(ROOT, shim)), ['SKILL.md']);
+    assert.match(fs.readFileSync(path.join(ROOT, shim, 'SKILL.md'), 'utf8'), /\.keelson\/skill\/SKILL\.md/);
+  }
+  assert.match(fs.readFileSync(path.join(ROOT, 'CLAUDE.md'), 'utf8'), /\.keelson\/workflow\.md/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'AGENTS.md'), 'utf8'), /\.keelson\/workflow\.md/);
 });
 
 test('shaping audits assumptions without turning clarification into ceremony', () => {
