@@ -72,6 +72,30 @@ test('changing configured tools removes stale generated adapters but preserves u
   run(dir, ['doctor', '--json'], { env });
 });
 
+test('update removes signature-matched legacy Keelson surfaces and preserves neighboring user files', () => {
+  const dir = tmpProject({
+    '.cursor/skills/keelson/SKILL.md': '---\nname: keelson\n---\n# Old Keelson\n',
+    '.cursor/rules/keelson.mdc': '# Keelson\nold\n',
+    '.cursor/rules/user.mdc': '# My rule\n',
+    '.github/skills/keelson/SKILL.md': '---\nname: keelson\n---\n# Old Keelson\n',
+    '.kilocode/skills/keelson/SKILL.md': '---\nname: keelson\n---\n# Old Keelson\n',
+    '.kilocode/rules/keelson.md': '# Keelson\nold\n',
+    '.kiro/steering/keelson.md': '# Keelson\nold\n',
+    '.qoder/rules/keelson.md': '# Keelson\nold\n',
+  });
+  run(dir, ['init', '--tools', 'agents', '--no-hooks'], { env });
+  for (const legacy of [
+    '.cursor/skills/keelson',
+    '.cursor/rules/keelson.mdc',
+    '.github/skills/keelson',
+    '.kilocode/skills/keelson',
+    '.kilocode/rules/keelson.md',
+    '.kiro/steering/keelson.md',
+    '.qoder/rules/keelson.md',
+  ]) assert.ok(!exists(dir, legacy), legacy);
+  assert.ok(exists(dir, '.cursor/rules/user.mdc'));
+});
+
 test('every registered platform installs around one canonical runtime and passes doctor', () => {
   const reg = JSON.parse(fs.readFileSync(path.resolve('registry/platforms.json'), 'utf8'));
   for (const [id, platform] of Object.entries(reg.platforms)) {
@@ -110,6 +134,46 @@ test('doctor detects package-owned runtime and shim drift and update repairs it'
 
   run(dir, ['update', '--no-hooks'], { env });
   run(dir, ['doctor', '--json'], { env });
+});
+
+test('no-hooks is persistent and can be explicitly re-enabled', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env });
+  assert.match(read(dir, '.keelson/config.yaml'), /^hooks: false$/m);
+  assert.ok(!exists(dir, '.keelson/hooks'));
+  assert.ok(!exists(dir, '.claude/settings.json'));
+
+  run(dir, ['update'], { env });
+  assert.match(read(dir, '.keelson/config.yaml'), /^hooks: false$/m);
+  assert.ok(!exists(dir, '.keelson/hooks'));
+  assert.ok(!exists(dir, '.claude/settings.json'));
+
+  run(dir, ['update', '--hooks'], { env });
+  assert.match(read(dir, '.keelson/config.yaml'), /^hooks: true$/m);
+  assert.ok(exists(dir, '.keelson/hooks/session-start.mjs'));
+  assert.ok(exists(dir, '.claude/settings.json'));
+  run(dir, ['doctor', '--json'], { env });
+});
+
+test('fresh init without a reliable detected host uses the portable agents layer', async () => {
+  const { chooseDetectedTools } = await import('../src/commands/init.js');
+  const none = chooseDetectedTools({});
+  assert.deepEqual(none.tools, ['agents']);
+  assert.equal(none.portableFallback, true);
+
+  const conventionOnly = chooseDetectedTools({
+    snow: { installed: true },
+    reasonix: { installed: true },
+  });
+  assert.deepEqual(conventionOnly.tools, ['agents']);
+  assert.deepEqual(conventionOnly.conventionDetected.sort(), ['reasonix', 'snow']);
+
+  const reliable = chooseDetectedTools({
+    codex: { installed: true },
+    snow: { installed: true },
+  });
+  assert.deepEqual(reliable.tools, ['codex']);
+  assert.equal(reliable.portableFallback, false);
 });
 
 test('guided profile keeps guided blocks; lang zh installs the Chinese skill when present', () => {
@@ -229,7 +293,7 @@ test('check runs configured commands and reports exit codes', () => {
 
 test('hooks print a snapshot and a one-line state', () => {
   const dir = tmpProject({});
-  run(dir, ['init'], { env });
+  run(dir, ['init', '--tools', 'claude'], { env });
   const snap = execFileSync('node', [path.join(dir, '.keelson/hooks/session-start.mjs')], { env: { ...process.env, CLAUDE_PROJECT_DIR: dir }, encoding: 'utf8' });
   assert.match(snap, /\[keelson\]/);
   assert.match(snap, /Active changes: none/);
@@ -244,7 +308,7 @@ test('handoff and session hook tolerate CRLF files', () => {
   const dir = tmpProject({});
   execFileSync('git', ['init', '-q'], { cwd: dir });
   execFileSync('git', ['-c', 'user.email=a@b', '-c', 'user.name=Ann', 'commit', '--allow-empty', '-qm', 'init'], { cwd: dir });
-  run(dir, ['init'], { env });
+  run(dir, ['init', '--tools', 'claude'], { env });
   run(dir, ['new', 'crlf-handoff'], { env });
   run(dir, ['handoff', 'crlf-handoff', '--by', 'Ann'], { env });
   const file = '.keelson/changes/crlf-handoff/handoff.md';
@@ -261,7 +325,7 @@ test('handoff and session hook tolerate CRLF files', () => {
 
 test('ablate removes every surface and restore brings it back byte-for-byte', () => {
   const dir = tmpProject({ 'CLAUDE.md': '# Mine\n' });
-  run(dir, ['init'], { env });
+  run(dir, ['init', '--tools', 'claude'], { env });
   const before = read(dir, 'CLAUDE.md');
   run(dir, ['ablate'], { env });
   assert.ok(!exists(dir, '.keelson'));
@@ -274,7 +338,7 @@ test('ablate removes every surface and restore brings it back byte-for-byte', ()
 
 test('models resolves tiers and rank writes user overrides', () => {
   const dir = tmpProject({});
-  run(dir, ['init', '--no-hooks'], { env });
+  run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env });
   assert.equal(run(dir, ['models', '--resolve', 'light'], { env }).stdout.trim(), 'haiku');
   run(dir, ['models', 'rank', 'fable', 'deep'], { env });
   assert.equal(run(dir, ['models', '--resolve', 'deep'], { env }).stdout.trim(), 'fable');
@@ -320,9 +384,9 @@ test('init references existing project material and ignores .keelson/.local', ()
   const dir = tmpProject({ 'docs/adr/0001.md': '# ADR', 'ARCHITECTURE.md': '# arch', '.github/workflows/ci.yml': 'x', '.gitignore': 'node_modules\n' });
   execFileSync('git', ['init', '-q'], { cwd: dir });
   execFileSync('git', ['remote', 'add', 'origin', 'git@github.com:acme/shop.git'], { cwd: dir });
-  run(dir, ['init', '--no-hooks'], { env });
+  run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env });
   const cfg = read(dir, '.keelson/config.yaml');
-  assert.match(cfg, /^version: 3$/m);
+  assert.match(cfg, /^version: 4$/m);
   assert.match(cfg, /decisions: docs\/adr/);
   assert.match(cfg, /architecture: ARCHITECTURE\.md/);
   assert.match(cfg, /tasks: https:\/\/github\.com\/acme\/shop\/issues/);
@@ -339,11 +403,11 @@ test('update migrates a v1 config and --dry-run writes nothing', () => {
   run(dir, ['init', '--no-hooks'], { env });
   write(dir, '.keelson/config.yaml', 'version: 1\ntools:\n  - claude\ncheck:\n  - echo hi\n');
   const dry = run(dir, ['update', '--dry-run'], { env }).stdout;
-  assert.match(dry, /migrate\s+\.keelson\/config\.yaml v1 → v3/);
+  assert.match(dry, /migrate\s+\.keelson\/config\.yaml v1 → v4/);
   assert.match(read(dir, '.keelson/config.yaml'), /^version: 1$/m);
   run(dir, ['update'], { env });
   const cfg = read(dir, '.keelson/config.yaml');
-  assert.match(cfg, /^version: 3$/m);
+  assert.match(cfg, /^version: 4$/m);
   assert.match(cfg, /- echo hi/);
   assert.match(cfg, /budgets:/);
   assert.match(cfg, /specs: \.keelson\/specs/);
@@ -374,7 +438,7 @@ test('handoff stamps at/updated/by and the session hook prints its next step', (
   const dir = tmpProject({});
   execFileSync('git', ['init', '-q'], { cwd: dir });
   execFileSync('git', ['-c', 'user.email=a@b', '-c', 'user.name=Ann', 'commit', '--allow-empty', '-qm', 'init'], { cwd: dir });
-  run(dir, ['init'], { env });
+  run(dir, ['init', '--tools', 'claude'], { env });
   run(dir, ['new', 'share-links'], { env });
   run(dir, ['handoff', 'share-links', '--by', 'Ann'], { env });
   const h = read(dir, '.keelson/changes/share-links/handoff.md');
@@ -392,7 +456,7 @@ test('handoff stamps at/updated/by and the session hook prints its next step', (
 test('cancel archives without merging; doctor and uninstall behave', () => {
   const dir = tmpProject({ 'package.json': '{"name":"x"}' });
   execFileSync('git', ['init', '-q'], { cwd: dir });
-  run(dir, ['init'], { env });
+  run(dir, ['init', '--tools', 'claude'], { env });
   write(dir, '.keelson/INTENT.md', '# x\n\n## Why this exists\nReal.\n');
   run(dir, ['new', 'dead-end', '--tier', 'spec', '--capability', 'orders'], { env });
   run(dir, ['cancel', 'dead-end', '--reason', 'superseded'], { env });
@@ -426,7 +490,7 @@ test('breaking change without Rollout is refused at landing', () => {
 test('guide flag adds the guided line; named checks run with kinds; doctor reports knowledge health', () => {
   const dir = tmpProject({ 'package.json': '{"name":"x"}' });
   execFileSync('git', ['init', '-q'], { cwd: dir });
-  run(dir, ['init', '--no-hooks', '--guide'], { env });
+  run(dir, ['init', '--tools', 'claude', '--no-hooks', '--guide'], { env });
   assert.match(read(dir, '.keelson/workflow.md'), /Guided mode:/);
   assert.doesNotMatch(read(dir, 'CLAUDE.md'), /Guided mode:/);
   assert.match(read(dir, '.keelson/config.yaml'), /^guide: true$/m);
