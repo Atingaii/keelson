@@ -45,6 +45,7 @@ export const projectPaths = (root, cfg = null) => {
     intent: path.join(k, 'INTENT.md'),
     now: path.join(k, 'NOW.md'),
     roadmap: path.join(k, 'ROADMAP.md'),
+    glossary: path.join(k, 'GLOSSARY.md'),
     specs: path.resolve(root, specsRel),
     specsRel,
     rules: path.join(k, 'rules'),

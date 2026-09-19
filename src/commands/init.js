@@ -68,6 +68,7 @@ export async function init({ flags }, cwd = process.cwd()) {
   cfg.tools = tools;
   cfg.lang = flags.lang ?? cfg.lang ?? 'en';
   cfg.profile = flags.profile ?? cfg.profile ?? 'lean';
+  if (flags.guide !== undefined) cfg.guide = flags.guide !== 'false' && flags.guide !== false;
   if (!['lean', 'guided'].includes(cfg.profile)) throw new Error('profile must be lean or guided');
 
   const project = path.basename(root);
@@ -104,6 +105,7 @@ export async function init({ flags }, cwd = process.cwd()) {
   if (seed('INTENT.md', p.intent)) ok('.keelson/INTENT.md (fill in why the project exists and what the agent may decide alone)');
   if (seed('NOW.md', p.now)) ok('.keelson/NOW.md');
   if (seed('ROADMAP.md', p.roadmap)) ok('.keelson/ROADMAP.md (current milestone; link your tracker instead of duplicating it)');
+  if (seed('GLOSSARY.md', p.glossary)) ok('.keelson/GLOSSARY.md (shared vocabulary; fill it when two words start meaning the same thing)');
   if (seed('rules-index.md', p.rulesIndex)) ok('.keelson/rules/index.md');
   if (seed('rules-general.md', path.join(p.rules, 'general.md'))) ok('.keelson/rules/general.md');
   mkdirp(p.specs);
@@ -116,7 +118,7 @@ export async function init({ flags }, cwd = process.cwd()) {
   for (const t of tools) {
     const skillPath = installSkill(root, t, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION });
     ok(`${PLATFORMS[t].label}: skill → ${skillPath}`);
-    const files = installInstructions(root, t, { lang: cfg.lang });
+    const files = installInstructions(root, t, { lang: cfg.lang, guide: cfg.guide });
     ok(`${PLATFORMS[t].label}: resident block → ${files.join(', ')}`);
     if (PLATFORMS[t].hooks && !flags.noHooks) {
       installHooks(root);

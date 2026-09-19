@@ -85,10 +85,14 @@ export function installSkill(root, platformId, { lang, profile, version }) {
   return path.relative(root, dest);
 }
 
-export function installInstructions(root, platformId, { lang }) {
+export function installInstructions(root, platformId, { lang, guide = false }) {
   const p = PLATFORMS[platformId];
   const blockFile = path.join(skillSource(lang), 'templates', 'resident-block.md');
-  const block = read(blockFile);
+  let block = read(blockFile);
+  const guideLine = lang === 'zh'
+    ? '- 引导模式已开启：项目所有者正在学习工程实践。用具体场景提问、给推荐和取舍、解释术语；spec 变更落地后附一段简短的教学说明。'
+    : '- Guided mode is on: the owner is learning engineering. Ask with concrete scenarios, recommend with trade-offs, explain terms, and close spec changes with a short teaching note.';
+  block = guide ? block.replace(END, `${guideLine}\n${END}`) : block;
   const file = path.join(root, p.instructions);
   write(file, upsertBlock(readOr(file, ''), block));
   const touched = [path.relative(root, file)];

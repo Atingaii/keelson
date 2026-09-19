@@ -134,7 +134,9 @@ export async function land({ flags, positional }, cwd = process.cwd()) {
     ok(`removed .keelson/changes/${name} (ledger and handoff stay in git history)`);
   }
   if (flags.now) {
-    if (!dry) write(p.now, `# Now\n\n${String(flags.now).trim()}\n`);
+    // Accept text with or without its own "# Now" heading; never write the heading twice.
+    const body = String(flags.now).trim().replace(/^#\s*Now\s*\n+/i, '');
+    if (!dry) write(p.now, `# Now\n\n${body}\n`);
     ok('NOW.md rewritten');
   } else info('rewrite .keelson/NOW.md now (present tense: active / blocked / next), or pass --now "<text>"');
   info('commit the landing together with the last code change; release status is derived from git tags');

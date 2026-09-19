@@ -1,6 +1,6 @@
 {
   "name": "keelson",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "An engineering collaboration layer for coding agents on long-lived projects: a small kernel, engineering capability that unfolds on demand, reviewable project state, and verification wired into the Git, tests, and CI you already have.",
   "type": "module",
   "bin": {

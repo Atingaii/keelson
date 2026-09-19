@@ -22,6 +22,8 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
     intent: readOr(p.intent).trim(),
     now: readOr(p.now).trim(),
     roadmap: exists(p.roadmap) ? readOr(p.roadmap).trim() : '',
+    glossary: exists(p.glossary) && !/^- …/m.test(readOr(p.glossary)) ? readOr(p.glossary).trim() : '',
+    guide: Boolean(cfg.guide),
     context: cfg.context?.trim() ?? '',
     refs: Object.fromEntries(refs),
     paths,
@@ -38,6 +40,8 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
   if (data.context) out.push('## Project context (config.yaml)', '', data.context, '');
   out.push('## INTENT.md', '', data.intent || '(empty — fill in .keelson/INTENT.md)', '');
   if (data.roadmap) out.push('## ROADMAP.md', '', data.roadmap, '');
+  if (data.glossary) out.push('## GLOSSARY.md', '', data.glossary, '');
+  if (data.guide) out.push('Guided mode is on: the owner is learning; ask with scenarios, recommend with trade-offs, explain terms.', '');
   out.push('## NOW.md', '', data.now || '(empty)', '');
   if (refs.length) out.push('## Existing project material (read, do not duplicate)', '', ...refs.map(([k, v]) => `- ${k}: ${v}`), '');
   out.push('## Active changes', '');

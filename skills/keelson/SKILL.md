@@ -5,7 +5,7 @@ description: Engineering collaboration layer for coding work in repositories tha
 
 # Keelson
 
-Keelson sits under your normal way of working on a project that will live for years. The repository keeps its standing facts in `.keelson/`: `INTENT.md` (why it exists, boundaries, what you may decide alone), `ROADMAP.md` (the current milestone), `NOW.md` (what is in flight), specs (how the system behaves today, path in `config.yaml`), `rules/` (conventions routed by path), `changes/` (work in progress, empty when idle). Existing project documents are referenced from `config.yaml → refs`, never duplicated. You do the work the way you judge best; Keelson makes sure the facts you need are in front of you, the facts you produce are written down, and nothing is declared done without evidence that matches the code.
+Keelson sits under your normal way of working on a project that will live for years. The repository keeps its standing facts in `.keelson/`: `INTENT.md` (why it exists, boundaries, what you may decide alone), `ROADMAP.md` (the current milestone), `NOW.md` (what is in flight), `GLOSSARY.md` (one meaning per term), specs (how the system behaves today, path in `config.yaml`), `rules/` (conventions routed by path), `changes/` (work in progress, empty when idle). Existing project documents are referenced from `config.yaml → refs`, never duplicated. You do the work the way you judge best; Keelson makes sure the facts you need are in front of you, the facts you produce are written down, and nothing is declared done without evidence that matches the code.
 
 Nothing here is a gate on you. The gates are on artifacts: `keelson land` refuses stale evidence, unchecked acceptance, open questions, and unconfirmed assumptions. Every guideline states why it exists so you can judge when it does not apply. User instructions and the project's own instruction files always take precedence.
 
@@ -21,17 +21,21 @@ Nothing here is a gate on you. The gates are on artifacts: `keelson land` refuse
 | quick | several files, intent clear, no behaviour contract changes | write back your understanding in 3–6 lines, `keelson new`, proceed | `references/shape.md` |
 | spec | behaviour contract changes, new or removed capability, abandoning an obvious approach, migrations, anything the owner wants to review before code | clarify until the next slice is deliverable, draft `change.md` with acceptance and delta specs, wait for approval | `references/shape.md`, `references/plan.md` |
 
-You decide the size; the user can override with "treat this as spec" or "just do it". When nobody can answer (a scripted run), build under assumptions marked `(assumed)` and stop before landing.
+You decide the size; the user can override with "treat this as spec" or "just do it". When nobody can answer (a scripted run), build under assumptions marked `(assumed)` and stop before landing. When `config.yaml → guide` is true, the owner is learning: explain with scenarios and trade-offs, name the engineering idea after the decision, and close spec changes with a short teaching note.
 
 ## What do you need right now?
 
+- **The owner is not sure what they want, or is learning** → `references/discover.md` (scenario before technology, which unknowns to raise, scope guard, explore before committing, guided mode)
 - **Understand what is wanted** → `references/shape.md` (facts first, write-back, decision states, authorization, interviewing, unattended runs)
+- **Words or boundaries are drifting** → `references/model.md` (glossary, bounded contexts, invariants, deep modules, design it twice)
 - **Know what the code touches** → `references/context.md` (three context layers, impact analysis, budget)
 - **Plan the change** → `references/plan.md` (change.md, slices, acceptance, delta specs, effort tiers, existing trackers)
+- **A design or reliability question** → `references/engineer.md` (engineering lenses: delivery, structure, evolution, operation, quality targets)
 - **Build** → `references/build.md` (rulings, subagents by tier, parallel work, keeping artifacts true)
 - **Prove it works** → `references/verify.md` (record validity, content validity, `keelson check --record`, reviews)
 - **Stop or resume** → `references/handoff.md` (handoff fields, resuming safely, NOW.md)
 - **Integrate and release** → `references/land.md` (landing gates, spec conflicts, rollout, promoting learnings, technical debt)
+- **Write the new facts back, keep the project small** → `references/reconcile.md` (where each fact goes, rewrite not append, budgets and compaction, `keelson doctor`)
 - **Something is broken** → `references/debug.md` (reproduce, root cause, category)
 - **"retro"** → run `keelson retro` and act on its suggestions
 

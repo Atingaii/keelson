@@ -62,7 +62,10 @@ export function validateProject(root) {
       if (t.effort && !EFFORT_TIERS.includes(t.effort)) errors.push(`${tag}/tasks.md: bad effort on "${t.title}"`);
       if (!t.effort) warnings.push(`${tag}/tasks.md: "${t.title}" has no (effort: …) tag`);
     }
-    for (const sl of c.slices) if (!sl.delivers) warnings.push(`${tag}/tasks.md: slice "${sl.name}" has no "Delivers:" line`);
+    for (const sl of c.slices) {
+      if (!sl.delivers) warnings.push(`${tag}/tasks.md: slice "${sl.name}" has no "Delivers:" line`);
+      if (/^(db|database|schema|backend|back-end|frontend|front-end|ui|api|model|models|storage|infra|infrastructure)( layer| only)?$/i.test(sl.name.trim())) warnings.push(`${tag}/tasks.md: slice "${sl.name}" is named after a layer; a slice should be one user-observable path through all layers (tracer bullet)`);
+    }
     if (/\{\{\w+\}\}|^…$/m.test(c.body)) warnings.push(`${tag}/change.md still has template placeholders`);
     for (const e of c.ledger) {
       if (e.kind === 'verify' && (e.exit === null || !e.command)) errors.push(`${tag}/ledger.md: Verify entry "${e.title}" needs a \`command\` and "exit N"`);

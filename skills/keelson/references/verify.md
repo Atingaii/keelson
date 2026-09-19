@@ -16,6 +16,8 @@ Before saying done, fixed, passing, or complete: run `keelson check --record "<c
 
 If a check cannot run (environment missing, service down), say so in the ledger as a `Note:` and in `NOW.md → Blocked / uncertain`. Partial verification is reported as partial; it is never rounded up.
 
+Checks in `config.yaml → check` may be plain strings or `{name, command, kind}` entries; `kind` is one of `test`, `lint`, `typecheck`, `build`, `fitness`, or `check`. A `fitness` check is an architecture or quality constraint turned into a command (dependency direction, interface compatibility, a latency budget). Mechanical evidence is this whole set passing on the current tree. It is necessary and never sufficient.
+
 ## Content validity: does the evidence cover the request?
 <!-- keelson: id=verify.content | without: tests pass and the requirement is still unmet; the implementer's summary is reviewed instead of the owner's request | sunset: never -->
 

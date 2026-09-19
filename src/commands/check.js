@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
-import { loadConfig } from '../lib/config.js';
+import { loadConfig, checkEntries } from '../lib/config.js';
 import { write, mkdirp, readOr } from '../lib/fs.js';
 import { loadAllChanges } from '../lib/changes.js';
 import { worktreeFingerprint } from '../lib/git.js';
@@ -15,7 +15,8 @@ export async function check({ flags, positional }, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
   const cfg = loadConfig(projectPaths(root).config);
   const p = projectPaths(root, cfg);
-  const cmds = positional.length ? [positional.join(' ')] : (cfg.check ?? []);
+  const entries = positional.length ? [{ name: positional.join(' '), command: positional.join(' '), kind: 'check' }] : checkEntries(cfg);
+  const cmds = entries.map((e) => e.command);
   if (!cmds.length) {
     warn('no check commands configured. Add them under `check:` in .keelson/config.yaml, e.g. `- npm test`.');
     return 0;
@@ -24,15 +25,16 @@ export async function check({ flags, positional }, cwd = process.cwd()) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   mkdirp(p.evidence);
   const results = [];
-  for (const [i, cmd] of cmds.entries()) {
+  for (const [i, entry] of entries.entries()) {
+    const cmd = entry.command;
     const r = spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8', env: { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0' } });
     const code = r.status ?? 1;
     const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
     if (!flags.quiet && out.trim()) process.stdout.write(out.endsWith('\n') ? out : out + '\n');
     const file = path.join(p.evidence, `${stamp}-${i + 1}.log`);
     write(file, `$ ${cmd}\nexit ${code}\n\n${out}`);
-    results.push({ cmd, exit: code, evidence: path.relative(root, file) });
-    (code === 0 ? ok : fail)(`\`${cmd}\` exit ${code}`);
+    results.push({ cmd, name: entry.name, kind: entry.kind, exit: code, evidence: path.relative(root, file) });
+    (code === 0 ? ok : fail)(`${entry.name !== cmd ? `${entry.name} (${entry.kind}) ` : ''}\`${cmd}\` exit ${code}`);
   }
   const failed = results.filter((r) => r.exit !== 0);
   const tree = worktreeFingerprint(root);

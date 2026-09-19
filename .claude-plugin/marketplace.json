@@ -12,7 +12,7 @@
       "name": "keelson",
       "source": "./",
       "description": "A load-bearing workflow layer for coding agents. Install the CLI (npm i -g keelson) and run `keelson init` in your project for hooks and the resident block.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "Atingaii"
       },

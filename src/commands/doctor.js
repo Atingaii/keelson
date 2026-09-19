@@ -8,6 +8,7 @@ import { validateProject } from './validate.js';
 import { projectStatus } from './status.js';
 import { parseFrontmatter } from '../lib/markdown.js';
 import { detectLocal } from '../lib/models.js';
+import { knowledgeHealth } from '../lib/health.js';
 import { ok, warn, fail, heading, dim } from '../lib/out.js';
 
 const require = createRequire(import.meta.url);
@@ -62,10 +63,14 @@ export async function doctor({ flags }, cwd = process.cwd()) {
   }
   for (const k of st.conflicts) add('warn', `shared contract between ${k.a} and ${k.b}: ${[...k.capabilities, ...k.paths].join(', ')}`);
 
+  const health = knowledgeHealth(root, cfg, p);
+  for (const h of health) add(h.level, `${h.kind}: ${h.text} → ${h.fix}`);
+
   const det = detectLocal();
   for (const t of cfg.tools ?? []) if (det.tools[t] && !det.tools[t].installed) add('info', `${PLATFORMS[t]?.label ?? t} CLI not found on PATH (fine if you use it through an IDE)`);
 
   heading(`keelson doctor — ${path.basename(root)} ${dim(`(keelson ${PKG_VERSION})`)}`);
+  if (health.length) console.log(dim('knowledge health: findings are suggestions for small compactions, never automatic rewrites'));
   for (const f of findings) (f.level === 'error' ? fail : f.level === 'warn' ? warn : ok)(f.text);
   const errs = findings.filter((f) => f.level === 'error').length;
   if (!findings.length) ok('everything in place');

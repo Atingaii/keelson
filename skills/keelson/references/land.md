@@ -33,6 +33,10 @@ When another change modified a shared contract, the target branch, or the verifi
 
 Release state is derived from git tags: `keelson status` lists changes landed since the last tag as unreleased. A change with a **Rollout** section is not complete until its steps have run; keep them in `NOW.md → Next` until they have. Keelson can remind; it never performs production operations itself.
 
+## Reconcile before you archive
+
+Landing merges the delta and the decisions. The rest of what the change taught (a new term, a moved responsibility, a quality number, a constraint that can be a check, a defect that deserves a regression test) is routed by `references/reconcile.md`. Do that pass before `keelson land`, so the truth files and the code share the landing commit.
+
 ## Promote learnings, and file the debt
 <!-- keelson: id=land.promote | without: the same convention is rediscovered in every change; defects found late become folklore instead of checks | sunset: never -->
 

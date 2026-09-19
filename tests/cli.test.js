@@ -81,7 +81,7 @@ test('change lifecycle: new → gates → check --record → land folds specs an
   // main spec moved → drift
   write(dir, '.keelson/specs/orders/spec.md', read(dir, '.keelson/specs/orders/spec.md') + '\n## Requirement: Extra\nx\n### Scenario: y\n- WHEN\n- THEN\n');
   assert.match(run(dir, ['land', '--confirm-assumptions'], { env, allowFail: true }).stderr, /changed since this delta was written/);
-  run(dir, ['land', '--confirm-assumptions', '--accept-drift', '--now', 'Nothing in flight.'], { env });
+  run(dir, ['land', '--confirm-assumptions', '--accept-drift', '--now', '# Now\n\nNothing in flight.'], { env });
   assert.ok(!exists(dir, '.keelson/changes/add-pagination'));
   const spec = read(dir, '.keelson/specs/orders/spec.md');
   assert.match(spec, /## Requirement: Page size/);
@@ -89,6 +89,7 @@ test('change lifecycle: new → gates → check --record → land folds specs an
   assert.match(spec, /- orders: offset pagination over cursor/);
   assert.match(spec, /- orders: oversized pages are clamped/);
   assert.match(read(dir, '.keelson/NOW.md'), /Nothing in flight/);
+  assert.equal((read(dir, '.keelson/NOW.md').match(/^# Now$/gm) || []).length, 1);
 });
 
 test('land --keep archives instead of folding', () => {
@@ -218,7 +219,7 @@ test('init references existing project material and ignores .keelson/.local', ()
   execFileSync('git', ['remote', 'add', 'origin', 'git@github.com:acme/shop.git'], { cwd: dir });
   run(dir, ['init', '--no-hooks'], { env });
   const cfg = read(dir, '.keelson/config.yaml');
-  assert.match(cfg, /^version: 2$/m);
+  assert.match(cfg, /^version: 3$/m);
   assert.match(cfg, /decisions: docs\/adr/);
   assert.match(cfg, /architecture: ARCHITECTURE\.md/);
   assert.match(cfg, /tasks: https:\/\/github\.com\/acme\/shop\/issues/);
@@ -235,12 +236,13 @@ test('update migrates a v1 config and --dry-run writes nothing', () => {
   run(dir, ['init', '--no-hooks'], { env });
   write(dir, '.keelson/config.yaml', 'version: 1\ntools:\n  - claude\ncheck:\n  - echo hi\n');
   const dry = run(dir, ['update', '--dry-run'], { env }).stdout;
-  assert.match(dry, /migrate\s+\.keelson\/config\.yaml v1 → v2/);
+  assert.match(dry, /migrate\s+\.keelson\/config\.yaml v1 → v3/);
   assert.match(read(dir, '.keelson/config.yaml'), /^version: 1$/m);
   run(dir, ['update'], { env });
   const cfg = read(dir, '.keelson/config.yaml');
-  assert.match(cfg, /^version: 2$/m);
+  assert.match(cfg, /^version: 3$/m);
   assert.match(cfg, /- echo hi/);
+  assert.match(cfg, /budgets:/);
   assert.match(cfg, /specs: \.keelson\/specs/);
 });
 
@@ -309,4 +311,29 @@ test('breaking change without Rollout is refused at landing', () => {
   write(dir, '.keelson/changes/drop-v1/tasks.md', '- [x] 1. a (effort: light)\n');
   write(dir, '.keelson/changes/drop-v1/ledger.md', '### Verify: ok\n`true` exit 0\n');
   assert.match(run(dir, ['land'], { env, allowFail: true }).stderr, /BREAKING.*Rollout/);
+});
+
+test('guide flag adds the guided line; named checks run with kinds; doctor reports knowledge health', () => {
+  const dir = tmpProject({ 'package.json': '{"name":"x"}' });
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  run(dir, ['init', '--no-hooks', '--guide'], { env });
+  assert.match(read(dir, 'CLAUDE.md'), /Guided mode is on/);
+  assert.match(read(dir, '.keelson/config.yaml'), /^guide: true$/m);
+  assert.ok(exists(dir, '.keelson/GLOSSARY.md'));
+  write(dir, '.keelson/config.yaml', read(dir, '.keelson/config.yaml').replace(/^check: \[\]$/m, 'check:\n  - name: unit\n    command: "exit 0"\n    kind: test\n  - name: deps\n    command: "exit 0"\n    kind: fitness\n'));
+  const tailJson = (out) => JSON.parse(out.slice(out.indexOf('\n{') + 1));
+  const r = tailJson(run(dir, ['check', '--quiet', '--json'], { env }).stdout);
+  assert.deepEqual(r.results.map((x) => [x.name, x.kind, x.exit]), [['unit', 'test', 0], ['deps', 'fitness', 0]]);
+  write(dir, '.keelson/INTENT.md', '# x\n\n## Why this exists\nReal.\n' + 'filler line\n'.repeat(130));
+  write(dir, '.keelson/specs/a/spec.md', '# a\n\n## Requirement: Shared\nx\n### Scenario: s\n- WHEN\n- THEN\n');
+  write(dir, '.keelson/specs/b/spec.md', '# b\n\n## Requirement: Shared\nThis was changed to y in 2026-01 and moved.\n### Scenario: s\n- WHEN\n- THEN\n');
+  const doc = tailJson(run(dir, ['doctor', '--json'], { env, allowFail: true }).stdout);
+  const texts = doc.findings.map((f) => f.text);
+  assert.ok(texts.some((t) => /budget: INTENT\.md is 1\d\d lines/.test(t)), texts.join('\n'));
+  assert.ok(texts.some((t) => /duplicate: requirement "Shared"/.test(t)));
+  assert.ok(texts.some((t) => /narrative: .*specs\/b/.test(t)));
+  run(dir, ['new', 'layered'], { env });
+  write(dir, '.keelson/changes/layered/tasks.md', '## Slice: Database\nDelivers: tables\n- [ ] 1. a (effort: light)\n');
+  const v = JSON.parse(run(dir, ['validate', '--json'], { env }).stdout);
+  assert.ok(v.warnings.some((w) => /named after a layer/.test(w)));
 });

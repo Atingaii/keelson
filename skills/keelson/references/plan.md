@@ -65,6 +65,11 @@ Delivers: every access path refuses a revoked or expired link
 
 Right-size: a task is the smallest unit a reviewer could reject on its own. Split where a reviewer could accept one half and reject the other. A slice is the smallest unit the owner could accept on its own.
 
+### Slices are vertical
+<!-- keelson: id=plan.tracer-bullet | without: the schema, then the backend, then the frontend are each finished before anything runs end to end, and the mismatch between them is found last | sunset: never -->
+
+A slice is one real user action carried through every layer it touches (interface, API, domain, storage, response, test), thin but complete, before the next action is started. The first slice of a feature is the narrowest path that proves the layers fit: for "create issue", the form, the endpoint, validation, the domain object, the row, the response, the rendered result, and one test. Update, delete, and comment come after it runs. `keelson validate` warns when a slice is named after a layer ("database", "backend", "UI"). A layer-shaped task inside a vertical slice is fine; a layer-shaped slice is not.
+
 ### Effort tiers
 <!-- keelson: id=plan.effort | without: every task runs on the most expensive model, or the cheapest one handles design decisions | sunset: when retro shows light-tier first-pass rate above 90% for 100 dispatches, relax the light criteria -->
 

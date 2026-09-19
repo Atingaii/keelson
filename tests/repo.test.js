@@ -39,7 +39,7 @@ test('every guidance section carries without and sunset; SKILL.md stays short', 
       const notes = [...txt.matchAll(/<!--\s*keelson:([^>]*)-->/g)];
       assert.ok(notes.length >= 2, `${lang}/references/${f} has annotations`);
       for (const n of notes) assert.match(n[1], /id=[\w.-]+\s*\|\s*without:.+\|\s*sunset:.+/s, `${lang}/references/${f}: ${n[1]}`);
-      assert.doesNotMatch(applyProfile(txt, 'lean'), /guided/);
+      assert.doesNotMatch(applyProfile(txt, 'lean'), /<!-- \/?guided -->/);
       assert.equal((txt.match(/<!-- guided -->/g) || []).length, (txt.match(/<!-- \/guided -->/g) || []).length);
     }
   }
@@ -61,5 +61,7 @@ test('config migration is pure and idempotent', async () => {
   assert.equal(v1.version, CONFIG_VERSION);
   assert.deepEqual(v1.check, ['npm test']);
   assert.equal(v1.paths.specs, '.keelson/specs');
+  assert.equal(v1.budgets.spec, 250);
+  assert.equal(v1.guide, false);
   assert.equal(parseConfig('').version, CONFIG_VERSION);
 });

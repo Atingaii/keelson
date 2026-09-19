@@ -1,7 +1,7 @@
 import YAML from 'yaml';
 import { readOr, write } from './fs.js';
 
-export const CONFIG_VERSION = 2;
+export const CONFIG_VERSION = 3;
 
 export const DEFAULT_CONFIG = {
   version: CONFIG_VERSION,
@@ -12,6 +12,8 @@ export const DEFAULT_CONFIG = {
   confirm: { quick: 'proceed', spec: 'wait' },
   land: 'fold',
   check: [],
+  guide: false,
+  budgets: { INTENT: 120, ROADMAP: 80, NOW: 60, GLOSSARY: 200, spec: 250, rule: 120, change: 200, handoff: 100, 'always-on': 300 },
   context: '',
   paths: { specs: '.keelson/specs' },
   refs: { architecture: null, decisions: null, tasks: null, ci: null },
@@ -42,6 +44,10 @@ export function migrate(cfg, fromVersion) {
     out.paths = { ...DEFAULT_CONFIG.paths, ...(out.paths ?? {}) };
     out.refs = { ...DEFAULT_CONFIG.refs, ...(out.refs ?? {}) };
   }
+  if (fromVersion < 3) {
+    out.budgets = { ...DEFAULT_CONFIG.budgets, ...(out.budgets ?? {}) };
+    out.guide = Boolean(out.guide);
+  }
   out.version = CONFIG_VERSION;
   return out;
 }
@@ -55,6 +61,8 @@ export function renderConfig(cfg) {
   return [
     '# Keelson project configuration. Every key is optional; defaults are shown.',
     '# paths.specs: where behaviour contracts live. refs.*: existing project material, referenced, never copied.',
+    '# check: commands (strings, or {name, command, kind}) that prove the code works. guide: true when the owner is learning engineering.',
+    '# budgets: line budgets per document type; `keelson doctor` asks for a compaction when one is exceeded.',
     '# Docs: https://github.com/Atingaii/keelson/blob/main/docs/configuration.md',
     doc.toString(),
   ].join('\n');
@@ -68,4 +76,23 @@ function deepMerge(base, extra) {
     out[k] = typeof v === 'object' && v !== null && !Array.isArray(v) && typeof base[k] === 'object' && base[k] !== null ? deepMerge(base[k], v) : v;
   }
   return out;
+}
+
+/** Normalise `check:` entries: a string, or {name, command, kind}. */
+export function checkEntries(cfg) {
+  return (cfg.check ?? []).map((c, i) => {
+    if (typeof c === 'string') return { name: c, command: c, kind: guessKind(c) };
+    const command = c.command ?? c.cmd ?? '';
+    return { name: c.name ?? command ?? `check-${i + 1}`, command, kind: c.kind ?? guessKind(command) };
+  }).filter((c) => c.command);
+}
+
+function guessKind(cmd) {
+  const c = String(cmd).toLowerCase();
+  if (/lint|eslint|ruff|clippy|vet|fmt/.test(c)) return 'lint';
+  if (/tsc|typecheck|type-check|mypy|pyright/.test(c)) return 'typecheck';
+  if (/build|compile/.test(c)) return 'build';
+  if (/architecture|arch|depend|boundary|compat|contract/.test(c)) return 'fitness';
+  if (/test|spec|pytest|jest|vitest|mocha/.test(c)) return 'test';
+  return 'check';
 }
