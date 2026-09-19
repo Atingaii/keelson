@@ -34,24 +34,25 @@ Keelson 是代理环境里的三个表面，加上仓库里的一个事实目录
 
 ## 技能
 
-`init` 把技能复制到工具的技能目录（`.claude/skills/keelson/` 或 `.agents/skills/keelson/`），并把包版本盖进 `SKILL.md` 的 frontmatter，好让 `keelson doctor` 发现过期的安装。它包含 `SKILL.md` 和十二个 reference：
+`init` 把技能复制到工具的技能目录（`.claude/skills/keelson/` 或 `.agents/skills/keelson/`），并把包版本盖进 `SKILL.md` 的 frontmatter，好让 `keelson doctor` 发现过期的安装。它包含 `SKILL.md` 和十三个 reference：
 
 | Reference | 何时阅读 |
 |---|---|
-| `discover.md` | 所有者不确定自己想要什么，或者正在学习：先场景后技术、哪些未知该问、范围守卫、承诺前先探索、引导模式 |
-| `shape.md` | 理解想要什么：先查事实、写回、决策状态、停止规则、访谈、授权、无人值守运行、定大小 |
+| `discover.md` | 所有者不确定自己想要什么，或者正在学习：先场景后技术、缺口归属、一个最高价值问题、范围守卫、承诺前先探索、引导模式 |
+| `shape.md` | 理解想要什么：先查事实、假设审计、写回、决策状态、停止规则、单问题访谈、授权、无人值守运行、定大小 |
 | `model.md` | 用词或边界开始漂移：术语表与限界上下文、边界与不变量、深模块、设计两次 |
 | `context.md` | 知道代码触及什么：三层上下文、影响分析、预算 |
 | `plan.md` | 创建 `change.md`、纵向切片、验收、delta specs、effort 层级、与已有跟踪器配合 |
 | `engineer.md` | 一个设计或可靠性问题：按交付、结构、演进、运行分组的工程视角；作为词汇的命名模式；作为数字的质量目标 |
 | `build.md` | 执行任务：裁定、按层级分派子代理、升级、并行工作、让工件保持真实 |
 | `verify.md` | 记录有效性、内容有效性、不悄悄弱化测试、陌生读者评审、完成报告 |
+| `harness.md` | 演进控制系统：不变量、前馈/反馈放置、重复失败升级、baseline、sunset 条件 |
 | `handoff.md` | 什么放哪里、写交接、安全恢复、`NOW.md` |
 | `land.md` | 落地门禁、代码与 specs 一起评审、相撞、发布状态、经验提升 |
 | `reconcile.md` | 把新事实写回并保持项目精简：每条事实的去处、重写不追加、预算与压缩、整理节奏 |
 | `debug.md` | 复现、定位、修复、命名根因类别 |
 
-`SKILL.md` 按需要路由。代理一次读一个 reference。每条准则带一段隐藏的 HTML 注释，含 `id`、它防止的失败（`without`）和删除条件（`sunset`）。`keelson retro` 读取这些注释。
+`SKILL.md` 按需要路由。代理一次读一个 reference。BOUND 阶段遇到有实质歧义的工作时，会先做紧凑的假设审计，并且一次最多只问一个由用户掌握、真正阻塞结果的问题；审计过程本身不落盘，真正有长期价值的结果才会路由进 `change.md`、specs、rules 或术语表。每条准则带一段隐藏的 HTML 注释，含 `id`、它防止的失败（`without`）和删除条件（`sunset`）。`keelson retro` 读取这些注释。
 
 `profile` 决定发出多少文本。`lean` 剥掉标记为 `<!-- guided -->` 的块。`guided` 保留它们。
 
@@ -61,7 +62,7 @@ Keelson 是代理环境里的三个表面，加上仓库里的一个事实目录
 
 ```text
 change.md      frontmatter (tier, created, status, owner, branch, worktree, depends, touches)
-               + Why, What [, How, Alternatives, Impact], Acceptance, Open questions [, Rollout], Decisions
+               + Why, What（结果 + 非目标）[, How, Alternatives, Impact], Acceptance, Open questions [, Rollout], Decisions
 tasks.md       "## Slice: name" + "Delivers: …" + checkbox tasks with (effort: tier) and verify: `cmd`
 ledger.md      append-only ### entries
 handoff.md     created by `keelson handoff`, stamped with at/updated/by

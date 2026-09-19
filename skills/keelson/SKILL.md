@@ -18,7 +18,7 @@ If `NOW.md` starts with "First contact", nobody has drafted the project's facts 
 Every non-trivial change follows **ORIENT → BOUND → BUILD → SENSE → RECONCILE**. Do not skip a state because the chat already seems to contain it.
 
 - **ORIENT** — inspect the worktree, then run `keelson context --paths <files you expect to touch>`; before editing a shared module run `keelson impact <files>`. Read the matched spec/rules instead of relying on memory.
-- **BOUND** — classify the change below, write back what you understand, surface assumptions, and make the acceptance boundary explicit before implementation grows.
+- **BOUND** — classify the change below, write back what you understand, audit material assumptions, and make the acceptance boundary explicit before implementation grows. If a user-owned gap can change the next slice, ask one highest-value question before coding.
 - **BUILD** — work one vertical slice at a time; keep unrelated cleanup out of the slice; keep change artifacts true as decisions move.
 - **SENSE** — run the cheapest relevant test/lint/type/fitness check while working; before any completion claim run fresh recorded verification with `keelson check --record`.
 - **RECONCILE** — write durable facts back to specs/rules/glossary/NOW, hand off cleanly if unfinished, and promote recurring failure patterns into a scoped rule or executable check rather than adding chat lore.

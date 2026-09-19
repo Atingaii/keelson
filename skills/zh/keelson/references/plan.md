@@ -24,6 +24,19 @@
 - **Rollout** — 仅用于破坏性变更、迁移或生产步骤。
 - **Decisions** — `- capability: decision; rejected option and why`，现在时。工作假设写成 `- (assumed) capability: …`。落地时折叠进该能力的 spec。
 
+## 把审计结果路由到已有工件
+<!-- keelson: id=plan.assumption-routing | without: clarification creates a new diary document, or critical assumptions stay only in chat and disappear across sessions | sunset: never -->
+
+假设审计只是对话中的临时工作区，不再新建一份永久文档。只有会影响未来工作的内容才沉淀：
+
+- 明确的结果或非目标 → `change.md → What`；
+- 为了继续工作而采用的工作假设 → `change.md → Decisions`，标为 `(assumed)`；
+- 仍未回答、由用户掌握且会阻塞工作的缺口 → `change.md → Open questions`，写清阻塞什么；
+- 已确认的可观察行为 → `Acceptance`；spec 档的行为还要写进 delta spec；
+- 过程中发现的稳定术语或工程不变量 → `GLOSSARY.md`、窄范围 rule 或 fitness check。
+
+变更落地以后，临时盘问过程随着 change 脚手架消失；留下来的只有当前行为、长期决策、规则、词汇和带证据的检查。
+
 ## Delta specs（spec 档）
 <!-- keelson: id=plan.delta | without: 没人重写整份 spec，行为契约就渐渐偏离代码 | sunset: never -->
 
