@@ -21,11 +21,16 @@ export async function focus({ flags, positional }, cwd = process.cwd()) {
   const session = readSession(root);
 
   if (!session.available) {
-    const payload = { available: false, focus: null, candidates: changes.map((c) => c.name) };
+    const candidate = candidatesFor(root, changes);
+    const requested = positional[0] ?? null;
+    if (requested && !loadChange(p.changes, requested)) throw new Error(`no active change named "${requested}"`);
+    const suggested = requested ?? (flags.auto ? candidate.preferred?.name ?? null : null);
+    const payload = { available: false, focus: null, suggested, reason: requested ? 'explicit' : candidate.reason, candidates: changes.map((c) => c.name) };
     if (flags.json) console.log(JSON.stringify(payload, null, 2));
     else {
-      warn('session identity is unavailable; work can continue, but Keelson cannot persist a per-session focus pointer');
-      if (changes.length) info(`active changes: ${changes.map((c) => c.name).join(', ')}`);
+      warn('session identity is unavailable; Keelson will not persist a shared/global focus because parallel sessions could cross-wire');
+      if (suggested) info(`use ${suggested} explicitly for this work (${requested ? 'requested' : candidate.reason}); commands accept a change name/--change where needed`);
+      else if (changes.length) info(`active changes: ${changes.map((c) => c.name).join(', ')}`);
     }
     return 0;
   }
