@@ -16,6 +16,32 @@ export const listFiles = (p) =>
   isDir(p) ? fs.readdirSync(p, { withFileTypes: true }).filter((d) => d.isFile()).map((d) => d.name).sort() : [];
 export const rmrf = (p) => fs.rmSync(p, { recursive: true, force: true });
 export const copyDir = (from, to, opts = {}) => fs.cpSync(from, to, { recursive: true, ...opts });
+
+/**
+ * Replace a generated directory without deleting the last good copy first.
+ * A fixed sibling backup makes an interrupted replacement recoverable on the next run.
+ */
+export function replaceDirSafe(dest, populate) {
+  const tmp = `${dest}.keelson-tmp`;
+  const bak = `${dest}.keelson-bak`;
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+
+  if (!exists(dest) && exists(bak)) fs.renameSync(bak, dest);
+  if (exists(tmp)) rmrf(tmp);
+  if (exists(bak) && exists(dest)) rmrf(bak);
+
+  fs.mkdirSync(tmp, { recursive: true });
+  try {
+    populate(tmp);
+    if (exists(dest)) fs.renameSync(dest, bak);
+    fs.renameSync(tmp, dest);
+    if (exists(bak)) rmrf(bak);
+  } catch (error) {
+    if (exists(tmp)) rmrf(tmp);
+    if (!exists(dest) && exists(bak)) fs.renameSync(bak, dest);
+    throw error;
+  }
+}
 export const writeJson = (p, obj) => write(p, JSON.stringify(obj, null, 2) + '\n');
 export const readJson = (p, fallback = null) => {
   if (!exists(p)) return fallback;

@@ -59,7 +59,7 @@ Two failures on boundary handling.
 4. 注册表里该平台的 `tiers` 映射。
 5. 注册表里该平台的 `rank` 列表：第一项给 `light`，第二项给 `standard`，最后一项给 `deep`。
 
-平台是 `--platform`，否则是 `config.yaml → tools` 的第一项，否则是 `claude`。
+平台优先取 `--platform`，否则取 `config.yaml → tools` 的第一项。只使用通用 `agents` 层的项目没有模型映射，除非用户用 `--platform` 点名一个一等公民宿主。
 
 ## 注册表
 
@@ -98,4 +98,4 @@ Two failures on boundary handling.
 
 ## 本地探测
 
-`keelson init` 和 `keelson models --detect` 在不联网的情况下扫描本机：`claude`、`codex`、`gemini`、`opencode`、`cursor-agent` 中哪些在 PATH 上及其版本；`~/.claude/settings.json`、`~/.codex/config.toml`、`ANTHROPIC_MODEL` 和 `OPENAI_MODEL` 里的默认模型；以及设置了哪些 provider API key。结果缓存在 `~/.keelson/models.cache.json`，由 `keelson models` 显示。缓存 24 小时后标记为过期。
+`keelson init` 和 `keelson models --detect` 在不联网的情况下扫描 7 个一等公民 CLI（`claude`、`codex`、`opencode`、`pi`、`gemini`、`kiro-cli`、`codebuddy`）是否在 PATH 上及其版本；`~/.claude/settings.json`、`~/.codex/config.toml`、`ANTHROPIC_MODEL` 和 `OPENAI_MODEL` 里的默认模型；以及设置了哪些 provider API key。结果缓存在 `~/.keelson/models.cache.json`，由 `keelson models` 显示。缓存 24 小时后标记为过期。

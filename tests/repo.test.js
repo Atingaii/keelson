@@ -1,10 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
-import { walk } from '../src/lib/fs.js';
+import { replaceDirSafe, walk } from '../src/lib/fs.js';
 import { datedIdPatterns } from '../src/lib/models.js';
-import { applyProfile, stampVersion } from '../src/platforms/index.js';
+import { applyProfile, renderSkillFiles, stampVersion, workflowContent } from '../src/platforms/index.js';
 
 const ROOT = path.resolve('.');
 const patterns = datedIdPatterns();
@@ -19,6 +20,30 @@ test('no dated model IDs in registry, skills, hooks, or docs', () => {
   }
   for (const f of ['README.md', 'README_CN.md']) if (fs.existsSync(path.join(ROOT, f))) for (const re of patterns) if (re.test(fs.readFileSync(path.join(ROOT, f), 'utf8'))) offenders.push(f);
   assert.deepEqual(offenders, []);
+});
+
+test('generated directory replacement preserves the last good copy across failure and interrupted residue', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'keelson-replace-'));
+  const dest = path.join(root, 'skill');
+  fs.mkdirSync(dest, { recursive: true });
+  fs.writeFileSync(path.join(dest, 'state.txt'), 'old');
+
+  assert.throws(() => replaceDirSafe(dest, (tmp) => {
+    fs.writeFileSync(path.join(tmp, 'state.txt'), 'partial');
+    throw new Error('boom');
+  }), /boom/);
+  assert.equal(fs.readFileSync(path.join(dest, 'state.txt'), 'utf8'), 'old');
+  assert.equal(fs.existsSync(dest + '.keelson-tmp'), false);
+  assert.equal(fs.existsSync(dest + '.keelson-bak'), false);
+
+  fs.renameSync(dest, dest + '.keelson-bak');
+  fs.mkdirSync(dest + '.keelson-tmp', { recursive: true });
+  fs.writeFileSync(path.join(dest + '.keelson-tmp', 'state.txt'), 'crash-partial');
+
+  replaceDirSafe(dest, (tmp) => fs.writeFileSync(path.join(tmp, 'state.txt'), 'new'));
+  assert.equal(fs.readFileSync(path.join(dest, 'state.txt'), 'utf8'), 'new');
+  assert.equal(fs.existsSync(dest + '.keelson-tmp'), false);
+  assert.equal(fs.existsSync(dest + '.keelson-bak'), false);
 });
 
 test('English and Chinese skills have the same files and the same guidance ids', () => {
@@ -45,21 +70,30 @@ test('every guidance section carries without and sunset; SKILL.md stays short', 
   }
 });
 
-test('resident instructions stay a small map into the skill', () => {
+test('resident instructions are discovery-only shims into .keelson', () => {
   for (const lang of ['skills/keelson', 'skills/zh/keelson']) {
     const block = fs.readFileSync(path.join(ROOT, lang, 'templates', 'resident-block.md'), 'utf8');
-    assert.ok(block.split('\n').length <= 20, `${lang}/templates/resident-block.md ≤ 20 lines`);
-    assert.match(block, /keelson context --paths/);
-    assert.match(block, /keelson check --record/);
-    assert.match(block, /keelson retro/);
-    assert.match(block, /skill/i);
+    assert.ok(block.split('\n').length <= 10, `${lang}/templates/resident-block.md ≤ 10 lines`);
+    assert.match(block, /\.keelson\/workflow\.md/);
+    assert.match(block, /\.keelson\/skill\/SKILL\.md/);
+    assert.doesNotMatch(block, /keelson context --paths/);
   }
 });
 
-test('repository dogfood skill exposes every canonical reference', () => {
-  const canonical = walk(path.join(ROOT, 'skills', 'keelson', 'references'));
-  const dogfood = walk(path.join(ROOT, '.claude', 'skills', 'keelson', 'references'));
-  assert.deepEqual(dogfood, canonical);
+test('repository dogfood runtime exactly matches the generated lean canonical runtime and only shims outside', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  const rendered = renderSkillFiles('en', 'lean', pkg.version);
+  assert.deepEqual(walk(path.join(ROOT, '.keelson', 'skill')), rendered.map((f) => f.rel).sort());
+  for (const f of rendered) {
+    assert.equal(fs.readFileSync(path.join(ROOT, '.keelson', 'skill', f.rel), 'utf8').replace(/\r\n?/g, '\n'), f.content, `.keelson/skill/${f.rel}`);
+  }
+  assert.equal(fs.readFileSync(path.join(ROOT, '.keelson', 'workflow.md'), 'utf8').replace(/\r\n?/g, '\n'), workflowContent('en', false));
+  for (const shim of ['.claude/skills/keelson', '.agents/skills/keelson']) {
+    assert.deepEqual(walk(path.join(ROOT, shim)), ['SKILL.md']);
+    assert.match(fs.readFileSync(path.join(ROOT, shim, 'SKILL.md'), 'utf8'), /\.keelson\/skill\/SKILL\.md/);
+  }
+  assert.match(fs.readFileSync(path.join(ROOT, 'CLAUDE.md'), 'utf8'), /\.keelson\/workflow\.md/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'AGENTS.md'), 'utf8'), /\.keelson\/workflow\.md/);
 });
 
 test('shaping audits assumptions without turning clarification into ceremony', () => {
@@ -88,17 +122,33 @@ test('skill frontmatter stamping is CRLF-safe and emits LF', () => {
   assert.doesNotMatch(out, /\r/);
 });
 
-test('platform registry retains the broad host compatibility contract', () => {
+test('platform registry exposes exactly seven first-class hosts plus the portable fallback', () => {
   const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'platforms.json'), 'utf8'));
-  const expected = ['claude', 'cursor', 'opencode', 'codex', 'kiro', 'kilo', 'gemini', 'antigravity', 'devin', 'qoder', 'codebuddy', 'copilot', 'droid', 'pi', 'ohmypi', 'reasonix', 'zcode', 'trae', 'grok', 'kimi', 'snow', 'agents'];
-  for (const id of expected) assert.ok(reg.platforms[id], `missing platform: ${id}`);
+  const firstClass = ['claude', 'codex', 'opencode', 'pi', 'gemini', 'kiro', 'codebuddy'];
+  assert.deepEqual(Object.keys(reg.platforms).sort(), [...firstClass, 'agents'].sort());
+  for (const id of firstClass) {
+    assert.equal(reg.platforms[id].support, 'first-class', id);
+    assert.notEqual(reg.platforms[id].confidence, 'convention', id);
+    assert.equal(reg.platforms[id].rulesFile, undefined, `${id}: no duplicate host rule file`);
+  }
+  assert.equal(reg.platforms.agents.support, 'portable');
+  assert.equal(reg.platforms.agents.skillsDir, '.agents/skills');
+  assert.match(reg.platforms.agents.examples, /Any host/);
 });
 
-test('platform registry keeps the portable Agent Skills fallback and detects Copilot CLI', () => {
-  const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'platforms.json'), 'utf8'));
-  assert.equal(reg.platforms.copilot.bin, 'copilot');
-  assert.equal(reg.platforms.agents.skillsDir, '.agents/skills');
-  assert.match(reg.platforms.agents.examples, /Amp/);
+test('first-class host discovery paths match their documented integration model', () => {
+  const p = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'platforms.json'), 'utf8')).platforms;
+
+  for (const id of ['codex', 'opencode', 'pi']) {
+    assert.equal(p[id].instructions, 'AGENTS.md', id);
+    assert.equal(p[id].skillsDir, '.agents/skills', id);
+  }
+
+  assert.deepEqual([p.claude.instructions, p.claude.skillsDir, p.claude.hooks], ['CLAUDE.md', '.claude/skills', true]);
+  assert.deepEqual([p.gemini.instructions, p.gemini.skillsDir], ['GEMINI.md', '.agents/skills']);
+  assert.deepEqual([p.kiro.instructions, p.kiro.skillsDir], ['AGENTS.md', '.kiro/skills']);
+  assert.deepEqual([p.codebuddy.instructions, p.codebuddy.skillsDir], ['CODEBUDDY.md', '.codebuddy/skills']);
+
   for (const lang of ['skills/keelson', 'skills/zh/keelson']) {
     const map = fs.readFileSync(path.join(ROOT, lang, 'templates', 'README.md'), 'utf8');
     assert.match(map, /NOW\.md/);
@@ -107,23 +157,9 @@ test('platform registry keeps the portable Agent Skills fallback and detects Cop
   }
 });
 
-test('documented hosts reuse the portable surface unless a native skill path adds capability', () => {
-  const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'platforms.json'), 'utf8'));
-
-  for (const id of ['cursor', 'copilot', 'kilo']) {
-    assert.equal(reg.platforms[id].instructions, 'AGENTS.md', `${id} should reuse AGENTS.md`);
-    assert.equal(reg.platforms[id].skillsDir, '.agents/skills', `${id} should reuse .agents/skills`);
-    assert.equal(reg.platforms[id].rulesFile, undefined, `${id} should not add a duplicate always-on rule`);
-  }
-
-  assert.equal(reg.platforms.kiro.instructions, 'AGENTS.md');
-  assert.equal(reg.platforms.kiro.skillsDir, '.kiro/skills');
-  assert.equal(reg.platforms.kiro.instructionsFormat, undefined);
-
-  assert.equal(reg.platforms.qoder.instructions, 'AGENTS.md');
-  assert.equal(reg.platforms.qoder.skillsDir, '.qoder/skills');
-  assert.equal(reg.platforms.qoder.confidence, 'documented');
-  assert.equal(reg.platforms.qoder.rulesFile, undefined);
+test('model registry is bounded to the seven first-class hosts', () => {
+  const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'models.json'), 'utf8'));
+  assert.deepEqual(Object.keys(reg.platforms).sort(), ['claude', 'codex', 'opencode', 'pi', 'gemini', 'kiro', 'codebuddy'].sort());
 });
 
 test('registry tiers point at aliases that exist in the platform rank', () => {
@@ -144,5 +180,8 @@ test('config migration is pure and idempotent', async () => {
   assert.equal(v1.paths.specs, '.keelson/specs');
   assert.equal(v1.budgets.spec, 250);
   assert.equal(v1.guide, false);
+  assert.equal(v1.hooks, true);
+  assert.deepEqual(parseConfig('').tools, ['agents']);
+  assert.equal(parseConfig('').hooks, true);
   assert.equal(parseConfig('').version, CONFIG_VERSION);
 });

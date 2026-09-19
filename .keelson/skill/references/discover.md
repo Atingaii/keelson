@@ -33,6 +33,21 @@ Sort each unknown before asking:
 
 Only questions whose answer would change the result reach the owner. Everything else is a default or a `(assumed)` decision that surfaces before landing.
 
+## Ask at the decision frontier
+<!-- keelson: id=discover.decision-frontier | without: the agent either interrupts for facts it could investigate, invents user-owned intent, or asks low-value questions whose answers do not change the work | sunset: never -->
+
+Before asking, classify the gap by who can resolve it:
+
+| Gap | Action |
+|---|---|
+| Already established in repository/context | Use it; cite the source in the write-back |
+| Reality-owned (code behaviour, API contract, benchmark, dependency capability) | Investigate or run a small experiment |
+| User-owned and load-bearing (goal, scope, acceptance, risk tolerance, public commitment) | Ask one question |
+| Non-load-bearing or cheap to reverse | Decide under authorization, or leave unresolved for a later slice |
+| Evidence exhausted | Mark it UNKNOWN; do not convert uncertainty into a user belief |
+
+Choose the question with the highest practical value of information: the one whose answer is most likely to change the next slice, multiplied by the cost of being wrong. You do not need a numeric score. Ask it neutrally; when useful, give concrete options and your recommendation. After the answer, update the write-back and reassess the frontier. "Exactly one question" is a bottleneck for **blocking uncertainty**, not a ritual: when no user-owned load-bearing gap exists, ask nothing and proceed.
+
 ## Scope guard
 <!-- keelson: id=discover.scope-guard | without: a first request asks for five independent domains at once, and integration risk, debugging cost, and requirement churn compound | sunset: never -->
 

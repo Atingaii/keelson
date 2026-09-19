@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { projectPaths, findProjectRoot } from '../lib/paths.js';
 import { exists, write, read, mkdirp, readOr } from '../lib/fs.js';
 import { loadConfig, saveConfig, DEFAULT_CONFIG, CONFIG_VERSION } from '../lib/config.js';
-import { PLATFORMS, PLATFORM_IDS, installTargets, installSkill, installInstructions, installHooks, skillSource, plannedSkillFiles } from '../platforms/index.js';
+import { PLATFORMS, PLATFORM_IDS, RETIRED_PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile, plannedManagedRemovals, reconcileManagedTargets, writeManagedState } from '../platforms/index.js';
 import { list } from '../lib/args.js';
 import { ok, info, warn, heading, dim } from '../lib/out.js';
 import { detectAndCache, detectLocal } from '../lib/models.js';
@@ -30,6 +30,15 @@ export function detectRefs(root) {
   }
   const specs = first(['docs/specs', 'docs/contracts', 'specs', 'spec']);
   return { refs, specsCandidate: specs };
+}
+
+export function chooseDetectedTools(detected = {}) {
+  const installed = PLATFORM_IDS.filter((id) => detected[id]?.installed);
+  const reliable = installed.filter((id) => PLATFORMS[id]?.confidence !== 'convention');
+  const conventionDetected = installed.filter((id) => PLATFORMS[id]?.confidence === 'convention');
+  return reliable.length
+    ? { tools: reliable, conventionDetected, portableFallback: false }
+    : { tools: ['agents'], conventionDetected, portableFallback: true };
 }
 
 export function detectChecks(root) {
@@ -64,23 +73,50 @@ export async function init({ flags }, cwd = process.cwd()) {
   const rawVersion = fresh ? CONFIG_VERSION : Number((readOr(cfgPath, '').match(/^version:\s*(\d+)/m) || [])[1] ?? 1);
   const cfg = fresh ? structuredClone(DEFAULT_CONFIG) : loadConfig(cfgPath);
 
-  // Tools: --tools a,b · or one flag per platform (--claude --cursor …) · or config · or auto-detect from the machine · or claude.
+  // Tools: explicit selection · saved config · reliable auto-detection · portable fallback.
+  const retiredFlagged = RETIRED_PLATFORM_IDS.filter((id) => flags[id] === true);
+  if (retiredFlagged.length) throw new Error(`retired host adapter flag(s): ${retiredFlagged.map((id) => `--${id}`).join(', ')}. Use --agents for the portable layer, or choose one of: ${PLATFORM_IDS.filter((id) => id !== 'agents').map((id) => `--${id}`).join(', ')}`);
   const flagged = PLATFORM_IDS.filter((id) => flags[id] === true);
+  const explicitlySelected = list(flags.tools).length > 0 || flagged.length > 0;
   let tools = list(flags.tools).length ? list(flags.tools) : flagged.length ? flagged : cfg.tools?.length && !fresh ? cfg.tools : [];
   let detectedTools = false;
-  if (!tools.length) {
-    const det = detectLocal().tools;
-    tools = PLATFORM_IDS.filter((id) => det[id]?.installed);
-    detectedTools = tools.length > 0;
-    if (!tools.length) tools = ['claude'];
+  let portableFallback = false;
+  let conventionDetected = [];
+  let retiredFromConfig = [];
+  if (!explicitlySelected && !fresh) {
+    retiredFromConfig = tools.filter((id) => RETIRED_PLATFORM_IDS.includes(id));
+    if (retiredFromConfig.length) tools = tools.filter((id) => !RETIRED_PLATFORM_IDS.includes(id));
+    if (!tools.length && retiredFromConfig.length) {
+      tools = ['agents'];
+      portableFallback = true;
+    }
   }
-  for (const t of tools) if (!PLATFORMS[t]) throw new Error(`unknown tool "${t}". Known: ${PLATFORM_IDS.join(', ')}`);
+  if (!tools.length) {
+    const detected = chooseDetectedTools(detectLocal().tools);
+    tools = detected.tools;
+    conventionDetected = detected.conventionDetected;
+    portableFallback = detected.portableFallback;
+    detectedTools = !portableFallback;
+  }
+  for (const t of tools) if (!PLATFORMS[t]) {
+    if (RETIRED_PLATFORM_IDS.includes(t)) throw new Error(`retired host adapter "${t}". Use "agents" for the portable layer, or choose one of: ${PLATFORM_IDS.filter((id) => id !== 'agents').join(', ')}`);
+    throw new Error(`unknown tool "${t}". Known: ${PLATFORM_IDS.join(', ')}`);
+  }
   cfg.tools = [...new Set(tools)];
-  const targets = installTargets(cfg.tools, cfg);
+  const retiredOverrides = Object.keys(cfg.platforms ?? {}).filter((id) => RETIRED_PLATFORM_IDS.includes(id));
+  for (const id of retiredOverrides) delete cfg.platforms[id];
+  if (cfg.platforms && !Object.keys(cfg.platforms).length) delete cfg.platforms;
+  const retiredModelOverrides = Object.keys(cfg.models ?? {}).filter((id) => RETIRED_PLATFORM_IDS.includes(id));
+  for (const id of retiredModelOverrides) delete cfg.models[id];
   cfg.lang = flags.lang ?? cfg.lang ?? 'en';
   cfg.profile = flags.profile ?? cfg.profile ?? 'lean';
   if (flags.guide !== undefined) cfg.guide = flags.guide !== 'false' && flags.guide !== false;
+  if (flags.hooks && flags.noHooks) throw new Error('choose either --hooks or --no-hooks, not both');
+  if (flags.hooks) cfg.hooks = true;
+  else if (flags.noHooks) cfg.hooks = false;
+  else cfg.hooks = cfg.hooks !== false;
   if (!['lean', 'guided'].includes(cfg.profile)) throw new Error('profile must be lean or guided');
+  const targets = installTargets(cfg.tools, cfg);
 
   const project = path.basename(root);
   const tpl = path.join(skillSource(cfg.lang), 'templates');
@@ -90,18 +126,32 @@ export async function init({ flags }, cwd = process.cwd()) {
     heading(`Keelson ${fresh ? 'init' : 'update'} (dry run) in ${root}`);
     const mapPath = path.join(root, '.keelson', 'README.md');
     console.log(`  ${(!exists(mapPath) ? 'create' : read(mapPath) === projectMap ? 'unchanged' : 'update').padEnd(9)} .keelson/README.md`);
+    const workflow = plannedWorkflowFile(root, { lang: cfg.lang, guide: cfg.guide });
+    console.log(`  ${workflow.status.padEnd(9)} ${workflow.path}`);
+    for (const f of plannedCanonicalSkillFiles(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
+    for (const rel of plannedManagedRemovals(root, targets)) console.log(`  ${'remove'.padEnd(9)} ${rel} (stale managed surface)`);
     for (const t of targets) {
-      for (const f of plannedSkillFiles(root, t, { lang: cfg.lang, profile: cfg.profile })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
+      for (const f of plannedSkillFiles(root, t, { lang: cfg.lang, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
       const ins = path.join(root, t.instructions);
       console.log(`  ${(exists(ins) ? (read(ins).includes('<!-- keelson:start -->') ? 'refresh' : 'append') : 'create').padEnd(9)} ${t.instructions}`);
     }
+    if (retiredFromConfig.length) console.log(`  migrate   config tools: drop retired ${retiredFromConfig.join(', ')}`);
+    if (retiredOverrides.length) console.log(`  migrate   config platforms: drop retired ${retiredOverrides.join(', ')}`);
+    if (retiredModelOverrides.length) console.log(`  migrate   config models: drop retired ${retiredModelOverrides.join(', ')}`);
     if (rawVersion < CONFIG_VERSION) console.log(`  migrate   .keelson/config.yaml v${rawVersion} → v${CONFIG_VERSION}`);
     console.log(dim('nothing written'));
     return 0;
   }
 
   heading(`Keelson ${fresh ? 'init' : 'update'} in ${root}`);
+  if (retiredFromConfig.length) warn(`retired host adapters removed from config: ${retiredFromConfig.join(', ')}; use the portable agents layer or select one of: ${PLATFORM_IDS.filter((id) => id !== 'agents').join(', ')}`);
+  if (retiredOverrides.length) warn(`retired platform overrides removed: ${retiredOverrides.join(', ')}`);
+  if (retiredModelOverrides.length) warn(`retired model overrides removed: ${retiredModelOverrides.join(', ')}`);
   if (detectedTools) info(`tools detected on this machine: ${cfg.tools.map((t) => PLATFORMS[t].label).join(', ')} (override with --tools or --<platform>)`);
+  else if (portableFallback) {
+    const note = conventionDetected.length ? `; convention-only detections: ${conventionDetected.map((t) => PLATFORMS[t].label).join(', ')} (opt in explicitly if wanted)` : '';
+    info(`no verified/documented host detected; using portable AGENTS.md + .agents/skills discovery${note}`);
+  }
   const p0 = projectPaths(root, cfg);
   mkdirp(p0.keelson);
   if (fresh) {
@@ -135,15 +185,23 @@ export async function init({ flags }, cwd = process.cwd()) {
   saveConfig(p.config, cfg);
   ok(`.keelson/config.yaml${rawVersion < CONFIG_VERSION ? ` (migrated v${rawVersion} → v${CONFIG_VERSION})` : ''}`);
 
+  for (const rel of reconcileManagedTargets(root, targets)) ok(`removed stale managed surface → ${rel}`);
+
+  const workflowPath = installWorkflow(root, { lang: cfg.lang, guide: cfg.guide });
+  const canonicalSkillPath = installCanonicalSkill(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION });
+  ok(`canonical runtime → ${workflowPath}; ${canonicalSkillPath}`);
+
   for (const t of targets) {
-    const skillPath = installSkill(root, t, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION });
-    const files = installInstructions(root, t, { lang: cfg.lang, guide: cfg.guide });
-    ok(`${t.label}: skill → ${skillPath}; instructions → ${files.join(', ')}${t.confidence === 'convention' ? dim(' (path by convention; run `keelson doctor` after your first session)') : ''}`);
-    if (t.hooks && !flags.noHooks) {
+    const skillPath = installSkill(root, t, { lang: cfg.lang, version: PKG_VERSION });
+    const files = installInstructions(root, t, { lang: cfg.lang });
+    ok(`${t.label}: discovery shim → ${skillPath}; instructions → ${files.join(', ')}${t.confidence === 'convention' ? dim(' (path by convention; run `keelson doctor` after your first session)') : ''}`);
+    if (t.hooks) {
       installHooks(root);
       ok(`${t.label}: hooks → .claude/settings.json (session snapshot + per-prompt state line)`);
     }
   }
+  writeManagedState(root, targets, PKG_VERSION);
+  ok('.keelson/.managed.json (generated-surface ownership)');
 
   try {
     detectAndCache();

@@ -9,9 +9,9 @@
 每个键都是可选的。`keelson init` 写入默认值。未知的键被忽略。
 
 ```yaml
-version: 3
+version: 4
 tools:
-  - claude
+  - agents
 lang: en
 profile: lean
 default_tier: auto
@@ -28,6 +28,7 @@ check:
     command: npm run test:architecture
     kind: fitness
 guide: false
+hooks: true
 budgets:
   INTENT: 120
   ROADMAP: 80
@@ -56,8 +57,8 @@ effort:
 
 | 键 | 默认值 | 含义 |
 |---|---|---|
-| `version` | `3` | 配置结构版本。旧文件每次读取时在内存中迁移，由 `keelson update` 重写 |
-| `tools` | `[claude]` | 为哪些工具生成文件。`claude`、`codex`、`cursor`、`opencode`、`gemini` 中的一个或多个。`keelson init --tools` 设置它 |
+| `version` | `4` | 配置结构版本。旧文件每次读取时在内存中迁移，由 `keelson update` 重写 |
+| `tools` | `[agents]` 兜底 | 为哪些宿主生成发现适配。首次 init 自动选择本机已安装且 `verified/documented` 的宿主；一个也没有时只使用通用 `agents` 层。`convention` 宿主必须显式选择，不靠猜测。`keelson init --tools` 设置它 |
 | `lang` | `en` | 安装的技能和模板的语言：`en` 或 `zh`。`keelson init --lang` 设置它 |
 | `profile` | `lean` | `lean` 只发出姿态和原则。`guided` 保留额外的步骤清单和示例。`keelson init --profile` 设置它 |
 | `default_tier` | `auto` | 仅供参考。`auto` 表示代理给每个变更定大小。设为 `quick` 或 `spec` 可在代理读的文件里表明偏好 |
@@ -65,7 +66,8 @@ effort:
 | `confirm.spec` | `wait` | spec 变更总是等批准，除非你设为 `proceed` |
 | `land` | `fold` | `fold` 在合并后删除变更目录。`keep` 把它移到 `changes/archive/` |
 | `check` | 自动探测 | `keelson check` 按顺序从项目根目录通过 shell 运行的内容。每个条目是一个命令字符串，或对象 `{name, command, kind}`，其中 `kind` 取 `test`、`lint`、`typecheck`、`build`、`fitness`、`check` 之一。对纯字符串，kind 从命令猜测。首次 init 时从 `package.json` 脚本、`pyproject.toml`、`pytest.ini`、`go.mod` 或 `Cargo.toml` 探测 |
-| `guide` | `false` | 所有者正在学习工程时设为 `true`。往常驻块加一行引导模式说明，往 `keelson context` 加一条提示；技能随后用场景和取舍解释，并在 spec 变更收尾时附一段简短的教学说明。`keelson init --guide` 设置它 |
+| `guide` | `false` | 所有者正在学习工程时设为 `true`。往 `.keelson/workflow.md` 加一行引导模式说明，往 `keelson context` 加一条提示；技能随后用场景和取舍解释，并在 spec 变更收尾时附一段简短的教学说明。`keelson init --guide` 设置它 |
+| `hooks` | `true` | 支持 hook 的已选宿主是否安装 Keelson hook。`--no-hooks` 会持久写成 `false`，之后 `update` 也不会偷偷恢复；`--hooks` 可重新开启 |
 | `budgets` | 见下文 | 每种文档的行数预算。`keelson doctor` 报告超预算的文档并要求压缩；没有任何东西被自动重写 |
 | `context` | `""` | 打印在 `keelson context` 输出顶部的自由文本。用于放不进 INTENT.md 的事实，比如技术栈概要 |
 | `paths.specs` | `.keelson/specs` | 行为契约目录，每个能力一个 `<capability>/spec.md`。指向已有的契约目录即可复用 |
@@ -104,23 +106,22 @@ effort:
 
 ### 平台覆盖
 
-每个工具从哪里读取说明和技能，来自随包附带的注册表；`keelson platforms` 会打印它。内置注册表采用标准层优先：已经读取 `AGENTS.md` + `.agents/skills/` 的宿主直接复用通用表面，不再生成另一份副本。若旧版本或本地安装需要不同路径，项目可以在 `platforms.<id>` 下覆盖某个工具条目的任意键：
+每个工具从哪里读取说明和技能，来自随包附带的注册表；`keelson platforms` 会打印它。内置注册表采用标准层优先：canonical 运行时始终只在 `.keelson/`；平台注册路径只描述发现 shim。已经读取 `AGENTS.md` + `.agents/skills/` 的宿主直接复用这套通用发现表面。若旧版本或本地安装需要不同路径，项目可以在 `platforms.<id>` 下覆盖某个工具条目的任意键：
 
 ```yaml
 platforms:
-  cursor:
-    skillsDir: .cursor/skills
-    rulesFile: .cursor/rules/keelson.mdc
+  opencode:
+    skillsDir: .opencode/skills
   kiro:
     instructions: .kiro/steering/keelson.md
     instructionsFormat: kiro
 ```
 
-键：`instructions`（接收常驻块的文件）、`instructionsFormat`（`kiro` 写一个带 inclusion 头的独立 steering 文件，而不是带标记的块）、`skillsDir`（`keelson/` 技能目录安装到哪里）、`rulesFile` 和 `rulesFormat`（`mdc` 为带 frontmatter 的 rule 文件，`md` 为纯 Markdown）、`hooks`（只对像 Claude Code 那样运行 hook 的工具设为 `true`）。覆盖对 `init`、`update`、`doctor`、`uninstall` 和 `ablate` 生效。当某个工具挪动了目录，或某个 `convention` 条目与你的安装不符时使用它。
+键：`instructions`（接收发现块的文件）、`instructionsFormat`（`kiro` 写一个带 inclusion 头的独立 steering 文件，而不是带标记的块）、`skillsDir`（单文件 `keelson/SKILL.md` 发现 shim 安装到哪里）、`rulesFile` 和 `rulesFormat`（`mdc` 为带 frontmatter 的 rule 文件，`md` 为纯 Markdown）、`hooks`（只对像 Claude Code 那样运行 hook 的工具设为 `true`）。覆盖对 `init`、`update`、`doctor`、`uninstall` 和 `ablate` 生效。当某个工具挪动了目录，或某个 `convention` 条目与你的安装不符时使用它。
 
 ### 迁移
 
-`version: 1` 的文件获得默认的 `paths` 和 `refs`；`version: 2` 的文件获得 `guide` 和 `budgets`。每条命令都能正确读取旧文件而无需改动；`keelson update` 把它们重写为版本 3，在那之前 `keelson doctor` 会提醒你。`keelson update --dry-run` 显示待执行的迁移。
+`version: 1` 的文件获得 `paths` 和 `refs`；`version: 2` 的文件获得 `guide` 和 `budgets`；v4 之前的文件获得持久的 `hooks: true`。旧文件读取时会先在内存中迁移；`keelson update` 把它们重写为版本 4、对齐生成表面的所有权清单，并且只清理能确认属于 Keelson 的旧适配文件。`keelson update --dry-run` 会先显示迁移与待清理表面。
 
 ## `.keelson/INTENT.md`
 

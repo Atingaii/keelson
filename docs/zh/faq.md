@@ -3,10 +3,10 @@
 # 常见问题
 
 **没有 hook 也能用吗？**
-能。Hook 只在 Claude Code 上存在，而且只注入状态。没有 hook 时，常驻块要求代理在非平凡工作前运行 `keelson context --paths <files>`，你说"继续"时它最先读的是 `NOW.md` 和每个变更的 `handoff.md`。如果在 Claude Code 上也想这样，给 `init` 传 `--no-hooks`。
+能。Hook 只在 Claude Code 上存在，而且只注入状态。没有 hook 时，发现块把代理指向 `.keelson/workflow.md`，其中 ORIENT 会要求它在非平凡工作前运行 `keelson context --paths <files>`；`NOW.md` 和每个变更的 `handoff.md` 保存接续状态。如果在 Claude Code 上也想这样，给 `init` 传 `--no-hooks`。
 
 **支持哪些工具？**
-22 个工具，由 `keelson platforms` 和 README 列出。每个都会得到技能目录和它所读取的说明文件里的说明块；有些还会得到一个 rules 文件。除 Claude Code 外的每个选择都会安装跨工具层（`AGENTS.md` + `.agents/skills/`），任何读取这一约定的代理都能拾取。`keelson init --cursor --codex` 一次配置多个，或者只运行 `keelson init`，使用本机已安装的工具。
+官方一等公民只有 7 个 CLI：Claude Code、Codex CLI、OpenCode、Pi、Gemini CLI、Kiro CLI、CodeBuddy CLI。每个适配器都使用真实验证或宿主官方文档明确的发现路径，并指向同一份 `.keelson/` 真源。每个项目仍安装通用 `AGENTS.md` + `.agents/skills/` 层，供其他兼容标准的 Agent 使用。`keelson init` 只自动探测这 7 个一等公民；也可以用 `keelson init --claude --codex` 等显式选择。
 
 **我必须在聊天里敲命令吗？**
 不必。你像以前一样和代理对话。CLI 由代理自己运行。"grill me"、"status"、"hand off"、"land it"、"retro" 这些短语在技能里有定义好的含义，但没有一个是必须的。
@@ -54,13 +54,13 @@
 没有。`verify` reference 要求与代码匹配且覆盖验收清单的证据。`guided` profile 加了一条说明：delta spec 里有场景时建议先写测试，问题是视觉性的或涉及未知 API 时建议先做原型。`lean` profile 把方法留给代理。
 
 **它消耗多少 token？**
-常驻块不到 20 行。会话启动 hook 打印最多约 1,500 个字符，一次。每个提示词那一行几十个 token，空闲时为空。技能一次读一个 reference，每个 30 到 90 行。Rules 只在 glob 匹配时才读。此外不注入任何东西。
+发现块不到 10 行。`.keelson/workflow.md` 是非平凡任务读取的紧凑执行内核。会话启动 hook 最多打印约 1,500 个字符一次；每个提示词那一行几十个 token，空闲时为空。canonical 技能一次只读一个 reference，每个 30 到 90 行。Rules 只在 glob 匹配时才读。此外不注入任何东西。
 
 **代理不理它怎么办？**
-运行 `keelson doctor`。它检查每个配置工具的技能是否安装且与 CLI 版本一致、常驻块是否在说明文件里、hook 是否已注册。`keelson update` 重新生成这一切。如果代理把变更大小判错了，说"按 spec 处理"或"直接做"。
+运行 `keelson doctor`。它先检查 canonical `.keelson/workflow.md` 和 `.keelson/skill/`，再检查每个配置宿主的发现 shim 是否指向这份运行时、版本是否匹配，以及需要时 hook 是否已注册。`keelson update` 重新生成这一切。如果代理把变更大小判错了，说"按 spec 处理"或"直接做"。
 
 **怎么把它去掉？**
-`keelson uninstall` 移除生成的表面（技能、常驻块、hook、本地状态），保留 `.keelson/`；加 `--purge` 连 `.keelson/` 一起移除。临时对照的话，`keelson ablate` 暂存每个表面，`keelson restore` 逐字节恢复。
+`keelson uninstall` 移除生成的运行时/集成表面（`.keelson/workflow.md`、`.keelson/skill/`、宿主发现 shim、hook、本地状态），但保留 `.keelson/` 中的项目事实；加 `--purge` 连整个 `.keelson/` 一起移除。临时对照的话，`keelson ablate` 暂存每个表面，`keelson restore` 逐字节恢复。
 
 **能在 Windows 上运行吗？**
 CLI 和 hook 都是普通的 Node 脚本。`keelson check` 通过默认 shell 运行你配置的命令。rules、specs 和 `touches` 里的路径使用正斜杠。

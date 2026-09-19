@@ -24,6 +24,19 @@ Sections, in order. Quick changes need only **Why**, **What**, and **Acceptance*
 - **Rollout** — only for breaking changes, migrations, or production steps.
 - **Decisions** — `- capability: decision; rejected option and why`, present tense. Working assumptions are `- (assumed) capability: …`. Folded into the capability's spec on landing.
 
+## Route the audit into existing artifacts
+<!-- keelson: id=plan.assumption-routing | without: clarification creates a new diary document, or critical assumptions stay only in chat and disappear across sessions | sunset: never -->
+
+The assumption audit is conversational scratch, not another permanent document. Persist only what changes future work:
+
+- an explicit outcome or non-goal → `change.md → What`;
+- a working assumption needed to proceed → `change.md → Decisions` as `(assumed)`;
+- a user-owned load-bearing gap that is still unanswered → `change.md → Open questions` with what it blocks;
+- a confirmed observable behaviour → `Acceptance` and, for spec-tier behaviour, the delta spec;
+- a stable term or engineering invariant discovered along the way → `GLOSSARY.md`, a scoped rule, or a fitness check.
+
+After landing, temporary questioning disappears with the change scaffolding. Only the current behaviour, durable decisions, rules, vocabulary, and evidence-bearing checks survive.
+
 ## Delta specs (spec tier)
 <!-- keelson: id=plan.delta | without: behaviour contracts drift from code because nobody rewrites whole specs | sunset: never -->
 

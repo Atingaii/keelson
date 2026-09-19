@@ -1,11 +1,11 @@
 import YAML from 'yaml';
 import { readOr, write } from './fs.js';
 
-export const CONFIG_VERSION = 3;
+export const CONFIG_VERSION = 4;
 
 export const DEFAULT_CONFIG = {
   version: CONFIG_VERSION,
-  tools: ['claude'],
+  tools: ['agents'],
   lang: 'en',
   profile: 'lean',
   default_tier: 'auto',
@@ -13,6 +13,7 @@ export const DEFAULT_CONFIG = {
   land: 'fold',
   check: [],
   guide: false,
+  hooks: true,
   budgets: { INTENT: 120, ROADMAP: 80, NOW: 60, GLOSSARY: 200, spec: 250, rule: 120, change: 200, handoff: 100, 'always-on': 300 },
   context: '',
   paths: { specs: '.keelson/specs' },
@@ -48,6 +49,9 @@ export function migrate(cfg, fromVersion) {
     out.budgets = { ...DEFAULT_CONFIG.budgets, ...(out.budgets ?? {}) };
     out.guide = Boolean(out.guide);
   }
+  if (fromVersion < 4) {
+    out.hooks = out.hooks !== false;
+  }
   out.version = CONFIG_VERSION;
   return out;
 }
@@ -61,7 +65,7 @@ export function renderConfig(cfg) {
   return [
     '# Keelson project configuration. Every key is optional; defaults are shown.',
     '# paths.specs: where behaviour contracts live. refs.*: existing project material, referenced, never copied.',
-    '# check: commands (strings, or {name, command, kind}) that prove the code works. guide: true when the owner is learning engineering.',
+    '# check: commands (strings, or {name, command, kind}) that prove the code works. guide: learning mode. hooks: persist host hook installation.',
     '# budgets: line budgets per document type; `keelson doctor` asks for a compaction when one is exceeded.',
     '# Docs: https://github.com/Atingaii/keelson/blob/main/docs/configuration.md',
     doc.toString(),

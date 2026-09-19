@@ -7,9 +7,9 @@ Two places hold configuration. `.keelson/config.yaml` is per project and committ
 Every key is optional. `keelson init` writes the defaults. Unknown keys are ignored.
 
 ```yaml
-version: 3
+version: 4
 tools:
-  - claude
+  - agents
 lang: en
 profile: lean
 default_tier: auto
@@ -26,6 +26,7 @@ check:
     command: npm run test:architecture
     kind: fitness
 guide: false
+hooks: true
 budgets:
   INTENT: 120
   ROADMAP: 80
@@ -54,8 +55,8 @@ effort:
 
 | Key | Default | Meaning |
 |---|---|---|
-| `version` | `3` | Config schema version. Older files are migrated in memory on every read and rewritten by `keelson update` |
-| `tools` | `[claude]` | Tools to generate files for. One or more of `claude`, `codex`, `cursor`, `opencode`, `gemini`. `keelson init --tools` sets it |
+| `version` | `4` | Config schema version. Older files are migrated in memory on every read and rewritten by `keelson update` |
+| `tools` | `[agents]` fallback | Discovery hosts to generate adapters for. On first init, verified/documented installed hosts are auto-selected; if none are found, the portable `agents` layer is used. `convention` hosts are opt-in, never guessed. `keelson init --tools` sets it |
 | `lang` | `en` | Language of the installed skill and templates: `en` or `zh`. `keelson init --lang` sets it |
 | `profile` | `lean` | `lean` ships stance and principles only. `guided` keeps the extra step lists and examples. `keelson init --profile` sets it |
 | `default_tier` | `auto` | Informational. `auto` means the agent sizes each change. Set `quick` or `spec` to state a preference in the file the agent reads |
@@ -63,7 +64,8 @@ effort:
 | `confirm.spec` | `wait` | Spec changes always wait unless you set `proceed` |
 | `land` | `fold` | `fold` removes the change directory after merging. `keep` moves it to `changes/archive/` |
 | `check` | detected | What `keelson check` runs, in order, from the project root through the shell. Each entry is a command string, or an object `{name, command, kind}` where `kind` is one of `test`, `lint`, `typecheck`, `build`, `fitness`, `check`. For a plain string the kind is guessed from the command. Detected from `package.json` scripts, `pyproject.toml`, `pytest.ini`, `go.mod`, or `Cargo.toml` on first init |
-| `guide` | `false` | `true` when the owner is learning engineering. Adds a guided-mode line to the resident block and a note to `keelson context`; the skill then explains with scenarios and trade-offs and closes spec changes with a short teaching note. `keelson init --guide` sets it |
+| `guide` | `false` | `true` when the owner is learning engineering. Adds a guided-mode line to `.keelson/workflow.md` and a note to `keelson context`; the skill then explains with scenarios and trade-offs and closes spec changes with a short teaching note. `keelson init --guide` sets it |
+| `hooks` | `true` | Whether hook-capable selected hosts should install their Keelson hooks. `--no-hooks` writes `false` and stays off on later `update`; `--hooks` turns them back on |
 | `budgets` | see below | Line budgets per document type. `keelson doctor` reports a document over its budget and asks for a compaction; nothing is rewritten automatically |
 | `context` | `""` | Free text printed at the top of `keelson context` output. Use it for facts that do not fit INTENT.md, such as a tech stack summary |
 | `paths.specs` | `.keelson/specs` | Directory of behaviour contracts, one `<capability>/spec.md` each. Point it at an existing contracts directory to reuse it |
@@ -102,23 +104,22 @@ Budgets are in lines. Crossing one is a signal to compact that document (rewrite
 
 ### Platform overrides
 
-Where each tool reads its instructions and skills comes from the registry shipped with the package; `keelson platforms` prints it. The built-in registry is standards-first: a host that already reads `AGENTS.md` + `.agents/skills/` reuses that portable surface instead of receiving another copy. A project can override any key of a tool's entry under `platforms.<id>` when an older/local install needs a different path:
+Where each tool reads its instructions and skills comes from the registry shipped with the package; `keelson platforms` prints it. The built-in registry is standards-first: the canonical runtime always stays under `.keelson/`; platform paths describe discovery shims only. A host that already reads `AGENTS.md` + `.agents/skills/` reuses that portable discovery surface. A project can override any key of a tool's entry under `platforms.<id>` when an older/local install needs a different path:
 
 ```yaml
 platforms:
-  cursor:
-    skillsDir: .cursor/skills
-    rulesFile: .cursor/rules/keelson.mdc
+  opencode:
+    skillsDir: .opencode/skills
   kiro:
     instructions: .kiro/steering/keelson.md
     instructionsFormat: kiro
 ```
 
-Keys: `instructions` (the file that receives the resident block), `instructionsFormat` (`kiro` writes a standalone steering file with an inclusion header instead of a marked block), `skillsDir` (where the `keelson/` skill directory is installed), `rulesFile` and `rulesFormat` (`mdc` for a rule file with frontmatter, `md` for plain Markdown), and `hooks` (`true` only for a tool that runs hooks the way Claude Code does). Overrides apply to `init`, `update`, `doctor`, `uninstall`, and `ablate`. Use them when a tool moves its directories, or when a `convention` entry does not match your install.
+Keys: `instructions` (the file that receives the discovery block), `instructionsFormat` (`kiro` writes a standalone steering file with an inclusion header instead of a marked block), `skillsDir` (where the one-file `keelson/SKILL.md` discovery shim is installed), `rulesFile` and `rulesFormat` (`mdc` for a rule file with frontmatter, `md` for plain Markdown), and `hooks` (`true` only for a tool that runs hooks the way Claude Code does). Overrides apply to `init`, `update`, `doctor`, `uninstall`, and `ablate`. Use them when a tool moves its directories, or when a `convention` entry does not match your install.
 
 ### Migration
 
-A `version: 1` file gains `paths` and `refs` with defaults; a `version: 2` file gains `guide` and `budgets`. Every command reads older files correctly without changes; `keelson update` rewrites them as version 3, and `keelson doctor` reminds you until then. `keelson update --dry-run` shows the pending migration.
+A `version: 1` file gains `paths` and `refs`; a `version: 2` file gains `guide` and `budgets`; pre-v4 files gain persistent `hooks: true`. Every command reads older files through migration in memory; `keelson update` rewrites them as version 4, reconciles the generated-surface ownership manifest, and removes only signature-matched Keelson legacy adapters. `keelson update --dry-run` shows the migration and stale managed surfaces before writing.
 
 ## `.keelson/INTENT.md`
 

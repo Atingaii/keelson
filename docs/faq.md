@@ -1,10 +1,10 @@
 # FAQ
 
 **Does it work without hooks?**
-Yes. Hooks exist only for Claude Code and only inject state. Without them, the resident block tells the agent to run `keelson context --paths <files>` before non-trivial work, and `NOW.md` plus each change's `handoff.md` are the first things it reads when you say "continue". Pass `--no-hooks` to `init` if you prefer that on Claude Code too.
+Yes. Hooks exist only for Claude Code and only inject state. Without them, the discovery block points the agent to `.keelson/workflow.md`, which tells it to run `keelson context --paths <files>` before non-trivial work; `NOW.md` plus each change's `handoff.md` carry continuation state. Pass `--no-hooks` to `init` if you prefer that on Claude Code too.
 
 **Which tools are supported?**
-Twenty-two tools, listed by `keelson platforms` and in the README. Each gets the skill directory and an instructions block in the file it reads; some also get a rules file. Every non-Claude selection installs the cross-tool layer (`AGENTS.md` + `.agents/skills/`), which any agent that reads that convention picks up. Run `keelson init --cursor --codex` for several at once, or `keelson init` alone to use what is installed on your machine.
+Seven first-class CLI hosts: Claude Code, Codex CLI, OpenCode, Pi, Gemini CLI, Kiro CLI, and CodeBuddy CLI. Each adapter uses a verified or host-documented discovery path and points to the same canonical `.keelson/` runtime. Every project also gets the portable `AGENTS.md` + `.agents/skills/` layer for other standards-compatible agents. `keelson init` auto-detects only the first-class hosts; use `keelson init --claude --codex` (or other first-class flags) to choose explicitly.
 
 **Do I have to type commands in chat?**
 No. You talk to the agent as before. The agent runs the CLI itself. Phrases such as "grill me", "status", "hand off", "land it", and "retro" have a defined meaning in the skill, but none is required.
@@ -52,13 +52,13 @@ Line budgets in `config.yaml → budgets` and `keelson doctor`. Doctor reports a
 No. The `verify` reference asks for evidence that matches the code and covers the acceptance list. The `guided` profile adds a note suggesting test-first when a scenario exists in the delta spec and a prototype when the problem is visual or an unknown API. The `lean` profile leaves the method to the agent.
 
 **What does it cost in tokens?**
-The resident block is under 20 lines. The session-start hook prints up to about 1,500 characters once. The per-prompt line is a few dozen tokens and empty when idle. The skill is read one reference at a time, each 30 to 90 lines. Rules are read only when their glob matches. Nothing else is injected.
+The discovery block is under 10 lines. `.keelson/workflow.md` is a compact operating kernel read for non-trivial work. The session-start hook prints up to about 1,500 characters once; the per-prompt line is a few dozen tokens and empty when idle. The canonical skill loads one reference at a time, each 30 to 90 lines. Rules are read only when their glob matches. Nothing else is injected.
 
 **What if the agent ignores it?**
-Run `keelson doctor`. It checks that the skill is installed for each configured tool and matches the CLI version, that the resident block is in the instructions file, and that the hooks are registered. `keelson update` regenerates all of it. If the agent sizes a change wrongly, say "treat this as spec" or "just do it".
+Run `keelson doctor`. It checks the canonical `.keelson/workflow.md` and `.keelson/skill/`, then verifies each configured host's discovery shim points to that runtime and matches the CLI version, plus hook registration where applicable. `keelson update` regenerates all of it. If the agent sizes a change wrongly, say "treat this as spec" or "just do it".
 
 **How do I get rid of it?**
-`keelson uninstall` removes the generated surfaces (skills, resident blocks, hooks, local state) and keeps `.keelson/`; add `--purge` to remove `.keelson/` too. For a temporary comparison, `keelson ablate` stashes every surface and `keelson restore` brings it back byte for byte.
+`keelson uninstall` removes generated runtime/integration surfaces (`.keelson/workflow.md`, `.keelson/skill/`, host discovery shims, hooks, local state) while keeping project facts under `.keelson/`; add `--purge` to remove `.keelson/` entirely. For a temporary comparison, `keelson ablate` stashes every surface and `keelson restore` brings it back byte for byte.
 
 **Does it run on Windows?**
 The CLI and hooks are plain Node scripts. `keelson check` runs your configured commands through the default shell. Paths in rules, specs, and `touches` use forward slashes.

@@ -18,7 +18,7 @@ cd your-project
 keelson init
 ```
 
-With no flags it picks the coding tools installed on this machine. Name the ones you use with one flag per tool (`keelson platforms` lists them):
+With no flags it picks installed hosts whose discovery paths are verified or documented. Convention-only detections are shown as opt-in candidates rather than silently enabled; if no reliable host is found, init uses the portable `AGENTS.md` + `.agents/skills/` layer. Name the ones you use with one flag per tool (`keelson platforms` lists them):
 
 ```bash
 keelson init --claude --codex --cursor
@@ -41,8 +41,9 @@ Keelson init in /home/you/your-project
 ✓ .keelson/rules/general.md
 ✓ .gitignore: .keelson/.local/ (session state and evidence stay on this machine)
 ✓ .keelson/config.yaml
-✓ Claude Code: skill → .claude/skills/keelson; instructions → CLAUDE.md
-✓ cross-tool layer: skill → .agents/skills/keelson; instructions → AGENTS.md
+✓ canonical runtime → .keelson/workflow.md; .keelson/skill
+✓ Claude Code: discovery shim → .claude/skills/keelson; instructions → CLAUDE.md
+✓ cross-tool layer: discovery shim → .agents/skills/keelson; instructions → AGENTS.md
 ✓ Claude Code: hooks → .claude/settings.json (session snapshot + per-prompt state line)
 · model detection cached in ~/.keelson/models.cache.json (keelson models)
 ✓ .keelson/NOW.md: first-contact task written for the agent (draft INTENT, specs, and rules from the code)
@@ -51,11 +52,11 @@ Done. Open your agent in this directory and start talking.
   On first contact it reads the repository, drafts .keelson/INTENT.md, the specs, and the rules, and asks you to confirm before anything lands.
 ```
 
-`init` never overwrites project-fact files that already exist in `.keelson/`. The one exception is `.keelson/README.md`: it is a package-owned human map and `keelson update` refreshes it. It appends a marked block to `CLAUDE.md` (or `AGENTS.md`, `GEMINI.md`) and leaves the rest of the file alone. Existing material it finds (architecture notes, decision records, CI, a GitHub issues page) is recorded under `refs` in `config.yaml` and referenced, never copied. If `package.json` has `lint`, `typecheck`, or `test` scripts, they become check commands. `keelson init --dry-run` lists what would be written without writing it.
+`init` never overwrites project-fact files such as INTENT, NOW, specs, rules, or active changes. It also records which generated adapters it owns in `.keelson/.managed.json`, so later `update`, `uninstall`, and `ablate` can remove stale Keelson surfaces without guessing. Package-owned runtime files — `.keelson/README.md`, `.keelson/workflow.md`, and `.keelson/skill/` — are refreshed by `keelson update`. Outside `.keelson/`, init only appends/replaces a marked discovery block in `CLAUDE.md` (or `AGENTS.md`, `GEMINI.md`) and writes one-file skill shims; user-authored content outside the marked block is left alone. Existing material it finds (architecture notes, decision records, CI, a GitHub issues page) is recorded under `refs` in `config.yaml` and referenced, never copied. If `package.json` has `lint`, `typecheck`, or `test` scripts, they become check commands. `keelson init --dry-run` lists what would be written without writing it.
 
 ## First contact
 
-If you are a person opening `.keelson/` directly, start with `.keelson/README.md`; it points you to `NOW.md`, `INTENT.md`, the relevant spec, and any active change. Open your agent in the project directory and say anything, or just "hello". `NOW.md` holds a first-contact task, so the agent reads the repository, drafts `.keelson/INTENT.md` (why the project exists, its boundaries, hard constraints, and what the agent may decide alone) and, for an existing codebase, one spec per capability plus rules for paths with conventions. It asks you to confirm or correct in one short exchange and keeps your answers. If you ask for a change right away, it does this while shaping that change and confirms both together. You never write these files by hand.
+If you are a person opening `.keelson/` directly, start with `.keelson/README.md`; it maps both the human project state and the canonical runtime. Agents enter through `.keelson/workflow.md` and `.keelson/skill/SKILL.md`; people usually continue with `NOW.md`, `INTENT.md`, the relevant spec, and any active change. Open your agent in the project directory and say anything, or just "hello". `NOW.md` holds a first-contact task, so the agent reads the repository, drafts `.keelson/INTENT.md` (why the project exists, its boundaries, hard constraints, and what the agent may decide alone) and, for an existing codebase, one spec per capability plus rules for paths with conventions. It asks you to confirm or correct in one short exchange and keeps your answers. If you ask for a change right away, it does this while shaping that change and confirms both together. You never write these files by hand.
 
 
 ## Your first quick change

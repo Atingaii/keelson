@@ -2,7 +2,7 @@
 
 All commands run from anywhere inside the project; Keelson walks up to find a `.keelson/` that holds `config.yaml` or `INTENT.md` (the user-level `~/.keelson/` never counts). Exit code 0 means success, 1 means an error or a failed check, 2 means an unknown command. `--json` on most commands prints machine-readable output. `--help` and `--version` work everywhere; `keelson <command> --help` prints that command's usage line.
 
-Boolean flags: `--json`, `--force`, `--dry-run`, `--no-hooks`, `--refresh`, `--detect`, `--keep`, `--quiet`, `--confirm-assumptions`, `--accept-drift`, `--worktree`, `--purge`, and one flag per platform (`--claude`, `--cursor`, …). Value flags accept `--key value` or `--key=value`. `--guide` is a value flag that also works bare: `--guide` and `--guide true` turn guided mode on, `--guide false` turns it off.
+Boolean flags: `--json`, `--force`, `--dry-run`, `--hooks`, `--no-hooks`, `--refresh`, `--detect`, `--keep`, `--quiet`, `--confirm-assumptions`, `--accept-drift`, `--worktree`, `--purge`, and one flag per first-class host (`--claude`, `--codex`, `--opencode`, `--pi`, `--gemini`, `--kiro`, `--codebuddy`) plus `--agents`. Value flags accept `--key value` or `--key=value`. `--guide` is a value flag that also works bare: `--guide` and `--guide true` turn guided mode on, `--guide false` turns it off.
 
 ## `keelson init`
 
@@ -11,12 +11,12 @@ keelson init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided]
              [--lang en|zh] [--no-hooks] [--dry-run] [--dir <path>]
 ```
 
-The only step. Creates `.keelson/` with `INTENT.md`, `ROADMAP.md`, `NOW.md`, `GLOSSARY.md`, `rules/index.md`, `rules/general.md`, `config.yaml`, and an empty `changes/`. Installs the skill, the instructions block, and (Claude Code) the hooks for each selected tool, plus the cross-tool layer (`AGENTS.md` + `.agents/skills/`) on every init. Detects check commands and existing project material on first run. Writes a first-contact task into `NOW.md`: the agent drafts `INTENT.md` (and, for an existing codebase, specs and rules) from the repository and confirms them with the owner. Never overwrites existing `.keelson/` files.
+The only step. Creates `.keelson/` with project facts plus the canonical `workflow.md` and `skill/` runtime. Installs only discovery blocks/skill shims at host-known paths, and (Claude Code) hooks; the portable `AGENTS.md` + `.agents/skills/` discovery layer is present on every init. Detects check commands and existing project material on first run. Writes a first-contact task into `NOW.md`: the agent drafts `INTENT.md` (and, for an existing codebase, specs and rules) from the repository and confirms them with the owner. Never overwrites existing `.keelson/` files.
 
-Tool selection, in order of precedence: `--tools a,b`; one flag per tool (`--claude`, `--codex`, `--cursor`, `--opencode`, `--gemini`, `--copilot`, `--kiro`, `--kilo`, `--antigravity`, `--devin`, `--qoder`, `--codebuddy`, `--droid`, `--pi`, `--ohmypi`, `--reasonix`, `--zcode`, `--trae`, `--grok`, `--kimi`, `--snow`, `--agents`); the tools already in `config.yaml` on an update; the tools whose command is found on this machine; Claude Code.
+Tool selection, in order of precedence: `--tools a,b`; one flag per first-class host (`--claude`, `--codex`, `--opencode`, `--pi`, `--gemini`, `--kiro`, `--codebuddy`) or `--agents`; the hosts already in `config.yaml` on update; then installed first-class hosts. If no first-class host is detected, Keelson uses the portable `agents` layer. Retired adapter ids from older configs are removed during update rather than regenerated.
 
 - `--guide` turns on guided mode for an owner who is learning engineering.
-- `--no-hooks` skips hook installation.
+- `--no-hooks` persists `hooks: false` in project config; later `update` keeps hooks off. `--hooks` explicitly re-enables them.
 - `--dry-run` lists what would be created, updated, or migrated and writes nothing.
 - `--dir` targets another directory.
 
@@ -28,11 +28,11 @@ Exit 1 on an unknown tool or profile.
 keelson platforms [--json]
 ```
 
-Lists every supported tool with its instructions file, skills directory, rules file, hook support, confidence label, and whether it is installed on this machine or configured in this project.
+Lists the seven first-class hosts plus the portable fallback with support level, instruction and skill discovery paths, hook support, confidence, and installed/configured state.
 
 ## `keelson update`
 
-Same as `init` with the values already in `config.yaml`. Run after upgrading the package to regenerate the skill, resident blocks, and hooks, and to migrate `config.yaml`. Accepts `--dry-run`.
+Same as `init` with the values already in `config.yaml`. Run after upgrading the package to refresh `.keelson/workflow.md`, `.keelson/skill/`, discovery shims, and hooks, and to migrate `config.yaml`. Accepts `--dry-run`.
 
 ## `keelson context`
 
@@ -193,7 +193,7 @@ Default: a table of tier to alias with the source of each resolution, plus the l
 keelson doctor [--json]
 ```
 
-Reports the Node version, pending config migration, and per configured tool: skill presence and version match, resident block presence, hook registration and script presence. Then every `validate` finding, stale verification, HEAD moved since a handoff, dependencies on active changes, shared-contract conflicts, knowledge health, and tool CLIs missing from the path. Exit 1 when any finding is an error.
+Reports the Node version, pending config migration, canonical `.keelson/workflow.md`/`.keelson/skill/` presence and version, and per configured tool: discovery shim presence/version/target, instruction block presence, hook registration and script presence. Then every `validate` finding, stale verification, HEAD moved since a handoff, dependencies on active changes, shared-contract conflicts, knowledge health, and tool CLIs missing from the path. Exit 1 when any finding is an error.
 
 ### Knowledge health
 
@@ -221,7 +221,7 @@ keelson ablate [--dry-run]
 keelson restore [--force] [--dry-run] [--dir <path>]
 ```
 
-`ablate` copies every Keelson surface (generated instruction files, skill directories, host-specific rule files when configured, `.claude/settings.json`, `.keelson/`) to `~/.keelson/ablations/<hash>/`, records a hash of the stash and of each path after removal, then removes them. `restore` verifies the stash is intact, refuses if any managed path changed while ablated (unless `--force`), copies everything back, and deletes the stash.
+`ablate` copies every Keelson surface (generated instruction files, host skill shim directories, host-specific rule files when configured, `.claude/settings.json`, `.keelson/`) to `~/.keelson/ablations/<hash>/`, records a hash of the stash and of each path after removal, then removes them. `restore` verifies the stash is intact, refuses if any managed path changed while ablated (unless `--force`), copies everything back, and deletes the stash.
 
 ## `keelson uninstall`
 
@@ -229,4 +229,4 @@ keelson restore [--force] [--dry-run] [--dir <path>]
 keelson uninstall [--purge]
 ```
 
-Removes the generated surfaces: skill directories, resident blocks, host-specific rule files when configured, hook entries in `.claude/settings.json`, `.keelson/hooks/`, and `.keelson/.local/`. Keeps `.keelson/` (INTENT, NOW, ROADMAP, rules, specs, changes). `--purge` removes `.keelson/` as well; specs stored outside it are untouched.
+Removes generated runtime/integration surfaces: host skill shim directories, discovery blocks, host-specific rule files when configured, hook entries in `.claude/settings.json`, `.keelson/workflow.md`, `.keelson/skill/`, `.keelson/hooks/`, and `.keelson/.local/`. Keeps the project facts under `.keelson/` (INTENT, NOW, ROADMAP, rules, specs, changes). `--purge` removes `.keelson/` as well; specs stored outside it are untouched.

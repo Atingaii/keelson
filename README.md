@@ -80,11 +80,11 @@ Requires Node.js 20 or newer.
 ```bash
 npm install -g keelson
 cd your-project
-keelson init                 # picks the coding tools installed on this machine
-keelson init --cursor --codex   # or name the ones you use
+keelson init                 # picks verified/documented installed hosts; otherwise portable AGENTS.md
+keelson init --claude --codex   # or name the first-class hosts you use
 ```
 
-That is the only step. Every init also writes the portable `AGENTS.md` + `.agents/skills/keelson` layer, so compatible agents can pick Keelson up later even if they were not selected today. Open your agent in the directory and talk to it. On first contact it reads the repository, drafts `.keelson/INTENT.md` (why the project exists, what it will not do, what the agent may decide alone), and, for an existing codebase, one spec per capability and rules for the paths that have conventions. It asks you to confirm in one short exchange. You never write those files by hand.
+That is the only step. The canonical runtime lives under `.keelson/`: `workflow.md` plus `skill/` and its references. Init also writes tiny discovery shims such as `AGENTS.md` and `.agents/skills/keelson/SKILL.md`, so compatible agents can find that one runtime later without duplicating it. Open your agent in the directory and talk to it. On first contact it reads the repository, drafts `.keelson/INTENT.md` (why the project exists, what it will not do, what the agent may decide alone), and, for an existing codebase, one spec per capability and rules for the paths that have conventions. It asks you to confirm in one short exchange. You never write those files by hand.
 
 `keelson init` also references the architecture notes, decision records, CI, and issue tracker it finds, instead of copying them. See [Existing projects](docs/existing-projects.md).
 
@@ -95,6 +95,8 @@ Claude Code users can also install the skill from the plugin marketplace (`/plug
 | Path | Holds | Written by |
 |---|---|---|
 | `.keelson/README.md` | Human map: what to read first, what every Keelson file means, and what survives landing | Keelson; refreshed by `update` |
+| `.keelson/workflow.md` | Canonical always-applicable operating loop | Keelson; refreshed by `update` |
+| `.keelson/skill/` | Canonical `SKILL.md` plus on-demand references | Keelson; refreshed by `update` |
 | `.keelson/INTENT.md` | Why the project exists, boundaries, hard constraints, what the agent may decide alone | Agent drafts; owner confirms |
 | `.keelson/ROADMAP.md` | The current milestone; later work as direction only. Links the tracker when there is one | You and the agent |
 | `.keelson/NOW.md` | What is in flight, what is blocked, the next step. Present tense, rewritten in full | The agent, when it stops or lands |
@@ -103,6 +105,7 @@ Claude Code users can also install the skill from the plugin marketplace (`/plug
 | `.keelson/rules/` | Conventions routed by path glob from `rules/index.md` | You and the agent |
 | `.keelson/changes/<name>/` | One directory per change in flight: `change.md`, `tasks.md`, `ledger.md`, `handoff.md`, delta specs | The agent |
 | `.keelson/config.yaml` | Tools, profile, check commands, `paths.specs`, `refs` to existing material, document budgets, guided mode, model overrides | `keelson init` |
+| `.keelson/.managed.json` | Package-owned discovery surfaces currently managed by this install | `keelson init` / `update`; do not hand-edit |
 | `.keelson/.local/` | Check evidence and per-machine state. Gitignored | `keelson check` |
 
 `changes/` is empty when nothing is in flight. Existing documents are referenced from `config.yaml → refs`, never copied.
@@ -132,9 +135,9 @@ So "implemented, tests pass, awaiting your review, not merged" and "merged, migr
 
 ## How it works
 
-1. **A resident block** under 20 lines in `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`. It says what `.keelson/` contains, how to size a change, and how to prove work is done.
+1. **A tiny discovery block** in `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, or `CODEBUDDY.md`. It only points the host to `.keelson/workflow.md` and `.keelson/skill/SKILL.md`; it is not another copy of the workflow.
 2. **Two hooks** (Claude Code). One prints the roadmap's `Now`, `NOW.md`, active changes, and handoff next steps at session start. The other prints one line per prompt with work and verification state, and nothing when the project is idle. Hooks inject state, never instructions.
-3. **One skill**, routed by need. `SKILL.md` is about 50 lines and points to one reference each for discovering what is wanted, shaping it, the domain model and glossary, context and impact, planning in vertical slices, engineering lenses, building, verifying, handing off, landing, reconciling new facts into the project, and debugging. The agent reads only the one it needs.
+3. **One canonical skill** at `.keelson/skill/SKILL.md`, routed by need. It points to one reference for each class of task; the agent reads only the one it needs. Host skill directories contain a one-file discovery shim, never another reference tree.
 4. **A thin CLI** that does mechanical work: scaffolds, fingerprints, merges specs, records evidence, refuses a landing that lacks it. Understanding the request, analysing impact, and reviewing code stay with the agent.
 
 Nothing in the skill is a gate on the agent. The gates are on artifacts.
@@ -170,40 +173,31 @@ The project's documents are kept small the same way. Each document type has a li
 - Path routing and `keelson impact` are navigation, not proof. The agent still reads for callers that a grep cannot see.
 - Files on disk are not a distributed lock, and a branch does not remove semantic conflicts. Claiming and merge control across machines belong to your tracker, pull requests, and CI.
 - A second agent agreeing with the first is a signal, not a correctness proof. The acceptance list is what gets checked.
-- Hooks exist only for Claude Code. Other tools rely on the resident block and `keelson context`. Of the 22 supported tools, two have been exercised in real sessions; the rest follow documented or conventional file locations and carry a confidence label.
+- Hooks currently exist only for Claude Code. The other first-class hosts use their documented instruction/skill discovery paths and the same `.keelson/` runtime. Claude Code has been exercised end-to-end and Codex has been exercised for skill loading; the remaining adapters are backed by host documentation and the shared adapter contract, not by claims of full-session validation.
 - Keelson never performs production operations. It reminds; you run.
 - Long-run evolution of large projects is the design goal. The 0.x releases have been exercised in real Claude Code sessions on small projects; the Codex CLI adapter has been verified to load the skill but not yet through a full change. Treat claims beyond that as untested.
 
 ## Supported tools
 
-`keelson init` takes one flag per tool, or `--tools a,b`, or nothing (it detects what is installed). Every project installs the portable cross-tool layer: `AGENTS.md` plus `.agents/skills/`. Hosts that already read this standard surface reuse it; Keelson adds a native surface only when it provides capability the shared layer does not. `keelson platforms` prints the full table with what is installed on your machine.
+Keelson deliberately keeps the official matrix small: **seven first-class CLI hosts** plus one portable standards fallback. A first-class adapter must have a verified or host-documented discovery path, deterministic init/update/uninstall ownership, one canonical `.keelson/` runtime, `doctor` coverage, and the same cross-platform adapter contract in tests. Tools outside this list can still use `--agents` when they read `AGENTS.md` and/or `.agents/skills/`; Keelson does not invent a host-specific directory for them.
 
-| Tool | Instructions | Skills | Hooks | Confidence |
-|---|---|---|---|---|
-| Claude Code `--claude` | `CLAUDE.md` | `.claude/skills/` | session start and per prompt | verified |
-| Codex CLI `--codex` | `AGENTS.md` | `.agents/skills/` | | verified |
-| Cursor `--cursor` | `AGENTS.md` | `.agents/skills/` | | documented |
-| OpenCode `--opencode` | `AGENTS.md` | `.agents/skills/` | | documented |
-| Gemini CLI `--gemini` | `GEMINI.md` | `.agents/skills/` | | documented |
-| GitHub Copilot `--copilot` | `AGENTS.md` | `.agents/skills/` | | documented |
-| Kiro `--kiro` | `AGENTS.md` | `.kiro/skills/` | | documented |
-| Kilo Code `--kilo` | `AGENTS.md` | `.agents/skills/` | | documented |
-| Antigravity `--antigravity` | `AGENTS.md`, `.agent/rules/keelson.md` | `.agent/skills/` | | convention |
-| Devin `--devin` | `AGENTS.md` | `.devin/skills/` | | convention |
-| Qoder `--qoder` | `AGENTS.md` | `.qoder/skills/` | | documented |
-| CodeBuddy `--codebuddy` | `AGENTS.md`, `.codebuddy/rules/keelson.md` | `.codebuddy/skills/` | | convention |
-| Droid `--droid` | `AGENTS.md` | `.factory/skills/` | | convention |
-| Pi Agent `--pi`, Oh My Pi `--ohmypi` | `AGENTS.md` | `.pi/skills/` | | convention |
-| Reasonix `--reasonix`, ZCode `--zcode`, Trae `--trae`, Grok Build `--grok`, Kimi Code `--kimi`, Snow CLI `--snow` | `AGENTS.md` (Trae also `.trae/rules/keelson.md`) | `.<tool>/skills/` | | convention |
-| Any `AGENTS.md` + `.agents/skills/` reader `--agents` (Amp, Cline, Deep Agents, Firebender, Warp, and others) | `AGENTS.md` | `.agents/skills/` | | documented |
+| Host | Flag | Instruction discovery | Skill discovery | Hooks | Evidence |
+|---|---|---|---|---|---|
+| Claude Code | `--claude` | `CLAUDE.md` | `.claude/skills/` | session start + prompt state | verified |
+| Codex CLI | `--codex` | `AGENTS.md` | `.agents/skills/` | — | verified |
+| OpenCode | `--opencode` | `AGENTS.md` | `.agents/skills/` | — | documented |
+| Pi coding agent | `--pi` | `AGENTS.md` | `.agents/skills/` | — | documented |
+| Gemini CLI | `--gemini` | `GEMINI.md` | `.agents/skills/` | — | documented |
+| Kiro CLI | `--kiro` | `AGENTS.md` | `.kiro/skills/` | — | documented |
+| CodeBuddy CLI | `--codebuddy` | `CODEBUDDY.md` | `.codebuddy/skills/` | — | documented |
+| Portable Agent Skills readers | `--agents` | `AGENTS.md` | `.agents/skills/` | — | standard fallback |
 
-Confidence says how the file locations were established. *Verified* tools have run real sessions with the maintainers. *Documented* locations come from the tool's own documentation. *Convention* locations follow the tool's directory convention and have not been exercised; if a tool does not pick up the skill, override its paths under `platforms.<id>` in `config.yaml` and run `keelson doctor`. Hooks exist only where the tool offers them; everywhere else the resident block tells the agent to run `keelson context` itself.
-
+With no explicit selection, `keelson init` auto-selects installed first-class hosts whose paths are verified or documented; if none are found it installs only the portable layer. Every selection still converges on the same `.keelson/workflow.md + .keelson/skill/` runtime. `keelson platforms` shows the support level, paths, confidence, installed state, and configured state.
 ## CLI
 
 | Command | Purpose |
 |---|---|
-| `keelson init` / `update` | Create or refresh `.keelson/`, references, skill, resident block, hooks. `--dry-run` previews |
+| `keelson init` / `update` | Create or refresh the canonical `.keelson/` runtime plus host discovery shims and hooks. `--dry-run` previews |
 | `keelson context --paths <files>` | INTENT, ROADMAP, NOW, active changes, references, matched rules |
 | `keelson impact <files>` | Importers, affected specs and rules, overlapping active changes |
 | `keelson new <name>` | Scaffold a change with owner, branch, delta base; `--worktree` for isolation |

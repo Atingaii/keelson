@@ -2,6 +2,23 @@
 
 Keelson is a small set of files, a thin CLI, and one skill. This page is the model behind them: what a change is, what states it moves through, what counts as evidence, and what Keelson deliberately is not.
 
+## Design laws
+
+Keelson borrows mature failure-control ideas from several engineering disciplines, but turns them into existing files and CLI invariants rather than new ceremonies.
+
+| Law | Why it matters | Keelson mechanism |
+|---|---|---|
+| **Desired state over mutation history** | Configuration systems are easier to recover when the current target is explicit instead of inferred from every past install step | `config.yaml` + `.managed.json`; `update` reconciles stale generated surfaces |
+| **Idempotent, recoverable transitions** | A retry after interruption should converge instead of making the install worse | repeatable `init/update`; generated directories keep the last complete copy until replacement is ready |
+| **Recognition over recall** | Humans and agents make fewer context errors when current state is visible at the point of use | `README.md` map, `NOW.md`, scoped rules, one routed reference instead of a large prompt |
+| **Explicit state machines over adjectives** | “Done” hides independent failure modes | separate work / verification / release dimensions and explicit landing gates |
+| **Observability must name the repair** | A health check that only says “bad” transfers debugging work to the user | `doctor` reports drift/health with the surface and the remediation (`update`, compact, re-check) |
+| **Evidence is revision-bound** | Reproducibility requires knowing which artifact a claim was measured against | `Verify:` entries bind commands and exit codes to a worktree fingerprint; edits make evidence stale |
+| **Handoffs are loss-sensitive interfaces** | Human factors failures happen at shift/session boundaries | `handoff.md`, `NOW.md`, owner/branch, one concrete next step; volatile details stay local |
+| **Progressive disclosure beats universal checklists** | More instructions eventually reduce compliance and attention | tiny discovery shim → compact workflow → one task-specific reference → scoped project rules |
+
+These are constraints on the harness itself. They should usually make Keelson smaller: when a principle becomes mechanically enforced, delete duplicate prose.
+
 ## Goal, milestone, change, slice
 
 Work on a long-lived project has four levels. Only the last two are files Keelson creates.

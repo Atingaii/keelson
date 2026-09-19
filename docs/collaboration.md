@@ -41,7 +41,7 @@ A handoff is a current-state summary. It is overwritten, never appended as a dia
 4. Re-run `keelson check --record` before building on prior verification; it is stale after any edit.
 5. Continue from **Next step**; update `handoff.md` and `NOW.md` when stopping again.
 
-The session-start hook prints each active change's next step, so on Claude Code the agent sees it before reading anything. On other tools the resident block tells it to run `keelson context` first.
+The session-start hook prints each active change's next step, so on Claude Code the agent sees it before reading anything. On other tools the discovery block points it to `.keelson/workflow.md`, whose ORIENT step runs `keelson context` first.
 
 ### What is committed and what is local
 

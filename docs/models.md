@@ -57,7 +57,7 @@ Failures at `deep` stop and ask the user; `deep` is the top tier and nothing esc
 4. The registry's `tiers` map for the platform.
 5. The registry's `rank` list for the platform: first entry for `light`, second for `standard`, last for `deep`.
 
-The platform is `--platform`, else the first entry in `config.yaml → tools`, else `claude`.
+The platform is `--platform`, otherwise the first entry in `config.yaml → tools`. A portable-only `agents` project has no model mapping unless the user chooses a first-class host with `--platform`.
 
 ## The registry
 
@@ -96,4 +96,4 @@ The project repository is not touched in any of these steps.
 
 ## Local detection
 
-`keelson init` and `keelson models --detect` scan the machine without network access: which of `claude`, `codex`, `gemini`, `opencode`, and `cursor-agent` are on the path and their versions; the default model in `~/.claude/settings.json`, `~/.codex/config.toml`, `ANTHROPIC_MODEL`, and `OPENAI_MODEL`; and which provider API keys are set. The result is cached in `~/.keelson/models.cache.json` and shown by `keelson models`. The cache is marked stale after 24 hours.
+`keelson init` and `keelson models --detect` scan the machine without network access for the seven first-class host CLIs (`claude`, `codex`, `opencode`, `pi`, `gemini`, `kiro-cli`, `codebuddy`) and their versions; the default model in `~/.claude/settings.json`, `~/.codex/config.toml`, `ANTHROPIC_MODEL`, and `OPENAI_MODEL`; and which provider API keys are set. The result is cached in `~/.keelson/models.cache.json` and shown by `keelson models`. The cache is marked stale after 24 hours.

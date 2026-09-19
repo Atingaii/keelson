@@ -93,4 +93,4 @@ keelson init
 keelson doctor
 ```
 
-它报告 Node 版本、配置迁移状态、每个配置工具的技能和常驻块是否存在且与 CLI 版本一致、hook 注册情况、每条 `validate` 发现、过期的验证、交接后 HEAD 是否移动、共享契约冲突、知识健康，以及哪些工具 CLI 在 PATH 上。
+它报告 Node 版本、配置迁移状态、canonical `.keelson/workflow.md` 与 `.keelson/skill/` 是否存在、每个配置宿主的发现 shim 是否指向它们并与 CLI 版本一致、hook 注册情况、每条 `validate` 发现、过期的验证、交接后 HEAD 是否移动、共享契约冲突、知识健康，以及哪些工具 CLI 在 PATH 上。

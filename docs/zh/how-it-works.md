@@ -4,20 +4,31 @@
 
 Keelson 是代理环境里的三个表面，加上仓库里一个人也能直接读懂的项目事实目录。`.keelson/README.md` 是这个目录的导航；它由 Keelson 维护并在 `keelson update` 时刷新，而项目事实文件不会因为升级 Keelson 被覆盖。本页精确描述每个机制。
 
-## 常驻块
+## Canonical 运行时与发现 shim
 
-`keelson init` 往工具的说明文件（`CLAUDE.md`、`AGENTS.md` 或 `GEMINI.md`）里追加一个块，位于 `<!-- keelson:start -->` 和 `<!-- keelson:end -->` 标记之间。`keelson update` 原地替换这个块；`keelson uninstall` 和 `keelson ablate` 移除它。文件里已有的内容从不被触碰。这个块不到 20 行，说明：
+`keelson init` 把完整的运行时指导统一放到一个项目本地根目录：
 
-- `.keelson/` 里有什么，以及既有文档从 `config.yaml` 引用；
-- 当 `guide: true` 时多一行：所有者正在学习工程，所以要用场景和取舍来解释，并在 spec 变更收尾时附一段简短的教学说明；
-- 非平凡工作前运行 `keelson context --paths <files>`，编辑共享模块前运行 `keelson impact <files>`；
-- 如何给变更定大小（trivial、quick、spec）；
-- 把决策记为已确认或假设，未决问题只阻塞依赖它的切片；
-- 只用 `keelson check --record` 声明"完成"，用 `keelson land` 落地，然后重写 `NOW.md`；
-- 停下时写 `handoff.md`，恢复时先检查工作树；
-- 细节在 `keelson` 技能里。
+```text
+.keelson/
+├── workflow.md
+└── skill/
+    ├── SKILL.md
+    └── references/
+```
 
-无论选择哪个宿主，每个初始化后的项目都会拥有 `AGENTS.md` + `.agents/skills/keelson/` 这一通用兼容层。已经读取这套表面的宿主直接复用它，不再生成重复副本；只有宿主原生路径能补充共享层缺少的能力时，Keelson 才额外生成原生说明或 Skill 路径。
+`.keelson/workflow.md` 是执行内核；`.keelson/skill/SKILL.md` 是任务路由器，references 只在命中时按需读取。初始化后的项目中，完整 Keelson 指导只有这一份。
+
+不同宿主仍然只能从它们认识的固定路径发现规则，所以 Keelson 会在 `.keelson/` 外写极薄适配：`CLAUDE.md`、`AGENTS.md`、`GEMINI.md`、`CODEBUDDY.md` 中的标记块，以及 `.claude/skills/keelson/SKILL.md`、`.agents/skills/keelson/SKILL.md` 等单文件 skill shim。这些入口只指向 `.keelson/workflow.md` 和 `.keelson/skill/SKILL.md`，不再携带 references。`keelson update` 原地刷新它们，并保留标记块之外的用户内容。
+
+每次 init 都安装通用的 `AGENTS.md` + `.agents/skills/keelson/SKILL.md` 发现层；只有确实能补充宿主发现能力时才增加原生 shim。实现不使用 symlink，因此 Windows、macOS、Linux 使用相同布局。
+
+## 受管目标状态与恢复
+
+生成的集成文件不再靠“磁盘上碰巧有什么”来推断。`.keelson/.managed.json` 记录当前安装真正负责的发现表面。运行 `update` 时，Keelson 从 `config.yaml` 计算目标状态，移除已经不需要且**能够确认由 Keelson 拥有**的旧适配，刷新当前宿主，再重写所有权清单。已知的历史路径只有在内容带有 Keelson 签名时才会清理，因此同目录下的用户文件不会被顺带删除。
+
+Keelson 更新自己维护的 Skill 目录时也不会“先删后写”。它先完整写入同级临时目录，替换期间保留上一份完整目录作为备份；如果失败就恢复。下一次 `update` 还能处理上一次中断留下的临时/备份残留。
+
+`keelson doctor` 检查的不只是“文件存在”：它会把 canonical workflow、canonical skill 的文件集合/内容、发现 shim、受管目标状态和已注册 hook 脚本，与当前 CLI 本应生成的结果比较。错误会指出具体漂移表面和修复方式，通常就是 `keelson update`。
 
 ## Hook（Claude Code）
 
@@ -30,11 +41,11 @@ Keelson 是代理环境里的三个表面，加上仓库里一个人也能直接
 
 会话快照每个会话花费几百 token 一次。每个提示词的那一行花费几十 token，空闲时为零。两个 hook 都不打印指令；它们打印状态。
 
-给 `init` 传 `--no-hooks` 可跳过。`settings.json` 里已有的 hook 被保留；Keelson 只增删命令路径包含 `.keelson/hooks/` 的条目。
+`--no-hooks` 会把 `hooks: false` 持久写入项目配置，之后 `update` 也保持关闭；`--hooks` 可重新开启。`settings.json` 里已有的 hook 被保留；Keelson 只增删命令路径包含 `.keelson/hooks/` 的条目。
 
 ## 技能
 
-`init` 把技能复制到工具的技能目录（`.claude/skills/keelson/` 或 `.agents/skills/keelson/`），并把包版本盖进 `SKILL.md` 的 frontmatter，好让 `keelson doctor` 发现过期的安装。它包含 `SKILL.md` 和十三个 reference：
+`init` 只在 `.keelson/skill/` 安装一份完整技能，并把包版本写入其 `SKILL.md` frontmatter；宿主 skill 目录只收到一个带版本的发现 `SKILL.md`，指向这份 canonical 副本。canonical 技能包含 `SKILL.md` 和十三个 reference：
 
 | Reference | 何时阅读 |
 |---|---|

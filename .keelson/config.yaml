@@ -3,7 +3,7 @@
 # check: commands (strings, or {name, command, kind}) that prove the code works. guide: true when the owner is learning engineering.
 # budgets: line budgets per document type; `keelson doctor` asks for a compaction when one is exceeded.
 # Docs: https://github.com/Atingaii/keelson/blob/main/docs/configuration.md
-version: 3
+version: 4
 tools:
   - claude
 lang: en
@@ -17,6 +17,7 @@ check:
   - npm run lint
   - npm run test
 guide: false
+hooks: true
 budgets:
   INTENT: 120
   ROADMAP: 80

@@ -2,20 +2,31 @@
 
 Keelson is three surfaces in the agent's environment and one human-readable directory of project facts in the repository. `.keelson/README.md` is the map into that directory; it is package-owned and refreshed by `keelson update`, while project facts are never overwritten just to upgrade Keelson. This page describes each mechanism precisely.
 
-## The resident block
+## The canonical runtime and discovery shims
 
-`keelson init` appends a block to the tool's instructions file (`CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`) between `<!-- keelson:start -->` and `<!-- keelson:end -->` markers. `keelson update` replaces the block in place; `keelson uninstall` and `keelson ablate` remove it. Existing content in the file is never touched. The block is under 20 lines and says:
+`keelson init` puts the complete runtime guidance under one project-local root:
 
-- what `.keelson/` contains and that existing documents are referenced from `config.yaml`;
-- when `guide: true`, one more line: the owner is learning engineering, so explain with scenarios and trade-offs and close spec changes with a short teaching note;
-- to run `keelson context --paths <files>` before non-trivial work and `keelson impact <files>` before editing shared modules;
-- how to size a change (trivial, quick, spec);
-- to record decisions as confirmed or assumed, and that open questions block only dependent slices;
-- to claim "done" only with `keelson check --record`, land with `keelson land`, then rewrite `NOW.md`;
-- to write `handoff.md` when stopping and check the worktree when resuming;
-- that the `keelson` skill holds the details.
+```text
+.keelson/
+├── workflow.md
+└── skill/
+    ├── SKILL.md
+    └── references/
+```
 
-Independently of the selected host, every initialized project receives `AGENTS.md` plus `.agents/skills/keelson/` as the portable compatibility layer. A host that already reads this surface reuses it instead of receiving a duplicate copy. Native instruction or skill paths are generated only where they add host-specific capability.
+`.keelson/workflow.md` is the operating kernel. `.keelson/skill/SKILL.md` is the task router; its references are loaded only when needed. This is the only full copy of Keelson guidance in an initialized project.
+
+Hosts still need files at paths they know how to discover, so Keelson writes tiny adapters outside `.keelson/`: a marked block in `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, or `CODEBUDDY.md`, and one-file skill shims such as `.claude/skills/keelson/SKILL.md` or `.agents/skills/keelson/SKILL.md`. Those adapters only point back to `.keelson/workflow.md` and `.keelson/skill/SKILL.md`; they contain no reference tree. `keelson update` refreshes them in place and preserves user-authored content outside the marked block.
+
+The portable `AGENTS.md` + `.agents/skills/keelson/SKILL.md` discovery layer is installed on every init. Native host shims are added only when they add discovery capability. No symlinks are used, so the layout behaves the same on Windows, macOS, and Linux.
+
+## Managed desired state and recovery
+
+Generated integration files are not inferred from whatever happens to be on disk. `.keelson/.managed.json` records the concrete discovery surfaces the current install owns. On `update`, Keelson computes the desired surfaces from `config.yaml`, removes stale **Keelson-owned** adapters, refreshes the selected adapters, and rewrites the manifest. Known legacy paths are removed only when their contents carry a Keelson signature, so neighboring user files survive migration.
+
+Package-owned skill directories are replaced recoverably rather than deleted first. Keelson populates a sibling temporary directory, keeps the last complete directory as a backup during the rename, and restores it if replacement fails. A later `update` also recovers interrupted temp/backup residue.
+
+`keelson doctor` checks more than presence: it compares the canonical workflow, canonical skill file set/content, discovery shims, managed desired state, and registered hook scripts with what this CLI version would generate. Its errors name the broken surface and point to the repair path, normally `keelson update`.
 
 ## Hooks (Claude Code)
 
@@ -28,11 +39,11 @@ Independently of the selected host, every initialized project receives `AGENTS.m
 
 The session snapshot costs a few hundred tokens once per session. The prompt line costs a few dozen tokens per turn and zero when idle. Neither hook prints instructions; they print state.
 
-Pass `--no-hooks` to `init` to skip them. Existing hooks in `settings.json` are preserved; Keelson only adds and removes entries whose command path contains `.keelson/hooks/`.
+`--no-hooks` persists `hooks: false` in project config, so later `update` keeps them disabled; `--hooks` turns them back on. Existing hooks in `settings.json` are preserved; Keelson only adds and removes entries whose command path contains `.keelson/hooks/`.
 
 ## The skill
 
-`init` copies the skill to the tool's skill directory (`.claude/skills/keelson/` or `.agents/skills/keelson/`) and stamps the package version into `SKILL.md`'s frontmatter so `keelson doctor` can spot a stale install. It contains `SKILL.md` and thirteen references:
+`init` installs the full skill once at `.keelson/skill/` and stamps the package version into its `SKILL.md` frontmatter. Host skill directories receive only a versioned discovery `SKILL.md` that points to that canonical copy. The canonical skill contains `SKILL.md` and thirteen references:
 
 | Reference | Read when |
 |---|---|
