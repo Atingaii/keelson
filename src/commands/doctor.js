@@ -9,6 +9,7 @@ import { projectStatus } from './status.js';
 import { parseFrontmatter } from '../lib/markdown.js';
 import { detectLocal } from '../lib/models.js';
 import { knowledgeHealth } from '../lib/health.js';
+import { listSessionStates } from '../lib/session.js';
 import { ok, warn, fail, heading, dim } from '../lib/out.js';
 
 const require = createRequire(import.meta.url);
@@ -116,6 +117,11 @@ export async function doctor({ flags }, cwd = process.cwd()) {
     if (c.blockedBy.length) add('info', `${c.name}: waits on ${c.blockedBy.join(', ')}`);
   }
   for (const k of st.conflicts) add('warn', `shared contract between ${k.a} and ${k.b}: ${[...k.capabilities, ...k.paths].join(', ')}`);
+
+  const activeNames = new Set(st.changes.map((c) => c.name));
+  for (const session of listSessionStates(root)) {
+    if (session.change && !activeNames.has(session.change)) add('warn', `stale session focus points to missing change "${session.change}" under .keelson/.runtime/sessions/`);
+  }
 
   const health = knowledgeHealth(root, cfg, p);
   for (const h of health) add(h.level, `${h.kind}: ${h.text} → ${h.fix}`);
