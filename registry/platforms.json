@@ -1,7 +1,7 @@
 {
   "version": 1,
   "updated": "2026-09-19",
-  "note": "Where each coding tool reads instructions and skills. `confidence` says how the path was established: verified = exercised in a real session by the maintainers; documented = taken from the tool's published documentation; convention = follows the tool's directory convention and should be confirmed with `keelson doctor` in your project. Every project installs the portable cross-tool layer (`AGENTS.md` + `.agents/skills/`). When a documented host already reads that standard layer, Keelson reuses it instead of installing a duplicate native copy; host-specific surfaces exist only when they add capability the portable layer does not provide. Override any path under `platforms.<id>` in config.yaml.",
+  "note": "Where each coding tool discovers Keelson instructions and the one-file skill shim. Canonical workflow and skill guidance live only under `.keelson/` in each initialized project. `confidence` says how a discovery path was established: verified = exercised in a real session by the maintainers; documented = taken from the tool's published documentation; convention = follows the tool's directory convention and should be confirmed with `keelson doctor` in your project. Every project installs the portable discovery layer (`AGENTS.md` + `.agents/skills/`). Host-specific surfaces exist only when they add discovery capability. Override any discovery path under `platforms.<id>` in config.yaml.",
   "platforms": {
     "claude": {
       "label": "Claude Code",
