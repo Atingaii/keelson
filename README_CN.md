@@ -183,7 +183,7 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 
 `keelson init` 接受每个工具一个标志，或 `--tools a,b`，或什么都不给（它探测本机已安装的工具）。每个项目都把 canonical 指导放在 `.keelson/`，外部只安装通用发现层：`AGENTS.md` 加 `.agents/skills/`。已有标准发现能力的宿主直接复用；必须增加宿主原生路径时，也只生成指向同一 `.keelson/` 真源的 shim。`keelson platforms` 打印完整表格，并标出本机已安装的工具。
 
-| 工具 | 说明文件 | 技能 | Hook | 可信度 |
+| 工具 | 说明发现路径 | 技能发现路径 | Hook | 可信度 |
 |---|---|---|---|---|
 | Claude Code `--claude` | `CLAUDE.md` | `.claude/skills/` | 会话启动和每个提示词 | verified |
 | Codex CLI `--codex` | `AGENTS.md` | `.agents/skills/` | | verified |
