@@ -3,6 +3,7 @@ import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { exists, read, write } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
 import { loadChange, loadAllChanges } from '../lib/changes.js';
+import { parseFrontmatter } from '../lib/markdown.js';
 import { headSha, gitUserName } from '../lib/git.js';
 import { skillSource } from '../platforms/index.js';
 import { ok, info } from '../lib/out.js';
@@ -23,11 +24,11 @@ export async function handoff({ flags, positional }, cwd = process.cwd()) {
   const file = path.join(c.dir, 'handoff.md');
   const front = `---\nat: ${headSha(root) ?? 'no-git'}\nupdated: ${new Date().toISOString().slice(0, 16).replace('T', ' ')}\nby: ${flags.by ?? gitUserName(root)}\n---\n`;
   if (exists(file)) {
-    const cur = read(file).replace(/^---\n[\s\S]*?\n---\n/, '');
+    const cur = parseFrontmatter(read(file)).body;
     write(file, front + cur);
     ok(`re-stamped ${path.relative(root, file)} (fill in what changed since the last handoff)`);
   } else {
-    const tpl = read(path.join(skillSource(cfg.lang), 'templates', 'handoff.md')).replace(/^---\n[\s\S]*?\n---\n/, '').replace(/\{\{name\}\}/g, name);
+    const tpl = parseFrontmatter(read(path.join(skillSource(cfg.lang), 'templates', 'handoff.md'))).body.replace(/\{\{name\}\}/g, name);
     write(file, front + tpl);
     ok(`created ${path.relative(root, file)}`);
   }
