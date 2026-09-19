@@ -2,7 +2,7 @@
 
 # 它如何工作
 
-Keelson 是代理环境里的三个表面，加上仓库里的一个事实目录。本页精确描述每个机制。
+Keelson 是代理环境里的三个表面，加上仓库里一个人也能直接读懂的项目事实目录。`.keelson/README.md` 是这个目录的导航；它由 Keelson 维护并在 `keelson update` 时刷新，而项目事实文件不会因为升级 Keelson 被覆盖。本页精确描述每个机制。
 
 ## 常驻块
 
@@ -17,7 +17,7 @@ Keelson 是代理环境里的三个表面，加上仓库里的一个事实目录
 - 停下时写 `handoff.md`，恢复时先检查工作树；
 - 细节在 `keelson` 技能里。
 
-对 Cursor，同样的文本也写入 `.cursor/rules/keelson.mdc`，带 `alwaysApply: true`。
+对 Cursor，同样的文本也写入 `.cursor/rules/keelson.mdc`，带 `alwaysApply: true`。无论选择哪个宿主，每个初始化后的项目都会额外拥有 `AGENTS.md` + `.agents/skills/keelson/` 这一通用兼容层。
 
 ## Hook（Claude Code）
 
