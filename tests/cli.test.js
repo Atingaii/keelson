@@ -292,7 +292,7 @@ test('change lifecycle: new → gates → check --record → land folds specs an
   const rec = run(dir, ['check', '--record', 'pagination', '--quiet'], { env });
   assert.match(rec.stdout, /recorded in/);
   assert.match(read(dir, '.keelson/changes/add-pagination/ledger.md'), /### Verify: pagination\n`npm run test` exit 0 · tree [0-9a-f]{10}/);
-  assert.ok(fs.readdirSync(path.join(dir, '.keelson/.local/evidence')).length >= 1);
+  assert.ok(fs.readdirSync(path.join(dir, '.keelson/.runtime/evidence')).length >= 1);
   assert.equal(JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes[0].verification.state, 'passed');
   const onlyAssumed = run(dir, ['land'], { env, allowFail: true });
   assert.match(onlyAssumed.stderr, /assumed decision/);
@@ -368,17 +368,69 @@ test('check runs configured commands and reports exit codes', () => {
   assert.match(r.stdout, /`exit 3` exit 3/);
 });
 
-test('hooks print a snapshot and a one-line state', () => {
+test('Claude hooks persist anonymous session identity and inject only focused work', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--tools', 'claude'], { env });
-  const snap = execFileSync('node', [path.join(dir, '.keelson/hooks/session-start.mjs')], { env: { ...process.env, CLAUDE_PROJECT_DIR: dir }, encoding: 'utf8' });
+  const envFile = path.join(dir, 'claude-env');
+  const input = JSON.stringify({ session_id: 'host-session-123', source: 'startup' });
+
+  const snap = execFileSync('node', [path.join(dir, '.keelson/hooks/session-start.mjs')], {
+    input,
+    env: { ...process.env, CLAUDE_PROJECT_DIR: dir, CLAUDE_ENV_FILE: envFile },
+    encoding: 'utf8'
+  });
   assert.match(snap, /\[keelson\]/);
-  assert.match(snap, /Active changes: none/);
-  const empty = execFileSync('node', [path.join(dir, '.keelson/hooks/prompt-state.mjs')], { env: { ...process.env, CLAUDE_PROJECT_DIR: dir }, encoding: 'utf8' });
-  assert.equal(empty, '');
-  run(dir, ['new', 'thing'], { env });
-  const line = execFileSync('node', [path.join(dir, '.keelson/hooks/prompt-state.mjs')], { env: { ...process.env, CLAUDE_PROJECT_DIR: dir }, encoding: 'utf8' });
-  assert.match(line, /^\[keelson\] active: thing · in-progress · verify not-run\n$/);
+  assert.match(snap, /Session focus is local/);
+  const exported = read(dir, 'claude-env').match(/KEELSON_SESSION_ID=([0-9a-f]{32})/)[1];
+  assert.equal(fs.readdirSync(path.join(dir, '.keelson/.runtime/sessions')).length, 1);
+
+  const sessionEnv = { ...env, KEELSON_SESSION_ID: exported };
+  run(dir, ['new', 'thing'], { env: sessionEnv });
+  const line = execFileSync('node', [path.join(dir, '.keelson/hooks/prompt-state.mjs')], {
+    input,
+    env: { ...process.env, CLAUDE_PROJECT_DIR: dir },
+    encoding: 'utf8'
+  });
+  assert.match(line, /^\[keelson\] focus: thing · in-progress · verify not-run\n$/);
+});
+
+test('sessions focus independent work items; ready is derived without a user finish phrase', () => {
+  const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"node -e \\"process.exit(0)\\""}}' });
+  run(dir, ['init', '--no-hooks'], { env });
+  const envA = { ...env, KEELSON_SESSION_ID: 'session-a' };
+  const envB = { ...env, KEELSON_SESSION_ID: 'session-b' };
+  const envC = { ...env, KEELSON_SESSION_ID: 'session-c' };
+
+  run(dir, ['new', 'alpha'], { env: envA });
+  run(dir, ['new', 'beta'], { env: envB });
+  assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: envA }).stdout).focus, 'alpha');
+  assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: envB }).stdout).focus, 'beta');
+
+  for (const name of ['alpha', 'beta']) {
+    write(dir, `.keelson/changes/${name}/change.md`, read(dir, `.keelson/changes/${name}/change.md`).replace('- [ ] … — check: `…`', '- [x] works — check: `npm test`'));
+  }
+
+  run(dir, ['check', '--record', 'alpha verified', '--quiet'], { env: envA });
+  assert.match(read(dir, '.keelson/changes/alpha/ledger.md'), /alpha verified/);
+  assert.ok(!exists(dir, '.keelson/changes/beta/ledger.md'));
+
+  const statusA = JSON.parse(run(dir, ['status', '--json'], { env: envA }).stdout);
+  assert.equal(statusA.focus, 'alpha');
+  assert.equal(statusA.changes.find((c) => c.name === 'alpha').work, 'ready');
+
+  // Landing is a lifecycle transition, not something that waits for the user to say "done".
+  run(dir, ['land'], { env: envA });
+  assert.ok(!exists(dir, '.keelson/changes/alpha'));
+  assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: envA }).stdout).focus, null);
+
+  // Another conversation remains isolated on its own work item.
+  assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: envB }).stdout).focus, 'beta');
+  assert.ok(exists(dir, '.keelson/changes/beta/change.md'));
+
+  // A new session does not complete or cancel durable work; it may deliberately resume the sole candidate.
+  assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: envC }).stdout).focus, null);
+  run(dir, ['focus', '--auto'], { env: envC });
+  assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: envC }).stdout).focus, 'beta');
 });
 
 test('handoff and session hook tolerate CRLF files', () => {
@@ -396,8 +448,8 @@ test('handoff and session hook tolerate CRLF files', () => {
   run(dir, ['handoff', 'crlf-handoff', '--by', 'Ann'], { env });
   const restamped = read(dir, file);
   assert.equal((restamped.match(/^---\r?$/gm) || []).length, 2);
-  const snap = execFileSync('node', [path.join(dir, '.keelson/hooks/session-start.mjs')], { env: { ...process.env, CLAUDE_PROJECT_DIR: dir }, encoding: 'utf8' });
-  assert.match(snap, /crlf-handoff handoff → next: Continue from CRLF\./);
+  const ctx = JSON.parse(run(dir, ['context', '--json'], { env }).stdout);
+  assert.equal(ctx.changes.find((c) => c.name === 'crlf-handoff').handoffNext.trim(), 'Continue from CRLF.');
 });
 
 test('ablate removes every surface and restore brings it back byte-for-byte', () => {
@@ -466,7 +518,7 @@ test('per-command --help prints that command only', () => {
   assert.doesNotMatch(out, /keelson land/);
 });
 
-test('init references existing project material and ignores .keelson/.local', () => {
+test('init references existing project material and ignores .keelson/.runtime', () => {
   const dir = tmpProject({ 'docs/adr/0001.md': '# ADR', 'ARCHITECTURE.md': '# arch', '.github/workflows/ci.yml': 'x', '.gitignore': 'node_modules\n' });
   execFileSync('git', ['init', '-q'], { cwd: dir });
   execFileSync('git', ['remote', 'add', 'origin', 'git@github.com:acme/shop.git'], { cwd: dir });
@@ -477,7 +529,8 @@ test('init references existing project material and ignores .keelson/.local', ()
   assert.match(cfg, /architecture: ARCHITECTURE\.md/);
   assert.match(cfg, /tasks: https:\/\/github\.com\/acme\/shop\/issues/);
   assert.match(cfg, /ci: \.github\/workflows/);
-  assert.match(read(dir, '.gitignore'), /^node_modules\n[\s\S]*\.keelson\/\.local\/$/m);
+  assert.match(read(dir, '.gitignore'), /^\.keelson\/\.runtime\/$/m);
+  assert.match(read(dir, '.gitignore'), /^\.keelson\/\.local\/$/m);
   assert.ok(!exists(dir, '.keelson/ROADMAP.md'));
   const ctx = run(dir, ['context'], { env }).stdout;
   assert.match(ctx, /Existing project material[\s\S]*decisions: docs\/adr/);
