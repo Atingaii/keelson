@@ -82,7 +82,7 @@ Keelson 把项目需要的事实留在仓库里，以代理在恰当时机读取
 npm install -g keelson
 cd your-project
 keelson init                 # 自动选 verified/documented 宿主；否则只装通用 AGENTS.md 层
-keelson init --cursor --codex   # 或者点名你在用的那些
+keelson init --claude --codex   # 或点名你使用的一等公民宿主
 ```
 
 这是唯一的一步。canonical 运行时统一位于 `.keelson/`：`workflow.md` 加 `skill/` 与其 references。init 只在外部写入很薄的发现入口，例如 `AGENTS.md` 和 `.agents/skills/keelson/SKILL.md`，所以以后换 Agent 也只会找到同一份真源，不会复制整套规则。在该目录下打开你的代理，开始对话。首次接触时，它读取仓库，起草 `.keelson/INTENT.md`（项目为什么存在、明确不做什么、代理可以自行决定什么）；对已有代码的项目，还会为每个能力写一份 spec，为有约定的路径写 rules。然后用一次简短的交流请你确认。这些文件你永远不需要手写。
@@ -137,7 +137,7 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 
 ## 它如何工作
 
-1. **一个极薄的发现块**，写在 `CLAUDE.md`、`AGENTS.md` 或 `GEMINI.md` 里。它只把宿主指向 `.keelson/workflow.md` 和 `.keelson/skill/SKILL.md`，不再复制工作流。
+1. **一个极薄的发现块**，写在 `CLAUDE.md`、`AGENTS.md`、`GEMINI.md` 或 `CODEBUDDY.md` 里。它只把宿主指向 `.keelson/workflow.md` 和 `.keelson/skill/SKILL.md`，不再复制工作流。
 2. **两个 hook**（Claude Code）。一个在会话启动时打印路线图的 `Now`、`NOW.md`、活动变更和交接的下一步。另一个在每个提示词前打印一行 work 与 verification 状态，项目空闲时什么都不打印。Hook 注入状态，从不注入指令。
 3. **一个 canonical 技能**，位于 `.keelson/skill/SKILL.md`，按需要路由到 references。各宿主的 skill 目录只留一个发现 shim，不再各复制一套 references。
 4. **一个薄 CLI**，只做机械性工作：搭脚手架、算指纹、合并 specs、记录证据、拒绝没有证据的落地。理解需求、分析影响、评审代码仍然由代理完成。
@@ -175,35 +175,26 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 - 路径路由和 `keelson impact` 是导航，不是证明。grep 看不见的调用方仍然要靠代理阅读。
 - 磁盘上的文件不是分布式锁，分支也不消除语义冲突。跨机器的认领与合并控制属于你的跟踪器、pull request 和 CI。
 - 第二个代理同意第一个代理，是一个信号，不是正确性证明。真正被检查的是验收清单。
-- Hook 只在 Claude Code 上存在。其他工具依赖常驻块和 `keelson context`。在 22 个受支持的工具里，两个在真实会话中验证过；其余按文档或惯例确定文件位置，并带有可信度标签。
+- 当前只有 Claude Code 使用 Keelson hook。其余一等公民宿主使用各自官方文档明确的说明/Skill 发现路径，并共同指向同一 `.keelson/` 真源。Claude Code 已做端到端使用，Codex 已验证 Skill 加载；其余适配器依赖宿主官方文档和统一适配契约，不把“有目录”夸大成完整会话验证。
 - Keelson 从不执行生产操作。它提醒，你来运行。
 - 大型项目的长期演进是设计目标。0.x 版本在真实的 Claude Code 会话和小项目上跑过；Codex CLI 适配器验证过能加载技能，但还没有完整走完一个变更。超出这个范围的说法都视为未验证。
 
 ## 支持的工具
 
-`keelson init` 接受每个工具一个标志、`--tools a,b`，或什么都不给。未指定时，只自动选择路径已经 `verified/documented` 且本机已安装的宿主；`convention` 宿主绝不靠猜测自动开启。一个可靠宿主也没找到时，只安装通用 `AGENTS.md` + `.agents/skills/` 发现层。canonical 指导始终只在 `.keelson/`，宿主原生路径只作为同一真源的 shim。`keelson platforms` 打印完整表格，并标出本机已安装的工具。
+Keelson 有意把官方矩阵控制得很小：**7 个一等公民 CLI 宿主 + 1 个通用标准兜底层**。要称为一等公民，必须同时满足：发现路径已经真实验证或有宿主官方文档；init/update/uninstall 的所有权确定；完整指导只有一份 `.keelson/` 真源；`doctor` 能诊断；并通过同一套跨平台适配契约测试。名单之外的工具如果读取 `AGENTS.md` 和/或 `.agents/skills/`，仍可使用 `--agents`；Keelson 不再为它们猜一个专用隐藏目录。
 
-| 工具 | 说明发现路径 | 技能发现路径 | Hook | 可信度 |
-|---|---|---|---|---|
-| Claude Code `--claude` | `CLAUDE.md` | `.claude/skills/` | 会话启动和每个提示词 | verified |
-| Codex CLI `--codex` | `AGENTS.md` | `.agents/skills/` | | verified |
-| Cursor `--cursor` | `AGENTS.md` | `.agents/skills/` | | documented |
-| OpenCode `--opencode` | `AGENTS.md` | `.agents/skills/` | | documented |
-| Gemini CLI `--gemini` | `GEMINI.md` | `.agents/skills/` | | documented |
-| GitHub Copilot `--copilot` | `AGENTS.md` | `.agents/skills/` | | documented |
-| Kiro `--kiro` | `AGENTS.md` | `.kiro/skills/` | | documented |
-| Kilo Code `--kilo` | `AGENTS.md` | `.agents/skills/` | | documented |
-| Antigravity `--antigravity` | `AGENTS.md`、`.agent/rules/keelson.md` | `.agent/skills/` | | convention |
-| Devin `--devin` | `AGENTS.md` | `.devin/skills/` | | convention |
-| Qoder `--qoder` | `AGENTS.md` | `.qoder/skills/` | | documented |
-| CodeBuddy `--codebuddy` | `AGENTS.md`、`.codebuddy/rules/keelson.md` | `.codebuddy/skills/` | | convention |
-| Droid `--droid` | `AGENTS.md` | `.factory/skills/` | | convention |
-| Pi Agent `--pi`、Oh My Pi `--ohmypi` | `AGENTS.md` | `.pi/skills/` | | convention |
-| Reasonix `--reasonix`、ZCode `--zcode`、Trae `--trae`、Grok Build `--grok`、Kimi Code `--kimi`、Snow CLI `--snow` | `AGENTS.md`（Trae 另有 `.trae/rules/keelson.md`） | `.<tool>/skills/` | | convention |
-| 任何读取 `AGENTS.md` + `.agents/skills/` 的工具 `--agents`（Amp、Cline、Deep Agents、Firebender、Warp 等） | `AGENTS.md` | `.agents/skills/` | | documented |
+| 宿主 | 标志 | 说明发现路径 | Skill 发现路径 | Hook | 依据 |
+|---|---|---|---|---|---|
+| Claude Code | `--claude` | `CLAUDE.md` | `.claude/skills/` | 会话启动 + prompt 状态 | verified |
+| Codex CLI | `--codex` | `AGENTS.md` | `.agents/skills/` | — | verified |
+| OpenCode | `--opencode` | `AGENTS.md` | `.agents/skills/` | — | documented |
+| Pi coding agent | `--pi` | `AGENTS.md` | `.agents/skills/` | — | documented |
+| Gemini CLI | `--gemini` | `GEMINI.md` | `.agents/skills/` | — | documented |
+| Kiro CLI | `--kiro` | `AGENTS.md` | `.kiro/skills/` | — | documented |
+| CodeBuddy CLI | `--codebuddy` | `CODEBUDDY.md` | `.codebuddy/skills/` | — | documented |
+| 通用 Agent Skills 读取器 | `--agents` | `AGENTS.md` | `.agents/skills/` | — | 标准兜底 |
 
-可信度说明文件位置是怎么确定的。*verified*（已验证）的工具与维护者跑过真实会话。*documented*（有文档）的位置来自该工具自己的文档。*convention*（按惯例）的位置遵循该工具的目录惯例，尚未实际验证；如果某个工具没有拾取技能，在 `config.yaml` 的 `platforms.<id>` 下覆盖它的路径，然后运行 `keelson doctor`。Hook 只在工具提供的地方存在；其他地方由常驻块要求代理自己运行 `keelson context`。
-
+没有显式指定宿主时，`keelson init` 只自动选择本机已安装、且路径为 verified/documented 的一等公民；一个也没有时只安装通用层。不管选择几个宿主，最终都收敛到同一份 `.keelson/workflow.md + .keelson/skill/`。`keelson platforms` 会显示支持层级、路径、可信度、本机安装状态和项目配置状态。
 ## CLI
 
 | 命令 | 用途 |
