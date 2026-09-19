@@ -53,7 +53,7 @@ The repository uses Keelson on itself. `.keelson/INTENT.md` states what the proj
 
 ## Adding a platform generator
 
-1. Add an entry to `PLATFORMS` in `src/platforms/index.js` with `label`, `instructions` (the file that gets the resident block), `skillsDir`, optional `rulesFile`, and `hooks` (true only if the tool runs hooks the way Claude Code does).
+1. Add an entry to `PLATFORMS` in `src/platforms/index.js` with `label`, `instructions` (the file that gets the discovery block), `skillsDir` (where the one-file skill shim is discovered), optional `rulesFile`, and `hooks` (true only if the tool runs hooks the way Claude Code does). The canonical workflow and skill always remain under `.keelson/`.
 2. If the tool needs a different file shape, extend `installInstructions`.
 3. Add the tool's CLI name to `detectLocal` in `src/lib/models.js` and a platform entry to `registry/models.json`.
 4. Add a row to the supported tools table in `README.md` and `README_CN.md`.
