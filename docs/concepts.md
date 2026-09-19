@@ -8,7 +8,7 @@ Keelson borrows mature failure-control ideas from several engineering discipline
 
 | Law | Why it matters | Keelson mechanism |
 |---|---|---|
-| **Desired state over mutation history** | Configuration systems are easier to recover when the current target is explicit instead of inferred from every past install step | `config.yaml` + `.managed.json`; `update` reconciles stale generated surfaces |
+| **Desired state over mutation history** | Configuration systems are easier to recover when the current target is explicit instead of inferred from every past install step | `config.yaml` + `manifest.json`; `update` reconciles stale generated surfaces |
 | **Idempotent, recoverable transitions** | A retry after interruption should converge instead of making the install worse | repeatable `init/update`; generated directories keep the last complete copy until replacement is ready |
 | **Recognition over recall** | Humans and agents make fewer context errors when current state is visible at the point of use | `README.md` map, `NOW.md`, scoped rules, one routed reference instead of a large prompt |
 | **Explicit state machines over adjectives** | “Done” hides independent failure modes | separate work / verification / release dimensions and explicit landing gates |
@@ -16,12 +16,13 @@ Keelson borrows mature failure-control ideas from several engineering discipline
 | **Evidence is revision-bound** | Reproducibility requires knowing which artifact a claim was measured against | `Verify:` entries bind commands and exit codes to a worktree fingerprint; edits make evidence stale |
 | **Handoffs are loss-sensitive interfaces** | Human factors failures happen at shift/session boundaries | `handoff.md`, `NOW.md`, owner/branch, one concrete next step; volatile details stay local |
 | **Progressive disclosure beats universal checklists** | More instructions eventually reduce compliance and attention | tiny discovery shim → compact workflow → one task-specific reference → scoped project rules |
+| **Golden path with escape hatches** | The common case should require almost no product-specific knowledge, while uncommon cases remain possible | user talks normally; the Skill routes six intents; sizing/config/host flags are explicit overrides, not prerequisites |
 
 These are constraints on the harness itself. They should usually make Keelson smaller: when a principle becomes mechanically enforced, delete duplicate prose.
 
 ## Goal, milestone, change, slice
 
-Work on a long-lived project has four levels. Only the last two are files Keelson creates.
+Work on a long-lived project has four conceptual levels. Keelson does not pre-create a document for every level: each artifact appears only when that level has durable information worth keeping.
 
 | Level | Where it lives | What it answers |
 |---|---|---|
@@ -30,7 +31,7 @@ Work on a long-lived project has four levels. Only the last two are files Keelso
 | Change | `.keelson/changes/<name>/` | What behaviour changes, why, and how anyone will know it is done |
 | Slice | `## Slice:` headings in `tasks.md` | The smallest part the owner could accept on its own |
 
-Near-term work is concrete. Later work is direction and dependencies under `ROADMAP.md → Next`, not tasks with invented steps. When the project already has a tracker, the tracker stays the authority for what is wanted and in what order; `config.yaml → refs.tasks` points at it and `change.md` links the issue.
+Near-term work is concrete. `ROADMAP.md` is optional: create it only when the repository needs a milestone/direction that is not already clear from its tracker. Later work is direction and dependencies, not tasks with invented steps. When the project already has a tracker, the tracker stays the authority for what is wanted and in what order; `config.yaml → refs.tasks` points at it and `change.md` links the issue.
 
 ## The seven capability areas
 
