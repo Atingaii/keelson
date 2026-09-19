@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { projectPaths, findProjectRoot } from '../lib/paths.js';
 import { exists, write, read, mkdirp, readOr } from '../lib/fs.js';
 import { loadConfig, saveConfig, DEFAULT_CONFIG, CONFIG_VERSION } from '../lib/config.js';
-import { PLATFORMS, PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile, plannedManagedRemovals, reconcileManagedTargets, writeManagedState } from '../platforms/index.js';
+import { PLATFORMS, PLATFORM_IDS, RETIRED_PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile, plannedManagedRemovals, reconcileManagedTargets, writeManagedState } from '../platforms/index.js';
 import { list } from '../lib/args.js';
 import { ok, info, warn, heading, dim } from '../lib/out.js';
 import { detectAndCache, detectLocal } from '../lib/models.js';
@@ -75,10 +75,20 @@ export async function init({ flags }, cwd = process.cwd()) {
 
   // Tools: explicit selection · saved config · reliable auto-detection · portable fallback.
   const flagged = PLATFORM_IDS.filter((id) => flags[id] === true);
+  const explicitlySelected = list(flags.tools).length > 0 || flagged.length > 0;
   let tools = list(flags.tools).length ? list(flags.tools) : flagged.length ? flagged : cfg.tools?.length && !fresh ? cfg.tools : [];
   let detectedTools = false;
   let portableFallback = false;
   let conventionDetected = [];
+  let retiredFromConfig = [];
+  if (!explicitlySelected && !fresh) {
+    retiredFromConfig = tools.filter((id) => RETIRED_PLATFORM_IDS.includes(id));
+    if (retiredFromConfig.length) tools = tools.filter((id) => !RETIRED_PLATFORM_IDS.includes(id));
+    if (!tools.length && retiredFromConfig.length) {
+      tools = ['agents'];
+      portableFallback = true;
+    }
+  }
   if (!tools.length) {
     const detected = chooseDetectedTools(detectLocal().tools);
     tools = detected.tools;
@@ -115,12 +125,14 @@ export async function init({ flags }, cwd = process.cwd()) {
       const ins = path.join(root, t.instructions);
       console.log(`  ${(exists(ins) ? (read(ins).includes('<!-- keelson:start -->') ? 'refresh' : 'append') : 'create').padEnd(9)} ${t.instructions}`);
     }
+    if (retiredFromConfig.length) console.log(`  migrate   config tools: drop retired ${retiredFromConfig.join(', ')}`);
     if (rawVersion < CONFIG_VERSION) console.log(`  migrate   .keelson/config.yaml v${rawVersion} → v${CONFIG_VERSION}`);
     console.log(dim('nothing written'));
     return 0;
   }
 
   heading(`Keelson ${fresh ? 'init' : 'update'} in ${root}`);
+  if (retiredFromConfig.length) warn(`retired host adapters removed from config: ${retiredFromConfig.join(', ')}; use the portable agents layer or select one of: ${PLATFORM_IDS.filter((id) => id !== 'agents').join(', ')}`);
   if (detectedTools) info(`tools detected on this machine: ${cfg.tools.map((t) => PLATFORMS[t].label).join(', ')} (override with --tools or --<platform>)`);
   else if (portableFallback) {
     const note = conventionDetected.length ? `; convention-only detections: ${conventionDetected.map((t) => PLATFORMS[t].label).join(', ')} (opt in explicitly if wanted)` : '';
