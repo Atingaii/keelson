@@ -1,16 +1,17 @@
 # Roadmap
 
 ## Now
-Keep the common path almost invisible: `keelson init` once, then natural-language work. The golden-path redesign is cross-platform verified: fresh projects start with a minimal control plane, project knowledge grows on demand, quick/spec change workspaces grow progressively, and the Skill routes six user intents instead of exposing internal mechanics.
+Make Keelson correct even when users never announce task boundaries. The durable work lifecycle is independent from chat/session lifetime; per-session focus is local convenience, readiness is derived from acceptance/evidence, and handoff is an explicit transfer artifact rather than a normal resume requirement.
 
-Preserve the reliability foundation: one canonical runtime under `.keelson/`, seven first-class CLI hosts plus the portable Agent Skills layer, `manifest.json` desired-state ownership, recoverable update, drift diagnostics, revision-bound verification, and explicit landing gates.
+Keep the product's other constraints: minimal standing control plane, one canonical runtime, seven first-class discovery/lifecycle adapters plus portable fallback, manifest reconciliation, recoverable update, drift diagnostics, and revision-bound evidence.
 
 ## Next
-- Run end-to-end field changes on OpenCode, Pi, Gemini CLI, Kiro CLI, and CodeBuddy CLI; repeat Codex through a complete change.
-- Run a continuous-evolution scenario with session breaks, changed requirements, host switching, interrupted/retried update, parallel branch, and merge conflict.
-- Measure which documents/rules are actually read and useful; remove controls that add context without preventing an observed failure.
+- Validate session focus, parallel isolation, derived `ready`, automatic land routing, `.runtime/evidence`, and legacy cleanup across Ubuntu/macOS/Windows.
+- Implement and exercise native session adapters host-by-host. Kiro CLI and CodeBuddy have documented session-id hook inputs; Codex hook integration needs mode/version testing before promotion; other hosts remain safely degraded until evidenced.
+- Run real scenarios with two simultaneous agent windows, topic switching, no explicit stop phrase, terminal close/reopen, changed requirements, and merge conflicts.
+- Measure whether NOW/handoff usage can be reduced further now that session focus and durable changes are separated.
 
 ## Later
-- Add a first-class host only when its discovery paths are primary-source backed or exercised and it passes the full lifecycle contract.
-- Add host-specific capabilities only when they measurably improve state injection or feedback without duplicating canonical guidance.
-- Prefer deleting process to adding it: a mechanically enforced invariant should replace redundant prose.
+- Promote a host from degraded to native session focus only after deterministic lifecycle tests.
+- Prefer capability metadata and safe degradation over host-specific duplicated workflows.
+- Prefer deleting process to adding it once a mechanical invariant replaces prose.
