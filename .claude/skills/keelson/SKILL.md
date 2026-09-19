@@ -1,57 +1,53 @@
 ---
 name: keelson
-description: Engineering collaboration layer for coding work in repositories that have a .keelson/ directory. Use whenever the user asks to build, add, change, refactor, fix, debug, plan, continue, hand off, wrap up, review, or release work in such a project, and when they say "grill me", "status", "hand off", "land it", or "retro". Keeps specs as the source of truth, routes scoped rules, records decisions and open questions, tracks work, verification, and release state separately, and tiers subagent effort.
+description: Engineering collaboration layer for coding work in repositories that have a .keelson/ directory. Use whenever the user asks to build, add, change, refactor, fix, debug, plan, continue, hand off, wrap up, review, or release work in such a project, and when they say "grill me", "status", "hand off", "land it", or "retro". Keeps specs as the source of truth, routes scoped rules, records decisions and open questions, separates work/verification/release state, and turns recurring mistakes into progressively stronger checks.
 version: 0.3.0
 ---
 
 # Keelson
 
-Keelson sits under your normal way of working on a project that will live for years. The repository keeps its standing facts in `.keelson/`: `INTENT.md` (why it exists, boundaries, what you may decide alone), `ROADMAP.md` (the current milestone), `NOW.md` (what is in flight), `GLOSSARY.md` (one meaning per term), specs (how the system behaves today, path in `config.yaml`), `rules/` (conventions routed by path), `changes/` (work in progress, empty when idle). Existing project documents are referenced from `config.yaml → refs`, never duplicated. You do the work the way you judge best; Keelson makes sure the facts you need are in front of you, the facts you produce are written down, and nothing is declared done without evidence that matches the code.
+The repository instruction block is the always-on kernel: **ORIENT → BOUND → BUILD → SENSE → RECONCILE**. This canonical skill is the router into deeper guidance; do not reload or restate every reference. Read `.keelson/README.md` for the human/project map. Standing project truth lives under `.keelson/`; existing project documents stay authoritative through `config.yaml → refs`.
 
-Nothing here is a gate on you. The gates are on artifacts: `keelson land` refuses stale evidence, unchecked acceptance, open questions, and unconfirmed assumptions. Every guideline states why it exists so you can judge when it does not apply. User instructions and the project's own instruction files always take precedence.
+Keelson constrains **state transitions, not implementation choices**. User instructions and the project's own instruction files take precedence. Prefer an executable invariant over more prose when a rule can be checked mechanically.
 
-## First contact
+## Start from current state
 
-If `NOW.md` starts with "First contact", nobody has drafted the project's facts yet. Read the repository (README, manifest, layout, code, and any document `config.yaml → refs` points at), draft `INTENT.md` (why, boundaries, hard constraints, a first Authorizations section), and for an existing codebase one spec per capability plus rules for paths with conventions. Then ask the owner to confirm or correct in one short exchange, keep their answers, and rewrite `NOW.md`. If the owner asks for a change right away, do this as part of shaping that change and confirm both together. Never ask the owner to write these files by hand.
+If `NOW.md` starts with "First contact", inspect the repository, draft `INTENT.md` and (for existing code) capability specs plus path-scoped rules, then ask the owner to confirm or correct them in one short exchange. Never ask the owner to author the scaffolding.
 
-## Before non-trivial work
+For non-trivial work, follow the resident loop. If this turn has not already oriented on the current tree, use `keelson context --paths <files>`; before changing a shared module, use `keelson impact <files>`. Do not ask again for facts already recorded in code, specs, INTENT, or the current conversation.
 
-`keelson context --paths <files you expect to touch>` prints INTENT, ROADMAP, NOW, active changes, existing references, and the matched rules. Before editing a shared module, `keelson impact <files>` lists importers and affected specs; treat it as navigation, then read for callers it cannot see.
+## Size only as much process as the change needs
 
-## Size the change, then pick the reference
+| Size | Boundary | Action |
+|---|---|---|
+| trivial | explicit one-file fix; no behaviour change | do it; no change directory |
+| quick | intent clear; behaviour contract unchanged | write back understanding, `keelson new`, proceed |
+| spec | behaviour/contract/capability/migration changes, or owner wants pre-code review | draft acceptance + delta specs; wait for approval |
 
-| Size | Signals | What to do | Read |
-|---|---|---|---|
-| trivial | style, typo, one-file explicit fix, no behaviour change | just do it; no change directory | nothing |
-| quick | several files, intent clear, no behaviour contract changes | write back your understanding in 3–6 lines, `keelson new`, proceed | `references/shape.md` |
-| spec | behaviour contract changes, new or removed capability, abandoning an obvious approach, migrations, anything the owner wants to review before code | clarify until the next slice is deliverable, draft `change.md` with acceptance and delta specs, wait for approval | `references/shape.md`, `references/plan.md` |
+The owner can override the size. In unattended runs, mark unresolved owner decisions `(assumed)` and stop before landing.
 
-You decide the size; the user can override with "treat this as spec" or "just do it". When nobody can answer (a scripted run), build under assumptions marked `(assumed)` and stop before landing. When `config.yaml → guide` is true, the owner is learning: explain with scenarios and trade-offs, name the engineering idea after the decision, and close spec changes with a short teaching note.
+## Load only what the task needs
 
-## What do you need right now?
+- Unclear product intent / guided discovery → `references/discover.md`
+- Requirements, assumptions, authorization → `references/shape.md`
+- Vocabulary, boundaries, invariants → `references/model.md`
+- Context and impact → `references/context.md`
+- Vertical-slice plan / delta specs → `references/plan.md`
+- Design, reliability, quality trade-offs → `references/engineer.md`
+- Implementation discipline → `references/build.md`
+- Evidence and acceptance → `references/verify.md`
+- Repeated harness failure class → `references/harness.md`
+- Stop / resume / parallel continuation → `references/handoff.md`
+- Integrate / release → `references/land.md`
+- Write durable facts back and compact → `references/reconcile.md`
+- Debugging → `references/debug.md`
 
-- **The owner is not sure what they want, or is learning** → `references/discover.md` (scenario before technology, which unknowns to raise, scope guard, explore before committing, guided mode)
-- **Understand what is wanted** → `references/shape.md` (facts first, write-back, decision states, authorization, interviewing, unattended runs)
-- **Words or boundaries are drifting** → `references/model.md` (glossary, bounded contexts, invariants, deep modules, design it twice)
-- **Know what the code touches** → `references/context.md` (three context layers, impact analysis, budget)
-- **Plan the change** → `references/plan.md` (change.md, slices, acceptance, delta specs, effort tiers, existing trackers)
-- **A design or reliability question** → `references/engineer.md` (engineering lenses: delivery, structure, evolution, operation, quality targets)
-- **Build** → `references/build.md` (rulings, subagents by tier, parallel work, keeping artifacts true)
-- **Prove it works** → `references/verify.md` (record validity, content validity, `keelson check --record`, reviews)
-- **Stop or resume** → `references/handoff.md` (handoff fields, resuming safely, NOW.md)
-- **Integrate and release** → `references/land.md` (landing gates, spec conflicts, rollout, promoting learnings, technical debt)
-- **Write the new facts back, keep the project small** → `references/reconcile.md` (where each fact goes, rewrite not append, budgets and compaction, `keelson doctor`)
-- **Something is broken** → `references/debug.md` (reproduce, root cause, category)
-- **"retro"** → run `keelson retro` and act on its suggestions
+## Invariants
 
-## CLI you will use
+- Keep **code reality**, **confirmed truth**, and **planned change** distinct; report drift instead of editing a spec to match a defect.
+- Completion claims require fresh `keelson check --record` evidence on the current tree.
+- Open questions block only the slices that depend on them.
+- Repeated failures graduate to a scoped rule or executable check; do not grow chat lore.
+- Use floating effort tiers `light | standard | deep`; never persist dated model IDs.
 
-`keelson context --paths <files>` · `keelson impact <files>` · `keelson new <name> --tier quick|spec [--capability cap] [--touches globs] [--depends change]` · `keelson status` · `keelson check --record "<claim>"` · `keelson validate` · `keelson handoff <name>` · `keelson land <name> [--now "<text>"] [--confirm-assumptions] [--accept-drift]` · `keelson cancel <name>` · `keelson models --resolve <tier>`. Every command accepts `--json`; `keelson <command> --help` prints its flags.
-
-## Ground rules (why they exist)
-
-- **Facts before questions.** Explore the code, `.keelson/`, and the referenced documents before asking. Decisions already recorded in specs or INTENT are not asked again.
-- **Three things are different: what the code does, what is confirmed, what is planned.** When they disagree, report the gap; never edit a spec to match a defect.
-- **Evidence before claims.** "Done", "passes", "fixed" follow `keelson check --record` in this session. Evidence from before the last code edit is stale, and `land` will say so.
-- **Open questions block only what depends on them.** Keep building the slices they do not touch.
-- **No dated model IDs in the repo.** Effort tiers are `light | standard | deep`; the host resolves them at runtime.
+Use `keelson <command> --help` for mechanics. Main state commands: `context`, `impact`, `new`, `status`, `check --record`, `handoff`, `land`, `cancel`, `retro`.
