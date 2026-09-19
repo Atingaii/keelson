@@ -28,17 +28,28 @@ export async function doctor({ flags }, cwd = process.cwd()) {
   const rawVersion = Number((readOr(p.config, '').match(/^version:\s*(\d+)/m) || [])[1] ?? 1);
   if (rawVersion < CONFIG_VERSION) add('warn', `config.yaml is v${rawVersion}; run \`keelson update\` to migrate to v${CONFIG_VERSION}`);
 
+  const canonicalSkill = path.join(p.skill, 'SKILL.md');
+  if (!exists(canonicalSkill)) add('error', 'canonical skill missing at .keelson/skill/SKILL.md (run `keelson update`)');
+  else {
+    const v = parseFrontmatter(readOr(canonicalSkill)).data.version ?? null;
+    if (v && v !== PKG_VERSION) add('warn', `canonical skill is ${v}, CLI is ${PKG_VERSION} (run \`keelson update\`)`);
+  }
+  if (!exists(p.workflow)) add('error', 'canonical workflow missing at .keelson/workflow.md (run `keelson update`)');
+
   for (const t of cfg.tools ?? []) if (!PLATFORMS[t]) add('error', `unknown tool "${t}" in config.yaml`);
   for (const pl of installTargets((cfg.tools ?? []).filter((t) => PLATFORMS[t]), cfg)) {
     const skill = path.join(root, pl.skillsDir, 'keelson', 'SKILL.md');
-    if (!exists(skill)) add('error', `${pl.label}: skill missing at ${pl.skillsDir}/keelson (run \`keelson update\`)`);
+    if (!exists(skill)) add('error', `${pl.label}: skill shim missing at ${pl.skillsDir}/keelson (run \`keelson update\`)`);
     else {
-      const v = parseFrontmatter(readOr(skill)).data.version ?? null;
-      if (v && v !== PKG_VERSION) add('warn', `${pl.label}: installed skill is ${v}, CLI is ${PKG_VERSION} (run \`keelson update\`)`);
+      const shimText = readOr(skill);
+      const v = parseFrontmatter(shimText).data.version ?? null;
+      if (v && v !== PKG_VERSION) add('warn', `${pl.label}: installed shim is ${v}, CLI is ${PKG_VERSION} (run \`keelson update\`)`);
+      if (!shimText.includes('.keelson/skill/SKILL.md')) add('error', `${pl.label}: skill entry does not point to .keelson/skill/SKILL.md`);
     }
     const ins = path.join(root, pl.instructions);
     const insText = readOr(ins, '');
     if (pl.instructionsFormat === 'kiro' ? !insText.includes('Keelson') : !insText.includes('<!-- keelson:start -->')) add('error', `${pl.label}: resident block missing from ${pl.instructions}`);
+    else if (!insText.includes('.keelson/workflow.md')) add('error', `${pl.label}: resident block does not point to .keelson/workflow.md`);
     if (pl.confidence === 'convention') add('info', `${pl.label}: file locations follow the tool's convention and have not been exercised by the maintainers; if the agent does not pick up the skill, override platforms.${pl.id} in config.yaml`);
     if (pl.hooks) {
       const settings = readJson(path.join(root, '.claude', 'settings.json'), {}) ?? {};
