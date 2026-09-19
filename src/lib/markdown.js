@@ -1,6 +1,9 @@
 /** Small, dependency-free helpers for the Markdown shapes Keelson relies on. */
 
+const normalizeNewlines = (text) => String(text ?? '').replace(/\r\n?/g, '\n');
+
 export function parseFrontmatter(text) {
+  text = normalizeNewlines(text);
   const m = text.match(/^---\n([\s\S]*?)\n---\n?/);
   if (!m) return { data: {}, body: text };
   const data = {};
@@ -19,6 +22,7 @@ export function renderFrontmatter(data) {
 
 /** Split into sections by heading level (default: h2). Returns [{title, level, body}]. */
 export function sections(text, level = 2) {
+  text = normalizeNewlines(text);
   const re = new RegExp(`^#{${level}}\\s+(.+)$`, 'm');
   const lines = text.split('\n');
   const out = [];
@@ -47,6 +51,7 @@ export const hasSection = (text, title, level = 2) =>
  * Tasks before any slice heading belong to an implicit slice named after the change.
  */
 export function parseTasks(text) {
+  text = normalizeNewlines(text);
   const tasks = [];
   let slice = null;
   for (const line of text.split('\n')) {
@@ -71,6 +76,7 @@ export function parseTasks(text) {
 
 /** Slices with their "Delivers:" line and task progress. */
 export function parseSlices(text) {
+  text = normalizeNewlines(text);
   const out = [];
   let cur = null;
   for (const line of text.split('\n')) {

@@ -43,6 +43,20 @@ test('frontmatter and sections', () => {
   assert.deepEqual(sections(body).map((s) => s.title), ['Why', 'What']);
 });
 
+test('markdown parsers treat CRLF and LF as the same document', () => {
+  const lf = '---\ntier: spec\ncreated: 2026-01-01\n---\n# T\n\n## Why\nw\n## What\n- x\n';
+  const crlf = lf.replace(/\n/g, '\r\n');
+  assert.deepEqual(parseFrontmatter(crlf), parseFrontmatter(lf));
+  assert.deepEqual(sections(crlf), sections(lf));
+
+  const handoffLf = '---\nat: abc1234\nupdated: 2026-01-01 10:00\nby: Ann\n---\n# H\n## Next step\nDo the thing.\n## Verification\nnone\n';
+  assert.deepEqual(parseHandoff(handoffLf.replace(/\n/g, '\r\n')), parseHandoff(handoffLf));
+
+  const tasksLf = '## Slice: Paging\nDelivers: pages work\n- [x] 1. Add it (effort: light) — verify: `npm test`\n';
+  assert.deepEqual(parseTasks(tasksLf.replace(/\n/g, '\r\n')), parseTasks(tasksLf));
+  assert.deepEqual(parseSlices(tasksLf.replace(/\n/g, '\r\n')), parseSlices(tasksLf));
+});
+
 test('parseTasks keeps the title clean when prose follows the verify command', () => {
   const [t] = parseTasks('- [x] 2. Add the branch (effort: light) — verify: `keelson check` plus a smoke run against `TODO_FILE`');
   assert.equal(t.title, 'Add the branch');

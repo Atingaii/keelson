@@ -156,6 +156,25 @@ test('hooks print a snapshot and a one-line state', () => {
   assert.match(line, /^\[keelson\] active: thing · in-progress · verify not-run · 0\/2 tasks\n$/);
 });
 
+test('handoff and session hook tolerate CRLF files', () => {
+  const dir = tmpProject({});
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  execFileSync('git', ['-c', 'user.email=a@b', '-c', 'user.name=Ann', 'commit', '--allow-empty', '-qm', 'init'], { cwd: dir });
+  run(dir, ['init'], { env });
+  run(dir, ['new', 'crlf-handoff'], { env });
+  run(dir, ['handoff', 'crlf-handoff', '--by', 'Ann'], { env });
+  const file = '.keelson/changes/crlf-handoff/handoff.md';
+  const crlf = read(dir, file)
+    .replace(/\n/g, '\r\n')
+    .replace(/## Next step\r\n…/, '## Next step\r\nContinue from CRLF.');
+  write(dir, file, crlf);
+  run(dir, ['handoff', 'crlf-handoff', '--by', 'Ann'], { env });
+  const restamped = read(dir, file);
+  assert.equal((restamped.match(/^---\r?$/gm) || []).length, 2);
+  const snap = execFileSync('node', [path.join(dir, '.keelson/hooks/session-start.mjs')], { env: { ...process.env, CLAUDE_PROJECT_DIR: dir }, encoding: 'utf8' });
+  assert.match(snap, /crlf-handoff handoff → next: Continue from CRLF\./);
+});
+
 test('ablate removes every surface and restore brings it back byte-for-byte', () => {
   const dir = tmpProject({ 'CLAUDE.md': '# Mine\n' });
   run(dir, ['init'], { env });

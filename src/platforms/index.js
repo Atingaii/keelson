@@ -72,6 +72,7 @@ export function removeBlock(existing) {
 
 /** Stamp the package version into SKILL.md frontmatter so `keelson doctor` can spot a stale install. */
 export function stampVersion(text, version) {
+  text = text.replace(/\r\n?/g, '\n');
   if (!version) return text;
   if (/^version:\s*/m.test(text.split('\n---')[0] ?? '')) return text.replace(/^version:.*$/m, `version: ${version}`);
   return text.replace(/^---\n([\s\S]*?)\n---/, (_, fm) => `---\n${fm}\nversion: ${version}\n---`);
@@ -88,7 +89,7 @@ export function renderSkillFiles(lang, profile, version) {
       if (e.isDirectory()) visit(path.join(d, e.name), r);
       else {
         let content = fs.readFileSync(path.join(d, e.name), 'utf8');
-        if (r.endsWith('.md')) content = applyProfile(content, profile);
+        if (r.endsWith('.md')) content = applyProfile(content.replace(/\r\n?/g, '\n'), profile);
         if (r === 'SKILL.md') content = stampVersion(content, version);
         out.push({ rel: r, content });
       }

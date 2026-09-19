@@ -8,7 +8,7 @@ const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const k = path.join(root, '.keelson');
 if (!fs.existsSync(k)) process.exit(0);
 
-const read = (p) => (fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '');
+const read = (p) => (fs.existsSync(p) ? fs.readFileSync(p, 'utf8').replace(/\r\n?/g, '\n') : '');
 const clip = (s, n) => (s.length > n ? s.slice(0, n).replace(/\s+\S*$/, '') + ' …' : s);
 const section = (text, re) => {
   const m = text.match(new RegExp(`^##\\s+(?:${re})[^\\n]*\\n([\\s\\S]*?)(?=^##\\s|(?![\\s\\S]))`, 'im'));
