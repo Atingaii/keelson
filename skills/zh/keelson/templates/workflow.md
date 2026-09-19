@@ -1,16 +1,18 @@
 # Keelson 工作流
 
-这是项目本地执行内核。项目真相位于 `.keelson/`；已有项目文档只从 `config.yaml` 引用，不复制。任务需要的深层指导位于 `.keelson/skill/`，只按需加载。
+项目真相与长期 work item 位于 `.keelson/`；机器本地的会话焦点与验证输出位于 gitignored 的 `.keelson/.runtime/`。**Session 不是 Task**：它只是指向当前对话正在围绕哪个 work item。
 
-每个非平凡变更都遵循 **ORIENT → BOUND → BUILD → SENSE → RECONCILE**。
+每个非平凡修改请求遵循 **ORIENT → BOUND → BUILD → SENSE → RECONCILE**。
 
-- **ORIENT** —— 检查当前工作树并运行 `keelson context --paths <files>`；修改共享模块前运行 `keelson impact <files>`。
-- **BOUND** —— trivial 直接做；quick 写回理解并只创建最小有用 change 工件；spec 先澄清验收、写行为 delta 和计划，再等批准。
-- **BUILD** —— 一次推进一个纵向切片。不要夹带无关清理；不得静默削弱测试或改变行为契约。
-- **SENSE** —— 尽早运行便宜且相关的检查。宣称 done/fixed/passing 之前必须有当前工作树上的新鲜 `keelson check --record` 证据。
-- **RECONCILE** —— 把稳定事实折叠回 specs/rules/glossary/NOW；跨会话未完成工作用 `keelson handoff <name>`。
-- **工件按需出现。** 空文档不是进度。ROADMAP、GLOSSARY、rules、specs、tasks、ledger、handoff 只有在承载下一位人或下一会话需要的信息时才创建。
-- 同类失败反复出现时用 `keelson retro` 提升为作用域 rule 或可执行 fitness check；自动化接管不变量后删掉重复提示词。
-- 如果 `NOW.md` 以“First contact”开头，就从仓库起草 `INTENT.md` 并让所有者确认或纠正。不要盘点整个仓库；只有真实工作暴露出长期契约或不变量时才创建 specs/rules。
+- **ORIENT** —— 检查工作树和当前 session focus。同一目标的追问继续使用 focus change；用户说“继续”时运行 `keelson focus --auto`，存在歧义时绝不静默绑定。
+- **BOUND** —— trivial 直接改；quick 创建最小有用 change；spec 先写 acceptance、行为 delta 和 plan，再等批准。
+- **BUILD** —— 一次推进一个纵向切片。独立的新修改目标创建新 change；围绕同一目标继续追问不会。
+- **SENSE** —— 尽早跑便宜检查；完成必须有当前工作树上的新鲜 `keelson check --record` 证据。
+- **RECONCILE** —— 每轮修改后评估生命周期。全部 gate 满足后状态成为 `ready`，Agent 自动 land；不等待用户说“做完了”。需要时把稳定事实折叠回 specs/rules/glossary。
+- 会话结束、长时间空闲、compaction、关闭窗口只改变本机会话 runtime，绝不自动完成、取消或 land 长期 work item。
+- `handoff.md` 只用于真正跨人/跨机器或明确所有权转移。普通新会话从 change/task/ledger 状态和可用的 session focus 重建。
+- 工件按需创建；空文档不是进度。
+- 重复 failure class 升级为作用域 rule 或可执行 fitness check；自动化接管后删掉冗余 prose。
+- First contact 只确认 `INTENT.md`；specs/rules 只有真实工作暴露长期真相时才增长。
 
-canonical 任务路由器是 `.keelson/skill/SKILL.md`。它先识别用户意图，再只加载该意图需要的 references。
+canonical 路由器是 `.keelson/skill/SKILL.md`。它判断对话意图；生命周期转换来自 work state，而不是用户措辞。
