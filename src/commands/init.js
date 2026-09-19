@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { projectPaths, findProjectRoot } from '../lib/paths.js';
 import { exists, write, read, mkdirp, readOr } from '../lib/fs.js';
 import { loadConfig, saveConfig, DEFAULT_CONFIG, CONFIG_VERSION } from '../lib/config.js';
-import { PLATFORMS, PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile } from '../platforms/index.js';
+import { PLATFORMS, PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile, plannedManagedRemovals, reconcileManagedTargets, writeManagedState } from '../platforms/index.js';
 import { list } from '../lib/args.js';
 import { ok, info, warn, heading, dim } from '../lib/out.js';
 import { detectAndCache, detectLocal } from '../lib/models.js';
@@ -93,6 +93,7 @@ export async function init({ flags }, cwd = process.cwd()) {
     const workflow = plannedWorkflowFile(root, { lang: cfg.lang, guide: cfg.guide });
     console.log(`  ${workflow.status.padEnd(9)} ${workflow.path}`);
     for (const f of plannedCanonicalSkillFiles(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
+    for (const rel of plannedManagedRemovals(root, targets)) console.log(`  ${'remove'.padEnd(9)} ${rel} (stale managed surface)`);
     for (const t of targets) {
       for (const f of plannedSkillFiles(root, t, { lang: cfg.lang, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
       const ins = path.join(root, t.instructions);
@@ -138,6 +139,8 @@ export async function init({ flags }, cwd = process.cwd()) {
   saveConfig(p.config, cfg);
   ok(`.keelson/config.yaml${rawVersion < CONFIG_VERSION ? ` (migrated v${rawVersion} → v${CONFIG_VERSION})` : ''}`);
 
+  for (const rel of reconcileManagedTargets(root, targets)) ok(`removed stale managed surface → ${rel}`);
+
   const workflowPath = installWorkflow(root, { lang: cfg.lang, guide: cfg.guide });
   const canonicalSkillPath = installCanonicalSkill(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION });
   ok(`canonical runtime → ${workflowPath}; ${canonicalSkillPath}`);
@@ -151,6 +154,8 @@ export async function init({ flags }, cwd = process.cwd()) {
       ok(`${t.label}: hooks → .claude/settings.json (session snapshot + per-prompt state line)`);
     }
   }
+  writeManagedState(root, targets, PKG_VERSION);
+  ok('.keelson/.managed.json (generated-surface ownership)');
 
   try {
     detectAndCache();
