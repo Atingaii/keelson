@@ -98,6 +98,22 @@ test('update removes signature-matched legacy Keelson surfaces and preserves nei
   assert.ok(exists(dir, '.cursor/rules/user.mdc'));
 });
 
+test('legacy hidden managed state migrates to manifest.json on update', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--tools', 'agents', '--no-hooks'], { env });
+  const current = JSON.parse(read(dir, '.keelson/manifest.json'));
+  current.version = current.schema;
+  delete current.schema;
+  write(dir, '.keelson/.managed.json', JSON.stringify(current, null, 2) + '\n');
+  fs.rmSync(path.join(dir, '.keelson/manifest.json'));
+
+  run(dir, ['update'], { env });
+  assert.ok(exists(dir, '.keelson/manifest.json'));
+  assert.ok(!exists(dir, '.keelson/.managed.json'));
+  assert.equal(JSON.parse(read(dir, '.keelson/manifest.json')).schema, 1);
+  run(dir, ['doctor', '--json'], { env });
+});
+
 test('retired host selections fail clearly and old config is migrated to portable support', () => {
   const dir = tmpProject({});
   let r = run(dir, ['init', '--cursor'], { env, allowFail: true });
@@ -233,6 +249,8 @@ test('change artifacts grow progressively instead of starting empty', () => {
   write(dir, '.keelson/changes/quick-fix/change.md', read(dir, '.keelson/changes/quick-fix/change.md').replace('- [ ] … — check: `…`', '- [x] works — check: `npm test`'));
   run(dir, ['check', '--record', 'quick works', '--change', 'quick-fix', '--quiet'], { env });
   assert.ok(exists(dir, '.keelson/changes/quick-fix/ledger.md'));
+  run(dir, ['land', 'quick-fix', '--now', 'Nothing in flight.'], { env });
+  assert.ok(!exists(dir, '.keelson/changes/quick-fix'), 'quick change lands without ever needing tasks.md');
 
   run(dir, ['new', 'new-contract', '--tier', 'spec', '--capability', 'orders'], { env });
   assert.ok(exists(dir, '.keelson/changes/new-contract/change.md'));
