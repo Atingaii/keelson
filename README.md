@@ -80,7 +80,7 @@ Requires Node.js 20 or newer.
 ```bash
 npm install -g keelson
 cd your-project
-keelson init                 # picks the coding tools installed on this machine
+keelson init                 # picks verified/documented installed hosts; otherwise portable AGENTS.md
 keelson init --cursor --codex   # or name the ones you use
 ```
 
@@ -178,7 +178,7 @@ The project's documents are kept small the same way. Each document type has a li
 
 ## Supported tools
 
-`keelson init` takes one flag per tool, or `--tools a,b`, or nothing (it detects what is installed). Every project keeps canonical guidance under `.keelson/` and installs the portable discovery layer: `AGENTS.md` plus `.agents/skills/`. Hosts that already read this surface reuse it; native host paths, when needed, are also shims into the same `.keelson/` runtime. `keelson platforms` prints the full table with what is installed on your machine.
+`keelson init` takes one flag per tool, `--tools a,b`, or nothing. With no selection it auto-picks installed hosts whose paths are verified or documented; convention-only detections are never guessed. If no reliable host is found, Keelson installs only the portable `AGENTS.md` + `.agents/skills/` discovery layer. Canonical guidance stays under `.keelson/`; native host paths, when explicitly needed, are shims into the same runtime. `keelson platforms` prints the full table with what is installed on your machine.
 
 | Tool | Instructions discovery | Skill discovery | Hooks | Confidence |
 |---|---|---|---|---|
