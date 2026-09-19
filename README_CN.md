@@ -37,7 +37,7 @@ Keelson 把项目需要的事实留在仓库里，以代理在恰当时机读取
        支持撤销和过期。不做：按账号授权。发现：rules/api.md 里的
        鉴权规则要求每次读取都经过 canView()。这会新增一个能力，
        所以是 spec 变更。
-       规划前先问两个问题。撤销后的链接要保留缩略图缓存吗？
+       规划前只问一个最高价值问题：撤销后的链接要保留缩略图缓存吗？
        我建议不保留；这样泄露的链接在撤销后什么也泄露不了。
 
 你：   撤销后不留缩略图。过期时间我还没想好。
@@ -85,7 +85,7 @@ keelson init                 # 自动选用本机已安装的编码工具
 keelson init --cursor --codex   # 或者点名你在用的那些
 ```
 
-这是唯一的一步。在该目录下打开你的代理，开始对话。首次接触时，它读取仓库，起草 `.keelson/INTENT.md`（项目为什么存在、明确不做什么、代理可以自行决定什么）；对已有代码的项目，还会为每个能力写一份 spec，为有约定的路径写 rules。然后用一次简短的交流请你确认。这些文件你永远不需要手写。
+这是唯一的一步。每次 init 都会额外写入通用的 `AGENTS.md` + `.agents/skills/keelson` 兼容层，所以以后即使换成今天没有点名的兼容 Agent，也可以直接拾取 Keelson。在该目录下打开你的代理，开始对话。首次接触时，它读取仓库，起草 `.keelson/INTENT.md`（项目为什么存在、明确不做什么、代理可以自行决定什么）；对已有代码的项目，还会为每个能力写一份 spec，为有约定的路径写 rules。然后用一次简短的交流请你确认。这些文件你永远不需要手写。
 
 `keelson init` 还会引用它找到的架构说明、决策记录、CI 和 issue 跟踪器，而不是复制它们。见[已有项目](docs/zh/existing-projects.md)。
 
@@ -97,7 +97,8 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 
 | 路径 | 内容 | 谁来写 |
 |---|---|---|
-| `.keelson/INTENT.md` | 项目为什么存在、边界、硬约束、代理可以自行决定什么 | 你，一次 |
+| `.keelson/README.md` | 人类导航：先看什么、每个 Keelson 文件干什么、落地后什么会留下 | Keelson；`update` 刷新 |
+| `.keelson/INTENT.md` | 项目为什么存在、边界、硬约束、代理可以自行决定什么 | Agent 起草；负责人确认 |
 | `.keelson/ROADMAP.md` | 当前里程碑；之后的工作只写方向。有跟踪器时链接过去 | 你和代理 |
 | `.keelson/NOW.md` | 在做什么、卡在哪、下一步。现在时，整体重写 | 代理，在停下或落地时 |
 | `.keelson/GLOSSARY.md` | 一个术语一个含义，specs、代码和对话共用 | 你和代理，在用词开始漂移时 |
@@ -178,7 +179,7 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 
 ## 支持的工具
 
-`keelson init` 接受每个工具一个标志，或 `--tools a,b`，或什么都不给（它探测本机已安装的工具）。除 Claude Code 外的每个选择还会安装跨工具层：`AGENTS.md` 加 `.agents/skills/`，任何读取这一约定的代理都能拾取。`keelson platforms` 打印完整表格，并标出本机已安装的工具。
+`keelson init` 接受每个工具一个标志，或 `--tools a,b`，或什么都不给（它探测本机已安装的工具）。每个项目都会同时安装通用兼容层：`AGENTS.md` 加 `.agents/skills/`；Codex、Gemini CLI、GitHub Copilot 以及其他读取这一约定的 Agent 即使初始化时没有被点名，也能拾取 Keelson。`keelson platforms` 打印完整表格，并标出本机已安装的工具。
 
 | 工具 | 说明文件 | 技能 | Hook | 可信度 |
 |---|---|---|---|---|
