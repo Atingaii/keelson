@@ -1,27 +1,38 @@
 # CLI reference
 
-All commands run from anywhere inside the project; Keelson walks up to find `.keelson/`. Exit code 0 means success, 1 means an error or a failed check, 2 means an unknown command. `--json` on most commands prints machine-readable output. `--help` and `--version` work everywhere; `keelson <command> --help` prints that command's usage line.
+All commands run from anywhere inside the project; Keelson walks up to find a `.keelson/` that holds `config.yaml` or `INTENT.md` (the user-level `~/.keelson/` never counts). Exit code 0 means success, 1 means an error or a failed check, 2 means an unknown command. `--json` on most commands prints machine-readable output. `--help` and `--version` work everywhere; `keelson <command> --help` prints that command's usage line.
 
-Boolean flags: `--json`, `--force`, `--dry-run`, `--no-hooks`, `--onboard`, `--refresh`, `--detect`, `--keep`, `--quiet`. Value flags accept `--key value` or `--key=value`.
+Boolean flags: `--json`, `--force`, `--dry-run`, `--no-hooks`, `--onboard`, `--refresh`, `--detect`, `--keep`, `--quiet`, `--confirm-assumptions`, `--accept-drift`, `--worktree`, `--purge`. Value flags accept `--key value` or `--key=value`.
 
 ## `keelson init`
 
 ```text
 keelson init [--tools claude,codex,cursor,opencode,gemini] [--profile lean|guided]
-             [--lang en|zh] [--no-hooks] [--onboard] [--dir <path>]
+             [--lang en|zh] [--no-hooks] [--onboard] [--dry-run] [--dir <path>]
 ```
 
-Creates `.keelson/` with `INTENT.md`, `NOW.md`, `rules/index.md`, `rules/general.md`, `config.yaml`, and an empty `changes/`. Installs the skill, the resident block, and (Claude Code) the hooks for each tool. Detects check commands on first run. Runs local model detection. Never overwrites existing `.keelson/` files.
+Creates `.keelson/` with `INTENT.md`, `NOW.md`, `ROADMAP.md`, `rules/index.md`, `rules/general.md`, `config.yaml`, an empty `changes/`, and the specs directory. On a fresh init it detects existing material (architecture notes, decision records, CI, GitHub issues) into `refs`, detects check commands, and adds `.keelson/.local/` to `.gitignore`. Installs the skill (stamped with the CLI version), the resident block, and (Claude Code) the hooks for each tool. Runs local model detection. Never overwrites existing `.keelson/` files.
 
 - `--onboard` rewrites `NOW.md` with an onboarding task for existing codebases.
 - `--no-hooks` skips hook installation.
+- `--dry-run` lists every skill file as create, update, or unchanged, whether the instructions file would be created, appended, or refreshed, and any pending config migration. Writes nothing.
 - `--dir` targets another directory.
+
+```text
+$ keelson init --dry-run
+Keelson update (dry run) in /home/you/shop
+  unchanged .claude/skills/keelson/SKILL.md
+  update    .claude/skills/keelson/references/verify.md
+  refresh   CLAUDE.md
+  migrate   .keelson/config.yaml v1 → v2
+nothing written
+```
 
 Exit 1 on an unknown tool or profile.
 
 ## `keelson update`
 
-Same as `init` with the values already in `config.yaml`. Run after upgrading the package to regenerate the skill, resident blocks, and hooks.
+Same as `init` with the values already in `config.yaml`. Run after upgrading the package to regenerate the skill, resident blocks, and hooks, and to migrate `config.yaml`. Accepts `--dry-run`.
 
 ## `keelson context`
 
@@ -29,23 +40,43 @@ Same as `init` with the values already in `config.yaml`. Run after upgrading the
 keelson context [--paths a/,b/**] [--json]
 ```
 
-Prints, as Markdown: the `context` text from config, `INTENT.md`, `NOW.md`, active changes with phase and progress, capabilities with specs, and the rule files whose globs match the given paths. Rules with `**` always print. Uncommitted files are listed when in a git repository. Paths may also be given as positional arguments.
+Prints, as Markdown: the `context` text from config, `INTENT.md`, `ROADMAP.md`, `NOW.md`, existing references from `refs`, active changes (tier, owner, work and verification state, progress, open questions, handoff next step), capabilities with specs, the rule files whose globs match the given paths, and uncommitted files. Rules under `**` always print. Paths may also be given as positional arguments.
 
 ```bash
 keelson context --paths src/services/notify.js
 ```
 
+## `keelson impact`
+
+```text
+keelson impact <file> [file...] [--json]
+```
+
+Mechanical hints for a set of files: importers found by module name, specs whose path or text matches, rules that apply, and active changes whose `touches` or capabilities overlap. Every line is navigation; dynamic entry points are found by reading.
+
+```text
+$ keelson impact src/api/orders.js
+Impact hints for src/api/orders.js
+Callers / importers (1):
+  src/web.js
+Specs that may be affected (1):
+  orders (mentions orders)
+Rules that apply (2):
+  rules/general.md  **
+  rules/api.md  src/api/**
+! active change add-pagination (ann, in-progress) declares these paths or capabilities — coordinate before editing
+```
+
 ## `keelson new`
 
 ```text
-keelson new <name> [--tier quick|spec] [--capability <name>]
+keelson new <name> [--tier quick|spec] [--capability a,b] [--touches globs]
+                   [--depends change[,change]] [--worktree] [--owner who] [--json]
 ```
 
-Creates `.keelson/changes/<slug>/` from the templates. `quick` (default) writes a short `change.md`; `spec` writes the full one and, with `--capability`, a delta spec at `specs/<capability>/spec.md`. Exit 1 if the change exists.
+Slugifies the name and creates `.keelson/changes/<name>/` with `change.md`, `tasks.md`, `ledger.md`, and one delta spec per `--capability`, each stamped with `base:` (a hash of the current main spec, or `new`). Frontmatter records `tier`, `created`, `status` (`clarifying` for spec, `in-progress` for quick), `owner` (git user name unless `--owner`), `branch`, and any `depends` and `touches`. `--worktree` runs `git worktree add -b <name> ../<repo>-<name>` and records `branch: <name>` and `worktree:`.
 
-```bash
-keelson new "NATS migration" --tier spec --capability messaging
-```
+Exit 1 if the change exists, the tier is unknown, or `--worktree` is used outside git.
 
 ## `keelson status`
 
@@ -53,20 +84,29 @@ keelson new "NATS migration" --tier spec --capability messaging
 keelson status [--json]
 ```
 
+Per active change: work, verification, and release state; owner and branch; slices with progress and what they deliver (or the task list when there are no slices); acceptance progress; open questions and what they block; assumed decisions awaiting the owner; handoff stamp and whether HEAD moved since. Then shared-contract warnings between active changes, the last tag with changes landed since it, and `NOW.md`.
+
 ```text
-Keelson — demo
-1 capability with specs · 1 active change
+Keelson — shop
+2 capabilities in .keelson/specs · 1 active change · HEAD 7a9f37c2b1 · 3 uncommitted
 
-nats-migration  [spec]  building  2/4 tasks
-   ✓ 1 Add NATS publisher adapter (standard)
-   ✓ 2 Migrate notify consumer (light)
-   · 3 Decide ack semantics (deep)
-   · 4 Remove CSV export (light)
-   1 ruling; last verify: none
-
-NOW.md
-...
+share-links  [spec]  work: in-progress  verify: ~ stale  release: unreleased  (ann @ share-links)
+   verified at tree 5bcb829dae, worktree is 9a92f4bead — re-run `keelson check --record` before landing
+   ✓ slice Create and access 2/2 — a link can be created and opens the album
+   · slice Revoke and expiry 0/3 — revoked or expired links refuse every access path
+   acceptance 2/4
+   open: default expiry for share links? (blocks Revoke and expiry)
+   1 assumed decision awaiting the owner
+   handoff 2026-09-19 14:02 at 7a9f37c2b1
 ```
+
+## `keelson handoff`
+
+```text
+keelson handoff [name] [--by who] [--json]
+```
+
+Creates `changes/<name>/handoff.md` from the template, or re-stamps an existing one, with `at` (short HEAD), `updated`, and `by`. The agent fills the sections. With one active change the name may be omitted.
 
 ## `keelson validate`
 
@@ -74,43 +114,47 @@ NOW.md
 keelson validate [--json]
 ```
 
-Checks: `INTENT.md` and `NOW.md` exist; `profile` and `land` values; every `rules/index.md` entry points to a file; specs have requirements, scenarios, and no duplicate names; each change has the sections its tier requires; spec changes list at least two alternatives; task effort tags are valid; `Verify:` entries carry a command and exit code; root-cause categories are known; no dated model IDs anywhere in `.keelson/`. Warnings do not affect the exit code. Exit 1 on any error.
+Structural checks over `.keelson/` and the specs directory. Errors (exit 1): missing `INTENT.md` or `NOW.md`; bad `profile` or `land`; rule files referenced but missing; spec directories without `spec.md`; duplicate requirements; bad tier or work status; missing `Why`/`What`; spec tier missing `How`/`Alternatives`/`Impact` or fewer than two alternatives; bad effort tags; `Verify:` entries without command or exit; unknown root-cause categories; dated model IDs anywhere under `.keelson/`. Warnings: template placeholders, rules not listed in the index, requirements without scenarios, acceptance items without a check kind, open questions without `blocks:`, dependencies on inactive changes, `**BREAKING**` without `Rollout`, slices without `Delivers:`, `Verify:` entries without `tree`, `Dispatch:` entries without `Result:`, handoffs without `at:`, missing refs paths, `.gitignore` without `.keelson/.local/`.
 
 ## `keelson check`
 
 ```text
-keelson check [--quiet] [--json]
+keelson check [cmd...] [--record [claim]] [--change name] [--quiet] [--json]
 ```
 
-Runs each command in `config.yaml → check` from the project root and prints its exit code. `--quiet` hides the commands' own output. Ends with a ready-to-paste ledger line. Exit 1 if any command fails; exit 0 with a warning when none are configured.
+Runs the commands in `config.yaml → check` (or the single command given as positional arguments), saves each output to `.keelson/.local/evidence/<timestamp>-<n>.log`, and prints one exit code per command. Computes the worktree fingerprint and forms a `Verify:` entry naming every command, its exit code, and `tree <hash>`. Without `--record` the entry is printed; with `--record` it is appended to the active change's `ledger.md` (`--change` picks one when several are active). `--record "<claim>"` sets the entry title; otherwise it is `checks pass` or `checks failed`.
 
-```text
-keelson check — 2 commands
-✓ `npm run lint` exit 0
-✓ `npm run test` exit 0
+Exit 1 when any command failed; the entry is still recorded with the failing exit code.
 
-all checks passed
-Ledger line:
-### Verify: <claim>
-`npm run lint` exit 0; `npm run test` exit 0
+```bash
+keelson check --record "pagination end to end"
+keelson check "npm test -- orders" --record --change add-pagination
 ```
 
 ## `keelson land`
 
 ```text
-keelson land [name] [--now "<text>"] [--keep] [--force] [--dry-run]
+keelson land [name] [--now "<text>"] [--confirm-assumptions] [--accept-drift]
+             [--keep] [--force] [--dry-run]
 ```
 
-The name is optional when exactly one change is active. Refuses when tasks are unchecked or the last `Verify:` entry is missing or non-zero; `--force` overrides. Merges delta specs, folds decisions, then removes the directory (or archives it with `--keep` or `land: keep`). `--now` rewrites `NOW.md`. `--dry-run` reports without writing.
+Refuses, listing every reason, while tasks or acceptance items are unchecked, a spec-tier change has no acceptance list, open questions remain, verification is not `passed`, `(assumed)` decisions exist without `--confirm-assumptions`, a `**BREAKING**` bullet has no `## Rollout`, or a delta's `base:` no longer matches the main spec without `--accept-drift`. Then merges each delta into `<paths.specs>/<capability>/spec.md`, appends `Decisions` lines, and removes the change directory (or archives it as `integrated` with `--keep` or `land: keep`). `--now` rewrites `NOW.md`. `--dry-run` previews. `--force` overrides the gates and prints what it overrode.
 
 ```text
-Landing nats-migration (spec)
-✓ specs/messaging: +1 added, ~1 modified, -1 removed
-✓ specs/messaging: 2 decision lines folded
-✓ removed .keelson/changes/nats-migration (ledger stays in git history)
-✓ NOW.md rewritten
-· commit the landing together with the last code change
+$ keelson land add-pagination
+keelson: cannot land "add-pagination":
+  - 1 acceptance item(s) unchecked
+  - verification stale (verified at tree 5bcb829dae, worktree is 9a92f4bead)
+Fix them, or pass --force if the user explicitly asked.
 ```
+
+## `keelson cancel`
+
+```text
+keelson cancel <name> [--reason "<why>"]
+```
+
+Sets `status: cancelled`, appends a `## Cancelled` note with the date and reason, and moves the directory to `changes/archive/YYYY-MM-DD-<name>-cancelled/`. Nothing is merged into the specs.
 
 ## `keelson retro`
 
@@ -118,7 +162,7 @@ Landing nats-migration (spec)
 keelson retro [--json]
 ```
 
-Reads ledgers from active changes, the archive, and git history. Prints root-cause counts, per-tier dispatch statistics, verify totals, every guidance block with its sunset condition, and suggestions. Exit 0 always; a warning when no ledger entries exist.
+Reads ledgers from active changes, the archive, and git history. Prints root-cause counts, per-tier dispatch statistics, verify entries, every guidance block with its sunset condition, and suggestions (prune guidance, add a rule, adjust effort tagging) when thresholds are met.
 
 ## `keelson models`
 
@@ -126,25 +170,33 @@ Reads ledgers from active changes, the archive, and git history. Prints root-cau
 keelson models [--platform <id>] [--json]
 keelson models --detect
 keelson models --refresh [--no-providers]
-keelson models --resolve light|standard|deep
-keelson models rank <alias> light|standard|deep [--platform <id>]
+keelson models --resolve <light|standard|deep>
+keelson models rank <alias> <light|standard|deep>
 ```
 
-- No flags: a table of tier → alias with the source of each mapping, plus the local detection summary.
-- `--detect`: scan installed tools, their configured default models, and which provider keys are set; write `~/.keelson/models.cache.json`.
-- `--refresh`: fetch the latest registry; with provider keys set, list each provider's catalogue and record models not seen before. `--no-providers` skips the catalogue calls. This is the only command that uses the network.
-- `--resolve`: print just the alias. Exit 1 if unresolved.
-- `rank`: write a user-level override. Rejects dated model IDs.
+Default: a table of tier to alias with the source of each resolution, plus the local detection summary. `--detect` rescans installed tools and provider keys. `--refresh` fetches the registry and, with keys set, provider catalogues. `--resolve` prints one alias for scripts, exit 1 when unresolved. `rank` writes a user-level override and refuses dated IDs. See [models.md](models.md).
 
-Platform defaults to the first entry in `config.yaml → tools`, or `claude` outside a project.
+## `keelson doctor`
 
-## `keelson ablate` and `keelson restore`
+```text
+keelson doctor [--json]
+```
+
+Reports the Node version, pending config migration, and per configured tool: skill presence and version match, resident block presence, hook registration and script presence. Then every `validate` finding, stale verification, HEAD moved since a handoff, dependencies on active changes, shared-contract conflicts, and tool CLIs missing from the path. Exit 1 when any finding is an error.
+
+## `keelson ablate` / `keelson restore`
 
 ```text
 keelson ablate [--dry-run]
 keelson restore [--force] [--dry-run] [--dir <path>]
 ```
 
-`ablate` copies every Keelson surface (instructions files, skill directories, `.cursor/rules/keelson.mdc`, `.claude/settings.json`, `.keelson/`) to `~/.keelson/ablations/<hash>/`, records hashes, removes the resident blocks and hook entries, and deletes the rest. Use it to compare an agent session with and without Keelson. Exit 1 if an ablation already exists.
+`ablate` copies every Keelson surface (instructions files, skill directories, `.cursor/rules/keelson.mdc`, `.claude/settings.json`, `.keelson/`) to `~/.keelson/ablations/<hash>/`, records a hash of the stash and of each path after removal, then removes them. `restore` verifies the stash is intact, refuses if any managed path changed while ablated (unless `--force`), copies everything back, and deletes the stash.
 
-`restore` verifies the stash is intact and that no managed path changed while ablated, then copies everything back and removes the stash. `--force` overwrites paths that changed.
+## `keelson uninstall`
+
+```text
+keelson uninstall [--purge]
+```
+
+Removes the generated surfaces: skill directories, resident blocks, `.cursor/rules/keelson.mdc`, hook entries in `.claude/settings.json`, `.keelson/hooks/`, and `.keelson/.local/`. Keeps `.keelson/` (INTENT, NOW, ROADMAP, rules, specs, changes). `--purge` removes `.keelson/` as well; specs stored outside it are untouched.

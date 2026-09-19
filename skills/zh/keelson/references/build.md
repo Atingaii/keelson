@@ -1,25 +1,25 @@
-# Building（实施）
+# Building（构建）
 
-执行 `tasks.md`。怎么做由你选；这里只写容易出错的部分。
+按切片逐个执行 `tasks.md`。怎么做由你选；这里只写容易出错的部分。
 
 ## 裁定，而不是停顿
-<!-- keelson: id=build.rulings | without: 代理把会话停在计划早已回答的问题上；或者默默决定，推理过程丢失 | sunset: never -->
+<!-- keelson: id=build.rulings | without: 代理把会话卡在计划早已回答的问题上；或者悄悄决定，推理过程丢失 | sunset: never -->
 
-计划是论证；`specs/` 和 `INTENT.md` 是权威；两者都没回答的，由你的判断来定。遇到歧义或计划缺陷时，做决定、记录、继续：
+计划是论证；specs 和 `INTENT.md` 是权威；两者都没回答的，由你在 `INTENT.md → Authorizations` 的范围内裁定。在授权范围内遇到歧义或计划缺陷时，决定、记录、继续：
 
 ```markdown
 ### Ruling: ack semantics
 At-least-once with idempotent consumers. Exactly-once would need a broker feature we do not run. Cost if wrong: duplicate side effects in `notify`, bounded by the idempotency key.
 ```
 
-只有四件事让你停下：不可逆或破坏性操作；涉及安全的动作；工作树之外、按惯例应先询问的副作用（合并、推送到共享分支、发布、外部调用）；计划坏到每条路都是猜。
+超出授权范围的，就是未决问题：写进 `change.md → Open questions` 并注明它阻塞什么，然后去建它不阻塞的切片。只有四件事让你彻底停下：不可逆或破坏性操作；涉及安全的操作；工作树之外、按惯例应先询问的副作用（合并、推到共享分支、发布、外部调用）；计划烂到每条路都是猜。
 
 ## 按 effort 层级分派子代理
-<!-- keelson: id=build.dispatch | without: 一个上下文包揽一切，越填越满质量越降，而成本与任务难度无关地保持平坦 | sunset: 宿主没有子代理工具时，本节自然失效 -->
+<!-- keelson: id=build.dispatch | without: 一个上下文包揽一切，越装越满质量越差，而且不管任务难易成本都一样 | sunset: 宿主没有子代理工具时，本节自然失效 -->
 
-当任务基本独立且宿主提供子代理时，每个任务分派一个新的子代理，模型按其 effort 层级解析：`keelson models --resolve <tier>` 打印本平台的别名（或者把层级按能力升序映射到子代理工具暴露的别名上）。交给子代理的是任务文本、命中的 rules、相关 spec 和验证命令。绝不把你的整段对话交给它。
+任务大体独立、宿主提供子代理时，每个任务派一个全新的子代理，模型由它的 effort 层级解析：`keelson models --resolve <tier>` 打印当前平台的别名（或者把层级按能力从低到高映射到子代理工具暴露的别名上）。交给子代理的是任务文本、命中的 rules、相关 spec 和验证命令。绝不把你的整段对话塞给它。
 
-每个任务完成后，由一个评审子代理（层级 ≥ `standard`，且不低于实施者）对照 diff 检查 spec 符合度和代码质量。两者都记入 ledger：
+每个任务之后，由一个评审子代理（层级 ≥ `standard`，绝不低于实施者）对照 spec 和 rules 检查 diff。两者都记进 ledger：
 
 ```markdown
 ### Dispatch: task 2 → standard (sonnet)
@@ -38,15 +38,20 @@ Two failures on boundary handling; light-tier output ignored the empty-page case
 
 升级只针对"做出来但做错了"的工作，不针对根本没跑起来的分派：限流、超时、工具报错，在同一层级稍等后重试一次，再不行就由你自己内联完成并记一条（`### Note: task 3 inline after two dispatch errors`）。`deep` 是最高层级，没有更高可升；`deep` 的验证失败则停下来问。任务紧耦合，或没有子代理工具：自己内联执行，仍然一次一个任务，仍然记 ledger。
 
-## 工作过程中让工件保持真实
-<!-- keelson: id=build.update-artifacts | without: tasks.md 和 change.md 描述的是计划而非实际发生的事；下一个会话信了过时的文字 | sunset: never -->
+## 并行工作
+<!-- keelson: id=build.parallel | without: 两个写代码的人在同一分支上互相覆盖，或者两个变更用两种方式实现同一契约 | sunset: never -->
 
-任务在验证通过时勾选，而不是写完时。实施中途设计变了，就改 `change.md`；行为变了，就改 delta spec。没有什么是锁死的；唯一的规则是每次提交时文件都反映现实。
+多个写代码的人（人或代理）同时工作时，每个变更用自己的分支或 worktree（`keelson new --worktree`）。共享接口在任何一方实现之前先对齐：在 delta spec 里约定契约，落地或引用它，然后再建。两个活动变更触及同一能力或同样声明的路径时，`keelson status` 会警告；把它当作"先谈"，不是锁。磁盘上的文件不是分布式锁，分支也消除不了语义冲突；跨机器的认领和合并控制属于任务系统、pull request 和 CI。把别人的变更集成进你的之后，重新跑验证；旧证据按定义已经过期。
+
+## 工作过程中让工件保持真实
+<!-- keelson: id=build.update-artifacts | without: tasks.md 和 change.md 描述的是计划而不是实际发生的事；下一个会话信了过期的文字 | sunset: never -->
+
+任务在验证通过时打勾，不是写完时。验收项在它的检查跑过之后打勾。构建中途设计变了，就改 `change.md`；行为变了，再改 delta spec。没有东西是锁死的；唯一的规则是每次提交时文件都反映现实。变更没做完就要停下，`keelson handoff <name>` 并填好它（见 `handoff.md`）。
 
 <!-- guided -->
-## 行为有规格时先写测试
-delta spec 里有场景的地方，先按场景写出失败的测试，看它失败，实现，看它通过。没有场景的地方，判断测试是不是最便宜的证据。
+## 行为有明确规格时先写测试
+delta spec 里有 scenario 的地方，先按 scenario 写失败的测试，看它失败，实现，看它通过。没有 scenario 的地方，自己判断测试是否是最便宜的证据。视觉探索和未知 API 可以先做一个小原型。
 
 ## 叙述
-工具调用之间最多一行简短说明。记录由 ledger 和工具输出承担。
+工具调用之间最多一行短话。记录由 ledger 和工具输出承担。
 <!-- /guided -->

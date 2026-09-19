@@ -7,7 +7,7 @@ Two places hold configuration. `.keelson/config.yaml` is per project and committ
 Every key is optional. `keelson init` writes the defaults. Unknown keys are ignored.
 
 ```yaml
-version: 1
+version: 2
 tools:
   - claude
 lang: en
@@ -21,6 +21,13 @@ check:
   - npm run lint
   - npm run test
 context: ""
+paths:
+  specs: .keelson/specs
+refs:
+  architecture: null
+  decisions: docs/adr
+  tasks: https://github.com/acme/shop/issues
+  ci: .github/workflows
 models: {}
 effort:
   review_min: standard
@@ -31,7 +38,7 @@ effort:
 
 | Key | Default | Meaning |
 |---|---|---|
-| `version` | `1` | Config schema version |
+| `version` | `2` | Config schema version. Older files are migrated in memory on every read and rewritten by `keelson update` |
 | `tools` | `[claude]` | Tools to generate files for. One or more of `claude`, `codex`, `cursor`, `opencode`, `gemini`. `keelson init --tools` sets it |
 | `lang` | `en` | Language of the installed skill and templates: `en` or `zh`. `keelson init --lang` sets it |
 | `profile` | `lean` | `lean` ships stance and principles only. `guided` keeps the extra step lists and examples. `keelson init --profile` sets it |
@@ -39,26 +46,57 @@ effort:
 | `confirm.quick` | `proceed` | `proceed`: the agent writes back its understanding and starts. `wait`: it waits for approval first |
 | `confirm.spec` | `wait` | Spec changes always wait unless you set `proceed` |
 | `land` | `fold` | `fold` removes the change directory after merging. `keep` moves it to `changes/archive/` |
-| `check` | detected | Commands `keelson check` runs, in order, from the project root through the shell. Detected from `package.json` scripts, `pyproject.toml`, `go.mod`, or `Cargo.toml` on first init |
+| `check` | detected | Commands `keelson check` runs, in order, from the project root through the shell. Detected from `package.json` scripts, `pyproject.toml`, `pytest.ini`, `go.mod`, or `Cargo.toml` on first init |
 | `context` | `""` | Free text printed at the top of `keelson context` output. Use it for facts that do not fit INTENT.md, such as a tech stack summary |
+| `paths.specs` | `.keelson/specs` | Directory of behaviour contracts, one `<capability>/spec.md` each. Point it at an existing contracts directory to reuse it |
+| `refs.architecture` | detected | Path to architecture notes, referenced by `keelson context`, never copied |
+| `refs.decisions` | detected | Path to the decision record directory |
+| `refs.tasks` | detected | URL or path of the issue tracker. The tracker stays authoritative for what is wanted |
+| `refs.ci` | detected | Path to CI configuration |
 | `models` | `{}` | Project-level tier overrides. Either `models: { deep: opus }` for all platforms or `models: { claude: { deep: opus } }` per platform. Aliases only |
 | `effort.review_min` | `standard` | Lowest tier for a reviewer subagent |
 | `effort.plan_min` | `deep` | Lowest tier for drafting `change.md` and delta specs |
 | `effort.verify_min` | `deep` | Lowest tier for the final fresh-reader review on spec changes |
 | `effort.escalate_after` | `2` | Failures at one tier before re-dispatching one tier up |
 
-`keelson validate` errors on a `profile` or `land` value outside the allowed set.
+`keelson validate` errors on a `profile` or `land` value outside the allowed set, and warns when `paths.specs` or a local `refs.*` path does not exist.
 
-## `.keelson/INTENT.md` working defaults
+### Migration
 
-`INTENT.md` ends with a `Working defaults` section. It is prose the agent reads, not parsed config. Use it to state the same preferences in words, for example "treat anything touching `payments/` as spec". The two files should agree; `config.yaml` is what the CLI enforces.
+A `version: 1` file gains `paths` and `refs` with defaults. Every command reads it correctly without changes; `keelson update` rewrites it as version 2, and `keelson doctor` reminds you until then. `keelson update --dry-run` shows the pending migration.
+
+## `.keelson/INTENT.md`
+
+Not configuration, but the file that decides how much the agent may do alone. The template's `Authorizations` section has three lines:
+
+- **Decides alone**: local implementation choices inside a confirmed scope; test structure; naming that follows existing patterns.
+- **Recommends, owner decides**: anything that changes user-visible behaviour, scope, or a long-term commitment; new dependencies; public interface changes.
+- **Always confirms**: irreversible data operations, production changes, permission widening, breaking compatibility.
+
+Edit the lines to fit the project. The `Working defaults` section states the sizing and approval preferences in words; `config.yaml` is what the CLI enforces, and the two should agree.
+
+## Change frontmatter
+
+`keelson new` writes these keys into `change.md`:
+
+| Key | Set by | Meaning |
+|---|---|---|
+| `tier` | `--tier` | `quick` or `spec` |
+| `created` | date | Creation date |
+| `status` | `new`, `land --keep`, `cancel`, or the agent | Work status: `clarifying`, `in-progress`, `blocked`, `in-review`, `integrated`, `cancelled`. Explicit values win over derived ones |
+| `owner` | git user name, or `--owner` | Who is driving the change |
+| `branch` | current branch, or the worktree branch | Where the work happens |
+| `worktree` | `--worktree` | Relative path of the worktree created for the change |
+| `depends` | `--depends a,b` | Active changes this one waits on |
+| `touches` | `--touches globs` | Path globs the change will edit; used for shared-contract warnings and impact |
+| `release` | the agent | Free text shown in `status`; `unreleased` when absent |
 
 ## `~/.keelson/`
 
 | File | Written by | Purpose |
 |---|---|---|
-| `models.yaml` | `keelson models rank <alias> <tier>` | User-level tier overrides, `platform → tier → alias`. Takes precedence over the registry, below project config |
-| `models.cache.json` | `keelson init`, `keelson models --detect`, `--refresh` | Installed tools and versions, configured default models, which provider keys are present, models seen in provider catalogues, unranked models. Considered stale after 24 hours |
+| `models.yaml` | `keelson models rank <alias> <tier>` | User-level tier overrides, `platform → tier → alias`. Above the registry, below project config |
+| `models.cache.json` | `keelson init`, `keelson models --detect`, `--refresh` | Installed tools and versions, configured default models, which provider keys are present, models seen in provider catalogues, unranked models. Stale after 24 hours |
 | `registry.json` | `keelson models --refresh` | A newer copy of the bundled registry, used when its `updated` date is later |
 | `ablations/<hash>/` | `keelson ablate` | The stashed files and manifest for one project. Removed by `keelson restore` |
 

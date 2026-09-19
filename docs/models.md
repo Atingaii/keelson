@@ -10,13 +10,20 @@ Keelson never names a model in the repository. Tasks carry an effort tier; the h
 | `standard` | Work that needs context but has a clear path | Most feature code, ordinary bug fixes, per-task review |
 | `deep` | Ambiguity, cross-layer effects, design trade-offs, security, unknown root cause | Drafting `change.md` and delta specs, rulings, hard debugging, the final fresh-reader review |
 
-The agent tags each task in `tasks.md`:
+The agent tags each task in `tasks.md`, grouped into slices when the change has more than one independently deliverable part:
 
 ```markdown
+## Slice: Paging
+Delivers: page and size work on the listing
 - [ ] 1. Add page/size parsing to GET /orders (effort: light) — verify: `npm test -- orders.params`
 - [ ] 2. Implement paged query in OrderRepo (effort: standard) — verify: `npm test -- orders.repo`
-- [ ] 3. Decide ack semantics for retries (effort: deep)
+
+## Slice: Limits
+Delivers: oversized pages are handled
+- [ ] 3. Decide clamp or reject above 200 and update specs/orders (effort: deep)
 ```
+
+Every dispatch is recorded in the ledger with a `Result: pass|fail` first line, so `keelson retro` can compute first-pass rates per tier without guessing from prose.
 
 ## Floors
 
@@ -38,7 +45,7 @@ When a task fails verification twice at its tier, the agent re-dispatches it one
 Two failures on boundary handling.
 ```
 
-Failures at `deep` stop and ask the user. Escalation applies to work that came back wrong. A dispatch that never ran, because of a rate limit, a timeout, or a tool error, is retried once at the same tier and then done inline by the agent, with a `Note:` in the ledger. Escalation makes a wrong tag cheap and lets `light` take on more work as models improve without anyone editing the repository.
+Failures at `deep` stop and ask the user; `deep` is the top tier and nothing escalates above it. Escalation applies to work that came back wrong. A dispatch that never ran, because of a rate limit, a timeout, or a tool error, is retried once at the same tier and then done inline by the agent, with a `Note:` in the ledger. Escalation makes a wrong tag cheap and lets `light` take on more work as models improve without anyone editing the repository.
 
 ## Resolution order
 

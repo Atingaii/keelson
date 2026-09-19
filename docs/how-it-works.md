@@ -1,17 +1,18 @@
 # How it works
 
-Keelson is three small surfaces in the agent's environment and one directory of facts in the repository. This page describes each mechanism precisely.
+Keelson is three surfaces in the agent's environment and one directory of facts in the repository. This page describes each mechanism precisely.
 
 ## The resident block
 
-`keelson init` appends a block to the tool's instructions file (`CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`) between `<!-- keelson:start -->` and `<!-- keelson:end -->` markers. `keelson update` replaces the block in place; `keelson ablate` removes it. The block is under 20 lines and says:
+`keelson init` appends a block to the tool's instructions file (`CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`) between `<!-- keelson:start -->` and `<!-- keelson:end -->` markers. `keelson update` replaces the block in place; `keelson uninstall` and `keelson ablate` remove it. Existing content in the file is never touched. The block is under 20 lines and says:
 
-- what `.keelson/` contains;
-- to run `keelson context --paths <files>` or read the files before non-trivial work;
+- what `.keelson/` contains and that existing documents are referenced from `config.yaml`;
+- to run `keelson context --paths <files>` before non-trivial work and `keelson impact <files>` before editing shared modules;
 - how to size a change (trivial, quick, spec);
-- to claim "done" only with a fresh command and its exit code;
-- to land finished work with `keelson land` and rewrite `NOW.md`;
-- that the `keelson` skill holds the per-phase details.
+- to record decisions as confirmed or assumed, and that open questions block only dependent slices;
+- to claim "done" only with `keelson check --record`, land with `keelson land`, then rewrite `NOW.md`;
+- to write `handoff.md` when stopping and check the worktree when resuming;
+- that the `keelson` skill holds the details.
 
 For Cursor the same text is also written to `.cursor/rules/keelson.mdc` with `alwaysApply: true`.
 
@@ -21,60 +22,74 @@ For Cursor the same text is also written to `.cursor/rules/keelson.mdc` with `al
 
 | Hook | Event | Prints |
 |---|---|---|
-| `session-start.mjs` | `SessionStart` on `startup`, `resume`, `clear`, `compact` | One header line, `NOW.md` (capped at 1200 characters), the list of active changes with tier and task progress, and the capabilities that have specs |
-| `prompt-state.mjs` | `UserPromptSubmit` | One line: `[keelson] active: <name> · <phase> · <done>/<total> tasks`. Nothing when no change is active |
+| `session-start.mjs` | `SessionStart` on `startup`, `resume`, `clear`, `compact` | One header line; `ROADMAP.md → Now` (up to 400 characters, skipped while it is the template placeholder); `NOW.md` (up to 900 characters); active changes with tier, status, task progress, and owner; each active change's handoff `Next step` (up to 200 characters) |
+| `prompt-state.mjs` | `UserPromptSubmit` | One line: `[keelson] active: <name> · <work> · verify <state> · <done>/<total> tasks · <n> open`. Nothing when no change is active |
 
-The session snapshot costs a few hundred tokens once per session. The prompt line costs a few dozen tokens per turn, and zero when idle. Neither hook prints instructions; they print state.
+The session snapshot costs a few hundred tokens once per session. The prompt line costs a few dozen tokens per turn and zero when idle. Neither hook prints instructions; they print state.
 
-Pass `--no-hooks` to `init` to skip them. Existing hooks in `settings.json` are preserved; Keelson only adds entries whose command path contains `.keelson/hooks/`.
+Pass `--no-hooks` to `init` to skip them. Existing hooks in `settings.json` are preserved; Keelson only adds and removes entries whose command path contains `.keelson/hooks/`.
 
 ## The skill
 
-`init` copies the skill to the tool's skill directory (`.claude/skills/keelson/` or `.agents/skills/keelson/`). It contains `SKILL.md` and six references:
+`init` copies the skill to the tool's skill directory (`.claude/skills/keelson/` or `.agents/skills/keelson/`) and stamps the package version into `SKILL.md`'s frontmatter so `keelson doctor` can spot a stale install. It contains `SKILL.md` and eight references:
 
 | Reference | Read when |
 |---|---|
-| `shape.md` | Turning a request into a shared understanding: explore first, write back, unattended sessions, interview, sizing |
-| `plan.md` | Creating `change.md`, delta specs, `tasks.md` with effort tiers, `ledger.md` |
-| `build.md` | Executing tasks: rulings, subagent dispatch by tier, escalation, keeping artifacts true |
-| `verify.md` | Fresh evidence, review against specs and rules, fresh-reader review, completion report |
-| `land.md` | `keelson land`, `NOW.md`, promoting learnings to rules, decision etiquette |
+| `shape.md` | Understanding what is wanted: facts first, write-back, decision states, stop rule, interviewing, authorization, unattended runs, sizing |
+| `context.md` | Knowing what the code touches: three context layers, impact analysis, budget |
+| `plan.md` | Creating `change.md`, slices, acceptance, delta specs, effort tiers, working with an existing tracker |
+| `build.md` | Executing tasks: rulings, subagent dispatch by tier, escalation, parallel work, keeping artifacts true |
+| `verify.md` | Record validity, content validity, no silent weakening of tests, fresh-reader review, completion report |
+| `handoff.md` | What goes where, writing a handoff, resuming safely, `NOW.md` |
+| `land.md` | Landing gates, code and specs reviewed together, collisions, release state, promoting learnings |
 | `debug.md` | Reproduce, locate, fix, name the root-cause category |
 
-`SKILL.md` routes by phase. The agent reads one reference at a time. Every guideline carries a hidden HTML comment with an `id`, the failure it prevents (`without`), and its deletion condition (`sunset`). `keelson retro` reads those comments.
+`SKILL.md` routes by need. The agent reads one reference at a time. Every guideline carries a hidden HTML comment with an `id`, the failure it prevents (`without`), and its deletion condition (`sunset`). `keelson retro` reads those comments.
 
-The `profile` setting selects how much text ships. `lean` strips blocks marked `<!-- guided -->`. `guided` keeps them.
+`profile` selects how much text ships. `lean` strips blocks marked `<!-- guided -->`. `guided` keeps them.
 
 ## The change directory
 
-`keelson new <name> --tier quick|spec` creates `.keelson/changes/<name>/`:
+`keelson new <name> --tier quick|spec [--capability a,b] [--touches globs] [--depends other] [--worktree]` creates `.keelson/changes/<name>/`:
 
 ```text
-change.md      frontmatter (tier, created) + Why, What [, How, Alternatives, Impact, Decisions]
-tasks.md       checkbox list with (effort: light|standard|deep) and verify: `cmd`
+change.md      frontmatter (tier, created, status, owner, branch, worktree, depends, touches)
+               + Why, What [, How, Alternatives, Impact], Acceptance, Open questions [, Rollout], Decisions
+tasks.md       "## Slice: name" + "Delivers: …" + checkbox tasks with (effort: tier) and verify: `cmd`
 ledger.md      append-only ### entries
-specs/<cap>/spec.md   delta spec, spec tier only
+handoff.md     created by `keelson handoff`, stamped with at/updated/by
+specs/<cap>/spec.md   delta spec with a base: stamp, created per --capability
 ```
 
-Phase is computed from the files, not stored:
+`owner` is the git user name (or the OS user), `branch` the current branch. `--worktree` runs `git worktree add -b <name> ../<repo>-<name>` and records `branch: <name>` and `worktree:`. `--touches` declares path globs the change will edit; `--depends` names other active changes it waits on.
 
-| Condition | Phase |
-|---|---|
-| No tasks | `planning` |
-| Tasks, none checked | `ready` |
-| Some checked | `building` |
-| All checked, last `Verify:` not exit 0 or absent | `verifying` |
-| All checked, last `Verify:` exit 0 | `landing` |
+### Lifecycle
 
-`keelson land` refuses unless all tasks are checked and the last `Verify:` entry has exit 0. `--force` overrides when the user asked for it.
+```text
+keelson new  →  build and tick tasks  →  keelson check --record  →  (keelson handoff when stopping)
+             →  keelson land   (fold or archive, specs merged)
+             →  keelson cancel (archive as cancelled, nothing merged)
+```
 
-### Fold or keep
+`config.yaml → land: fold` (default) removes the change directory after merging; its ledger and handoff remain in git history and `keelson retro` reads them from there. `land: keep`, or `keelson land --keep`, moves the directory to `.keelson/changes/archive/YYYY-MM-DD-<name>/` with `status: integrated`. `keelson cancel` moves it to `archive/YYYY-MM-DD-<name>-cancelled/` with `status: cancelled` and a `## Cancelled` note.
 
-`config.yaml` `land: fold` (default) removes the change directory after merging. Its ledger remains in git history and `keelson retro` reads it from there. `land: keep`, or `keelson land --keep`, moves the directory to `.keelson/changes/archive/YYYY-MM-DD-<name>/` instead.
+### Landing gates
+
+`keelson land` refuses, and names every reason, when:
+
+- any task is unchecked;
+- any acceptance item is unchecked, or a spec-tier change has no `## Acceptance` list;
+- any open question remains;
+- verification is `not-run`, `failed`, `partial`, or `stale`;
+- `(assumed)` decisions exist and `--confirm-assumptions` was not passed;
+- a `What` bullet starts with `**BREAKING**` and there is no `## Rollout` section;
+- a delta spec's `base:` no longer matches the main spec and `--accept-drift` was not passed.
+
+`--dry-run` previews the merge. `--force` overrides every gate and prints what it overrode; it is for the owner's explicit decision.
 
 ## Spec merge semantics
 
-Main specs live at `.keelson/specs/<capability>/spec.md`:
+Main specs live at `<paths.specs>/<capability>/spec.md`:
 
 ```markdown
 # orders
@@ -93,9 +108,12 @@ The system SHALL ...
 - orders: offset pagination over cursor; cursor rejected because the table needs page jumps
 ```
 
-A delta spec in a change uses three sections:
+A delta spec in a change carries a `base:` stamp (a hash of the main spec when the delta was created, or `new`) and three sections:
 
 ```markdown
+---
+base: 4233e56865
+---
 ## ADDED Requirements
 ### Requirement: Page size limit
 ...
@@ -113,13 +131,21 @@ At landing, per capability:
 - `REMOVED` deletes the requirement by name; a missing name is reported.
 - `MODIFIED` replaces the requirement by name; a missing name is added instead and reported.
 - `ADDED` appends; an existing name is replaced and reported as modified.
-- Names compare case-insensitively.
+- Names compare case-insensitively. `#### Scenario:` headings in a delta are normalised to `###` in the main spec.
 
-Then every line under `## Decisions` in `change.md` that starts with a capability prefix (`- orders: ...`) is appended to that capability's `## Decisions` section. Lines already present are skipped. Lines without a prefix are skipped with a warning. A capability that has no spec yet gets one created with just the decisions.
+Then every line under `## Decisions` in `change.md` that starts with a capability prefix (`- orders: …`, optionally after `(confirmed)` or `(assumed)`) is appended to that capability's `## Decisions` section. Lines already present are skipped. Lines without a prefix are skipped with a warning. A capability with no spec yet gets one created.
+
+Drift: if the main spec changed after the delta was written, `base:` no longer matches and landing refuses until the agent re-reads it and passes `--accept-drift`.
+
+## The worktree fingerprint
+
+Verification staleness needs a stable identity for "the code as it is now". In a git repository Keelson builds a real tree object from a throw-away index: `git add -A` into a temporary `GIT_INDEX_FILE` with `.keelson/` excluded, then `git write-tree`, truncated to 10 characters. Tracked and untracked files count, `.gitignore` is respected, and appending to a ledger does not invalidate the evidence it records. Without git, the fingerprint is a content hash of every file outside `node_modules`, `.git`, and `.keelson`.
+
+`keelson check` writes the fingerprint into the `Verify:` entry as `tree <hash>`. `keelson status`, `land`, and `doctor` recompute it and compare.
 
 ## NOW.md
 
-`NOW.md` is a snapshot, not a log. It is rewritten in full at every landing and whenever work stops mid-way. Present tense, three short parts: what is active, what is blocked or uncertain, the next concrete step. `keelson land --now "<text>"` writes it. The session-start hook prints it.
+`NOW.md` is a snapshot, not a log. It is rewritten in full at every landing and whenever work stops mid-way: what is active, what is blocked or uncertain (including "not yet checked: …"), the next concrete step. `keelson land --now "<text>"` writes it. The session-start hook prints it.
 
 ## Rules routing
 
@@ -133,30 +159,34 @@ Then every line under `## Decisions` in `change.md` that starts with a capabilit
 
 The arrow may be `→`, `->`, or `:`. The trailing note after a dash is optional. `keelson context --paths a,b` prints every rule file whose glob matches any of the paths; `**` and `*` alone always match.
 
-Glob semantics: `**/` matches zero or more directories; `**` alone matches anything; `*` matches within one segment; `?` matches one character; `{a,b}` matches alternatives. A glob with no wildcard characters, such as `src/api` or `src/api/`, matches that path and everything beneath it.
+Glob semantics: `**/` matches zero or more directories; `**` alone matches anything; `*` matches within one segment; `?` matches one character; `{a,b}` matches alternatives. A glob with no wildcard, such as `src/api` or `src/api/`, matches that path and everything beneath it.
 
-`keelson validate` reports index entries whose file is missing as errors, and rule files not listed in the index as warnings, since unlisted files are never routed.
+`keelson validate` reports index entries whose file is missing as errors, and rule files not listed in the index as warnings.
+
+## Impact hints
+
+`keelson impact <files>` prints, for the given files:
+
+- callers: files whose `import`, `require`, `from`, `include`, or `use` line names the module's basename (via `git grep`, or a file walk without git);
+- specs that may be affected: capabilities whose directory name appears in a file path, or whose spec text contains a word from a file's basename;
+- rules that apply, by the same routing as `context`;
+- active changes whose `touches` cover the files or whose capabilities match the specs found.
+
+Every line of that output is a hint. Dynamic entry points, routes, jobs, and templates are found by reading.
 
 ## Ledger entries and retro
 
-`ledger.md` is append-only. Each entry is an `###` heading followed by a body:
+`ledger.md` is append-only. Each entry is a `###` heading followed by a body:
 
 | Entry | Meaning | Parsed fields |
 |---|---|---|
-| `### Ruling: <topic>` | A decision the agent made instead of stopping | count |
+| `### Ruling: <topic>` | A decision the agent made inside its authorization instead of stopping | count |
 | `### Root cause: <category>` | Category of a fixed bug | `missing-rule`, `cross-layer`, `propagation`, `test-gap`, `implicit-assumption`, `guessed-fix` |
-| `### Verify: <claim>` | Evidence for a status claim | a command in backticks and `exit N` in the body |
-| `### Dispatch: task N → <tier> (<alias>)` | A subagent dispatch | tier, task, and a `Result: pass\|fail` line in the body |
+| `### Verify: <claim>` | Evidence for a status claim | commands in backticks, `exit N` (the highest counts), `tree <hash>` |
+| `### Dispatch: task N → <tier> (<alias>)` | A subagent dispatch | tier, task, and a `Result: pass\|fail` first line in the body |
 | `### Escalate: task N <tier> → <tier>` | A re-dispatch one tier up | from, to |
 | `### Note: <text>` | Anything else | none |
 
-`keelson validate` requires every `Verify:` entry to have both a command and an exit code, and every `Root cause:` to use a known category.
+`keelson validate` requires every `Verify:` entry to have a command and an exit code, warns when it has no `tree`, warns when a `Dispatch:` has no `Result:` line, and requires every `Root cause:` to use a known category.
 
-`keelson retro` gathers ledgers from active changes, the archive, and git history (files under `.keelson/changes/` deleted in past commits). It computes:
-
-- root-cause counts per category;
-- per tier: dispatches, failures, escalations away from the tier, first-pass rate;
-- verify entries and how many failed;
-- rulings.
-
-It then lists every guidance block with a sunset condition and prints suggestions when thresholds are met: prune a block, add a rule for a recurring category, or adjust effort tagging.
+`keelson retro` gathers ledgers from active changes, the archive, and git history (ledgers deleted under `.keelson/changes/` in past commits). It computes root-cause counts per category; per tier, dispatches, failures, entries without a result, escalations away from the tier, and first-pass rate over known results; verify entries and how many failed; rulings. It then lists every guidance block with its sunset condition and prints suggestions when thresholds are met: prune a block, add a rule for a recurring category, or adjust effort tagging.

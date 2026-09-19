@@ -1,6 +1,7 @@
 ---
 tier: quick
 created: {{date}}
+status: in-progress
 ---
 
 # {{title}}
@@ -10,3 +11,6 @@ created: {{date}}
 
 ## What
 - …
+
+## Acceptance
+- [ ] … — check: `…`

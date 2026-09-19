@@ -9,7 +9,7 @@ A fix without a known cause is a guess that happened to pass. This reference exi
 2. Reproduce deterministically: a failing test, a script, or exact steps. If you cannot reproduce it, you cannot know it is fixed.
 3. Locate: where does observed behaviour first diverge from expected? Add logging or assertions at the boundaries rather than reading everything.
 4. Form one hypothesis, test it with the smallest change, and only then write the fix.
-5. Run the reproduction again; it must pass. Run `keelson check`.
+5. Run the reproduction again; it must pass. Keep the negative check: with the fix reverted, the regression test fails. Then `keelson check --record`.
 
 If three hypotheses in a row fail, stop and re-read the problem from the top; you are probably in the wrong layer.
 
