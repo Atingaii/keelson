@@ -12,7 +12,7 @@ const env = { HOME };
 test('init creates .keelson, skill, resident block, hooks; update is idempotent', () => {
   const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"echo ok"}}', 'CLAUDE.md': '# Mine\n' });
   run(dir, ['init', '--tools', 'claude,cursor'], { env });
-  for (const f of ['.keelson/README.md', '.keelson/INTENT.md', '.keelson/NOW.md', '.keelson/config.yaml', '.keelson/rules/index.md', '.keelson/rules/general.md', '.keelson/hooks/session-start.mjs', '.claude/skills/keelson/SKILL.md', '.claude/skills/keelson/references/build.md', '.agents/skills/keelson/SKILL.md', '.cursor/rules/keelson.mdc', 'AGENTS.md']) assert.ok(exists(dir, f), f);
+  for (const f of ['.keelson/README.md', '.keelson/INTENT.md', '.keelson/NOW.md', '.keelson/config.yaml', '.keelson/rules/index.md', '.keelson/rules/general.md', '.keelson/hooks/session-start.mjs', '.claude/skills/keelson/SKILL.md', '.claude/skills/keelson/references/build.md', '.agents/skills/keelson/SKILL.md', 'AGENTS.md']) assert.ok(exists(dir, f), f);
   assert.ok(!exists(dir, '.claude/skills/keelson/templates'), 'templates are not installed into the skill');
   const claude = read(dir, 'CLAUDE.md');
   assert.match(claude, /^# Mine/);
@@ -377,14 +377,14 @@ test('guide flag adds the guided line; named checks run with kinds; doctor repor
   assert.ok(v.warnings.some((w) => /named after a layer/.test(w)));
 });
 
-test('init is the only step: platform flags, cross-tool layer, kiro steering, first-contact note; no INTENT chore', () => {
+test('init is the only step: platform flags, standards-first surfaces, first-contact note; no INTENT chore', () => {
   const dir = tmpProject({ 'package.json': '{"name":"shop"}', 'src/a.js': 'export const a = 1;\n' });
   execFileSync('git', ['init', '-q'], { cwd: dir });
   const out = run(dir, ['init', '--claude', '--cursor', '--kiro', '--no-hooks'], { env }).stdout;
   assert.match(out, /Open your agent in this directory and start talking/);
   assert.doesNotMatch(out, /Edit \.keelson\/INTENT\.md/);
-  for (const f of ['.claude/skills/keelson/SKILL.md', '.cursor/skills/keelson/SKILL.md', '.cursor/rules/keelson.mdc', '.agents/skills/keelson/SKILL.md', '.kiro/skills/keelson/SKILL.md', '.kiro/steering/keelson.md', 'AGENTS.md', 'CLAUDE.md']) assert.ok(exists(dir, f), f);
-  assert.match(read(dir, '.kiro/steering/keelson.md'), /^---\ninclusion: always\n---/);
+  for (const f of ['.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', '.kiro/skills/keelson/SKILL.md', 'AGENTS.md', 'CLAUDE.md']) assert.ok(exists(dir, f), f);
+  for (const f of ['.cursor/skills/keelson', '.cursor/rules/keelson.mdc', '.kiro/steering/keelson.md']) assert.ok(!exists(dir, f), `standards-first init should not create ${f}`);
   assert.match(read(dir, '.keelson/NOW.md'), /^First contact with /m);
   assert.match(read(dir, '.keelson/NOW.md'), /write one spec per capability/);
   assert.match(read(dir, '.keelson/config.yaml'), /- kiro/);
