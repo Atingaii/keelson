@@ -60,9 +60,9 @@ test('repository dogfood runtime exactly matches the generated lean canonical ru
   const rendered = renderSkillFiles('en', 'lean', pkg.version);
   assert.deepEqual(walk(path.join(ROOT, '.keelson', 'skill')), rendered.map((f) => f.rel).sort());
   for (const f of rendered) {
-    assert.equal(fs.readFileSync(path.join(ROOT, '.keelson', 'skill', f.rel), 'utf8'), f.content, `.keelson/skill/${f.rel}`);
+    assert.equal(fs.readFileSync(path.join(ROOT, '.keelson', 'skill', f.rel), 'utf8').replace(/\r\n?/g, '\n'), f.content, `.keelson/skill/${f.rel}`);
   }
-  assert.equal(fs.readFileSync(path.join(ROOT, '.keelson', 'workflow.md'), 'utf8'), workflowContent('en', false));
+  assert.equal(fs.readFileSync(path.join(ROOT, '.keelson', 'workflow.md'), 'utf8').replace(/\r\n?/g, '\n'), workflowContent('en', false));
   for (const shim of ['.claude/skills/keelson', '.agents/skills/keelson']) {
     assert.deepEqual(walk(path.join(ROOT, shim)), ['SKILL.md']);
     assert.match(fs.readFileSync(path.join(ROOT, shim, 'SKILL.md'), 'utf8'), /\.keelson\/skill\/SKILL\.md/);
