@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { walk } from '../src/lib/fs.js';
+import { replaceDirSafe, walk } from '../src/lib/fs.js';
 import { datedIdPatterns } from '../src/lib/models.js';
 import { applyProfile, renderSkillFiles, stampVersion, workflowContent } from '../src/platforms/index.js';
 
@@ -19,6 +19,30 @@ test('no dated model IDs in registry, skills, hooks, or docs', () => {
   }
   for (const f of ['README.md', 'README_CN.md']) if (fs.existsSync(path.join(ROOT, f))) for (const re of patterns) if (re.test(fs.readFileSync(path.join(ROOT, f), 'utf8'))) offenders.push(f);
   assert.deepEqual(offenders, []);
+});
+
+test('generated directory replacement preserves the last good copy across failure and interrupted residue', () => {
+  const root = fs.mkdtempSync(path.join(process.env.TMPDIR || process.env.TEMP || '/tmp', 'keelson-replace-'));
+  const dest = path.join(root, 'skill');
+  fs.mkdirSync(dest, { recursive: true });
+  fs.writeFileSync(path.join(dest, 'state.txt'), 'old');
+
+  assert.throws(() => replaceDirSafe(dest, (tmp) => {
+    fs.writeFileSync(path.join(tmp, 'state.txt'), 'partial');
+    throw new Error('boom');
+  }), /boom/);
+  assert.equal(fs.readFileSync(path.join(dest, 'state.txt'), 'utf8'), 'old');
+  assert.equal(fs.existsSync(dest + '.keelson-tmp'), false);
+  assert.equal(fs.existsSync(dest + '.keelson-bak'), false);
+
+  fs.renameSync(dest, dest + '.keelson-bak');
+  fs.mkdirSync(dest + '.keelson-tmp', { recursive: true });
+  fs.writeFileSync(path.join(dest + '.keelson-tmp', 'state.txt'), 'crash-partial');
+
+  replaceDirSafe(dest, (tmp) => fs.writeFileSync(path.join(tmp, 'state.txt'), 'new'));
+  assert.equal(fs.readFileSync(path.join(dest, 'state.txt'), 'utf8'), 'new');
+  assert.equal(fs.existsSync(dest + '.keelson-tmp'), false);
+  assert.equal(fs.existsSync(dest + '.keelson-bak'), false);
 });
 
 test('English and Chinese skills have the same files and the same guidance ids', () => {
