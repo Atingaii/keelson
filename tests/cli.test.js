@@ -55,8 +55,9 @@ test('changing configured tools removes stale generated adapters but preserves u
   assert.ok(exists(dir, '.keelson/hooks/session-start.mjs'));
 
   const dry = run(dir, ['update', '--tools', 'codex', '--dry-run'], { env }).stdout;
-  assert.match(dry, /remove\s+\.claude\/skills\/keelson/);
-  assert.match(dry, /remove\s+\.kiro\/skills\/keelson/);
+  assert.match(dry, /remove\s+\.claude[\\/]skills[\\/]keelson/);
+  assert.match(dry, /remove\s+\.kiro[\\/]skills[\\/]keelson/);
+  assert.doesNotMatch(dry, /remove\s+AGENTS\.md/, 'shared desired discovery path should not be removed and re-added');
 
   run(dir, ['update', '--tools', 'codex'], { env });
   assert.ok(!exists(dir, '.claude/skills/keelson'));
