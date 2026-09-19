@@ -1,7 +1,6 @@
 import path from 'node:path';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { readOr, walk, listDirs, read, exists } from '../lib/fs.js';
-import { loadConfig } from '../lib/config.js';
 import { parseLedger, ROOT_CAUSES } from '../lib/markdown.js';
 import { loadAllChanges } from '../lib/changes.js';
 import { historicalLedgers } from '../lib/git.js';
@@ -81,7 +80,6 @@ export function suggestions(metrics, guidance) {
 
 export async function retro({ flags }, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
-  const cfg = loadConfig(projectPaths(root).config);
   const ledgers = collectLedgers(root);
   const metrics = computeMetrics(ledgers);
   const guidance = collectGuidance(root);
