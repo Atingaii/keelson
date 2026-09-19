@@ -5,7 +5,7 @@ description: 面向带有 .keelson/ 目录的仓库的工程协作层。凡是�
 
 # Keelson
 
-仓库说明文件里的常驻块是始终生效的小内核：**ORIENT → BOUND → BUILD → SENSE → RECONCILE**。这份 canonical Skill 只负责把任务路由到更深的指导；不要一次加载或复述所有 reference。先看 `.keelson/README.md` 获取人和 Agent 都能读懂的项目地图。长期项目事实放在 `.keelson/`；已有项目文档通过 `config.yaml → refs` 保持权威，不复制。
+`.keelson/workflow.md` 是项目本地的执行内核：**ORIENT → BOUND → BUILD → SENSE → RECONCILE**。初始化后，这份 canonical Skill 位于 `.keelson/skill/SKILL.md`，只负责把任务路由到更深的指导；不要一次加载或复述所有 reference。先看 `.keelson/README.md` 获取人和 Agent 都能读懂的项目地图。长期项目事实放在 `.keelson/`；已有项目文档通过 `config.yaml → refs` 保持权威，不复制。
 
 Keelson 约束的是**状态转换，而不是实现方式**。用户指令和项目自身说明文件优先。一个规则若能稳定机械检查，就优先做成可执行不变量，而不是继续增加提示词。
 
