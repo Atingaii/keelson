@@ -6,14 +6,22 @@ All notable changes to this project are documented here. The format follows Keep
 
 ### Added
 
+- Per-session focus runtime under gitignored `.keelson/.runtime/sessions/`: session pointers select durable changes but never carry completion state.
+- `keelson focus [change] [--auto|--clear]`: safe agent-facing session routing with explicit degraded behavior when a host has no verified identity bridge.
+- Derived work state `ready`: when acceptance/tasks, blockers/assumptions, rollout, and current-tree verification satisfy the gates, `check --record` tells the agent to land immediately without waiting for a user finish phrase.
+- Claude hooks now hash the host session id, persist only an opaque local pointer, bridge `KEELSON_SESSION_ID` into later CLI commands, and keep parallel conversations isolated.
 - `.keelson/README.md`: a package-owned human project map that explains what to read first, what every Keelson artifact means, and what survives landing; `keelson update` refreshes it without overwriting project facts.
 - New `harness.md` skill reference: feedforward/feedback controls, mechanical invariants, repeated-failure promotion, verification baselines, and sunset conditions for model-specific guidance.
 
 ### Changed
 
+- Conversation/session lifecycle is now independent from durable change lifecycle: closing a window, going idle, compaction, or switching focus cannot complete/cancel/land work.
+- `handoff.md` is reserved for explicit ownership/machine transfer; ordinary new sessions recover from durable change state plus local focus/candidate resolution.
+- Machine-local check output moved from `.keelson/.local/evidence/` to `.keelson/.runtime/evidence/`; the legacy `.local/` path remains gitignored/cleaned for compatibility.
+- Platform metadata now reports session-focus capability separately from discovery support (`native` vs `degraded`).
 - Fresh init is now a minimal standing control plane: `README.md`, `INTENT.md`, `NOW.md`, `config.yaml`, `manifest.json`, `workflow.md`, and `skill/`. Empty ROADMAP/GLOSSARY/rules/specs/changes trees are no longer pre-created.
 - Change workspaces now grow progressively: quick changes start with `change.md` only; spec changes add `tasks.md` and behavior deltas; `ledger.md` and `handoff.md` appear only after the corresponding event or session boundary.
-- The canonical Skill routes requests through six user intents — Explore, Change, Fix, Resume, Finish, Improve — while detailed references remain an internal capability library.
+- The canonical Skill now routes five **conversation** intents — Explore, Change, Fix, Resume, Improve. Completion/Finish is no longer a user intent; `ready` is derived from durable gates and current-tree verification.
 - Top-level CLI help now separates the small user command surface from agent workflow and advanced maintenance commands.
 - README and documentation were reorganized around one golden path, with a documentation home and complete end-to-end user flow in English and Chinese.
 - Generated surfaces are now reconciled as desired state through `.keelson/manifest.json`: switching hosts removes stale Keelson adapters and hook registrations without touching neighboring user files.
