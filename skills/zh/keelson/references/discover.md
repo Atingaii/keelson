@@ -33,6 +33,21 @@
 
 只有答案会改变结果的问题才交给负责人。其余都是默认值，或是落地前会浮现出来的 `(assumed)` 决策。
 
+## 只在决策前沿提问
+<!-- keelson: id=discover.decision-frontier | without: the agent either interrupts for facts it could investigate, invents user-owned intent, or asks low-value questions whose answers do not change the work | sunset: never -->
+
+提问前，先按“谁有能力解决这个缺口”来分类：
+
+| 缺口 | 处理 |
+|---|---|
+| 仓库或上下文已经确定 | 直接使用，并在写回中指出依据 |
+| 属于现实世界（代码行为、API 契约、benchmark、依赖能力） | 自己调查，或做一个小实验 |
+| 属于用户且会阻塞结果（目标、范围、验收、风险容忍度、公开承诺） | 只问一个问题 |
+| 不阻塞，或很容易撤销 | 按授权决定，或留给后续切片 |
+| 证据已经耗尽 | 标为 UNKNOWN；不要把不确定性改写成用户的观点 |
+
+选择“实际信息价值”最高的问题：哪个答案最可能改变下一个切片，再乘上猜错它的代价。不需要真的算分。问题保持中性；有帮助时给出具体选项和你的推荐。得到答案后更新写回，再重新判断决策前沿。“只问一个问题”只用于**真正阻塞工作的不确定性**，不是仪式：没有由用户掌握的关键缺口时，一个问题都不要问，直接推进。
+
 ## 范围守卫
 <!-- keelson: id=discover.scope-guard | without: 第一个请求就同时要五个独立领域，集成风险、调试成本和需求变动叠加放大 | sunset: never -->
 
