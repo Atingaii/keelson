@@ -7,6 +7,18 @@ Turn a request or an idea into a shared understanding before artifacts exist. Fa
 
 Read what answers the question: the code, tests, `INTENT.md`, `ROADMAP.md`, the specs, the matched `rules/`, and the documents listed under `refs` in `config.yaml`. A decision already recorded in a spec's `Decisions` section or in `INTENT.md` is settled; do not ask it again. Only questions about intent, priorities, and trade-offs belong to the user.
 
+## Assumption audit before questions
+<!-- keelson: id=shape.assumption-audit | without: the agent solves a plausible but wrong problem, attributes invented beliefs to the owner, or asks a questionnaire before reading the repository | sunset: never -->
+
+When quick work is materially ambiguous, and for every spec change, do a compact audit after reading the repository and before implementation. Do not narrate private chain-of-thought; report only decision-relevant results:
+
+1. **Established** — facts the owner or repository actually states.
+2. **Required assumptions** — what the proposed path would need to be true but nobody has confirmed. Phrase it as "this plan would require X", never "you assume X".
+3. **Missing** — information that cannot be learned from the repository; rank it by how much the answer could change the outcome, boundary, acceptance, or an expensive-to-reverse choice.
+4. **Failure if wrong** — name one likely failure pattern for this class of work: wrong problem, scope creep, compatibility break, unmeasured optimisation, unsafe migration, or another concrete risk.
+
+If no missing item is load-bearing, proceed under the project's authorizations/defaults and record any material assumption. If one is load-bearing and user-owned, ask the single highest-value question, wait for the answer, update the write-back, then re-run the audit. Do not ask a dependent second question before the first answer exists.
+
 ## Write back your understanding
 <!-- keelson: id=shape.write-back | without: agent builds its own interpretation; mismatches surface after code exists | sunset: never -->
 
@@ -34,7 +46,7 @@ The bar is not "no unknowns in the project". It is: the next slice has a clear o
 ## Interview (spec changes, or when the user says "grill me")
 <!-- keelson: id=shape.interview | without: architectural ambiguity is resolved silently by the agent instead of by the owner | sunset: never -->
 
-Walk the decision tree front to back: resolve the blocking decision before its dependents (outcome and scope before API and data model). Questions that are independent of each other may share a round; a question whose answer depends on an unanswered one waits for the next round. Use the host's question tool when available, with 2–4 concrete options and a recommendation with its trade-off, plus free text. When the owner does not follow a term, offer a scenario, a sketch, or a small experiment instead of more vocabulary. After each answer, acknowledge in one sentence and continue. When the user says "grill me", continue until every branch is settled, then summarise the decisions; otherwise stop at the rule above.
+Walk the decision tree front to back: resolve the blocking decision before its dependents (outcome and scope before API and data model). Default to one highest-value question at a time. Only batch questions when the owner explicitly asks for a batch and the questions are genuinely independent; if one answer can change whether or how another should be asked, wait. Use the host's question tool when available, with 2–4 concrete options and a recommendation with its trade-off, plus free text. When the owner does not follow a term, offer a scenario, a sketch, or a small experiment instead of more vocabulary. After each answer, acknowledge in one sentence and continue. When the user says "grill me", continue until every branch is settled, then summarise the decisions; otherwise stop at the rule above.
 
 Open with the assumption check when the change is architectural: "What are we assuming here that, if false, changes the answer?" State your own answer before asking for theirs.
 
