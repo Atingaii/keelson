@@ -178,5 +178,8 @@ test('config migration is pure and idempotent', async () => {
   assert.equal(v1.paths.specs, '.keelson/specs');
   assert.equal(v1.budgets.spec, 250);
   assert.equal(v1.guide, false);
+  assert.equal(v1.hooks, true);
+  assert.deepEqual(parseConfig('').tools, ['agents']);
+  assert.equal(parseConfig('').hooks, true);
   assert.equal(parseConfig('').version, CONFIG_VERSION);
 });
