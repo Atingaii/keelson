@@ -221,7 +221,7 @@ test('guided profile keeps guided blocks; lang zh installs the Chinese skill whe
 });
 
 test('change artifacts grow progressively instead of starting empty', () => {
-  const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"true"}}' });
+  const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"node -e \\"process.exit(0)\\""}}' });
   run(dir, ['init', '--no-hooks'], { env });
 
   run(dir, ['new', 'quick-fix', '--tier', 'quick'], { env });
