@@ -1,9 +1,9 @@
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { requireProjectRoot, projectPaths } from '../lib/paths.js';
-import { exists, readOr, readJson } from '../lib/fs.js';
+import { requireProjectRoot, projectPaths, PKG_ROOT } from '../lib/paths.js';
+import { exists, readOr, readJson, walk } from '../lib/fs.js';
 import { loadConfig, CONFIG_VERSION } from '../lib/config.js';
-import { PLATFORMS, installTargets } from '../platforms/index.js';
+import { PLATFORMS, installTargets, managedStateMatches, readManagedState, renderSkillFiles, renderSkillShim, residentBlock, workflowContent } from '../platforms/index.js';
 import { validateProject } from './validate.js';
 import { projectStatus } from './status.js';
 import { parseFrontmatter } from '../lib/markdown.js';
@@ -28,6 +28,24 @@ export async function doctor({ flags }, cwd = process.cwd()) {
   const rawVersion = Number((readOr(p.config, '').match(/^version:\s*(\d+)/m) || [])[1] ?? 1);
   if (rawVersion < CONFIG_VERSION) add('warn', `config.yaml is v${rawVersion}; run \`keelson update\` to migrate to v${CONFIG_VERSION}`);
 
+  const normalize = (text) => String(text ?? '').replace(/\r\n?/g, '\n');
+  const expectedSkillFiles = renderSkillFiles(cfg.lang, cfg.profile, PKG_VERSION);
+  const expectedSkillPaths = expectedSkillFiles.map((f) => f.rel).sort();
+  const actualSkillPaths = walk(p.skill);
+  if (JSON.stringify(actualSkillPaths) !== JSON.stringify(expectedSkillPaths)) {
+    add('error', 'canonical skill file set drifted from this CLI version (run `keelson update`)');
+  }
+  for (const file of expectedSkillFiles) {
+    const actual = readOr(path.join(p.skill, file.rel), null);
+    if (actual !== null && normalize(actual) !== file.content) add('error', `canonical skill drift: .keelson/skill/${file.rel} (run \`keelson update\`)`);
+  }
+  if (exists(p.workflow) && normalize(readOr(p.workflow)) !== workflowContent(cfg.lang, cfg.guide)) {
+    add('error', 'canonical workflow drifted from config/profile (run `keelson update`)');
+  }
+  for (const suffix of ['.keelson-tmp', '.keelson-bak']) {
+    if (exists(p.skill + suffix)) add('warn', `interrupted runtime replacement residue: .keelson/skill${suffix.replace('.keelson', '')} (run \`keelson update\`)`);
+  }
+
   const canonicalSkill = path.join(p.skill, 'SKILL.md');
   if (!exists(canonicalSkill)) add('error', 'canonical skill missing at .keelson/skill/SKILL.md (run `keelson update`)');
   else {
@@ -37,26 +55,41 @@ export async function doctor({ flags }, cwd = process.cwd()) {
   if (!exists(p.workflow)) add('error', 'canonical workflow missing at .keelson/workflow.md (run `keelson update`)');
 
   for (const t of cfg.tools ?? []) if (!PLATFORMS[t]) add('error', `unknown tool "${t}" in config.yaml`);
-  for (const pl of installTargets((cfg.tools ?? []).filter((t) => PLATFORMS[t]), cfg)) {
+  const currentTargets = installTargets((cfg.tools ?? []).filter((t) => PLATFORMS[t]), cfg);
+  const managed = readManagedState(root);
+  if (!managed) add('warn', 'generated-surface ownership manifest is missing (run `keelson update`)');
+  else {
+    if (managed.packageVersion && managed.packageVersion !== PKG_VERSION) add('warn', `managed surfaces were last written by Keelson ${managed.packageVersion}; CLI is ${PKG_VERSION}`);
+    if (!managedStateMatches(root, currentTargets)) add('error', 'configured tools and generated-surface ownership differ (run `keelson update` to reconcile stale adapters)');
+  }
+  const expectedBlock = normalize(residentBlock(cfg.lang).trim());
+  for (const pl of currentTargets) {
     const skill = path.join(root, pl.skillsDir, 'keelson', 'SKILL.md');
     if (!exists(skill)) add('error', `${pl.label}: skill shim missing at ${pl.skillsDir}/keelson (run \`keelson update\`)`);
     else {
       const shimText = readOr(skill);
       const v = parseFrontmatter(shimText).data.version ?? null;
       if (v && v !== PKG_VERSION) add('warn', `${pl.label}: installed shim is ${v}, CLI is ${PKG_VERSION} (run \`keelson update\`)`);
-      if (!shimText.includes('.keelson/skill/SKILL.md')) add('error', `${pl.label}: skill entry does not point to .keelson/skill/SKILL.md`);
+      if (normalize(shimText) !== renderSkillShim(cfg.lang, PKG_VERSION)) add('error', `${pl.label}: skill discovery shim drifted (run \`keelson update\`)`);
     }
     const ins = path.join(root, pl.instructions);
     const insText = readOr(ins, '');
-    if (pl.instructionsFormat === 'kiro' ? !insText.includes('Keelson') : !insText.includes('<!-- keelson:start -->')) add('error', `${pl.label}: resident block missing from ${pl.instructions}`);
-    else if (!insText.includes('.keelson/workflow.md')) add('error', `${pl.label}: resident block does not point to .keelson/workflow.md`);
+    if (pl.instructionsFormat === 'kiro' ? !insText.includes('Keelson') : !insText.includes('<!-- keelson:start -->')) add('error', `${pl.label}: discovery block missing from ${pl.instructions}`);
+    else if (pl.instructionsFormat !== 'kiro') {
+      const found = normalize(insText).match(/<!-- keelson:start -->[\s\S]*?<!-- keelson:end -->/)?.[0] ?? '';
+      if (found.trim() !== expectedBlock) add('error', `${pl.label}: discovery block drifted in ${pl.instructions} (run \`keelson update\`)`);
+    }
     if (pl.confidence === 'convention') add('info', `${pl.label}: file locations follow the tool's convention and have not been exercised by the maintainers; if the agent does not pick up the skill, override platforms.${pl.id} in config.yaml`);
     if (pl.hooks) {
       const settings = readJson(path.join(root, '.claude', 'settings.json'), {}) ?? {};
       const has = (ev, script) => (settings.hooks?.[ev] ?? []).some((g) => (g.hooks ?? []).some((h) => String(h.command ?? '').includes(script)));
       if (!has('SessionStart', 'session-start.mjs')) add('warn', `${pl.label}: SessionStart hook not registered (init --no-hooks, or removed); the agent must run \`keelson context\` itself`);
       if (!has('UserPromptSubmit', 'prompt-state.mjs')) add('warn', `${pl.label}: UserPromptSubmit hook not registered`);
-      for (const s of ['session-start.mjs', 'prompt-state.mjs']) if (!exists(path.join(p.hooks, s))) add('error', `hook script missing: .keelson/hooks/${s}`);
+      for (const script of ['session-start.mjs', 'prompt-state.mjs']) {
+        const installed = path.join(p.hooks, script);
+        if (!exists(installed)) add('error', `hook script missing: .keelson/hooks/${script}`);
+        else if (normalize(readOr(installed)) !== normalize(readOr(path.join(PKG_ROOT, 'hooks', script)))) add('error', `hook script drifted: .keelson/hooks/${script} (run \`keelson update\`)`);
+      }
     }
   }
 
