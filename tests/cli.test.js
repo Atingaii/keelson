@@ -11,7 +11,7 @@ const env = { HOME };
 
 test('init creates .keelson, skill, resident block, hooks; update is idempotent', () => {
   const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"echo ok"}}', 'CLAUDE.md': '# Mine\n' });
-  run(dir, ['init', '--tools', 'claude,cursor'], { env });
+  run(dir, ['init', '--tools', 'claude,opencode'], { env });
   for (const f of ['.keelson/README.md', '.keelson/INTENT.md', '.keelson/NOW.md', '.keelson/config.yaml', '.keelson/.managed.json', '.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/skill/references/build.md', '.keelson/rules/index.md', '.keelson/rules/general.md', '.keelson/hooks/session-start.mjs', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', 'AGENTS.md']) assert.ok(exists(dir, f), f);
   assert.ok(!exists(dir, '.claude/skills/keelson/references'), 'host skill directory is a shim only');
   assert.ok(!exists(dir, '.agents/skills/keelson/references'), 'portable skill directory is a shim only');
@@ -548,10 +548,10 @@ test('guide flag adds the guided line; named checks run with kinds; doctor repor
   assert.ok(v.warnings.some((w) => /named after a layer/.test(w)));
 });
 
-test('init is the only step: platform flags, standards-first surfaces, first-contact note; no INTENT chore', () => {
+test('init is the only step: first-class platform flags, standards-first surfaces, first-contact note; no INTENT chore', () => {
   const dir = tmpProject({ 'package.json': '{"name":"shop"}', 'src/a.js': 'export const a = 1;\n' });
   execFileSync('git', ['init', '-q'], { cwd: dir });
-  const out = run(dir, ['init', '--claude', '--cursor', '--kiro', '--no-hooks'], { env }).stdout;
+  const out = run(dir, ['init', '--claude', '--opencode', '--kiro', '--no-hooks'], { env }).stdout;
   assert.match(out, /Open your agent in this directory and start talking/);
   assert.doesNotMatch(out, /Edit \.keelson\/INTENT\.md/);
   for (const f of ['.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/skill/references/verify.md', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', '.kiro/skills/keelson/SKILL.md', 'AGENTS.md', 'CLAUDE.md']) assert.ok(exists(dir, f), f);
