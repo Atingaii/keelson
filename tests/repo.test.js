@@ -82,6 +82,12 @@ test('skill frontmatter stamping is CRLF-safe and emits LF', () => {
   assert.doesNotMatch(out, /\r/);
 });
 
+test('platform registry retains the broad host compatibility contract', () => {
+  const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'platforms.json'), 'utf8'));
+  const expected = ['claude', 'cursor', 'opencode', 'codex', 'kiro', 'kilo', 'gemini', 'antigravity', 'devin', 'qoder', 'codebuddy', 'copilot', 'droid', 'pi', 'ohmypi', 'reasonix', 'zcode', 'trae', 'grok', 'kimi', 'snow', 'agents'];
+  for (const id of expected) assert.ok(reg.platforms[id], `missing platform: ${id}`);
+});
+
 test('platform registry keeps the portable Agent Skills fallback and detects Copilot CLI', () => {
   const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'platforms.json'), 'utf8'));
   assert.equal(reg.platforms.copilot.bin, 'copilot');
