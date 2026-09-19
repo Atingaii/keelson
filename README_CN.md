@@ -21,27 +21,26 @@ Keelson 把这些事实留在仓库里，并且只在真正需要时让 Agent �
 
 ## 60 秒例子
 
-你仍然正常说话：
+用户**不需要**告诉 Keelson “任务开始了”或“任务做完了”。
 
 > **你：** 用户可以撤销分享链接，撤销后必须立刻不能再打开图片。
 
-Agent 先读项目、写回边界，只问真正影响方案的问题：
+Agent 创建/绑定一个长期 change，这个会话继续聚焦它。
 
-> **Agent：** 我会把撤销定义为所有图片访问路径立即拒绝；已经下载到浏览器里的字节无法远程抹除；不设宽限期。相比定时宽限，我建议即时拒绝，因为“立刻”本身就是需求。这个边界批准吗？
+> **你：** 为什么不能保留 5 分钟宽限期？  
+> **Agent：** 它能降低缓存压力，但与“立刻”冲突，因此仍建议即时拒绝。
 
-批准后，它只创建这次工作真正需要的工件，按纵向切片实现，并把验证绑定到精确工作树。
+> **你：** 直接图片 URL 也要失效。  
+> **Agent：** 仍然属于同一个 change，我把这条访问路径加入已有验收边界。
 
-需要停下：
+> **你：** 那移动端呢？  
+> **Agent：** 这是围绕同一目标的解释性追问，不会创建新 task；同一撤销契约适用。
 
-> **你：** 先停在这里。  
-> **Agent：** 已写 handoff。下一步：让 revoked link 的直接图片访问也拒绝。
+用户可以一直这样问，不需要说“结束任务”。
 
-第二天：
+当 Acceptance 满足、没有阻塞问题/未确认假设、需要的 rollout 已存在，并且当前代码树上 verification 新鲜，Keelson 机械推导 work state 为 **ready**。Agent 在宣称完成之前自动 land，不等待用户说“做完了”。
 
-> **你：** 继续。  
-> **Agent：** 从已记录的 handoff 继续；之前的决策已经确认，不重新提问。
-
-宣称完成之前必须有新鲜证据；验证之后代码再发生变化，证据自动变成 stale。
+如果用户直接关掉窗口，长期 change 仍然保持进行中；消失的只是本地 session focus。新会话在候选明确时可用 `keelson focus --auto` 恢复。提交进 Git 的 `handoff.md` 只用于真正跨人/跨机器的所有权转移，不再承担普通聊天续接。
 
 ## 快速开始
 
@@ -71,20 +70,23 @@ keelson uninstall  # 删除生成的集成表面
 
 ## 一条黄金路径
 
-Keelson 把自然语言工作路由成六类意图：
+“用户现在在问什么”和“工作生命周期走到哪里”是两件事。
+
+Keelson 只把消息分成五类对话意图：
 
 | 意图 | 含义 |
 |---|---|
-| **Explore** | 思考、比较、澄清；明确要求修改之前保持只读 |
-| **Change** | 给功能/重构/迁移定边界，再交付最小纵向切片 |
+| **Explore** | 思考、比较、解释、澄清；明确要求修改之前保持只读 |
+| **Change** | 构建/重构/迁移，或继续修改当前 focus 的同一目标 |
 | **Fix** | 复现 → 定位 → 回归检查 → 修复 → 验证 |
-| **Resume** | 读取 NOW + handoff，从记录的下一步继续 |
-| **Finish** | Verify → review → land → 折叠长期真相 |
+| **Resume** | 新会话在候选明确时重新绑定到已有长期工作 |
 | **Improve** | 把重复失败提升为 spec、作用域 rule 或可执行 check |
 
-这只是 Agent 的路由模式，不是用户需要背的命令。
+**“完成”不是一种对话意图。** 它来自 work item 的机械状态：验收完成、无阻塞问题/假设、必要 rollout 已存在、当前工作树验证新鲜。满足这些 gate 后 change 自动成为 `ready`，Agent 进入 land/reconcile，不等待用户说“做完了”。
 
-完整示例见：**[完整用户流程](docs/zh/user-flow.md)**。
+Session 只是本机焦点指针；结束 session 绝不会自动完成、取消或 land change。
+
+完整例子见：**[完整用户流程](docs/zh/user-flow.md)**。
 
 ## 控制面一开始很小，只在需要时增长
 
@@ -103,27 +105,36 @@ Fresh init 只有：
     └── references/
 ```
 
-可选知识只有真的有内容时才出现：
+长期项目知识只有真的有内容时才出现：
 
 ```text
-ROADMAP.md                   # 真有里程碑需要保留时
-GLOSSARY.md                  # 术语开始重要或歧义时
-rules/                       # 真有稳定作用域不变量时
-specs/<capability>/spec.md   # 真有行为契约时
-changes/<name>/              # 非平凡工作进行中时
-.local/                      # 本机证据，gitignored
+ROADMAP.md                   # tracker 没有表达清楚的里程碑/方向
+GLOSSARY.md                  # 重要共享术语
+rules/                       # 稳定作用域不变量
+specs/<capability>/spec.md   # 行为契约
+changes/<name>/              # 进行中的长期 work item
 ```
 
-一个 quick change 最开始甚至只有：
+机器本地的易失状态单独放：
+
+```text
+.runtime/
+├── sessions/<key>.json      # 当前对话只保存 focus 到哪个 change
+└── evidence/                # 检查输出
+```
+
+`.runtime/` 被 gitignore。session 文件从来不是 task record，也从不记录“completed”。
+
+quick change 最开始可以只有：
 
 ```text
 changes/rename-buyer/
 └── change.md
 ```
 
-只有真正需要计划、证据、跨会话交接或行为 delta 时，`tasks.md`、`ledger.md`、`handoff.md`、delta specs 才出现。
+只有真正需要计划、证据、行为 delta 或明确所有权交接时，`tasks.md`、`ledger.md`、delta specs、`handoff.md` 才出现。
 
-**空脚手架不是进度。**
+**空脚手架不是进度；关闭一次对话也不是完成。**
 
 ## 一份 canonical runtime
 
