@@ -3,7 +3,8 @@ import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { readOr, listDirs, exists } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
 import { matchRules } from '../lib/rules.js';
-import { loadAllChanges, verificationStatus } from '../lib/changes.js';
+import { loadAllChanges, verificationStatus, derivedWorkStatus } from '../lib/changes.js';
+import { readSession } from '../lib/session.js';
 import { gitStatusShort, recentCommits, worktreeFingerprint } from '../lib/git.js';
 import { list } from '../lib/args.js';
 
@@ -15,6 +16,9 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
   const rules = matchRules(p.rules, paths);
   const fp = worktreeFingerprint(root);
   const changes = loadAllChanges(p.changes);
+  const session = readSession(root);
+  const focus = session.state?.change && changes.some((c) => c.name === session.state.change) ? session.state.change : null;
+  const orderedChanges = focus ? [...changes].sort((a, b) => (a.name === focus ? -1 : b.name === focus ? 1 : 0)) : changes;
   const specs = listDirs(p.specs);
   const refs = Object.entries(cfg.refs ?? {}).filter(([, v]) => v);
   const data = {
@@ -29,7 +33,9 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
     paths,
     rules: rules.map((r) => ({ file: `.keelson/rules/${r.file}`, globs: r.globs, content: r.content.trim(), missing: !r.exists })),
     specs: specs.map((s) => `${p.specsRel}/${s}/spec.md`),
-    changes: changes.map((c) => ({ name: c.name, tier: c.tier, owner: c.owner, work: c.work, verification: verificationStatus(c, fp).state, progress: c.progress, open: c.open.map((o) => o.text), handoffNext: c.handoff?.next ?? null })),
+    focus,
+    sessionAvailable: session.available,
+    changes: orderedChanges.map((c) => ({ name: c.name, tier: c.tier, owner: c.owner, work: derivedWorkStatus(c, fp), verification: verificationStatus(c, fp).state, progress: c.progress, open: c.open.map((o) => o.text), handoffNext: c.handoff?.next ?? null })),
     git: { dirty: gitStatusShort(root), recent: recentCommits(root, 5) },
   };
   if (flags.json) {
@@ -44,8 +50,8 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
   if (data.guide) out.push('Guided mode is on: the owner is learning; ask with scenarios, recommend with trade-offs, explain terms.', '');
   out.push('## NOW.md', '', data.now || '(empty)', '');
   if (refs.length) out.push('## Existing project material (read, do not duplicate)', '', ...refs.map(([k, v]) => `- ${k}: ${v}`), '');
-  out.push('## Active changes', '');
-  if (!changes.length) out.push('none');
+  out.push(`## Active changes${data.focus ? ` (session focus: ${data.focus})` : ''}`, '');
+  if (!data.changes.length) out.push('none');
   for (const c of data.changes) {
     out.push(`- ${c.name} · ${c.tier} · work ${c.work} · verify ${c.verification} · ${c.progress.done}/${c.progress.total} tasks${c.owner ? ` · ${c.owner}` : ''}`);
     if (c.open.length) out.push(`  open: ${c.open.join('; ')}`);
