@@ -96,6 +96,40 @@ test('update removes signature-matched legacy Keelson surfaces and preserves nei
   assert.ok(exists(dir, '.cursor/rules/user.mdc'));
 });
 
+test('retired host selections fail clearly and old config is migrated to portable support', () => {
+  const dir = tmpProject({});
+  let r = run(dir, ['init', '--cursor'], { env, allowFail: true });
+  assert.equal(r.code, 1);
+  assert.match(r.stderr, /retired host adapter.*--cursor/);
+  assert.match(r.stderr, /--agents/);
+
+  run(dir, ['init', '--tools', 'agents', '--no-hooks'], { env });
+  write(dir, '.keelson/config.yaml', [
+    'version: 4',
+    'tools:',
+    '  - cursor',
+    'platforms:',
+    '  cursor:',
+    '    skillsDir: .cursor/skills',
+    'models:',
+    '  cursor:',
+    '    deep: old-family',
+    'hooks: false',
+    ''
+  ].join('\n'));
+
+  const dry = run(dir, ['update', '--dry-run'], { env }).stdout;
+  assert.match(dry, /config tools: drop retired cursor/);
+  assert.match(dry, /config platforms: drop retired cursor/);
+  assert.match(dry, /config models: drop retired cursor/);
+
+  run(dir, ['update'], { env });
+  const cfg = read(dir, '.keelson/config.yaml');
+  assert.match(cfg, /tools:\n\s+- agents/);
+  assert.doesNotMatch(cfg, /cursor/);
+  run(dir, ['doctor', '--json'], { env });
+});
+
 test('every registered platform installs around one canonical runtime and passes doctor', () => {
   const reg = JSON.parse(fs.readFileSync(path.resolve('registry/platforms.json'), 'utf8'));
   for (const [id, platform] of Object.entries(reg.platforms)) {
