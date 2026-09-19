@@ -34,7 +34,7 @@ keelson init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided]
 keelson platforms [--json]
 ```
 
-列出 7 个一等公民宿主和通用兜底层，并显示支持层级、说明/Skill 发现路径、hook 能力、可信度以及本机安装/项目配置状态。
+列出 7 个一等公民宿主和通用兜底层，并显示 discovery 支持、`sessionFocus` 能力（`native|degraded`）、说明/Skill 路径、hook、可信度以及本机安装/项目配置状态。
 
 ## `keelson update`
 
