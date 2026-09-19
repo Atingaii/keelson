@@ -82,6 +82,19 @@ test('skill frontmatter stamping is CRLF-safe and emits LF', () => {
   assert.doesNotMatch(out, /\r/);
 });
 
+test('platform registry keeps the portable Agent Skills fallback and detects Copilot CLI', () => {
+  const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'platforms.json'), 'utf8'));
+  assert.equal(reg.platforms.copilot.bin, 'copilot');
+  assert.equal(reg.platforms.agents.skillsDir, '.agents/skills');
+  assert.match(reg.platforms.agents.examples, /Amp/);
+  for (const lang of ['skills/keelson', 'skills/zh/keelson']) {
+    const map = fs.readFileSync(path.join(ROOT, lang, 'templates', 'README.md'), 'utf8');
+    assert.match(map, /NOW\.md/);
+    assert.match(map, /INTENT\.md/);
+    assert.match(map, /changes/);
+  }
+});
+
 test('registry tiers point at aliases that exist in the platform rank', () => {
   const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'models.json'), 'utf8'));
   for (const [id, p] of Object.entries(reg.platforms)) {
