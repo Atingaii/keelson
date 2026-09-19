@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { walk } from '../src/lib/fs.js';
 import { datedIdPatterns } from '../src/lib/models.js';
-import { applyProfile } from '../src/platforms/index.js';
+import { applyProfile, stampVersion } from '../src/platforms/index.js';
 
 const ROOT = path.resolve('.');
 const patterns = datedIdPatterns();
@@ -73,6 +73,13 @@ test('shaping audits assumptions without turning clarification into ceremony', (
   assert.match(zh, /只问一个最高价值问题/);
   assert.match(fs.readFileSync(path.join(ROOT, 'skills/keelson/templates/change.md'), 'utf8'), /Non-goal:/);
   assert.match(fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/templates/change.md'), 'utf8'), /非目标：/);
+});
+
+test('skill frontmatter stamping is CRLF-safe and emits LF', () => {
+  const src = '---\r\nname: keelson\r\ndescription: x\r\n---\r\n\r\n# Keelson\r\n';
+  const out = stampVersion(src, '9.9.9');
+  assert.match(out, /^version: 9\.9\.9$/m);
+  assert.doesNotMatch(out, /\r/);
 });
 
 test('registry tiers point at aliases that exist in the platform rank', () => {
