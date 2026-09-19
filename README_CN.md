@@ -81,7 +81,7 @@ Keelson 把项目需要的事实留在仓库里，以代理在恰当时机读取
 ```bash
 npm install -g keelson
 cd your-project
-keelson init                 # 自动选用本机已安装的编码工具
+keelson init                 # 自动选 verified/documented 宿主；否则只装通用 AGENTS.md 层
 keelson init --cursor --codex   # 或者点名你在用的那些
 ```
 
@@ -181,7 +181,7 @@ Claude Code 用户也可以从插件市场安装技能（`/plugin marketplace ad
 
 ## 支持的工具
 
-`keelson init` 接受每个工具一个标志，或 `--tools a,b`，或什么都不给（它探测本机已安装的工具）。每个项目都把 canonical 指导放在 `.keelson/`，外部只安装通用发现层：`AGENTS.md` 加 `.agents/skills/`。已有标准发现能力的宿主直接复用；必须增加宿主原生路径时，也只生成指向同一 `.keelson/` 真源的 shim。`keelson platforms` 打印完整表格，并标出本机已安装的工具。
+`keelson init` 接受每个工具一个标志、`--tools a,b`，或什么都不给。未指定时，只自动选择路径已经 `verified/documented` 且本机已安装的宿主；`convention` 宿主绝不靠猜测自动开启。一个可靠宿主也没找到时，只安装通用 `AGENTS.md` + `.agents/skills/` 发现层。canonical 指导始终只在 `.keelson/`，宿主原生路径只作为同一真源的 shim。`keelson platforms` 打印完整表格，并标出本机已安装的工具。
 
 | 工具 | 说明发现路径 | 技能发现路径 | Hook | 可信度 |
 |---|---|---|---|---|
