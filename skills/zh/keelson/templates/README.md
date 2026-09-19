@@ -34,9 +34,10 @@
 | `changes/<name>/change.md` | 非平凡工作需要可评审的边界 |
 | `changes/<name>/tasks.md` | 工作需要明确的多步骤 / 多切片计划 |
 | `changes/<name>/ledger.md` | 真正发生了裁定、根因、分派或验证事件 |
-| `changes/<name>/handoff.md` | 工作必须跨会话 / 跨人继续 |
+| `changes/<name>/handoff.md` | 工作所有权真正跨人/跨机器，或需要显式交接包 |
 | `changes/<name>/specs/**` | spec 级变更修改行为契约 |
-| `.local/` | 产生本机验证证据时；gitignored |
+| `.runtime/sessions/` | 宿主/会话提供稳定 identity 时；只保存本地 focus 指针，绝不保存完成状态 |
+| `.runtime/evidence/` | 检查真正产生本机输出时；gitignored |
 | `hooks/` | 已选宿主存在 Keelson 生命周期 hook 集成 |
 
 ## 一次变更完成后留下什么
@@ -46,7 +47,8 @@
 - 可观察行为 → 主 specs；
 - 稳定约束 → 作用域 rules 或可执行 checks；
 - 稳定术语 → glossary；
-- 当前接续状态 → NOW；
+- 普通跨会话接续 → 长期 change 状态 + 本地 session focus；
+- 明确所有权转移 → handoff；
 - 完整时间线 → git 历史。
 
 临时 change 工件在落地后 fold 或 archive。空的可选工件应该删除，而不是为了“以后也许用到”长期保留。
