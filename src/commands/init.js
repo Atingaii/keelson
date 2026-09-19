@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { projectPaths, findProjectRoot } from '../lib/paths.js';
 import { exists, write, read, mkdirp, readOr } from '../lib/fs.js';
 import { loadConfig, saveConfig, DEFAULT_CONFIG, CONFIG_VERSION } from '../lib/config.js';
-import { PLATFORMS, PLATFORM_IDS, installTargets, installSkill, installInstructions, installHooks, skillSource, plannedSkillFiles } from '../platforms/index.js';
+import { PLATFORMS, PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile } from '../platforms/index.js';
 import { list } from '../lib/args.js';
 import { ok, info, warn, heading, dim } from '../lib/out.js';
 import { detectAndCache, detectLocal } from '../lib/models.js';
@@ -90,8 +90,11 @@ export async function init({ flags }, cwd = process.cwd()) {
     heading(`Keelson ${fresh ? 'init' : 'update'} (dry run) in ${root}`);
     const mapPath = path.join(root, '.keelson', 'README.md');
     console.log(`  ${(!exists(mapPath) ? 'create' : read(mapPath) === projectMap ? 'unchanged' : 'update').padEnd(9)} .keelson/README.md`);
+    const workflow = plannedWorkflowFile(root, { lang: cfg.lang, guide: cfg.guide });
+    console.log(`  ${workflow.status.padEnd(9)} ${workflow.path}`);
+    for (const f of plannedCanonicalSkillFiles(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
     for (const t of targets) {
-      for (const f of plannedSkillFiles(root, t, { lang: cfg.lang, profile: cfg.profile })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
+      for (const f of plannedSkillFiles(root, t, { lang: cfg.lang, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
       const ins = path.join(root, t.instructions);
       console.log(`  ${(exists(ins) ? (read(ins).includes('<!-- keelson:start -->') ? 'refresh' : 'append') : 'create').padEnd(9)} ${t.instructions}`);
     }
@@ -135,10 +138,14 @@ export async function init({ flags }, cwd = process.cwd()) {
   saveConfig(p.config, cfg);
   ok(`.keelson/config.yaml${rawVersion < CONFIG_VERSION ? ` (migrated v${rawVersion} → v${CONFIG_VERSION})` : ''}`);
 
+  const workflowPath = installWorkflow(root, { lang: cfg.lang, guide: cfg.guide });
+  const canonicalSkillPath = installCanonicalSkill(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION });
+  ok(`canonical runtime → ${workflowPath}; ${canonicalSkillPath}`);
+
   for (const t of targets) {
-    const skillPath = installSkill(root, t, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION });
-    const files = installInstructions(root, t, { lang: cfg.lang, guide: cfg.guide });
-    ok(`${t.label}: skill → ${skillPath}; instructions → ${files.join(', ')}${t.confidence === 'convention' ? dim(' (path by convention; run `keelson doctor` after your first session)') : ''}`);
+    const skillPath = installSkill(root, t, { lang: cfg.lang, version: PKG_VERSION });
+    const files = installInstructions(root, t, { lang: cfg.lang });
+    ok(`${t.label}: discovery shim → ${skillPath}; instructions → ${files.join(', ')}${t.confidence === 'convention' ? dim(' (path by convention; run `keelson doctor` after your first session)') : ''}`);
     if (t.hooks && !flags.noHooks) {
       installHooks(root);
       ok(`${t.label}: hooks → .claude/settings.json (session snapshot + per-prompt state line)`);
