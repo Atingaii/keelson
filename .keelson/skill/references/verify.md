@@ -45,7 +45,3 @@ Evidence: `npm test -- orders` exit 0 (14 passed); `npm run lint` exit 0 · tree
 Open: none. Change in review; `keelson land add-pagination` when integrated.
 ```
 
-<!-- guided -->
-## Words that mean you have not verified
-"should", "probably", "seems to", "I believe it works". If you are about to write one of these about a status, run the command instead.
-<!-- /guided -->
