@@ -33,6 +33,10 @@
 
 发布状态由 git tag 推导：`keelson status` 把最近一个 tag 之后落地的变更列为未发布。带 **Rollout** 段的变更，在它的步骤跑完之前不算完成；在那之前把它们留在 `NOW.md → Next`。Keelson 可以提醒；它自己绝不执行生产操作。
 
+## 归档之前先回写
+
+落地合并的是 delta 和决策。变更教给你的其余东西（一个新术语、一项移动了的职责、一个质量数字、一条可以变成检查的约束、一个值得回归测试的缺陷）由 `references/reconcile.md` 负责分派去向。在 `keelson land` 之前做完这一遍，让真相文件和代码共享同一个落地提交。
+
 ## 沉淀经验，登记技术债
 <!-- keelson: id=land.promote | without: 同一条约定在每个变更里被重新发现；晚发现的缺陷变成传说而不是检查 | sunset: never -->
 

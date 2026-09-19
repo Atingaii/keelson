@@ -65,6 +65,11 @@ Delivers: every access path refuses a revoked or expired link
 
 粒度：任务是评审者可以单独否决的最小单位。评审者可能接受一半、否决另一半时就拆开。切片是负责人可以单独验收的最小单位。
 
+### 切片是纵向的
+<!-- keelson: id=plan.tracer-bullet | without: 先把 schema 做完、再把后端做完、再把前端做完，任何东西都还没端到端跑过，层与层之间的不匹配最后才被发现 | sunset: never -->
+
+一个切片是一个真实的用户动作，穿过它触及的每一层（界面、API、领域、存储、响应、测试），薄但完整，然后才开始下一个动作。一个功能的第一个切片，是能证明各层能对得上的最窄路径：以"创建 issue"为例，就是表单、端点、校验、领域对象、数据行、响应、渲染结果，加一个测试。更新、删除、评论都在它跑通之后。`keelson validate` 会在切片按层命名（"database"、"backend"、"UI"）时给出警告。纵向切片内部有一个按层划分的任务没问题；按层划分的切片不行。
+
 ### Effort 层级
 <!-- keelson: id=plan.effort | without: 每个任务都跑在最贵的模型上，或者最便宜的模型在做设计决策 | sunset: 当 retro 显示 light 层级在 100 次分派中一次通过率超过 90% 时，放宽 light 的标准 -->
 

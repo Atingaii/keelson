@@ -16,6 +16,8 @@
 
 某项检查跑不了（环境缺失、服务不可用），就在 ledger 里记一条 `Note:`，并写进 `NOW.md → Blocked / uncertain`。部分验证按部分汇报；绝不向上取整。
 
+`config.yaml → check` 里的条目可以是普通字符串，也可以是 `{name, command, kind}`；`kind` 是 `test`、`lint`、`typecheck`、`build`、`fitness`、`check` 之一。`fitness` 检查是变成了一条命令的架构或质量约束（依赖方向、接口兼容性、延迟预算）。机械证据就是这整组检查在当前树上全部通过。它是必要的，但从来不充分。
+
 ## 内容有效性：证据覆盖了请求吗？
 <!-- keelson: id=verify.content | without: 测试通过而需求仍未满足；被评审的是实施者的总结，而不是负责人的请求 | sunset: never -->
 
