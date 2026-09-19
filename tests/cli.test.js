@@ -362,8 +362,8 @@ test('guide flag adds the guided line; named checks run with kinds; doctor repor
   const dir = tmpProject({ 'package.json': '{"name":"x"}' });
   execFileSync('git', ['init', '-q'], { cwd: dir });
   run(dir, ['init', '--no-hooks', '--guide'], { env });
-  assert.match(read(dir, '.keelson/workflow.md'), /Guided mode is on/);
-  assert.doesNotMatch(read(dir, 'CLAUDE.md'), /Guided mode is on/);
+  assert.match(read(dir, '.keelson/workflow.md'), /Guided mode:/);
+  assert.doesNotMatch(read(dir, 'CLAUDE.md'), /Guided mode:/);
   assert.match(read(dir, '.keelson/config.yaml'), /^guide: true$/m);
   assert.ok(exists(dir, '.keelson/GLOSSARY.md'));
   write(dir, '.keelson/config.yaml', read(dir, '.keelson/config.yaml').replace(/^check: \[\]$/m, 'check:\n  - name: unit\n    command: "exit 0"\n    kind: test\n  - name: deps\n    command: "exit 0"\n    kind: fitness\n'));
