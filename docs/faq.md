@@ -4,7 +4,7 @@
 Yes. Hooks exist only for Claude Code and only inject state. Without them, the discovery block points the agent to `.keelson/workflow.md`, which tells it to run `keelson context --paths <files>` before non-trivial work; `NOW.md` plus each change's `handoff.md` carry continuation state. Pass `--no-hooks` to `init` if you prefer that on Claude Code too.
 
 **Which tools are supported?**
-Twenty-two tools, listed by `keelson platforms` and in the README. The complete workflow and skill live once under `.keelson/`. Each host gets only the discovery files it knows how to read; some also get a host-specific discovery/rules file. Every project installs the portable `AGENTS.md` + `.agents/skills/` discovery layer. Run `keelson init --cursor --codex` for several at once, or `keelson init` alone to use what is installed on your machine.
+Seven first-class CLI hosts: Claude Code, Codex CLI, OpenCode, Pi, Gemini CLI, Kiro CLI, and CodeBuddy CLI. Each adapter uses a verified or host-documented discovery path and points to the same canonical `.keelson/` runtime. Every project also gets the portable `AGENTS.md` + `.agents/skills/` layer for other standards-compatible agents. `keelson init` auto-detects only the first-class hosts; use `keelson init --claude --codex` (or other first-class flags) to choose explicitly.
 
 **Do I have to type commands in chat?**
 No. You talk to the agent as before. The agent runs the CLI itself. Phrases such as "grill me", "status", "hand off", "land it", and "retro" have a defined meaning in the skill, but none is required.
