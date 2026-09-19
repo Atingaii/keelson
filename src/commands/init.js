@@ -59,8 +59,14 @@ export function detectChecks(root) {
 export function ensureGitignore(root) {
   const gi = path.join(root, '.gitignore');
   const cur = readOr(gi, '');
-  if (/^\.keelson\/\.local\/?$/m.test(cur)) return false;
-  write(gi, `${cur.replace(/\n*$/, cur ? '\n' : '')}# Keelson: per-machine session state and check evidence\n.keelson/.local/\n`);
+  const hasRuntime = /^\.keelson\/\.runtime\/?$/m.test(cur);
+  const hasLegacy = /^\.keelson\/\.local\/?$/m.test(cur);
+  if (hasRuntime && hasLegacy) return false;
+  let add = '';
+  if (!hasRuntime) add += '.keelson/.runtime/\n';
+  if (!hasLegacy) add += '.keelson/.local/\n';
+  write(gi, `${cur.replace(/\n*$/, cur ? '\n' : '')}# Keelson: per-machine runtime state and check evidence\n${add}`);
+  return true;
   return true;
 }
 
@@ -175,7 +181,7 @@ export async function init({ flags }, cwd = process.cwd()) {
   if (seed('INTENT.md', p.intent)) ok('.keelson/INTENT.md (the agent drafts it from the code on first contact; confirm it when it asks)');
   if (seed('NOW.md', p.now)) ok('.keelson/NOW.md');
   // Progressive disclosure: ROADMAP, GLOSSARY, rules/, specs/, and changes/ are created only when the project actually needs them.
-  if (ensureGitignore(root)) ok('.gitignore: .keelson/.local/ (session state and evidence stay on this machine)');
+  if (ensureGitignore(root)) ok('.gitignore: .keelson/.runtime/ (session focus and evidence stay on this machine)');
   saveConfig(p.config, cfg);
   ok(`.keelson/config.yaml${rawVersion < CONFIG_VERSION ? ` (migrated v${rawVersion} → v${CONFIG_VERSION})` : ''}`);
 
