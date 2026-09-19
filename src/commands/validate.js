@@ -19,7 +19,7 @@ export function validateProject(root) {
   if (!exists(p.now)) errors.push('missing .keelson/NOW.md');
   if (!['lean', 'guided'].includes(cfg.profile)) errors.push(`config.profile must be lean|guided (got ${cfg.profile})`);
   if (!['fold', 'keep'].includes(cfg.land)) errors.push(`config.land must be fold|keep (got ${cfg.land})`);
-  if (!exists(p.specs)) warnings.push(`paths.specs points at ${p.specsRel}, which does not exist`);
+  if (!exists(p.specs) && p.specsRel !== '.keelson/specs') warnings.push(`paths.specs points at ${p.specsRel}, which does not exist`);
   for (const [k, v] of Object.entries(cfg.refs ?? {})) if (v && !/^https?:\/\//.test(v) && !exists(path.join(root, v))) warnings.push(`refs.${k} points at ${v}, which does not exist`);
   const gi = readOr(path.join(root, '.gitignore'), '');
   if (exists(path.join(root, '.git')) && !/^\.keelson\/\.local\/?$/m.test(gi)) warnings.push('.gitignore does not exclude .keelson/.local/ (session state and evidence would be committed)');
