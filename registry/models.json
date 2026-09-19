@@ -2,30 +2,112 @@
   "version": 1,
   "updated": "2026-09-19",
   "note": "Tiers map to floating aliases, never to dated model IDs. Update this file only when a platform gains or retires a model family.",
-  "tiers": ["light", "standard", "deep"],
+  "tiers": [
+    "light",
+    "standard",
+    "deep"
+  ],
   "platforms": {
     "claude": {
       "label": "Claude Code",
-      "rank": ["haiku", "sonnet", "opus", "fable"],
-      "tiers": { "light": "haiku", "standard": "sonnet", "deep": "opus" },
+      "rank": [
+        "haiku",
+        "sonnet",
+        "opus",
+        "fable"
+      ],
+      "tiers": {
+        "light": "haiku",
+        "standard": "sonnet",
+        "deep": "opus"
+      },
       "subagents": true,
       "notes": "Agent tool accepts family aliases; each alias floats to the newest model of that family. `fable` is used for deep when the host exposes it."
     },
     "codex": {
       "label": "Codex CLI",
-      "rank": ["mini", "default", "high"],
+      "rank": [
+        "mini",
+        "default",
+        "high"
+      ],
       "tiers": {},
       "subagents": false,
       "notes": "Model names vary by release. Run `keelson models rank <name> <tier>` once, or `keelson models --refresh` with OPENAI_API_KEY to infer from the provider catalogue."
     },
-    "cursor": { "label": "Cursor", "rank": [], "tiers": {}, "subagents": false },
-    "opencode": { "label": "OpenCode", "rank": [], "tiers": {}, "subagents": true },
-    "gemini": { "label": "Gemini CLI", "rank": ["flash-lite", "flash", "pro"], "tiers": { "light": "flash-lite", "standard": "flash", "deep": "pro" }, "subagents": false }
+    "opencode": {
+      "label": "OpenCode",
+      "rank": [],
+      "tiers": {},
+      "subagents": true,
+      "notes": "OpenCode provides built-in subagents; model identifiers are provider-qualified and project-specific, so Keelson does not guess a tier mapping."
+    },
+    "pi": {
+      "label": "Pi coding agent",
+      "rank": [],
+      "tiers": {},
+      "subagents": false,
+      "notes": "Pi model selection depends on the configured provider. Keep effort tiers semantic unless the user supplies aliases."
+    },
+    "gemini": {
+      "label": "Gemini CLI",
+      "rank": [
+        "flash-lite",
+        "flash",
+        "pro"
+      ],
+      "tiers": {
+        "light": "flash-lite",
+        "standard": "flash",
+        "deep": "pro"
+      },
+      "subagents": false
+    },
+    "kiro": {
+      "label": "Kiro CLI",
+      "rank": [],
+      "tiers": {},
+      "subagents": true,
+      "notes": "Kiro CLI supports parallel subagents. Model availability can vary by account and release, so aliases are user-configured."
+    },
+    "codebuddy": {
+      "label": "CodeBuddy CLI",
+      "rank": [],
+      "tiers": {},
+      "subagents": true,
+      "notes": "CodeBuddy exposes an Agent subagent tool and host-specific model aliases. Keelson does not persist release-specific model IDs."
+    }
   },
   "providers": {
-    "anthropic": { "env": "ANTHROPIC_API_KEY", "catalogue": "https://api.anthropic.com/v1/models", "families": ["haiku", "sonnet", "opus", "fable"] },
-    "openai": { "env": "OPENAI_API_KEY", "catalogue": "https://api.openai.com/v1/models", "families": ["nano", "mini", "", "pro"] },
-    "google": { "env": "GEMINI_API_KEY", "catalogue": null, "families": ["flash-lite", "flash", "pro"] }
+    "anthropic": {
+      "env": "ANTHROPIC_API_KEY",
+      "catalogue": "https://api.anthropic.com/v1/models",
+      "families": [
+        "haiku",
+        "sonnet",
+        "opus",
+        "fable"
+      ]
+    },
+    "openai": {
+      "env": "OPENAI_API_KEY",
+      "catalogue": "https://api.openai.com/v1/models",
+      "families": [
+        "nano",
+        "mini",
+        "",
+        "pro"
+      ]
+    },
+    "google": {
+      "env": "GEMINI_API_KEY",
+      "catalogue": null,
+      "families": [
+        "flash-lite",
+        "flash",
+        "pro"
+      ]
+    }
   },
   "dated_id_patterns": [
     "claude-[a-z0-9.-]+-\\d{8}",
