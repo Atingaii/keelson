@@ -25,6 +25,16 @@ export const CANONICAL_SKILL_DIR = path.join('.keelson', 'skill');
 export const CANONICAL_WORKFLOW = path.join('.keelson', 'workflow.md');
 export const MANAGED_STATE = path.join('.keelson', '.managed.json');
 
+export const LEGACY_MANAGED_PATHS = [
+  '.cursor/skills/keelson',
+  '.cursor/rules/keelson.mdc',
+  '.github/skills/keelson',
+  '.kilocode/skills/keelson',
+  '.kilocode/rules/keelson.md',
+  '.kiro/steering/keelson.md',
+  '.qoder/rules/keelson.md',
+];
+
 /** Expand a tool selection into concrete targets. Every project also gets the portable cross-tool layer. */
 export function installTargets(tools, cfg = null) {
   const targets = [];
@@ -92,9 +102,25 @@ function managedSurfacePaths(t) {
   return [path.join(t.skillsDir, 'keelson'), t.instructions, t.rulesFile].filter(Boolean);
 }
 
+function looksKeelsonOwned(root, rel) {
+  const target = path.join(root, rel);
+  if (!exists(target)) return false;
+  const candidate = fs.statSync(target).isDirectory() ? path.join(target, 'SKILL.md') : target;
+  if (!exists(candidate)) return false;
+  const text = readOr(candidate, '');
+  return /^name:\s*keelson\s*$/m.test(text) || /<!-- keelson:start -->|#\s+Keelson|Keelson project workflow/i.test(text);
+}
+
+export function legacyManagedRemovals(root, targets) {
+  const current = new Set(targets.flatMap(managedSurfacePaths));
+  return LEGACY_MANAGED_PATHS.filter((rel) => !current.has(rel) && looksKeelsonOwned(root, rel));
+}
+
 export function plannedManagedRemovals(root, targets) {
-  return [...new Set(staleManagedTargets(root, targets).flatMap(managedSurfacePaths))]
-    .filter((rel) => exists(path.join(root, rel)));
+  return [...new Set([
+    ...staleManagedTargets(root, targets).flatMap(managedSurfacePaths),
+    ...legacyManagedRemovals(root, targets),
+  ])].filter((rel) => exists(path.join(root, rel)));
 }
 
 const START = '<!-- keelson:start -->';
@@ -321,6 +347,10 @@ export function reconcileManagedTargets(root, targets) {
   const removed = [];
   const stale = staleManagedTargets(root, targets);
   for (const p of stale) removed.push(...removeTargetSurfaces(root, p));
+  for (const rel of legacyManagedRemovals(root, targets)) {
+    rmrf(path.join(root, rel));
+    removed.push(rel);
+  }
   if (stale.some((p) => p.hooks) && !targets.some((p) => p.hooks)) {
     removeHooks(root);
     const hooksDir = path.join(root, '.keelson', 'hooks');
