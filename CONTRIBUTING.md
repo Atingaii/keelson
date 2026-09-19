@@ -49,7 +49,7 @@ The repository uses Keelson on itself. `.keelson/INTENT.md` states what the proj
 - `src/lib/changes.js` derives work status and verification status; `src/lib/git.js` computes the worktree fingerprint, tags, folded changes, and importers.
 - `src/commands/land.js` exports `landingBlockers`, the single list of reasons a landing is refused. `doctor` and `land` share it.
 - `hooks/*.mjs` have no imports beyond Node built-ins; they run in projects where the CLI is not installed.
-- `src/platforms/index.js` renders skill files (profile applied, version stamped) both for installation and for `--dry-run`.
+- `src/platforms/index.js` renders the canonical `.keelson/skill/` (profile applied, version stamped), the canonical workflow, and one-file host discovery shims for installation and `--dry-run`.
 
 ## Adding a platform generator
 
@@ -72,7 +72,7 @@ Aliases only. Never a dated model ID; `tests/` checks this.
 
 ## Changing agent guidance
 
-Every guideline in `skills/keelson/references/*.md` carries `<!-- keelson: id=… | without: … | sunset: … -->`. A guideline that cannot say what failure it prevents does not go in; one that cannot say when it should be deleted says `sunset: never` and explains why in the text. Optional depth goes inside `<!-- guided -->…<!-- /guided -->`. `SKILL.md` stays under 80 lines. Change the Chinese mirror in the same pull request; a test checks that both mirrors carry the same ids.
+Every guideline in `skills/keelson/references/*.md` carries `<!-- keelson: id=… | without: … | sunset: … -->`. A guideline that cannot say what failure it prevents does not go in; one that cannot say when it should be deleted says `sunset: never` and explains why in the text. Optional depth goes inside `<!-- guided -->…<!-- /guided -->`. `SKILL.md` stays under 60 lines. Change the Chinese mirror in the same pull request; a test checks that both mirrors carry the same ids.
 
 ## Pull requests
 
