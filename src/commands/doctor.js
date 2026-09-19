@@ -79,6 +79,11 @@ export async function doctor({ flags }, cwd = process.cwd()) {
       const found = normalize(insText).match(/<!-- keelson:start -->[\s\S]*?<!-- keelson:end -->/)?.[0] ?? '';
       if (found.trim() !== expectedBlock) add('error', `${pl.label}: discovery block drifted in ${pl.instructions} (run \`keelson update\`)`);
     }
+    if (pl.rulesFile) {
+      const rules = path.join(root, pl.rulesFile);
+      if (!exists(rules)) add('error', `${pl.label}: discovery rules file missing at ${pl.rulesFile} (run \`keelson update\`)`);
+      else if (!readOr(rules).includes('.keelson/workflow.md')) add('error', `${pl.label}: discovery rules file does not point to .keelson/workflow.md`);
+    }
     if (pl.confidence === 'convention') add('info', `${pl.label}: file locations follow the tool's convention and have not been exercised by the maintainers; if the agent does not pick up the skill, override platforms.${pl.id} in config.yaml`);
     if (pl.hooks) {
       const settings = readJson(path.join(root, '.claude', 'settings.json'), {}) ?? {};
