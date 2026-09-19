@@ -13,7 +13,7 @@ keelson init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided]
              [--lang en|zh] [--no-hooks] [--dry-run] [--dir <path>]
 ```
 
-唯一的一步。创建 `.keelson/`，含 `INTENT.md`、`ROADMAP.md`、`NOW.md`、`GLOSSARY.md`、`rules/index.md`、`rules/general.md`、`config.yaml` 和空的 `changes/`。为每个选中的工具安装技能、说明块，以及（Claude Code）hook；除 Claude Code 外的每个选择还会安装跨工具层（`AGENTS.md` + `.agents/skills/`）。首次运行时探测检查命令和既有项目资料。往 `NOW.md` 写入一个首次接触任务：代理根据仓库起草 `INTENT.md`（已有代码的项目还有 specs 和 rules），并请所有者确认。从不覆盖 `.keelson/` 里已有的文件。
+唯一的一步。创建 `.keelson/`，含 `INTENT.md`、`ROADMAP.md`、`NOW.md`、`GLOSSARY.md`、`rules/index.md`、`rules/general.md`、`config.yaml` 和空的 `changes/`。为每个选中的工具安装技能、说明块，以及（Claude Code）hook；每次 init 都会同时安装跨工具层（`AGENTS.md` + `.agents/skills/`）。首次运行时探测检查命令和既有项目资料。往 `NOW.md` 写入一个首次接触任务：代理根据仓库起草 `INTENT.md`（已有代码的项目还有 specs 和 rules），并请所有者确认。从不覆盖 `.keelson/` 里已有的文件。
 
 工具选择，按优先级：`--tools a,b`；每个工具一个标志（`--claude`、`--codex`、`--cursor`、`--opencode`、`--gemini`、`--copilot`、`--kiro`、`--kilo`、`--antigravity`、`--devin`、`--qoder`、`--codebuddy`、`--droid`、`--pi`、`--ohmypi`、`--reasonix`、`--zcode`、`--trae`、`--grok`、`--kimi`、`--snow`、`--agents`）；更新时 `config.yaml` 里已有的工具；本机能找到其命令的工具；Claude Code。
 
@@ -225,7 +225,7 @@ keelson ablate [--dry-run]
 keelson restore [--force] [--dry-run] [--dir <path>]
 ```
 
-`ablate` 把每个 Keelson 表面（说明文件、技能目录、`.cursor/rules/keelson.mdc`、`.claude/settings.json`、`.keelson/`）复制到 `~/.keelson/ablations/<hash>/`，记录暂存内容的哈希和每个路径在移除后的哈希，然后移除它们。`restore` 验证暂存完好，若任何受管路径在 ablate 期间发生了变化则拒绝（除非 `--force`），把一切复制回来，并删除暂存。
+`ablate` 把每个 Keelson 表面（生成的说明文件、技能目录、配置过的宿主专用 rule 文件、`.claude/settings.json`、`.keelson/`）复制到 `~/.keelson/ablations/<hash>/`，记录暂存内容的哈希和每个路径在移除后的哈希，然后移除它们。`restore` 验证暂存完好，若任何受管路径在 ablate 期间发生了变化则拒绝（除非 `--force`），把一切复制回来，并删除暂存。
 
 ## `keelson uninstall`
 
@@ -233,4 +233,4 @@ keelson restore [--force] [--dry-run] [--dir <path>]
 keelson uninstall [--purge]
 ```
 
-移除生成的表面：技能目录、常驻块、`.cursor/rules/keelson.mdc`、`.claude/settings.json` 里的 hook 条目、`.keelson/hooks/` 和 `.keelson/.local/`。保留 `.keelson/`（INTENT、NOW、ROADMAP、rules、specs、changes）。`--purge` 连 `.keelson/` 一起移除；存放在它之外的 specs 不受影响。
+移除生成的表面：技能目录、常驻块、配置过的宿主专用 rule 文件、`.claude/settings.json` 里的 hook 条目、`.keelson/hooks/` 和 `.keelson/.local/`。保留 `.keelson/`（INTENT、NOW、ROADMAP、rules、specs、changes）。`--purge` 连 `.keelson/` 一起移除；存放在它之外的 specs 不受影响。
