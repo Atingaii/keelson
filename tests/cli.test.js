@@ -410,7 +410,8 @@ test('sessions focus independent work items; ready is derived without a user fin
     write(dir, `.keelson/changes/${name}/change.md`, read(dir, `.keelson/changes/${name}/change.md`).replace('- [ ] … — check: `…`', '- [x] works — check: `npm test`'));
   }
 
-  run(dir, ['check', '--record', 'alpha verified', '--quiet'], { env: envA });
+  const alphaCheck = run(dir, ['check', '--record', 'alpha verified', '--quiet'], { env: envA });
+  assert.match(alphaCheck.stdout, /alpha: ready → run `keelson land alpha`/);
   assert.match(read(dir, '.keelson/changes/alpha/ledger.md'), /alpha verified/);
   assert.ok(!exists(dir, '.keelson/changes/beta/ledger.md'));
 
@@ -431,6 +432,17 @@ test('sessions focus independent work items; ready is derived without a user fin
   assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: envC }).stdout).focus, null);
   run(dir, ['focus', '--auto'], { env: envC });
   assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: envC }).stdout).focus, 'beta');
+
+  // Losing/clearing the conversation pointer never changes durable work.
+  run(dir, ['focus', '--clear'], { env: envB });
+  assert.ok(exists(dir, '.keelson/changes/beta/change.md'));
+  assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: envB }).stdout).focus, null);
+
+  // No native identity: suggest the unique candidate but refuse to create a shared/global focus.
+  const degraded = JSON.parse(run(dir, ['focus', '--auto', '--json'], { env }).stdout);
+  assert.equal(degraded.available, false);
+  assert.equal(degraded.focus, null);
+  assert.equal(degraded.suggested, 'beta');
 });
 
 test('handoff and session hook tolerate CRLF files', () => {
@@ -595,7 +607,11 @@ test('handoff stamps at/updated/by and the session hook prints its next step', (
 test('cancel archives without merging; doctor and uninstall behave', () => {
   const dir = tmpProject({ 'package.json': '{"name":"x"}' });
   execFileSync('git', ['init', '-q'], { cwd: dir });
+  const sessionEnv = { ...env, KEELSON_SESSION_ID: 'uninstall-session' };
   run(dir, ['init', '--tools', 'claude'], { env });
+  run(dir, ['new', 'runtime-probe'], { env: sessionEnv });
+  assert.ok(exists(dir, '.keelson/.runtime/sessions'));
+  run(dir, ['cancel', 'runtime-probe', '--reason', 'test'], { env: sessionEnv });
   write(dir, '.keelson/INTENT.md', '# x\n\n## Why this exists\nReal.\n');
   run(dir, ['new', 'dead-end', '--tier', 'spec', '--capability', 'orders'], { env });
   run(dir, ['cancel', 'dead-end', '--reason', 'superseded'], { env });
@@ -606,6 +622,7 @@ test('cancel archives without merging; doctor and uninstall behave', () => {
   const doc = run(dir, ['doctor', '--json'], { env, allowFail: true });
   assert.equal(doc.code, 0, doc.stdout + doc.stderr);
   run(dir, ['uninstall'], { env });
+  assert.ok(!exists(dir, '.keelson/.runtime'));
   assert.ok(!exists(dir, '.claude/skills/keelson'));
   assert.ok(!exists(dir, '.keelson/skill'));
   assert.ok(!exists(dir, '.keelson/workflow.md'));
@@ -675,6 +692,8 @@ test('init is the only step: first-class platform flags, standards-first surface
   assert.equal(list.length, 8);
   assert.deepEqual(list.map((p) => p.id).sort(), ['claude', 'codex', 'opencode', 'pi', 'gemini', 'kiro', 'codebuddy', 'agents'].sort());
   assert.ok(list.find((p) => p.id === 'kiro').configured);
+  assert.equal(list.find((p) => p.id === 'claude').sessionFocus, 'native');
+  assert.equal(list.find((p) => p.id === 'codex').sessionFocus, 'degraded');
   run(dir, ['uninstall'], { env });
   assert.ok(!exists(dir, '.kiro/steering/keelson.md'));
   assert.ok(!exists(dir, '.cursor/skills/keelson'));
