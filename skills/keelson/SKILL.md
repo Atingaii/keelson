@@ -5,7 +5,7 @@ description: Engineering collaboration layer for coding work in repositories tha
 
 # Keelson
 
-The repository instruction block is the always-on kernel: **ORIENT → BOUND → BUILD → SENSE → RECONCILE**. This canonical skill is the router into deeper guidance; do not reload or restate every reference. Read `.keelson/README.md` for the human/project map. Standing project truth lives under `.keelson/`; existing project documents stay authoritative through `config.yaml → refs`.
+`.keelson/workflow.md` is the project-local operating kernel: **ORIENT → BOUND → BUILD → SENSE → RECONCILE**. This canonical skill lives at `.keelson/skill/SKILL.md` after init and routes into deeper guidance; do not reload or restate every reference. Read `.keelson/README.md` for the human/project map. Standing project truth lives under `.keelson/`; existing project documents stay authoritative through `config.yaml → refs`.
 
 Keelson constrains **state transitions, not implementation choices**. User instructions and the project's own instruction files take precedence. Prefer an executable invariant over more prose when a rule can be checked mechanically.
 
