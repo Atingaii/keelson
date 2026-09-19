@@ -211,7 +211,7 @@ export async function init({ flags }, cwd = process.cwd()) {
   console.log('');
   if (fresh) {
     heading('Done. Open your agent in this directory and start talking.');
-    console.log(dim('  On first contact it reads the repository, drafts .keelson/INTENT.md' + (hasCode(root) ? ', the specs, and the rules' : '') + ', and asks you to confirm before anything lands.'));
+    console.log(dim('  On first contact it drafts .keelson/INTENT.md from the repository and confirms it with you; specs/rules grow only when real work needs them.'));
   }
   return 0;
 }
@@ -236,22 +236,22 @@ function hasCode(root) {
 
 function writeOnboardNote(p, project, cfg, existingCode) {
   const refs = Object.entries(cfg.refs ?? {}).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`);
-  const intent = `Draft \`.keelson/INTENT.md\` from what the repository shows (README, package manifest, directory layout${existingCode ? ', the code' : ''}): why it exists, its boundaries, hard constraints, and a first Authorizations section. Ask the owner to confirm or correct it in one short exchange; keep their answers, drop your guesses.`;
-  const specs = existingCode
-    ? ` Then list the capabilities the code already has, write one spec per capability (present tense, observable behaviour only) under \`${cfg.paths.specs}/\`, and propose rules for the paths that have conventions. Where a document already describes a contract or a decision, link to it from the spec instead of restating it.`
+  const intent = `Draft \`.keelson/INTENT.md\` from what the repository already shows (README, package manifest, directory layout${existingCode ? ', and the code' : ''}): why it exists, its boundaries, hard constraints, and a first Authorizations section. Ask the owner to confirm or correct it in one short exchange; keep their answers, drop your guesses.`;
+  const grow = existingCode
+    ? ' Do not inventory the whole repository into specs or rules. As the first real task touches a capability or stable engineering invariant, create only the spec/rule needed to preserve that truth across future sessions.'
     : '';
   write(
     p.now,
     `# Now
 
-First contact with ${project}: Keelson was just initialised and nothing has been drafted yet.
+First contact with ${project}: Keelson was just initialised and project intent has not been confirmed yet.
 
 ## Blocked / uncertain
-INTENT.md${existingCode ? ', the specs, and the rules' : ''} are drafts until the owner confirms them. Existing documents${refs.length ? ` (${refs.join(', ')})` : ''} are referenced, never copied.
+INTENT.md is a draft until the owner confirms it. Existing documents${refs.length ? ` (${refs.join(', ')})` : ''} are referenced, never copied.
 
 ## Next
-${intent}${specs} Do this before, or as part of, the first thing the owner asks for; if they ask for a change right away, draft INTENT from what you learn while shaping that change and confirm both together. Then rewrite this file.
+${intent}${grow} Do this before, or together with, the first non-trivial thing the owner asks for. Then rewrite this file to the actual current state.
 `,
   );
-  ok(`.keelson/NOW.md: first-contact task written for the agent${existingCode ? ' (draft INTENT, specs, and rules from the code)' : ' (draft INTENT)'}`);
+  ok('.keelson/NOW.md: first-contact task written for the agent (confirm project intent; grow contracts only when work needs them)');
 }
