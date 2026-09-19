@@ -64,23 +64,36 @@ export async function init({ flags }, cwd = process.cwd()) {
   const rawVersion = fresh ? CONFIG_VERSION : Number((readOr(cfgPath, '').match(/^version:\s*(\d+)/m) || [])[1] ?? 1);
   const cfg = fresh ? structuredClone(DEFAULT_CONFIG) : loadConfig(cfgPath);
 
-  // Tools: --tools a,b · or one flag per platform (--claude --cursor …) · or config · or auto-detect from the machine · or claude.
+  // Tools: explicit selection · saved config · reliable auto-detection · portable fallback.
   const flagged = PLATFORM_IDS.filter((id) => flags[id] === true);
   let tools = list(flags.tools).length ? list(flags.tools) : flagged.length ? flagged : cfg.tools?.length && !fresh ? cfg.tools : [];
   let detectedTools = false;
+  let portableFallback = false;
+  let conventionDetected = [];
   if (!tools.length) {
     const det = detectLocal().tools;
-    tools = PLATFORM_IDS.filter((id) => det[id]?.installed);
-    detectedTools = tools.length > 0;
-    if (!tools.length) tools = ['claude'];
+    const installed = PLATFORM_IDS.filter((id) => det[id]?.installed);
+    const reliable = installed.filter((id) => PLATFORMS[id]?.confidence !== 'convention');
+    conventionDetected = installed.filter((id) => PLATFORMS[id]?.confidence === 'convention');
+    if (reliable.length) {
+      tools = reliable;
+      detectedTools = true;
+    } else {
+      tools = ['agents'];
+      portableFallback = true;
+    }
   }
   for (const t of tools) if (!PLATFORMS[t]) throw new Error(`unknown tool "${t}". Known: ${PLATFORM_IDS.join(', ')}`);
   cfg.tools = [...new Set(tools)];
-  const targets = installTargets(cfg.tools, cfg);
   cfg.lang = flags.lang ?? cfg.lang ?? 'en';
   cfg.profile = flags.profile ?? cfg.profile ?? 'lean';
   if (flags.guide !== undefined) cfg.guide = flags.guide !== 'false' && flags.guide !== false;
+  if (flags.hooks && flags.noHooks) throw new Error('choose either --hooks or --no-hooks, not both');
+  if (flags.hooks) cfg.hooks = true;
+  else if (flags.noHooks) cfg.hooks = false;
+  else cfg.hooks = cfg.hooks !== false;
   if (!['lean', 'guided'].includes(cfg.profile)) throw new Error('profile must be lean or guided');
+  const targets = installTargets(cfg.tools, cfg);
 
   const project = path.basename(root);
   const tpl = path.join(skillSource(cfg.lang), 'templates');
@@ -106,6 +119,10 @@ export async function init({ flags }, cwd = process.cwd()) {
 
   heading(`Keelson ${fresh ? 'init' : 'update'} in ${root}`);
   if (detectedTools) info(`tools detected on this machine: ${cfg.tools.map((t) => PLATFORMS[t].label).join(', ')} (override with --tools or --<platform>)`);
+  else if (portableFallback) {
+    const note = conventionDetected.length ? `; convention-only detections: ${conventionDetected.map((t) => PLATFORMS[t].label).join(', ')} (opt in explicitly if wanted)` : '';
+    info(`no verified/documented host detected; using portable AGENTS.md + .agents/skills discovery${note}`);
+  }
   const p0 = projectPaths(root, cfg);
   mkdirp(p0.keelson);
   if (fresh) {
@@ -149,7 +166,7 @@ export async function init({ flags }, cwd = process.cwd()) {
     const skillPath = installSkill(root, t, { lang: cfg.lang, version: PKG_VERSION });
     const files = installInstructions(root, t, { lang: cfg.lang });
     ok(`${t.label}: discovery shim → ${skillPath}; instructions → ${files.join(', ')}${t.confidence === 'convention' ? dim(' (path by convention; run `keelson doctor` after your first session)') : ''}`);
-    if (t.hooks && !flags.noHooks) {
+    if (t.hooks) {
       installHooks(root);
       ok(`${t.label}: hooks → .claude/settings.json (session snapshot + per-prompt state line)`);
     }
