@@ -1,0 +1,11 @@
+{
+  "name": "keelson",
+  "description": "A load-bearing workflow layer for coding agents: specs as truth, scoped rules, session memory, effort-tiered subagents. Init once, then just talk.",
+  "version": "0.1.0",
+  "author": { "name": "Atingaii" },
+  "homepage": "https://github.com/Atingaii/keelson",
+  "repository": "https://github.com/Atingaii/keelson",
+  "license": "MIT",
+  "keywords": ["workflow", "specs", "subagents", "memory", "skills"],
+  "skills": ["./skills/keelson"]
+}

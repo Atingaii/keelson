@@ -1,0 +1,22 @@
+# Keelson project configuration. Every key is optional; defaults are shown.
+# Docs: https://github.com/Atingaii/keelson/blob/main/docs/configuration.md
+version: 1
+tools:
+  - claude
+lang: en
+profile: lean
+default_tier: auto
+confirm:
+  quick: proceed
+  spec: wait
+land: fold
+check:
+  - npm run lint
+  - npm run test
+context: ""
+models: {}
+effort:
+  review_min: standard
+  plan_min: deep
+  verify_min: deep
+  escalate_after: 2

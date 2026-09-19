@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "updated": "2026-09-19",
+  "note": "Tiers map to floating aliases, never to dated model IDs. Update this file only when a platform gains or retires a model family.",
+  "tiers": ["light", "standard", "deep"],
+  "platforms": {
+    "claude": {
+      "label": "Claude Code",
+      "rank": ["haiku", "sonnet", "opus", "fable"],
+      "tiers": { "light": "haiku", "standard": "sonnet", "deep": "opus" },
+      "subagents": true,
+      "notes": "Agent tool accepts family aliases; each alias floats to the newest model of that family. `fable` is used for deep when the host exposes it."
+    },
+    "codex": {
+      "label": "Codex CLI",
+      "rank": ["mini", "default", "high"],
+      "tiers": {},
+      "subagents": false,
+      "notes": "Model names vary by release. Run `keelson models rank <name> <tier>` once, or `keelson models --refresh` with OPENAI_API_KEY to infer from the provider catalogue."
+    },
+    "cursor": { "label": "Cursor", "rank": [], "tiers": {}, "subagents": false },
+    "opencode": { "label": "OpenCode", "rank": [], "tiers": {}, "subagents": true },
+    "gemini": { "label": "Gemini CLI", "rank": ["flash-lite", "flash", "pro"], "tiers": { "light": "flash-lite", "standard": "flash", "deep": "pro" }, "subagents": false }
+  },
+  "providers": {
+    "anthropic": { "env": "ANTHROPIC_API_KEY", "catalogue": "https://api.anthropic.com/v1/models", "families": ["haiku", "sonnet", "opus", "fable"] },
+    "openai": { "env": "OPENAI_API_KEY", "catalogue": "https://api.openai.com/v1/models", "families": ["nano", "mini", "", "pro"] },
+    "google": { "env": "GEMINI_API_KEY", "catalogue": null, "families": ["flash-lite", "flash", "pro"] }
+  },
+  "dated_id_patterns": [
+    "claude-[a-z0-9.-]+-\\d{8}",
+    "gpt-[a-z0-9.-]+-\\d{4}-\\d{2}-\\d{2}",
+    "gemini-[a-z0-9.-]+-\\d{3,}",
+    "o[0-9]-[a-z-]+-\\d{4}-\\d{2}-\\d{2}"
+  ]
+}

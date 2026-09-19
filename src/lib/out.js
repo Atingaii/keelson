@@ -1,0 +1,13 @@
+const tty = process.stdout.isTTY && !process.env.NO_COLOR;
+const c = (code) => (s) => (tty ? `\x1b[${code}m${s}\x1b[0m` : s);
+export const bold = c(1);
+export const dim = c(2);
+export const green = c(32);
+export const yellow = c(33);
+export const red = c(31);
+export const cyan = c(36);
+export const ok = (s) => console.log(`${green('✓')} ${s}`);
+export const warn = (s) => console.log(`${yellow('!')} ${s}`);
+export const fail = (s) => console.log(`${red('✗')} ${s}`);
+export const info = (s) => console.log(`${cyan('·')} ${s}`);
+export const heading = (s) => console.log(bold(s));
