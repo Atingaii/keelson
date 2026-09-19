@@ -1,11 +1,11 @@
 # Now
 
-0.3.x harness hardening is integrated: the resident map stays thin; BOUND audits material assumptions at the decision frontier and asks at most one load-bearing user question; ORIENT → BOUND → BUILD → SENSE → RECONCILE remains the operating loop. Markdown and generated agent surfaces now have one cross-platform invariant: LF and CRLF parse with identical semantics, while package-owned rendered Markdown emits LF. The full GitHub Actions matrix is green on Ubuntu, macOS, and Windows with Node 20 and 22.
+0.3.x harness hardening now includes a human and portability layer: `.keelson/README.md` gives people a stable map into the project facts; every init writes the portable `AGENTS.md` + `.agents/skills/keelson/` surface in addition to selected host-specific surfaces; Copilot CLI is auto-detected. The existing ORIENT → BOUND → BUILD → SENSE → RECONCILE loop, assumption frontier, and LF/CRLF invariants remain unchanged.
 
 ## Blocked / uncertain
 - Codex end-to-end run is blocked by the account usage limit until 2026-09-20 16:51; only skill loading is confirmed there.
-- Registry entries for Codex, Cursor, and OpenCode are empty until their alias conventions are confirmed.
+- Several platform entries remain `convention` confidence until exercised in real sessions; the portable `.agents/skills/` layer provides the fallback for compatible hosts.
 - Two agents writing the same branch at the same moment has not been exercised; parallel work was verified against a pre-seeded in-flight change.
 
 ## Next
-Run the Codex end-to-end test when the limit lifts, then the continuous-evolution test with several changes, session breaks, a requirement revision, parallel work, and a merge conflict. Tune retro thresholds from those real ledgers, then publish 0.3.0 once NPM_TOKEN is set in repository secrets.
+Run the full CI matrix for the human-map/portable-layer change, then run Codex end-to-end when the limit lifts and the continuous-evolution test with session breaks, requirement revision, parallel work, and a merge conflict. Tune retro thresholds from those real ledgers.
