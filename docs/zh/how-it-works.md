@@ -17,7 +17,7 @@ Keelson 是代理环境里的三个表面，加上仓库里一个人也能直接
 - 停下时写 `handoff.md`，恢复时先检查工作树；
 - 细节在 `keelson` 技能里。
 
-对 Cursor，同样的文本也写入 `.cursor/rules/keelson.mdc`，带 `alwaysApply: true`。无论选择哪个宿主，每个初始化后的项目都会额外拥有 `AGENTS.md` + `.agents/skills/keelson/` 这一通用兼容层。
+无论选择哪个宿主，每个初始化后的项目都会拥有 `AGENTS.md` + `.agents/skills/keelson/` 这一通用兼容层。已经读取这套表面的宿主直接复用它，不再生成重复副本；只有宿主原生路径能补充共享层缺少的能力时，Keelson 才额外生成原生说明或 Skill 路径。
 
 ## Hook（Claude Code）
 
