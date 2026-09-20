@@ -16,6 +16,18 @@ export function capabilityDir(specsDir, capability) {
   return path.join(specsDir, capability);
 }
 
+const firstFree = (dir, preferred, fallback) => {
+  if (!exists(path.join(dir, preferred))) return preferred;
+  if (!exists(path.join(dir, fallback))) return fallback;
+  for (let i = 2; ; i++) {
+    const dot = fallback.lastIndexOf('.');
+    const candidate = dot > 0
+      ? `${fallback.slice(0, dot)}-${i}${fallback.slice(dot)}`
+      : `${fallback}-${i}`;
+    if (!exists(path.join(dir, candidate))) return candidate;
+  }
+};
+
 export function capabilityStorageOptions(specsDir, capability) {
   const dir = capabilityDir(specsDir, capability);
   const main = readOr(path.join(dir, 'spec.md'), '');
@@ -27,8 +39,8 @@ export function capabilityStorageOptions(specsDir, capability) {
     };
   }
   return {
-    requirementsDir: exists(path.join(dir, 'requirements')) ? 'keelson-requirements' : 'requirements',
-    decisionsFile: exists(path.join(dir, 'decisions.md')) ? 'keelson-decisions.md' : 'decisions.md',
+    requirementsDir: firstFree(dir, 'requirements', 'keelson-requirements'),
+    decisionsFile: firstFree(dir, 'decisions.md', 'keelson-decisions.md'),
   };
 }
 
