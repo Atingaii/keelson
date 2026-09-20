@@ -448,8 +448,11 @@ test('change lifecycle: new → gates → check --record → land folds specs an
   assert.equal(JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes[0].verification.state, 'stale');
   assert.match(run(dir, ['land', '--confirm-assumptions'], { env, allowFail: true }).stderr, /verification stale/);
   run(dir, ['check', '--record', 'after edit', '--quiet'], { env });
-  // main spec moved → drift
+  // main spec moved → drift is a lifecycle gate everywhere, not a land-only surprise.
   write(dir, '.keelson/specs/orders/spec.md', read(dir, '.keelson/specs/orders/spec.md') + '\n## Requirement: Extra\nx\n### Scenario: y\n- WHEN\n- THEN\n');
+  const drifted = JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes[0];
+  assert.equal(drifted.work, 'in-progress');
+  assert.ok(drifted.gates.some((g) => g.code === 'drift' && g.pass === false));
   assert.match(run(dir, ['land', '--confirm-assumptions'], { env, allowFail: true }).stderr, /changed since this delta was written/);
   run(dir, ['land', '--confirm-assumptions', '--accept-drift', '--now', '# Now\n\nNothing in flight.'], { env });
   assert.ok(!exists(dir, '.keelson/changes/add-pagination'));
