@@ -58,6 +58,8 @@ The API SHALL reject `size` above 200 with HTTP 400.
 ### Requirement: Legacy CSV export
 ```
 
+A capability is logically one behaviour contract, but it does not have to stay one physical file. When the merged contract crosses the configured spec budget, `keelson land` automatically rewrites it as a small `spec.md` index plus `requirements/*.md` and optional `decisions.md`; future deltas still target the capability as one logical spec, and base hashes cover the whole logical contract. Do not manually recombine shards.
+
 A spec is a behaviour contract: observable behaviour, inputs, outputs, error conditions, external constraints. If the implementation could change without changing what a client sees, it does not belong here. Architecture constraints (who may depend on whom, which layer owns a decision) belong in `rules/`, and long-lived decision records in `refs.decisions` when the project has one; link, do not restate.
 
 ## tasks.md and slices
