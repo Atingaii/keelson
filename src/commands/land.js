@@ -11,7 +11,7 @@ import { specBase } from './new.js';
 import { ok, warn, info, heading } from '../lib/out.js';
 import { clearChangeBindings, readSession } from '../lib/session.js';
 import { budgetStatus } from '../lib/health.js';
-import { readCapabilitySpec, planCapabilityStorage, writeCapabilityStorage } from '../lib/specs.js';
+import { readCapabilitySpec, planCapabilityStorage, writeCapabilityStorage, capabilityStorageOptions } from '../lib/specs.js';
 
 export function mergeDelta(mainText, deltaText, capability) {
   const main = mainText ? parseSpec(mainText) : { purpose: '', requirements: [], decisions: [] };
@@ -93,7 +93,7 @@ export function landingBlockers(c, fingerprint, { confirmAssumptions = false, ac
   }
 
   for (const [cap, item] of projected) {
-    const storage = planCapabilityStorage(cap, item.text, cfg.budgets?.spec);
+    const storage = planCapabilityStorage(cap, item.text, cfg.budgets?.spec, capabilityStorageOptions(p.specs, cap));
     item.storage = storage;
     if (storage.hardOver.length && !flags.force) {
       const detail = storage.hardOver.map((f) => `${f.rel} ${f.lines} lines`).join(', ');
