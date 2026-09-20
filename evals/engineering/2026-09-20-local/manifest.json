@@ -702,7 +702,27 @@
       "sha256": "338ebd06c91ba2a6902e569ad3128b8174860f08704d5336c86132c5a8e13bbe",
       "bytes": 92743,
       "note": "Resolved task-created temporary paths, task worktrees and branches, duplicate logs and owned Docker image. User data and delivery/verification artifacts retained."
+    },
+    {
+      "file": "full-suite-a18cfba.tap.log",
+      "sha256": "8d11fead6efa443cde891839e731e3a34c86d6f99f9f285b37da97ee1fcf9592",
+      "bytes": 31076,
+      "source_commit": "a18cfba3e9b6a5e4d3bef733b896da80a2b3f9c4",
+      "command": "npm test",
+      "tap_counts": {
+        "tests": 154,
+        "pass": 154,
+        "fail": 0,
+        "skipped": 0
+      },
+      "note": "Full final shipping-code regression. Documentation/evidence edits occurred during the run; code/tests unchanged. A final check --record will separately bind the complete finalized tree and contract."
+    },
+    {
+      "file": "delivery-audit.json",
+      "sha256": "41e663f9fd5ce72701c99840e15181429c5ad2e8170efd788bcddd3c38b6d169",
+      "bytes": 885,
+      "note": "Final local regression, scoped artifact scan, package and pending CI observation; final signed check remains separate."
     }
   ],
-  "updated_at_utc": "2026-09-20T13:41:40.439895+00:00"
+  "updated_at_utc": "2026-09-20T13:43:28.934415+00:00"
 }

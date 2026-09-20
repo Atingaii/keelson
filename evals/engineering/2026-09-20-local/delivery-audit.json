@@ -1,0 +1,26 @@
+{
+  "observed_at_utc": "2026-09-20T13:43:28.934415+00:00",
+  "source_commit": "93f0822ebf8b57b8b28603a5f092c53486807db7",
+  "changed_evidence_files_scanned": 361,
+  "secret_pattern_file_hits": [],
+  "scan_limitation": "Pattern scan is not proof of absence of every secret. An earlier unbounded sk- pattern matched 12 flask- path suffixes in the cleanup manifest; manual boundary inspection confirmed only directory names, and the bounded pattern yields zero matches.",
+  "full_local_suite": {
+    "tests": 154,
+    "pass": 154,
+    "fail": 0,
+    "skipped": 0
+  },
+  "lint_exit": 0,
+  "validate_exit": 0,
+  "package_files": 121,
+  "package_bytes": 180043,
+  "package_unpacked_bytes": 511242,
+  "package_excludes": [
+    ".keelson",
+    "evals",
+    "benchmarks",
+    "node_modules"
+  ],
+  "latest_remote_matrix": "pending; previous 018ec92 six jobs passed",
+  "npm_published": false
+}

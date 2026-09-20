@@ -2,7 +2,7 @@
 
 The 0.4 hardening implementation is on main. Signed local check records bind code and contracts; prose alone cannot authorize completion. Default installation loads package guidance, keeps machine-local runtime outside tracked project data, and never writes ignore rules. Decision records preserve ownership, prerequisites and explicit reopening history.
 
-The full 0.3 language/profile migration matrix and actual 0.3 migration to the Codex lightweight layout pass without force. Independent ownership, Windows write/lock, Git error-boundary and byte-equivalent slab reviews pass. All six Ubuntu/macOS/Windows × Node 20/22 CI jobs pass at 018ec92; the final slab integration still requires final full regression and CI.
+The full 0.3 language/profile migration matrix and actual 0.3 migration to the Codex lightweight layout pass without force. Independent ownership, Windows write/lock, Git error-boundary, byte-equivalent slab and final experiment reporting reviews pass. Final shipping-code a18cfba passes 154/154 local tests with zero skips, lint, project validation and the 121-file package dry run. Main 93f0822 is pushed; its final six-job remote CI is pending. All six jobs already pass at 018ec92.
 
 ## Measured outcomes and open targets
 - The formal five-method comparison is complete: 45 cells, Keelson 7b2c303 original acceptance 9/9. The two separately declared explorations each pass original acceptance 3/3 and the stricter supplemental probe 2/3. Their failed repetitions remain visible; the declared supplemental 3/3 target is unmet.

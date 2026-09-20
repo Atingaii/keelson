@@ -29,7 +29,7 @@ Legacy prose needs a new check. Default guidance loads from the installed packag
 - [x] Decision records support bounded questions and prevent silent reopening of settled decisions. — test: tests/decisions.test.js
 - [x] Fixed open-source tasks are evaluated using local Codex with gpt-5.6-terra against OpenSpec, Trellis and Superpowers; raw evidence and limitations are retained. — manual: benchmarks/README.md and retained run records
 - [x] English and Chinese README, migration/security documentation and generated wide banner match shipped behavior. — manual: README.md, README_CN.md, docs/verification.md and docs/assets/keelson-banner.png
-- [ ] All required local checks pass, main is pushed, and remote branch cleanup is verified. — manual: npm run lint, npm test, keelson validate and git ls-remote
+- [x] All required local checks pass, main is pushed, and remote branch cleanup is verified. — manual: npm run lint, npm test (154/154 on final shipping code), keelson validate, main 93f0822 push and git ls-remote (only main)
 
 ## Decisions
 - The user's 2026-09-20 instruction authorizes implementation, dependencies needed for correctness, documentation, benchmark execution and remote main submission.
