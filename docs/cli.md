@@ -62,7 +62,7 @@ Review commands before first trust. Trust authorizes local shell execution; it i
 
 Record writes signed ledger.jsonl evidence and logs inside the change. Readable ledger.md prose is not verification authority. Complete configured checks must pass against unchanged code and acceptance inputs. An explicit subset can pass as a command while remaining partial evidence. Quiet suppresses live output; JSON emits machine-readable results.
 
-Attest exports active or archived evidence and its current local verification status; it exits nonzero when not fresh and trusted. Another machine requires a new local run. See [trust limits](verification.md). Validate checks structure, deltas, decisions and budgets; it does not execute tests.
+Attest exports active or archived evidence and its current local verification status; it exits nonzero when not fresh and trusted. An archived change may use its original name only when that name resolves uniquely; otherwise pass the exact archive directory printed by the error. Another machine requires a new local run. See [trust limits](verification.md). Validate checks structure, deltas, decisions and budgets; it does not execute tests.
 
 ## Landing
 

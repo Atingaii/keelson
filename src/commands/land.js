@@ -194,7 +194,7 @@ function landUnlocked({ flags, positional }, cwd) {
   if (mode === 'keep') {
     if (!dry) {
       mkdirp(p.archive);
-      write(path.join(c.dir, 'landed.json'), JSON.stringify({ status: 'integrated', at: new Date().toISOString(), forced: Boolean(flags.force) }) + '\n');
+      write(path.join(c.dir, 'landed.json'), JSON.stringify({ status: 'integrated', change: name, at: new Date().toISOString(), forced: Boolean(flags.force) }) + '\n');
       fs.renameSync(c.dir, dest);
     }
     ok(`archived → .keelson/changes/archive/${path.basename(dest)}`);
@@ -247,6 +247,7 @@ function cancelUnlocked({ flags, positional }, cwd) {
   return landingTransaction(root, [c.dir, dest, p.sessions], () => {
   const cm = path.join(c.dir, 'change.md');
   write(cm, read(cm).replace(/^status:.*$/m, `status: cancelled`).replace(/\n*$/, `\n\n## Cancelled\n${new Date().toISOString().slice(0, 10)}: ${reason}\n`));
+  write(path.join(c.dir, 'landed.json'), JSON.stringify({ status: 'cancelled', change: name, at: new Date().toISOString() }) + '\n');
   mkdirp(p.archive);
   fs.renameSync(c.dir, dest);
   clearChangeBindings(root, name);
