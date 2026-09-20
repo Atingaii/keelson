@@ -51,12 +51,16 @@ function isKeelsonPath(file) {
   return file.equals(KEELSON_DIR) || (file.length > KEELSON_DIR.length && file.subarray(0, KEELSON_DIR.length).equals(KEELSON_DIR) && file[KEELSON_DIR.length] === 0x2f);
 }
 
-function localPath(root, bytes) {
+export function resolveFingerprintPath(root, bytes) {
   const rel = bytes.toString('utf8');
   if (!Buffer.from(rel, 'utf8').equals(bytes)) throw new Error('cannot fingerprint a Git path that is not valid UTF-8');
   const base = path.resolve(root);
   const file = path.resolve(base, rel);
-  return file !== base && file.startsWith(`${base}${path.sep}`) ? file : null;
+  const relative = path.relative(base, file);
+  if (!relative || relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new Error('cannot fingerprint a Git path outside the project root');
+  }
+  return file;
 }
 
 function addGitEntries(entries, root, args, kind) {
@@ -81,7 +85,7 @@ function contentDigest(value) {
 }
 
 function prepareEntry(root, entry) {
-  const file = localPath(root, entry.rawFile);
+  const file = resolveFingerprintPath(root, entry.rawFile);
   if (!file) return null;
   let stat;
   try {

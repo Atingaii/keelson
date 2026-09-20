@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { tmpProject, write } from './helpers.js';
-import { importers, worktreeFingerprint } from '../src/lib/git.js';
+import { importers, resolveFingerprintPath, worktreeFingerprint } from '../src/lib/git.js';
 
 test('fingerprints include ignored tracked code, exclude Keelson, and preserve the real index', () => {
   const root = tmpProject({ 'tracked.txt': 'one', '.keelson/INTENT.md': 'intent' });
@@ -144,4 +144,12 @@ test('untracked tab names remain paths, rather than being parsed as stage metada
   const before = worktreeFingerprint(root);
   write(root, 'untracked\tname.txt', 'two');
   assert.notEqual(worktreeFingerprint(root), before);
+});
+
+
+test('fingerprint path resolution accepts a filesystem root and refuses escapes', () => {
+  const root = path.parse(process.cwd()).root;
+  assert.equal(resolveFingerprintPath(root, Buffer.from('keelson-fingerprint-root-test')), path.join(root, 'keelson-fingerprint-root-test'));
+  const project = tmpProject({});
+  assert.throws(() => resolveFingerprintPath(project, Buffer.from('../outside')), /outside the project root/);
 });

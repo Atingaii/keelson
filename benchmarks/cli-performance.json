@@ -3511,5 +3511,58 @@
         "reason": "This iteration overlapped a two-core host load around 5 and concurrent full-suite/pytest work. Raw samples are retained for audit, but it must not be used as an optimization comparison or idle-host result."
       }
     }
+  ],
+  "diagnostics": [
+    {
+      "id": "three-sample-diagnostic-2026-09-20T12:27:14.915Z",
+      "protocol": {
+        "trackedOrdinaryFiles": 5000,
+        "samples": 3,
+        "warmups": 0,
+        "targetEligible": false
+      },
+      "environment": {
+        "node": "v20.20.2",
+        "platform": "linux",
+        "arch": "x64",
+        "cpuCores": 2,
+        "loadAverageAtStart": [
+          0.91,
+          1.15,
+          1.95
+        ],
+        "loadAverageAtEnd": [
+          0.92,
+          1.15,
+          1.95
+        ]
+      },
+      "rawWallTimesMs": {
+        "statusWithFreshSignedRecord": [
+          448.696,
+          429.1,
+          433.816
+        ],
+        "checkNoRecord": [
+          630.431,
+          641.641,
+          634.207
+        ],
+        "shellBaseline": [
+          44.487,
+          39.239,
+          33.094
+        ],
+        "checkWithRecord": [
+          664.345,
+          678.416,
+          670.046
+        ]
+      },
+      "notes": [
+        "Diagnostic only: three samples with no warm-up while other exploration may be active. It is retained for early regression detection and is not an official 30-sample target verdict.",
+        "Fresh signed status was prepared outside timing. check --record uses distinct valid quick changes."
+      ]
+    }
   ]
 }
