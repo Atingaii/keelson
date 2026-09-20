@@ -623,7 +623,9 @@ test('large logical specs auto-shard without user maintenance', () => {
   run(dir, ['init', '--no-hooks'], { env });
   write(dir, '.keelson/config.yaml', read(dir, '.keelson/config.yaml').replace('spec: 250', 'spec: 12'));
   run(dir, ['new', 'grow-orders', '--tier', 'quick', '--capability', 'orders'], { env });
-  write(dir, '.keelson/changes/grow-orders/change.md', read(dir, '.keelson/changes/grow-orders/change.md').replace('- [ ] … — check: `…`', '- [x] works — check: `true`'));
+  write(dir, '.keelson/changes/grow-orders/change.md', read(dir, '.keelson/changes/grow-orders/change.md')
+    .replace('- [ ] … — check: `…`', '- [x] works — check: `true`')
+    .replace(/\n*$/, '\n\n## Decisions\n- orders: keep capability-local decisions individually addressable\n- orders: prefer bounded physical files over one growing monolith\n'));
   write(dir, '.keelson/changes/grow-orders/ledger.md', '### Verify: ok\n`true` exit 0\n');
   write(dir, '.keelson/changes/grow-orders/specs/orders/spec.md', [
     '---',
@@ -653,6 +655,10 @@ test('large logical specs auto-shard without user maintenance', () => {
   assert.ok(exists(dir, '.keelson/specs/orders/requirements/create.md'));
   assert.ok(exists(dir, '.keelson/specs/orders/requirements/read.md'));
   assert.ok(exists(dir, '.keelson/specs/orders/requirements/revoke.md'));
+  assert.match(read(dir, '.keelson/specs/orders/spec.md'), /^decisions_dir: decisions$/m);
+  const decisionFiles = fs.readdirSync(path.join(dir, '.keelson/specs/orders/decisions')).filter((f) => f.endsWith('.md'));
+  assert.equal(decisionFiles.length, 2);
+  assert.match(read(dir, path.join('.keelson/specs/orders/decisions', decisionFiles[0])), /## Decisions/);
   assert.equal(JSON.parse(run(dir, ['validate', '--json'], { env }).stdout).ok, true);
 
   // A later change hashes and edits the whole logical contract, not just the index.
