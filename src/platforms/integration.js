@@ -181,10 +181,14 @@ const CODEBUDDY_SESSION_MARK = '.keelson/hooks/codebuddy-session.mjs';
 function ensureCodeBuddyHook(settings, event, matcher = null) {
   settings.hooks ??= {};
   settings.hooks[event] ??= [];
-  const found = settings.hooks[event].some((g) =>
+  const found = settings.hooks[event].find((g) =>
     (g.hooks ?? []).some((h) => String(h.command ?? '').includes(CODEBUDDY_SESSION_MARK)),
   );
-  if (found) return;
+  if (found) {
+    if (matcher && found.matcher !== matcher) found.matcher = matcher;
+    else if (!matcher && 'matcher' in found) delete found.matcher;
+    return;
+  }
   const group = {
     hooks: [{
       type: 'command',
