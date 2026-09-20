@@ -1,0 +1,52 @@
+[
+  {
+    "project": "@fission-ai/openspec",
+    "version": "1.13.1",
+    "declared_license": "MIT",
+    "source": "https://registry.npmjs.org/@fission-ai/openspec/-/openspec-1.13.1.tgz",
+    "integrity": "sha512-UHJSV2n6ohjfRaJLvi526avOohFS/orCjM+7JPgvDzuEJbCCkykKfP2fp3gcsvthDLeWolMRT5JAE08MSPnr8Q==",
+    "upstream_release_tag_commit": "634c557bd0470eec37861b46172c3f503d283c1b",
+    "archive_path": "package/LICENSE",
+    "file": "openspec-LICENSE.txt",
+    "sha256": "c3c7235bea1214ab62df643473975c2e8b8848f528901a976693f7d069713e64"
+  },
+  {
+    "project": "@mindfoldhq/trellis",
+    "version": "0.6.17",
+    "declared_license": "AGPL-3.0-only",
+    "source": "https://registry.npmjs.org/@mindfoldhq/trellis/-/trellis-0.6.17.tgz",
+    "integrity": "sha512-u65OJbzR3OBzFWybX/uzBXaZdzn+71Afaknodu0GUcFIrTyp3ZegK9rHNeTX0guHow35WXkqDVuyrhn8vVzSQg==",
+    "upstream_release_tag_commit": "833a5846d18ad7a5ccd8c41c876d89cc936f5fd9",
+    "archive_path": "package/LICENSE",
+    "file": "trellis-LICENSE.txt",
+    "sha256": "d8a6cc31abc16b6748c7a21f21611f5a1ec33f67d22ca23d7da1c19b95496bee"
+  },
+  {
+    "project": "pallets/flask",
+    "commit": "06ea505ce2b2042af26e96d35ebf159af7c0869d",
+    "source": "https://raw.githubusercontent.com/pallets/flask/06ea505ce2b2042af26e96d35ebf159af7c0869d/LICENSE.txt",
+    "file": "flask-LICENSE.txt",
+    "sha256": "489a8e1108509ed98a37bb983e11e0f7e1d31f0bd8f99a79c8448e7ff37d07ea"
+  },
+  {
+    "project": "pallets/flask",
+    "commit": "de8429ffda8cfb54db175529e2bae72a24e1fa7e",
+    "source": "https://raw.githubusercontent.com/pallets/flask/de8429ffda8cfb54db175529e2bae72a24e1fa7e/LICENSE.txt",
+    "file": "flask-LICENSE.txt",
+    "sha256": "489a8e1108509ed98a37bb983e11e0f7e1d31f0bd8f99a79c8448e7ff37d07ea"
+  },
+  {
+    "project": "pallets/flask",
+    "commit": "7b0088693ece1bd3a9238a6fdf56ed8df7a4d43b",
+    "source": "https://raw.githubusercontent.com/pallets/flask/7b0088693ece1bd3a9238a6fdf56ed8df7a4d43b/LICENSE.txt",
+    "file": "flask-LICENSE.txt",
+    "sha256": "489a8e1108509ed98a37bb983e11e0f7e1d31f0bd8f99a79c8448e7ff37d07ea"
+  },
+  {
+    "project": "obra/superpowers",
+    "commit": "5bf4e78011075bcfc0dc295f0724994cd123ee71",
+    "source": "https://raw.githubusercontent.com/obra/superpowers/5bf4e78011075bcfc0dc295f0724994cd123ee71/LICENSE",
+    "file": "superpowers-LICENSE.txt",
+    "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400"
+  }
+]
