@@ -97,3 +97,9 @@ node benchmarks/summarize-results.mjs evals/results/<summary>.json \
 ## 提交前检查
 
 保留 raw 文件的同时，仅报告 secrets 扫描命中的文件名和数量，绝不打印值。确认所有结果的 provenance、任务 SHA、方法 revision、模型、timeout 和实际有效 prompt 可对应；保留失败和无效尝试的原因。临时 worktree、下载缓存和容器由 runner 或任务清理，原始证据、固定依赖说明和已引用的冻结 checkout 则保留到审阅完成。
+
+## CLI 时延实测
+
+运行 `node benchmarks/cli-performance.mjs --out benchmarks/cli-performance.json`，在 5000 文件的固定 Git 项目中，每组预热 3 次、测量 30 次。计时包含新 Node 进程及输出捕获；测试命令自身成本另外测量，`check` 净开销为估计值。signed `status`/`context` 使用已签名的新鲜记录，不以无记录路径替代。每次迭代、失败启动、硬件和环境条件都保留在 [原始结果](cli-performance.json)。
+
+最新完整迭代测量 `997c94e` 加已注明摘要的 `34da3a0` 两文件补丁。p95 为：signed status 634.104 ms、signed context 779.032 ms、ask 323.139 ms、impact 302.530 ms、validate 210.487 ms、check 净开销 988.123 ms、record 净开销 996.910 ms、land 690.677 ms、init 1050.479 ms。按初稿预算分别为五项未达、四项达到；不能据此宣称所有性能目标通过。共享机器的起止负载均已记录。后续短诊断只用于选择实现，不能替代这组完整样本或宣称达标。

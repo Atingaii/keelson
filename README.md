@@ -62,7 +62,7 @@ Codex is the host exercised by the local model benchmark. Claude Code, OpenCode,
 
 [The benchmark protocol, pinned revisions, and raw results](benchmarks/README.md) compare Keelson with bare Codex, **OpenSpec**, **Trellis**, and **Superpowers** on the same Flask tasks, model, and budget. Mechanical acceptance, framework activation, time, tokens, and decision behavior are reported separately. A small benchmark is evidence for those tasks, not a universal ranking.
 
-Read the [measured results and limitations](evals/RESULTS.md). Original fixed-task scores and later robustness probes are reported separately, including failed and invalid attempts.
+Read the [measured results and limitations](evals/RESULTS.md). Original fixed-task scores and later robustness probes are reported separately, including failed and invalid attempts. The latest exploratory robustness probe passes 2/3, and several [CLI latency budgets](benchmarks/README.md#cli-时延实测) remain unmet; the available evidence does not establish excellence across every dimension.
 
 Keelson learns from [OpenSpec](https://github.com/Fission-AI/OpenSpec)'s delta contracts, [Trellis](https://github.com/mindfold-ai/Trellis)'s persistent project context, and [Superpowers](https://github.com/obra/superpowers)' implementation and review workflows. Its evidence format uses [in-toto Statements](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md) and [DSSE](https://github.com/secure-systems-lab/dsse). This is an implementation of local signed records, not SLSA certification.
 

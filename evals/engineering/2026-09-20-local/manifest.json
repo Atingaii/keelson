@@ -610,6 +610,18 @@
       "bytes": 2368,
       "source_commit": "34da3a07798198ce4e3fc056080900ab322942ef",
       "note": "Actual GitHub Actions API result: all six Ubuntu/macOS/Windows x Node 20/22 jobs pass after portable importer and fixture fixes."
+    },
+    {
+      "file": "final-artifact-audit.json",
+      "sha256": "93388d9b210058c7621626d01d5813e8a0a9439cad105893d95d4001e763f44f",
+      "bytes": 712,
+      "note": "Pre-delivery artifact audit at main 05b2564 plus documented README edits; final framing decisions may require a later package observation."
+    },
+    {
+      "file": "package-dry-run.json",
+      "sha256": "d607ef4ac85d60d55f7c01be3159720ff310a7e95eb122895f8af8645c395b2a",
+      "bytes": 13449,
+      "note": "Pre-delivery artifact audit at main 05b2564 plus documented README edits; final framing decisions may require a later package observation."
     }
   ],
   "updated_at_utc": "2026-09-20T12:35:04.321907+00:00"
