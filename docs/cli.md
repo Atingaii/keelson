@@ -179,7 +179,7 @@ keelson land [name] [--now "<text>"] [--confirm-assumptions] [--accept-drift]
              [--keep] [--force] [--dry-run]
 ```
 
-Refuses, listing every real lifecycle blocker, while acceptance is incomplete, an active dependency remains, a spec-tier change has no acceptance contract, open questions or unreconciled contract drift remain, verification is not `passed`, `(assumed)` decisions still need owner confirmation, or a breaking change has no rollout. Task checkboxes are advisory only. Landing projects all durable writes first; large capability contracts automatically shard into a bounded `spec.md` index + `requirements/*.md` + optional `decisions.md`, then the change folds or archives. `--now` rewrites `NOW.md`; `--dry-run` previews; `--force` is reserved for explicit owner overrides.
+Refuses, listing every real lifecycle blocker, while acceptance is incomplete, an active dependency remains, a spec-tier change has no acceptance contract, open questions or unreconciled contract drift remain, verification is not `passed`, `(assumed)` decisions still need owner confirmation, or a breaking change has no rollout. Task checkboxes are advisory only. Landing projects all durable writes first; large capability contracts automatically shard into a bounded `spec.md` index + `requirements/*.md` + `decisions/*.md` when needed, then the change folds or archives. `--now` rewrites `NOW.md`; `--dry-run` previews; `--force` is reserved for explicit owner overrides.
 
 ```text
 $ keelson land add-pagination
@@ -227,7 +227,7 @@ Reports the Node version, pending config migration, canonical runtime integrity,
 
 ### Knowledge health
 
-Findings about the project's documents, reported as warnings or information with a suggested fix, never applied automatically:
+`keelson doctor` itself is read-only: it reports document-health signals and suggested fixes. During normal Agent work, the same signals are consumed internally during RECONCILE; deterministic structure maintenance may happen automatically, while semantic rewrites are re-verified and only owner-owned semantic decisions are surfaced:
 
 | Kind | Reported when |
 |---|---|
