@@ -9,9 +9,11 @@ import { readSession } from '../lib/session.js';
 import { gitStatusShort, recentCommits, worktreeFingerprint } from '../lib/git.js';
 import { list } from '../lib/args.js';
 import { knowledgeHealth } from '../lib/health.js';
+import { maintainRuntime } from '../lib/maintenance.js';
 
 export async function context({ flags, positional }, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
+  maintainRuntime(root);
   const cfg = loadConfig(projectPaths(root).config);
   const p = projectPaths(root, cfg);
   const paths = [...list(flags.paths), ...positional].map((x) => path.relative(root, path.resolve(root, x)).replace(/\\/g, '/'));
