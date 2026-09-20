@@ -8,7 +8,7 @@
 - **BOUND** —— trivial 直接改；quick 创建最小有用 change；spec 先写 acceptance、行为 delta 和 plan，再等批准。
 - **BUILD** —— 一次推进一个纵向切片。独立的新修改目标创建新 change；围绕同一目标继续追问不会。
 - **SENSE** —— 尽早跑便宜检查；完成必须有当前工作树上的新鲜 `keelson check --record` 证据。任务复选框只描述当前计划，不负责判定完成。
-- **RECONCILE** —— 每轮修改后根据 acceptance、阻塞项、rollout/兼容性和新鲜 verification 重新计算生命周期。它们满足后状态成为 `ready`，Agent 自动 land；既不等待用户说“做完了”，也不要求历史计划里的每个复选框永远仍然相关。需要时把稳定事实折叠回 specs/rules/glossary。
+- **RECONCILE** —— 每轮修改后根据 acceptance、阻塞项、rollout/兼容性和新鲜 verification 重新计算生命周期。land 前静默完成 context 暴露的内部知识维护：重写单例当前状态文档、拆分/去重 rules，并让 `land` 自动分片大型 spec。gate 满足后状态成为 `ready` 并自动 land；不等待用户说“做完了”，也不把维护流程暴露给用户。
 - 会话结束、长时间空闲、compaction、关闭窗口只改变本机会话 runtime，绝不自动完成、取消或 land 长期 work item。
 - `handoff.md` 只用于真正跨人/跨机器或明确所有权转移。普通新会话从 change/task/ledger 状态和可用的 session focus 重建。
 - 工件按需创建；空文档不是进度。
