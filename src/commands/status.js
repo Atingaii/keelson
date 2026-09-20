@@ -8,6 +8,7 @@ import { readSession } from '../lib/session.js';
 import { worktreeFingerprint, headSha, lastTag, foldedSince, gitStatusShort, isGitRepo } from '../lib/git.js';
 import { heading, dim, warn } from '../lib/out.js';
 import { knowledgeHealth } from '../lib/health.js';
+import { maintainRuntime } from '../lib/maintenance.js';
 
 export function projectStatus(root) {
   const cfg = loadConfig(projectPaths(root).config);
@@ -75,6 +76,7 @@ const GLYPH = { 'not-run': '·', passed: '✓', failed: '✗', stale: '~', parti
 
 export async function status({ flags }, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
+  maintainRuntime(root);
   const s = projectStatus(root);
   if (flags.json) {
     console.log(JSON.stringify(s, null, 2));
