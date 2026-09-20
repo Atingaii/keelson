@@ -6,6 +6,7 @@ import { parseRulesIndex } from '../lib/rules.js';
 import { parseSpec, parseDelta, parseFrontmatter, hasSection, EFFORT_TIERS, ROOT_CAUSES, WORK_STATUSES } from '../lib/markdown.js';
 import { loadAllChanges } from '../lib/changes.js';
 import { datedIdPatterns } from '../lib/models.js';
+import { knowledgeHealth } from '../lib/health.js';
 import { ok, fail, warn } from '../lib/out.js';
 
 export function validateProject(root) {
@@ -79,6 +80,10 @@ export function validateProject(root) {
       if (!d.added.length && !d.modified.length && !d.removed.length) warnings.push(`${tag}/specs/${df}: no ADDED/MODIFIED/REMOVED requirements`);
     }
     if (c.handoff && !c.handoff.at) warnings.push(`${tag}/handoff.md has no "at:" commit; run \`keelson handoff ${c.name}\` to stamp it`);
+  }
+
+  for (const h of knowledgeHealth(root, cfg, p)) {
+    if (h.level === 'error') errors.push(`${h.kind}: ${h.text} → ${h.fix}`);
   }
 
   const patterns = datedIdPatterns();
