@@ -9,6 +9,7 @@ import { worktreeFingerprint } from '../lib/git.js';
 import { ok, fail, warn, heading, info } from '../lib/out.js';
 import { readSession } from '../lib/session.js';
 import { maintainRuntime } from '../lib/maintenance.js';
+import { changeSpecDrift } from '../lib/specs.js';
 
 export function verifyLine(claim, results, tree) {
   return `### Verify: ${claim}\n${results.map((r) => `\`${r.cmd}\` exit ${r.exit}`).join('; ')}${tree ? ` · tree ${tree}` : ''}`;
@@ -60,7 +61,8 @@ export async function check({ flags, positional }, cwd = process.cwd()) {
       ok(`recorded in .keelson/changes/${name}/ledger.md`);
       const updated = loadChange(p.changes, name);
       const activeNames = new Set(loadAllChanges(p.changes).map((c) => c.name));
-      const lifecycle = updated ? evaluateLifecycle(updated, tree, { activeNames }) : null;
+      const contractDrift = updated ? changeSpecDrift(updated, p.specs) : [];
+      const lifecycle = updated ? evaluateLifecycle(updated, tree, { activeNames, contractDrift }) : null;
       if (lifecycle?.work === 'ready') ok(`${name}: ready → run \`keelson land ${name}\`; do not wait for the user to say "done"`);
       else if (lifecycle?.blockedBy.length) info(`${name}: verification passed, but lifecycle still waits on ${lifecycle.blockedBy.join(', ')}`);
     }
