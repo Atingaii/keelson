@@ -1,4 +1,5 @@
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { exists, read, readOr, write, walk, rmrf } from './fs.js';
 import { parseFrontmatter, parseSpec, renderSpec } from './markdown.js';
 
@@ -8,6 +9,8 @@ const slugify = (s) => String(s)
   .replace(/[^a-z0-9]+/g, '-')
   .replace(/^-+|-+$/g, '')
   .slice(0, 60) || 'requirement';
+
+export const specFingerprint = (text) => crypto.createHash('sha1').update(text).digest('hex').slice(0, 10);
 
 export function capabilityDir(specsDir, capability) {
   return path.join(specsDir, capability);
@@ -166,6 +169,28 @@ export function capabilityPhysicalDocs(specsDir, capability) {
   const reqDir = path.join(dir, requirementsRel);
   for (const rel of walk(reqDir)) {
     if (rel.endsWith('.md')) out.push({ rel: `${requirementsRel}/${rel}`, file: path.join(reqDir, rel) });
+  }
+  return out;
+}
+
+export function changeSpecDrift(change, specsDir) {
+  const out = [];
+  for (const df of change.deltaFiles ?? []) {
+    const cap = path.dirname(df).replace(/\\/g, '/');
+    if (cap === '.' || cap.includes('<')) continue;
+    const deltaPath = path.join(change.dir, 'specs', df);
+    const { data } = parseFrontmatter(read(deltaPath));
+    if (!data.base) continue;
+    const logical = readCapabilitySpec(specsDir, cap);
+    const current = logical ? specFingerprint(logical) : 'new';
+    if (current !== data.base) {
+      out.push({
+        capability: cap,
+        expected: data.base,
+        current,
+        detail: `specs/${cap} changed since this delta was written (base ${data.base}, now ${current}); re-read and reconcile the delta`,
+      });
+    }
   }
   return out;
 }
