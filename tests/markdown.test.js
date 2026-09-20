@@ -143,8 +143,10 @@ test('shard metadata cannot escape or traverse a symlinked capability directory'
   const outside = path.join(root, 'outside');
   fs.mkdirSync(outside);
   fs.rmSync(cap, { recursive: true });
-  fs.symlinkSync(outside, cap);
-  assert.throws(() => readCapabilitySpec(specs, 'checkout'), /root must not be a symlink/);
+  fs.symlinkSync(outside, cap, process.platform === 'win32' ? 'junction' : 'dir');
+  assert.throws(() => readCapabilitySpec(specs, 'checkout'), /must not be a symlink/);
+  assert.throws(() => readCapabilitySpec(specs, 'checkout/nested'), /must not be a symlink/);
+  assert.throws(() => readCapabilitySpec(specs, '../outside'), /escapes/);
 });
 
 test('Unicode requirement names produce distinct readable storage slugs', () => {

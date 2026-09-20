@@ -3,7 +3,9 @@ import { spawn, spawnSync } from 'node:child_process';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { loadConfig, checkEntries } from '../lib/config.js';
 import { append, write } from '../lib/fs.js';
-import { loadAllChanges } from '../lib/changes.js';
+import { loadAllChanges, loadChange } from '../lib/changes.js';
+import { evaluateLifecycle } from '../lib/lifecycle.js';
+import { changeSpecDrift } from '../lib/specs.js';
 import { worktreeFingerprint } from '../lib/git.js';
 import { readSession } from '../lib/session.js';
 import { contractFingerprint, recordStatement, sha256, trustCommands, verificationStatement } from '../lib/evidence.js';
@@ -98,6 +100,11 @@ export async function check({ flags, positional }, cwd = process.cwd()) {
     console.log(passed ? 'all checks passed' : unchanged ? 'checks failed' : 'inputs changed during checking; re-run checks');
     if (change) console.log(`recorded in ${result.record}`);
     if (!complete) console.log('partial suite: this run cannot authorize landing');
+    if (change && passed && complete) {
+      const current = loadChange(p.changes, change.name);
+      const lifecycle = evaluateLifecycle(current, before.tree, { activeNames: loadAllChanges(p.changes).map((c) => c.name), contractDrift: changeSpecDrift(current, p.specs) });
+      if (lifecycle.work === 'ready') console.log(`${change.name}: ready → run \`keelson land ${change.name}\``);
+    }
   }
   return passed ? 0 : 1;
   } finally { finish(); }

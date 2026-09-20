@@ -11,8 +11,8 @@
     {
       "name": "keelson",
       "source": "./",
-      "description": "An engineering collaboration layer for coding agents. Install the CLI (npm i -g keelson) and run `keelson init` once to create the canonical `.keelson/` runtime, discovery shims, and optional Claude hooks.",
-      "version": "0.3.0",
+      "description": "An engineering collaboration layer for coding agents. Install the CLI (install from the GitHub repository) and run `keelson init` once to create the lightweight project integration, discovery shims, and optional Claude hooks.",
+      "version": "0.4.0",
       "author": {
         "name": "Atingaii"
       },

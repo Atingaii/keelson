@@ -13,14 +13,14 @@ Coding agents are good at one task and bad at a project that lasts years: they f
 - Always confirms: publishing to npm, pushing tags, force-landing a change, deleting user files.
 
 ## Hard constraints
-- Node ≥ 20, one runtime dependency (`yaml`). Hook scripts have zero dependencies.
+- Node ≥ 20; runtime dependencies must earn their maintenance cost. Host hooks execute installed package code.
 - No dated model IDs anywhere in this repository or in generated files.
 - Every piece of agent guidance carries a `without:` and a `sunset:` annotation, and the Chinese mirror carries the same ids.
-- No other project, framework, or tool is named as a source or comparison anywhere in the repository.
+- Credit prior art and use reproducible comparisons; do not claim universal superiority, compliance, or hostile-agent isolation from local signatures.
 - Generated surfaces are re-creatable from the package (`keelson update`), ownership-tracked, drift-diagnosable, recoverably replaced, and removable (`keelson ablate` / `uninstall`).
 - A host is first-class only with verified or primary-documentation discovery paths plus init/update/doctor/uninstall and cross-platform contract coverage; guessed host directories are not support.
 
 ## Working defaults
 - Change sizing: auto
 - Quick changes: proceed after write-back
-- Spec changes: wait for approval
+- Spec changes: proceed within the user's established authorization; ask only for a material unresolved owner decision.

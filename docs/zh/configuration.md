@@ -64,10 +64,11 @@ effort:
 | `default_tier` | `auto` | 仅供参考。`auto` 表示代理给每个变更定大小。设为 `quick` 或 `spec` 可在代理读的文件里表明偏好 |
 | `confirm.quick` | `proceed` | `proceed`：代理写回理解后开始。`wait`：先等批准 |
 | `confirm.spec` | `proceed` | `proceed`：短 write-back 后，只要没有真实的所有者决定未解决就直接推进。团队需要显式 plan 审批点时设为 `wait` |
-| `land` | `fold` | `fold` 在合并后删除变更目录。`keep` 把它移到 `changes/archive/` |
+| `land` | `fold` | `fold` 清理可丢弃脚手架，带签名证据时仍归档；`keep` 也归档无签名变更 |
 | `check` | 自动探测 | `keelson check` 按顺序从项目根目录通过 shell 运行的内容。每个条目是一个命令字符串，或对象 `{name, command, kind}`，其中 `kind` 取 `test`、`lint`、`typecheck`、`build`、`fitness`、`check` 之一。对纯字符串，kind 从命令猜测。首次 init 时从 `package.json` 脚本、`pyproject.toml`、`pytest.ini`、`go.mod` 或 `Cargo.toml` 探测 |
 | `guide` | `false` | 可选教学模式。默认提问本来就使用场景和易懂语言；设为 `true` 后额外解释已落定决定背后的工程概念、约束理由，并在 spec 变更收尾时附一段简短教学说明。`keelson init --guide` 设置它 |
-| `hooks` | `true` | 是否安装由 Keelson 管理的 lifecycle/session hook 或 plugin。当前控制 Claude、OpenCode、CodeBuddy bridge；Pi 的 `PI_SESSION_ID` 由宿主内置，所以仍保持 native。`--no-hooks` 持久写成 `false`；`--hooks` 重新开启 |
+| `vendor` | `false` | 是否复制指导文件；默认使用 keelson guide 按需读取 |
+| `hooks` | `true` | 是否安装由 Keelson 管理的 lifecycle/session hook 或 plugin。当前控制 Claude、OpenCode、CodeBuddy bridge；Codex 与 Pi 分别通过宿主内置 `CODEX_THREAD_ID`、`PI_SESSION_ID` 保持 native。`--no-hooks` 持久写成 `false`；`--hooks` 重新开启 |
 | `budgets` | 见下文 | 每种文档的软行数预算。Keelson 把压力作为内部信号交给 Agent：大型 spec 自动分片，单例/rule 在 RECONCILE 中自动整理，长期文档只有到 2× 预算才硬失败 |
 | `context` | `""` | 打印在 `keelson context` 输出顶部的自由文本。用于放不进 INTENT.md 的事实，比如技术栈概要 |
 | `paths.specs` | `.keelson/specs` | 行为契约目录，每个能力一个 `<capability>/spec.md`。指向已有的契约目录即可复用 |
@@ -106,7 +107,7 @@ effort:
 
 ### 平台覆盖
 
-每个工具从哪里读取说明和技能，来自随包附带的注册表；`keelson platforms` 会打印它。内置注册表采用标准层优先：canonical 运行时始终只在 `.keelson/`；平台注册路径只描述发现 shim。已经读取 `AGENTS.md` + `.agents/skills/` 的宿主直接复用这套通用发现表面。若旧版本或本地安装需要不同路径，项目可以在 `platforms.<id>` 下覆盖某个工具条目的任意键：
+每个工具从哪里读取说明和技能，来自随包附带的注册表；`keelson platforms` 会打印它。内置注册表采用标准层优先：默认从安装包读取指导，`vendor: true` 才将指导复制到 `.keelson/`；平台注册路径描述发现 shim。已经读取 `AGENTS.md` + `.agents/skills/` 的宿主直接复用这套通用发现表面。若旧版本或本地安装需要不同路径，项目可以在 `platforms.<id>` 下覆盖某个工具条目的任意键：
 
 ```yaml
 platforms:
@@ -165,7 +166,10 @@ platforms:
 | `ANTHROPIC_MODEL`、`OPENAI_MODEL` | 由 `keelson models --detect` 报告为工具的默认模型 |
 | `ANTHROPIC_API_KEY`、`OPENAI_API_KEY`、`GEMINI_API_KEY` | 探测时记录它们是否存在。`--refresh` 用前两个查询 provider 目录 |
 | `CLAUDE_PROJECT_DIR` | 由 Claude Code 设置；hook 用它找到项目 |
-| `KEELSON_SESSION_ID` | Claude/OpenCode/CodeBuddy native bridge 注入的 opaque session identity；只用于选择 `.keelson/.runtime/sessions/<key>.json` |
+| `KEELSON_SESSION_ID` | 显式 opaque 会话身份；焦点保存在 Git 私有 keelson-runtime/sessions 或项目外部缓存 |
+| `CODEX_THREAD_ID` | Codex 原生会话身份，哈希后持久化 |
 | `PI_SESSION_ID` | Pi 自动提供给 shell tool；Keelson 只在内存中哈希它来解析本地 session focus |
 | `NO_COLOR` | 关闭 CLI 彩色输出 |
 | `KEELSON_DEBUG` | 出错时打印堆栈 |
+
+配置检查在本机 shell 中运行。首次先审阅再执行 `keelson check --trust`，命令组改变后重新信任。可写 spec 路径必须留在项目内且不可经过符号链接。详见[验证](verification.md)。

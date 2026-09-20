@@ -38,8 +38,14 @@ export function worktreeFingerprint(root) {
     const idx = path.join(os.tmpdir(), `keelson-index-${crypto.randomUUID()}`);
     try {
       const env = { GIT_INDEX_FILE: idx };
+      // Seed from HEAD so tracked files remain inputs even if a later ignore
+      // rule matches them. An empty index incorrectly treats those as untracked.
+      const head = git(root, ['rev-parse', '--verify', 'HEAD']);
+      git(root, ['read-tree', head || '--empty'], { env, allowFail: false });
+      git(root, ['rm', '-r', '--cached', '--ignore-unmatch', '--', '.keelson'], { env, allowFail: false });
       git(root, ['add', '-A', '--', '.', ':(exclude).keelson'], { env, allowFail: false });
-      return git(root, ['write-tree'], { env, allowFail: false });
+      const prefix = git(root, ['rev-parse', '--show-prefix']);
+      return git(root, ['write-tree', ...(prefix ? [`--prefix=${prefix}`] : [])], { env, allowFail: false });
     } finally {
       fs.rmSync(idx, { force: true });
     }

@@ -10,6 +10,13 @@ import { tmpProject, run, read, exists, write } from './helpers.js';
 const HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'keelson-home-'));
 const env = { HOME };
 
+// These lifecycle fixtures exercise gate behavior, using a real successful process.
+function recordFixture(dir, name) {
+  const config = read(dir, '.keelson/config.yaml');
+  if (/^check: \[\]$/m.test(config)) write(dir, '.keelson/config.yaml', config.replace(/^check: \[\]$/m, 'check:\n  - node -e "process.exit(0)"'));
+  run(dir, ['check', '--trust', '--record', '--change', name, '--quiet'], { env });
+}
+
 test('init creates a minimal control plane; update is idempotent', () => {
   const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"echo ok"}}', 'CLAUDE.md': '# Mine\n' });
   run(dir, ['init', '--tools', 'claude,opencode'], { env });
@@ -382,7 +389,7 @@ test('guided profile keeps guided blocks; lang zh installs the Chinese skill whe
 });
 
 test('change artifacts grow progressively instead of starting empty', () => {
-  const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"node -e \\"process.exit(0)\\""}}' });
+  const dir = tmpProject({ 'package.json': JSON.stringify({ name: 'x', scripts: { test: 'node -e "process.exit(0)"' } }) });
   run(dir, ['init', '--no-hooks'], { env });
 
   run(dir, ['new', 'quick-fix', '--tier', 'quick'], { env });
@@ -392,7 +399,7 @@ test('change artifacts grow progressively instead of starting empty', () => {
   assert.ok(!exists(dir, '.keelson/changes/quick-fix/handoff.md'));
 
   write(dir, '.keelson/changes/quick-fix/change.md', read(dir, '.keelson/changes/quick-fix/change.md').replace('- [ ] … — check: `…`', '- [x] works — check: `npm test`'));
-  run(dir, ['check', '--record', 'quick works', '--change', 'quick-fix', '--quiet'], { env });
+  run(dir, ['check', '--trust', '--record', 'quick works', '--change', 'quick-fix', '--quiet'], { env });
   assert.ok(exists(dir, '.keelson/changes/quick-fix/ledger.md'));
   run(dir, ['land', 'quick-fix', '--now', 'Nothing in flight.'], { env });
   assert.ok(!exists(dir, '.keelson/changes/quick-fix'), 'quick change lands without ever needing tasks.md');
@@ -435,10 +442,10 @@ test('change lifecycle: new → gates → check --record → land folds specs an
   write(dir, '.keelson/changes/add-pagination/tasks.md', '# Tasks\n\n## Slice: Paging\nDelivers: pages work\n- [x] 1. Do it (effort: light) — verify: `echo ok`\n');
   let cm = read(dir, '.keelson/changes/add-pagination/change.md').replace('- [ ] default', '- [x] default').replace(/## Open questions\n- [^\n]+\n/, '## Open questions\n- none\n');
   write(dir, '.keelson/changes/add-pagination/change.md', cm);
-  const rec = run(dir, ['check', '--record', 'pagination', '--quiet'], { env });
+  const rec = run(dir, ['check', '--trust', '--record', 'pagination', '--quiet'], { env });
   assert.match(rec.stdout, /recorded in/);
   assert.match(read(dir, '.keelson/changes/add-pagination/ledger.md'), /### Verify: pagination\n`npm run test` exit 0 · tree [0-9a-f]{10}/);
-  assert.ok(fs.readdirSync(path.join(dir, '.keelson/.runtime/evidence')).length >= 1);
+  assert.ok(fs.readdirSync(path.join(dir, '.keelson/changes/add-pagination/evidence')).some((f) => f.endsWith('.log')));
   assert.equal(JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes[0].verification.state, 'passed');
   const onlyAssumed = run(dir, ['land'], { env, allowFail: true });
   assert.match(onlyAssumed.stderr, /assumed decision/);
@@ -447,13 +454,15 @@ test('change lifecycle: new → gates → check --record → land folds specs an
   write(dir, 'src/x.js', 'export const x = 1;\n');
   assert.equal(JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes[0].verification.state, 'stale');
   assert.match(run(dir, ['land', '--confirm-assumptions'], { env, allowFail: true }).stderr, /verification stale/);
-  run(dir, ['check', '--record', 'after edit', '--quiet'], { env });
+  run(dir, ['check', '--trust', '--record', 'after edit', '--quiet'], { env });
   // main spec moved → drift is a lifecycle gate everywhere, not a land-only surprise.
   write(dir, '.keelson/specs/orders/spec.md', read(dir, '.keelson/specs/orders/spec.md') + '\n## Requirement: Extra\nx\n### Scenario: y\n- WHEN\n- THEN\n');
   const drifted = JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes[0];
   assert.equal(drifted.work, 'in-progress');
   assert.ok(drifted.gates.some((g) => g.code === 'drift' && g.pass === false));
   assert.match(run(dir, ['land', '--confirm-assumptions'], { env, allowFail: true }).stderr, /changed since this delta was written/);
+  assert.equal(drifted.verification.state, 'stale');
+  run(dir, ['check', '--trust', '--record', '--quiet'], { env });
   run(dir, ['land', '--confirm-assumptions', '--accept-drift', '--now', '# Now\n\nNothing in flight.'], { env });
   assert.ok(!exists(dir, '.keelson/changes/add-pagination'));
   const spec = read(dir, '.keelson/specs/orders/spec.md');
@@ -472,8 +481,9 @@ test('land --keep archives instead of folding', () => {
   write(dir, '.keelson/changes/tidy/tasks.md', '- [x] 1. a (effort: light)\n');
   write(dir, '.keelson/changes/tidy/change.md', read(dir, '.keelson/changes/tidy/change.md').replace(/## Acceptance[\s\S]*$/, '## Acceptance\n- [x] done — check: `true`\n'));
   write(dir, '.keelson/changes/tidy/ledger.md', '### Verify: ok\n`true` exit 0\n');
+  recordFixture(dir, 'tidy');
   run(dir, ['land', 'tidy', '--keep'], { env });
-  assert.match(read(dir, path.join('.keelson/changes/archive', fs.readdirSync(path.join(dir, '.keelson/changes/archive'))[0], 'change.md')), /^status: integrated$/m);
+  assert.equal(JSON.parse(read(dir, path.join('.keelson/changes/archive', fs.readdirSync(path.join(dir, '.keelson/changes/archive'))[0], 'landed.json'))).status, 'integrated');
   const archived = fs.readdirSync(path.join(dir, '.keelson/changes/archive'));
   assert.equal(archived.length, 1);
   assert.match(archived[0], /^\d{4}-\d{2}-\d{2}-tidy$/);
@@ -552,9 +562,9 @@ test('check runs configured commands and reports exit codes', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--no-hooks'], { env });
   write(dir, '.keelson/config.yaml', 'check:\n  - "exit 0"\n  - "exit 3"\n');
-  const r = run(dir, ['check', '--quiet', '--json'], { env, allowFail: true });
+  const r = run(dir, ['check', '--trust', '--quiet', '--json'], { env, allowFail: true });
   assert.equal(r.code, 1);
-  assert.match(r.stdout, /`exit 3` exit 3/);
+  assert.equal(JSON.parse(r.stdout).results[1].exit, 3);
 });
 
 test('Claude hooks persist anonymous session identity and inject only focused work', () => {
@@ -584,7 +594,7 @@ test('Claude hooks persist anonymous session identity and inject only focused wo
 });
 
 test('sessions focus independent work items; ready is derived without a user finish phrase', () => {
-  const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"node -e \\"process.exit(0)\\""}}' });
+  const dir = tmpProject({ 'package.json': JSON.stringify({ name: 'x', scripts: { test: 'node -e "process.exit(0)"' } }) });
   run(dir, ['init', '--no-hooks'], { env });
   const envA = { ...env, KEELSON_SESSION_ID: 'session-a' };
   const envB = { ...env, KEELSON_SESSION_ID: 'session-b' };
@@ -602,7 +612,7 @@ test('sessions focus independent work items; ready is derived without a user fin
   // human-maintained completion signal once the accepted outcome is verified.
   write(dir, '.keelson/changes/alpha/tasks.md', '- [ ] optional cleanup (effort: light) — verify: `true`\n');
 
-  const alphaCheck = run(dir, ['check', '--record', 'alpha verified', '--quiet'], { env: envA });
+  const alphaCheck = run(dir, ['check', '--trust', '--record', 'alpha verified', '--quiet'], { env: envA });
   assert.match(alphaCheck.stdout, /alpha: ready → run `keelson land alpha`/);
   assert.match(read(dir, '.keelson/changes/alpha/ledger.md'), /alpha verified/);
   assert.ok(!exists(dir, '.keelson/changes/beta/ledger.md'));
@@ -700,6 +710,7 @@ test('large logical specs auto-shard without user maintenance', () => {
     '- THEN refused',
     ''
   ].join('\n'));
+  recordFixture(dir, 'grow-orders');
   const landed = run(dir, ['land', 'grow-orders'], { env });
   assert.match(landed.stdout, /auto-organize/);
   assert.match(read(dir, '.keelson/specs/orders/spec.md'), /^layout: sharded$/m);
@@ -744,6 +755,7 @@ test('auto-sharding preserves pre-existing unmanaged requirements directories', 
     '## REMOVED Requirements',
     ''
   ].join('\n'));
+  recordFixture(dir, 'extend-existing');
   run(dir, ['land', 'extend-existing'], { env });
   assert.equal(read(dir, '.keelson/specs/orders/requirements/manual.md'), '# user-owned\nkeep me\n');
   assert.match(read(dir, '.keelson/specs/orders/spec.md'), /^requirements_dir: keelson-requirements$/m);
@@ -793,6 +805,7 @@ test('legacy sharded decision files migrate to bounded decision shards without t
     ''
   ].join('\n'));
 
+  recordFixture(dir, 'migrate-decisions');
   run(dir, ['land', 'migrate-decisions'], { env });
   const index = read(dir, '.keelson/specs/orders/spec.md');
   assert.match(index, /^decisions_dir: keelson-decisions$/m);
@@ -839,6 +852,7 @@ test('hard knowledge limits fail validate and preflight land before writing spec
     '- THEN h',
     ''
   ].join('\n'));
+  recordFixture(dir, 'bounded-spec');
   const refused = run(dir, ['land', 'bounded-spec'], { env, allowFail: true });
   assert.equal(refused.code, 1);
   assert.match(refused.stderr, /auto-sharding still leaves oversized spec shard/);
@@ -1018,6 +1032,7 @@ test('status exposes shared contracts and impact lists importers', () => {
   write(dir, '.keelson/changes/a/tasks.md', '- [x] 1. x (effort: light)\n');
   write(dir, '.keelson/changes/a/change.md', read(dir, '.keelson/changes/a/change.md').replace(/^status:.*$/m, 'status: in-progress').replace(/## Acceptance[\s\S]*?## Open questions/, '## Acceptance\n- [x] ok — check: `true`\n\n## Open questions').replace(/## How\n…/, '## How\nh').replace(/## Alternatives[\s\S]*?## Impact/, '## Alternatives\n- **x (chosen)** — a\n- **y** — strongest: b. Rejected because: c\n\n## Impact').replace(/## Decisions[\s\S]*$/, '## Decisions\n- orders: x over y; y rejected because c\n'));
   write(dir, '.keelson/changes/a/ledger.md', '### Verify: ok\n`true` exit 0\n');
+  recordFixture(dir, 'a');
   const landed = run(dir, ['land', 'a', '--dry-run'], { env }).stdout;
   assert.match(landed, /shared contract with active change b/);
   const im = JSON.parse(run(dir, ['impact', 'src/api/orders.js', '--json'], { env }).stdout);
@@ -1094,7 +1109,7 @@ test('guide flag adds the guided line; named checks run with kinds; doctor repor
   assert.ok(!exists(dir, '.keelson/GLOSSARY.md'));
   write(dir, '.keelson/config.yaml', read(dir, '.keelson/config.yaml').replace(/^check: \[\]$/m, 'check:\n  - name: unit\n    command: "exit 0"\n    kind: test\n  - name: deps\n    command: "exit 0"\n    kind: fitness\n'));
   const tailJson = (out) => JSON.parse(out.slice(out.indexOf('\n{') + 1));
-  const r = tailJson(run(dir, ['check', '--quiet', '--json'], { env }).stdout);
+  const r = tailJson(run(dir, ['check', '--trust', '--quiet', '--json'], { env }).stdout);
   assert.deepEqual(r.results.map((x) => [x.name, x.kind, x.exit]), [['unit', 'test', 0], ['deps', 'fitness', 0]]);
   write(dir, '.keelson/INTENT.md', '# x\n\n## Why this exists\nReal.\n' + 'filler line\n'.repeat(130));
   write(dir, '.keelson/specs/a/spec.md', '# a\n\n## Requirement: Shared\nx\n### Scenario: s\n- WHEN\n- THEN\n');

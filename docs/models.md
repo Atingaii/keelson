@@ -1,6 +1,6 @@
 # Effort tiers and models
 
-Keelson never names a model in the repository. Tasks carry an effort tier; the host resolves the tier to a model alias when work is dispatched.
+Tasks normally carry an effort tier; the host resolves it to a model alias. Explicit user model constraints take precedence. Benchmark records retain the actual selected alias rather than implying a tier launched it.
 
 ## The three tiers
 

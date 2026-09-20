@@ -1,132 +1,42 @@
-# Getting started
+# Get started
 
-Keelson has one user-facing workflow:
-
-> **Run `keelson init` once, then keep talking to your coding agent normally.**
-
-For the full start-to-finish example—including continuous follow-up questions, session recovery, quick/spec changes, explicit transfer handoffs, verification, automatic readiness/landing, bugs, upgrades, and uninstall—read [Complete user flow](user-flow.md).
-
-## Install
-
-Requires Node.js 20+.
+Install from the repository with Node.js 20 or later:
 
 ```bash
-npm install -g keelson
-keelson --version
+git clone https://github.com/Atingaii/keelson.git
+cd keelson
+npm ci
+npm link
+cd /path/to/your/project
+keelson init --codex
 ```
 
-## Initialize
+`npm link` exposes the local checkout's CLI. Use a pinned Git revision for reproducible team installation. The package is named `@atingaii/keelson`; this documentation does not claim it has been published to npm.
 
-```bash
-cd your-project
-keelson init
+Initialization writes small project notes and host discovery shims. It leaves `.gitignore` alone. Start Codex in the project and ask for a real change. The installed skill points it to `keelson guide`, project intent and current change state.
+
+For a manual first change:
+
+1. Run `keelson new fix-pagination --tier quick`.
+2. Describe the outcome and measurable acceptance in `.keelson/changes/fix-pagination/change.md`.
+3. Implement the change and tests. Tick acceptance only after checking it.
+4. Add the project's existing test/lint commands to `.keelson/config.yaml`:
+
+```yaml
+check:
+  - name: unit tests
+    command: npm test
+    kind: test
+  - name: lint
+    command: npm run lint
+    kind: lint
 ```
 
-With no host flags, Keelson detects installed first-class CLIs whose discovery paths are verified or documented. If none are found, it uses the portable `AGENTS.md + .agents/skills/` layer.
+5. Review these commands, then run `keelson check --trust --record`.
+6. Inspect `keelson status`, then `keelson land fix-pagination` when all gates pass.
 
-You can be explicit:
+No configured checks is an error, not a green result. A `spec` change also describes how and impact, and carries delta contracts when behavior changes. The CLI does not infer requirement coverage from a test exit code; acceptance remains an explicit review.
 
-```bash
-keelson init --claude
-keelson init --codex --opencode
-keelson init --gemini --kiro
-```
+`keelson ask` records persistent decisions; `keelson guide interview` explains when to ask. `keelson doctor --session` shows host/session identity. `keelson update` refreshes integration; `keelson uninstall` removes owned integration while preserving project knowledge and evidence. Use `init --vendor` only when you want copied package guidance.
 
-First-class hosts are listed by:
-
-```bash
-keelson platforms
-```
-
-## What init creates
-
-Fresh init is intentionally small:
-
-```text
-.keelson/
-├── README.md
-├── INTENT.md
-├── NOW.md
-├── config.yaml
-├── manifest.json
-├── workflow.md
-└── skill/
-    ├── SKILL.md
-    └── references/
-```
-
-It does **not** pre-create empty ROADMAP, glossary, rules, specs, changes, task lists, ledgers, or handoffs.
-
-Outside `.keelson/`, Keelson writes only the thin discovery surfaces the selected hosts need. Full guidance still lives once under `.keelson/`.
-
-`manifest.json` records which generated host surfaces Keelson owns, so later `update`, `uninstall`, and host switches can reconcile them without guessing.
-
-## First contact
-
-Open your normal coding agent and ask for real work.
-
-On the first non-trivial conversation the agent:
-
-1. reads the repository and existing referenced material;
-2. drafts `.keelson/INTENT.md` from evidence already present;
-3. shapes the actual request immediately;
-4. asks one boundary question only if the repository cannot answer something that materially changes the current work.
-
-It does **not** inventory the whole repository into specs and rules. Those appear later only when current work exposes a behavior contract or durable invariant worth preserving.
-
-Example:
-
-> **You:** Add search to the orders page.  
-> **Agent:** Understood as filtering the existing orders list by order number and customer name, preserving the existing pagination contract; no public API change is implied by the repository. I’ll proceed with that boundary.
-
-If the repository showed two plausible meanings that changed the product, the agent would ask that one question instead. Otherwise work continues immediately.
-
-The agent does **not** ask you to choose databases, queues, consistency models, or architecture patterns just because they exist. Before every question it asks: what will this answer change, who owns the answer, and can repository evidence or a cheap experiment settle it? If the choice is reversible engineering detail, the agent chooses a sensible project-aligned default. If you say “not sure,” that is useful information, not a failed answer.
-
-If you explicitly ask to “stress-test this,” the agent continues through the material decision tree. Otherwise it stops questioning as soon as the next safe vertical slice has a clear outcome, boundary, and acceptance check.
-
-## What grows later
-
-Project knowledge appears only when useful:
-
-- `ROADMAP.md` — when a milestone/direction belongs in the repo rather than the tracker;
-- `GLOSSARY.md` — when vocabulary becomes load-bearing;
-- `rules/` — when a stable path-scoped engineering invariant must survive future sessions;
-- `specs/` — when observable behavior needs a durable contract;
-- `changes/` — while non-trivial work is in flight;
-- `.runtime/sessions/` — when a host/session identity can carry a local focus pointer;
-- `.runtime/evidence/` — when machine-local verification output is produced.
-
-A quick change starts with only `change.md`. A spec-sized change also starts with a task plan and behavior delta. Ledger appears after a real event. Handoff appears only for explicit ownership/machine transfer; ordinary new chat sessions use local session focus/candidate recovery.
-
-## The commands you may care about
-
-```bash
-keelson status
-```
-Shows active work (including mechanically derived `ready`), current session focus, verification freshness, open questions, transfer handoffs, and release state.
-
-```bash
-keelson doctor
-```
-Diagnoses runtime/shim/manifest drift, project validation, stale evidence, conflicts, and knowledge health.
-
-```bash
-npm install -g keelson@latest
-keelson update
-```
-Refreshes package-owned guidance and reconciles generated host surfaces after an upgrade or host change.
-
-```bash
-keelson uninstall
-```
-Removes generated integration/runtime surfaces while keeping project facts. Add `--purge` only when you explicitly want the whole `.keelson/` directory removed.
-
-You do not need to memorize the agent-facing commands.
-
-## Next
-
-- [Complete user flow](user-flow.md) — the full worked lifecycle.
-- [Concepts](concepts.md) — the mental model.
-- [How it works](how-it-works.md) — on-disk and runtime mechanics.
-- [Existing projects](existing-projects.md) — brownfield adoption.
+Read [verification](verification.md), [CLI](cli.md), and [configuration](configuration.md) for details.

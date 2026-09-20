@@ -62,10 +62,11 @@ effort:
 | `default_tier` | `auto` | Informational. `auto` means the agent sizes each change. Set `quick` or `spec` to state a preference in the file the agent reads |
 | `confirm.quick` | `proceed` | `proceed`: the agent writes back its understanding and starts. `wait`: it waits for approval first |
 | `confirm.spec` | `proceed` | `proceed`: after the short write-back, spec-sized work starts unless a real owner decision remains. Set `wait` when your team wants an explicit plan-approval checkpoint |
-| `land` | `fold` | `fold` removes the change directory after merging. `keep` moves it to `changes/archive/` |
+| `land` | `fold` | `fold` removes disposable scaffolding after merging. Signed evidence always archives; `keep` also archives unsigned changes |
 | `check` | detected | What `keelson check` runs, in order, from the project root through the shell. Each entry is a command string, or an object `{name, command, kind}` where `kind` is one of `test`, `lint`, `typecheck`, `build`, `fitness`, `check`. For a plain string the kind is guessed from the command. Detected from `package.json` scripts, `pyproject.toml`, `pytest.ini`, `go.mod`, or `Cargo.toml` on first init |
 | `guide` | `false` | Optional teaching mode. Questions are already scenario-first and understandable by default; `true` additionally names the engineering ideas behind settled decisions, explains constraint rationale, and closes spec changes with a short teaching note. `keelson init --guide` sets it |
-| `hooks` | `true` | Whether Keelson-managed lifecycle/session hooks or plugins are installed for selected hosts. This currently controls Claude, OpenCode, and CodeBuddy bridges; Pi stays native because `PI_SESSION_ID` is provided by Pi itself. `--no-hooks` persists `false`; `--hooks` turns managed bridges back on |
+| `vendor` | `false` | Copy workflow/skill guidance into the project; otherwise use `keelson guide` |
+| `hooks` | `true` | Whether Keelson-managed lifecycle/session hooks or plugins are installed for selected hosts. This currently controls Claude, OpenCode, and CodeBuddy bridges; Codex and Pi remain native through host-provided `CODEX_THREAD_ID` and `PI_SESSION_ID`. `--no-hooks` persists `false`; `--hooks` turns managed bridges back on |
 | `budgets` | see below | Soft line budgets per document type. Keelson routes pressure to the Agent internally; large specs auto-shard, singleton/rule compaction happens during RECONCILE, and durable files hard-fail only at 2× budget |
 | `context` | `""` | Free text printed at the top of `keelson context` output. Use it for facts that do not fit INTENT.md, such as a tech stack summary |
 | `paths.specs` | `.keelson/specs` | Directory of behaviour contracts, one `<capability>/spec.md` each. Point it at an existing contracts directory to reuse it |
@@ -104,7 +105,7 @@ Budgets are in lines and are soft compaction thresholds. Crossing one warns and 
 
 ### Platform overrides
 
-Where each tool reads its instructions and skills comes from the registry shipped with the package; `keelson platforms` prints it. The built-in registry is standards-first: the canonical runtime always stays under `.keelson/`; platform paths describe discovery shims only. A host that already reads `AGENTS.md` + `.agents/skills/` reuses that portable discovery surface. A project can override any key of a tool's entry under `platforms.<id>` when an older/local install needs a different path:
+Where each tool reads its instructions and skills comes from the registry shipped with the package; `keelson platforms` prints it. The built-in registry is standards-first: guidance loads from the installed package by default; `vendor: true` copies guidance under `.keelson/`. Platform paths describe discovery shims only. A host that already reads `AGENTS.md` + `.agents/skills/` reuses that portable discovery surface. A project can override any key of a tool's entry under `platforms.<id>` when an older/local install needs a different path:
 
 ```yaml
 platforms:
@@ -163,7 +164,10 @@ Edit the lines to fit the project. The `Working defaults` section states the siz
 | `ANTHROPIC_MODEL`, `OPENAI_MODEL` | Reported as the tool's default model by `keelson models --detect` |
 | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY` | Their presence is recorded by detection. `--refresh` uses the first two to query provider catalogues |
 | `CLAUDE_PROJECT_DIR` | Set by Claude Code; the hooks use it to find the project |
-| `KEELSON_SESSION_ID` | Opaque session identity injected by native Keelson bridges (Claude/OpenCode/CodeBuddy). Used only to select `.keelson/.runtime/sessions/<key>.json` |
+| `KEELSON_SESSION_ID` | Explicit opaque session identity; local focus is stored in Git-private `keelson-runtime/sessions/` or the external project cache |
+| `CODEX_THREAD_ID` | Native Codex identity, hashed before persistence |
 | `PI_SESSION_ID` | Provided by Pi to shell tools; Keelson hashes it in memory to resolve the local session focus |
 | `NO_COLOR` | Disables coloured CLI output |
 | `KEELSON_DEBUG` | Prints stack traces on errors |
+
+Configured checks run in the local shell. Review them before the first `keelson check --trust`; changed suites need renewed trust. Writable spec paths must remain inside the project and may not traverse symlinks. See [verification](verification.md).

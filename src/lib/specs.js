@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { exists, read, readOr, write, walk, rmrf } from './fs.js';
 import { parseFrontmatter, parseSpec, renderSpec } from './markdown.js';
+import { resolveWithin } from './paths.js';
 
 const lineCount = (text) => String(text ?? '').split('\n').length;
 export const slugify = (s) => Array.from(String(s)
@@ -17,7 +18,7 @@ export const slugify = (s) => Array.from(String(s)
 export const specFingerprint = (text) => crypto.createHash('sha1').update(text).digest('hex').slice(0, 10);
 
 export function capabilityDir(specsDir, capability) {
-  return path.join(specsDir, capability);
+  return resolveWithin(specsDir, capability);
 }
 
 function capabilityStorageRoot(specsDir, capability) {
@@ -60,7 +61,7 @@ const firstFree = (dir, preferred, fallback) => {
 
 export function capabilityStorageOptions(specsDir, capability) {
   const dir = capabilityStorageRoot(specsDir, capability);
-  const main = readOr(path.join(dir, 'spec.md'), '');
+  const main = readOr(storagePath(dir, 'spec.md'), '');
   const { data } = parseFrontmatter(main);
   if (data.layout === 'sharded') {
     return {
@@ -83,7 +84,7 @@ export function capabilityStorageOptions(specsDir, capability) {
 
 export function readCapabilitySpec(specsDir, capability) {
   const dir = capabilityStorageRoot(specsDir, capability);
-  const mainPath = path.join(dir, 'spec.md');
+  const mainPath = storagePath(dir, 'spec.md');
   const main = readOr(mainPath, '');
   if (!main) return '';
 
@@ -232,7 +233,7 @@ export function planCapabilityStorage(capability, logicalText, budget = 0, {
 
 export function writeCapabilityStorage(specsDir, capability, plan) {
   const dir = capabilityStorageRoot(specsDir, capability);
-  const currentMain = readOr(path.join(dir, 'spec.md'), '');
+  const currentMain = readOr(storagePath(dir, 'spec.md'), '');
   const { data } = parseFrontmatter(currentMain);
   if (data.layout === 'sharded') {
     rmrf(storagePath(dir, data.requirements_dir || 'requirements'));
@@ -250,8 +251,8 @@ export function writeCapabilityStorage(specsDir, capability, plan) {
 export function capabilityPhysicalDocs(specsDir, capability) {
   const dir = capabilityStorageRoot(specsDir, capability);
   const out = [];
-  const main = readOr(path.join(dir, 'spec.md'), '');
-  if (main) out.push({ rel: 'spec.md', file: path.join(dir, 'spec.md') });
+  const main = readOr(storagePath(dir, 'spec.md'), '');
+  if (main) out.push({ rel: 'spec.md', file: storagePath(dir, 'spec.md') });
   const { data } = parseFrontmatter(main);
   if (data.layout !== 'sharded') return out;
   if (data.decisions_dir) {

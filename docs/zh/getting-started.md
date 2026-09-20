@@ -1,134 +1,31 @@
-[English](../getting-started.md)
+# 快速开始
 
-# 快速上手
-
-Keelson 面向用户只有一条流程：
-
-> **运行一次 `keelson init`，之后继续像原来一样和 Coding Agent 对话。**
-
-从连续追问、session 恢复、quick/spec 变更、显式 transfer handoff、验证、自动 ready/land、bug 修复，到升级和卸载的完整故事见[完整用户流程](user-flow.md)。
-
-## 安装
-
-需要 Node.js 20+。
+使用 Node.js 20 或以上版本，从仓库安装：
 
 ```bash
-npm install -g keelson
-keelson --version
+git clone https://github.com/Atingaii/keelson.git
+cd keelson
+npm ci
+npm link
+cd /path/to/your/project
+keelson init --codex
 ```
 
-## 初始化
+`npm link` 将当前源码的 CLI 放到命令路径。团队需要可复现安装时，应固定 Git 提交。包名为 `@atingaii/keelson`，此处不代表已发布到 npm。
 
-```bash
-cd your-project
-keelson init
-```
+初始化创建精简的项目说明和宿主入口，不修改 `.gitignore`。在项目中启动 Codex，正常提出修改需求；它通过 `keelson guide` 加载指导。
 
-没有指定宿主时，Keelson 自动探测本机已安装、发现路径已 verified/documented 的一等公民 CLI；一个也没有时，使用通用 `AGENTS.md + .agents/skills/` 层。
+手动体验：
 
-也可以显式指定：
+1. `keelson new fix-pagination --tier quick` 创建变更。
+2. 在 `.keelson/changes/fix-pagination/change.md` 写明结果和验收方法。
+3. 完成代码和测试，实际验证后勾选验收项。
+4. 在 `.keelson/config.yaml` 的 `check` 中填写项目已有检查命令，例如 `npm test`。
+5. 检查命令内容后运行 `keelson check --trust --record`。
+6. 查看 `keelson status`，门槛全部满足后运行 `keelson land fix-pagination`。
 
-```bash
-keelson init --claude
-keelson init --codex --opencode
-keelson init --gemini --kiro
-```
+没有配置检查时会报错。测试退出码不能代替需求覆盖审查。规格级变更还需要 How、Impact，以及行为变化对应的差量契约。
 
-查看一等公民宿主：
+`keelson ask` 保存决策及依据，`keelson doctor --session` 诊断会话身份。`update` 更新集成入口；`uninstall` 保留项目知识和证据。希望把包内指导一起提交时，显式使用 `init --vendor`。
 
-```bash
-keelson platforms
-```
-
-## init 会创建什么
-
-Fresh init 刻意保持很小：
-
-```text
-.keelson/
-├── README.md
-├── INTENT.md
-├── NOW.md
-├── config.yaml
-├── manifest.json
-├── workflow.md
-└── skill/
-    ├── SKILL.md
-    └── references/
-```
-
-不会预先创建空 ROADMAP、Glossary、rules、specs、changes、tasks、ledger 或 handoff。
-
-在 `.keelson/` 外，Keelson 只写已选宿主真正需要的薄发现表面；完整指导仍只有 `.keelson/` 里一份。
-
-`manifest.json` 记录当前安装真正负责哪些生成表面，因此以后 `update`、`uninstall` 或切换宿主时可以准确对齐，而不是猜。
-
-## 第一次接触
-
-正常打开你使用的 Coding Agent，直接提出真实需求。
-
-第一次非平凡对话时，Agent 会：
-
-1. 读取仓库与已有引用材料；
-2. 根据已有证据起草 `.keelson/INTENT.md`；
-3. 直接整理并推进当前真实需求；
-4. 只有仓库无法回答、且某个项目边界会实质改变当前工作时，才只问那一个问题。
-
-它不会把整个仓库一次性盘点成 specs/rules。只有当前工作真的暴露出行为契约或稳定工程不变量时，这些文件才出现。
-
-例如：
-
-> **你：** 给订单页面加搜索。  
-> **Agent：** 我理解为在现有订单列表中按订单号和客户名过滤，保持已有分页契约；从仓库看并不涉及公开 API 变化。我会按这个边界直接推进。
-
-如果仓库里存在两种都合理、而且会改变产品行为的解释，Agent 才会只问那个问题；否则直接继续。
-
-Agent 不会因为“数据库、队列、一致性模型、架构模式”这些技术选项存在，就把它们丢给你选择。每个问题之前，它都会先判断：这个答案会改变什么、谁真正拥有答案、仓库证据或一个便宜实验能不能解决。可逆的工程细节由 Agent 沿用项目惯例或合理默认值自行决定。你回答“**不确定**”也完全有效，它会据此继续调查、默认或做小实验，而不是逼你猜术语。
-
-只有你明确说“**深挖一下 / 压力测试这个方案**”时，Agent 才会沿重要决策树继续追问；普通工作只要下一个安全纵向切片已有清楚结果、边界和验收，就停止提问并开始做。
-
-## 后续哪些内容会长出来
-
-只有有实际信息时才出现：
-
-- `ROADMAP.md` —— 有值得写进仓库、而不是 tracker 的里程碑/方向；
-- `GLOSSARY.md` —— 术语开始重要或产生歧义；
-- `rules/` —— 稳定的路径作用域工程不变量需要跨会话保存；
-- `specs/` —— 可观察行为需要长期契约；
-- `changes/` —— 非平凡工作正在进行；
-- `.runtime/sessions/` —— 宿主/session identity 可以保存本地 focus pointer 时；
-- `.runtime/evidence/` —— 产生本机验证输出时。
-
-quick change 最开始只有 `change.md`。spec 级变更还会有任务计划和行为 delta。真正发生验证事件后 ledger 才出现；handoff 只在显式换人/换机器交接时出现，普通新聊天使用本地 session focus/candidate 恢复。
-
-## 用户可能会主动运行的命令
-
-```bash
-keelson status
-```
-查看活动工作（包括机械推导的 `ready`）、当前 session focus、verification 新鲜度、open questions、transfer handoff 和 release 状态。
-
-```bash
-keelson doctor
-```
-诊断 runtime/shim/manifest 漂移、项目结构、过期证据、冲突和 knowledge health。
-
-```bash
-npm install -g keelson@latest
-keelson update
-```
-升级或切换宿主后，刷新 package-owned guidance 并对齐生成表面。
-
-```bash
-keelson uninstall
-```
-移除生成的 integration/runtime 表面但保留项目事实。只有明确想删除整个 `.keelson/` 时才加 `--purge`。
-
-用户不需要记住那些主要给 Agent 使用的命令。
-
-## 下一步
-
-- [完整用户流程](user-flow.md)
-- [核心概念](concepts.md)
-- [工作原理](how-it-works.md)
-- [已有项目](existing-projects.md)
+详情见[证据与信任](../verification.md)、[CLI](../cli.md)及[配置](../configuration.md)。

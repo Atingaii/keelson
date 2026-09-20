@@ -83,9 +83,9 @@ Agent 随后：
 ## CI
 
 ```yaml
-- run: npm install -g keelson
+# Install a reviewed, pinned Keelson Git revision first; see getting-started.md.
 - run: keelson validate
-- run: keelson check
+- run: keelson check --trust
 ```
 
 `validate` 在结构错误时失败，并对之后会阻塞落地的任何问题打印警告。`check` 运行 `config.yaml → check` 里的命令。
@@ -96,4 +96,4 @@ Agent 随后：
 keelson doctor
 ```
 
-它报告 Node 版本、配置迁移状态、canonical `.keelson/workflow.md` 与 `.keelson/skill/` 是否存在、每个配置宿主的发现 shim 是否指向它们并与 CLI 版本一致、hook 注册情况、每条 `validate` 发现、过期的验证、交接后 HEAD 是否移动、共享契约冲突、知识健康，以及哪些工具 CLI 在 PATH 上。
+它报告 Node/配置状态、所选集成入口、指导加载方式、宿主能力、验证发现、过期证据和共享契约冲突。夹具覆盖与真实宿主支持不同，参见[平台能力](../platforms.md)。

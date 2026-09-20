@@ -2,6 +2,18 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { tmpProject, run, write } from './helpers.js';
+import { evaluateLifecycle } from '../src/lib/lifecycle.js';
+
+test('legacy confirmation cannot silently settle a structured assumption', () => {
+  const change = {
+    evidence: { state: 'passed', tree: 'tree' }, depends: [], acceptance: [], acceptanceProgress: { done: 0, total: 0 },
+    tier: 'quick', open: [], assumed: [], progress: { done: 0, total: 0 },
+    decisionRecords: [{ id: 'D17', state: 'assumed' }],
+  };
+  const result = evaluateLifecycle(change, 'tree', { confirmAssumptions: true });
+  assert.equal(result.gates.find((g) => g.code === 'decisions').pass, false);
+  assert.notEqual(result.work, 'ready');
+});
 
 test('decision frontier routes ownership, preserves settlement and orders dependencies', (t) => {
   const root = tmpProject({ '.keelson/config.yaml': 'version: 4\n' });

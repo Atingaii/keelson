@@ -38,7 +38,7 @@ export function evaluateLifecycle(change, fingerprint, {
   const contractComplete = change.tier === 'quick' || change.acceptance.length > 0;
   const rolloutReady = !change.breaking || change.hasRollout;
 
-  const pendingDecisions = (change.decisionRecords ?? []).filter((d) => d.state === 'open' || (d.state === 'assumed' && !confirmAssumptions));
+  const pendingDecisions = (change.decisionRecords ?? []).filter((d) => d.state === 'open' || d.state === 'assumed');
   const gates = [
     gate('decisions', pendingDecisions.length === 0, `${pendingDecisions.length} unresolved decision(s): ${pendingDecisions.map((d) => d.id).join(', ')}; use keelson ask frontier`),
     gate(

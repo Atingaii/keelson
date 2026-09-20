@@ -5,14 +5,9 @@ Ready/完成是由长期 gate 与证据支撑的状态，而证据有两个会�
 ## 记录有效性：`keelson check --record`
 <!-- keelson: id=verify.fresh | without: "应该能过"和"看起来对"取代了运行命令；最后一次改动之前的证据被当成当前的 | sunset: never -->
 
-在说"完成、修好、通过、做完"之前：运行 `keelson check --record "<claim>"`。它运行项目配置的检查命令，把完整输出保存到 变更目录下的 `evidence/`，并向 ledger 追加一条 `Verify:`，写明每条命令、退出码，以及它所运行的工作树指纹：
+声称完成前先审阅配置的命令，首次运行使用 `keelson check --trust --record "<claim>"`；相同命令后续无需再次传 trust。CLI 将签名 `ledger.jsonl` 和 `evidence/<digest>.log` 保存在变更中。ledger.md 是可读摘要，手写 Verify 不授权落地。
 
-```markdown
-### Verify: pagination end-to-end
-`npm run lint` exit 0; `npm run test` exit 0 · tree 5bcb829dae
-```
-
-`keelson status` 把该指纹与当前树比较，任何代码改动之后都会报 `stale`；`keelson land` 拒绝过期、失败或缺失的证据。若这次记录关闭了最后一个 gate，`keelson check --record` 会直接提示 change 已 `ready`，Agent 应立即 land，而不是等用户说“做完了”。之前的一次运行、部分运行或子代理的汇报都不是证据；diff 和一条新鲜的 `Verify:` 才是。额外的单条命令可以用 `keelson check "<cmd>" --record` 检查。
+记录同时绑定完整代码与契约指纹，包括验收和决策。status/land 拒绝过期、失败、不完整或本机不信任的证据。显式单条命令只形成部分证据，除非它恰好覆盖完整配置检查。最终检查前完成验收记录；之后编辑会使证据失效。门禁全部通过时，在已有授权内落地。本机签名不隔离同权限进程，也不证明模型身份。
 
 某项检查跑不了（环境缺失、服务不可用），就在 ledger 里记一条 `Note:`，并写进 `NOW.md → Blocked / uncertain`。部分验证按部分汇报；绝不向上取整。
 
@@ -63,4 +58,3 @@ Open: none. `keelson land add-pagination` succeeded; durable behavior/decisions 
 "应该"、"大概"、"看起来"、"我相信它能用"。要对状态写下这些词时，改成去运行命令。
 <!-- /guided -->
 
-结构化证据以签名 `ledger.jsonl` 为准；手写 `Verify:` 不授权归档。首次检查先审阅命令并使用 `--trust`。验收、决策和契约变化同样使证据失效；本机签名不隔离同权限进程。

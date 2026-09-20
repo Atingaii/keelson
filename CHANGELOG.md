@@ -2,41 +2,32 @@
 
 All notable changes to this project are documented here. The format follows Keep a Changelog, and the project follows Semantic Versioning.
 
-## [Unreleased]
+## [Unreleased] — 0.4.0 development
+
+This version is in the Git repository; an npm publication is a separate release action.
 
 ### Added
 
-- Per-session focus runtime under gitignored `.keelson/.runtime/sessions/`: session pointers select durable changes but never carry completion state.
-- `keelson focus [change] [--auto|--clear]`: safe agent-facing session routing with explicit degraded behavior when a host has no verified identity bridge.
-- Derived work state `ready`: when acceptance/tasks, blockers/assumptions, rollout, and current-tree verification satisfy the gates, `check --record` tells the agent to land immediately without waiting for a user finish phrase.
-- Native session focus now covers four hosts with minimal adapters: Claude hooks, one OpenCode project plugin, Pi's built-in `PI_SESSION_ID` (no adapter file), and CodeBuddy hooks for SessionStart/UserPromptSubmit plus Bash/PowerShell PreToolUse. Raw host session ids are never stored.
-- `.keelson/README.md`: a package-owned human project map that explains what to read first, what every Keelson artifact means, and what survives landing; `keelson update` refreshes it without overwriting project facts.
-- New `harness.md` skill reference: feedforward/feedback controls, mechanical invariants, repeated-failure promotion, verification baselines, and sunset conditions for model-specific guidance.
+- Ed25519 DSSE/in-toto verification records, full code and acceptance fingerprints, bound output logs, explicit command trust, deadlines and output caps.
+- `keelson ask` decision ownership, dependency-aware question frontier, settlement and reopening history; `attest` evidence export.
+- Git-private runtime, serialized evidence appends, active-check guards and recoverable landing/cancellation transactions.
+- Reproducible local Codex comparison protocol for bare Codex, Keelson, OpenSpec, Trellis and Superpowers, with raw results and explicit limitations.
+- English/Chinese migration and trust documentation plus a generated wide project banner.
 
 ### Changed
 
-- Conversation/session lifecycle is now independent from durable change lifecycle: closing a window, going idle, compaction, or switching focus cannot complete/cancel/land work.
-- `handoff.md` is reserved for explicit ownership/machine transfer; ordinary new sessions recover from durable change state plus local focus/candidate resolution.
-- Machine-local check output moved from `.keelson/.local/evidence/` to `.keelson/.runtime/evidence/`; the legacy `.local/` path remains gitignored/cleaned for compatibility.
-- Platform metadata now reports session-focus capability separately from discovery support (`native` vs `degraded`).
-- Fresh init is now a minimal standing control plane: `README.md`, `INTENT.md`, `NOW.md`, `config.yaml`, `manifest.json`, `workflow.md`, and `skill/`. Empty ROADMAP/GLOSSARY/rules/specs/changes trees are no longer pre-created.
-- Change workspaces now grow progressively: quick changes start with `change.md` only; spec changes add `tasks.md` and behavior deltas; `ledger.md` and `handoff.md` appear only after the corresponding event or session boundary.
-- The canonical Skill now routes five **conversation** intents — Explore, Change, Fix, Resume, Improve. Completion/Finish is no longer a user intent; `ready` is derived from durable gates and current-tree verification.
-- Top-level CLI help now separates the small user command surface from agent workflow and advanced maintenance commands.
-- README and documentation were reorganized around one golden path, with a documentation home and complete end-to-end user flow in English and Chinese.
-- Generated surfaces are now reconciled as desired state through `.keelson/manifest.json`: switching hosts removes stale Keelson adapters and hook registrations without touching neighboring user files.
-- Canonical skill/shim directories are replaced recoverably: the last complete directory remains available until the new one is fully populated, and interrupted temp/backup residue is recovered on the next update.
-- `keelson doctor` now detects package-owned runtime, shim, managed-state, rule-file, and registered-hook drift rather than checking only file presence/version.
-- `--no-hooks` is persistent (`hooks: false`) and can be reversed with `--hooks`; config schema is version 4. Fresh init falls back to portable `agents` instead of assuming Claude Code when no first-class host is detected.
-- Keelson now uses a single project-local runtime root: `.keelson/workflow.md` and `.keelson/skill/` hold the canonical workflow, skill, and references. `AGENTS.md`, `CLAUDE.md`, `.agents/skills/keelson/`, and native host skill paths are discovery shims only, eliminating duplicated guidance while preserving platform discovery.
-- Platform generation is standards-first and bounded to the seven first-class hosts plus portable fallback; native paths exist only where documented discovery adds capability, and guessed legacy adapters migrate away safely.
-- The canonical `SKILL.md` is now a thin on-demand router rather than a second copy of the resident ORIENT → BOUND → BUILD → SENSE → RECONCILE loop; a repository test caps it at 60 lines.
-- Markdown parsing and generated agent surfaces are now line-ending agnostic: LF and CRLF parse identically, while package-owned rendered Markdown emits LF for stable cross-platform output.
-- BOUND now performs an assumption audit before ambiguous non-trivial work: established facts stay separate from plan-required assumptions, reality-owned gaps are investigated, user-owned load-bearing gaps produce one highest-value question, and material results route into existing change/spec/rule artifacts instead of a new prompt diary.
-- `keelson init` is the only setup step. It auto-detects first-class hosts, writes a first-contact task that infers and confirms `INTENT.md`, and deliberately avoids a whole-repository spec/rule inventory; durable contracts grow only when real work needs them.
-- Official support is intentionally narrowed to seven first-class CLI hosts — Claude Code, Codex CLI, OpenCode, Pi, Gemini CLI, Kiro CLI, and CodeBuddy CLI — plus the portable `AGENTS.md` + `.agents/skills/` fallback. First-class paths must be verified or host-documented and pass the shared lifecycle contract; guessed convention-only adapters are retired and signature-matched legacy Keelson surfaces are cleaned during update.
-- New `keelson platforms` command lists the tools, their locations, and which are installed or configured.
-- The binary no longer calls `process.exit()` after printing, which truncated large `--json` output on macOS.
+- Default init installs small discovery shims and project facts; `guide` loads installed guidance on demand. `--vendor` explicitly copies it.
+- No generated .gitignore changes. Signed logs and public keys stay with archived changes; private keys, trust and focus remain local.
+- Codex uses CODEX_THREAD_ID. Host capability, documentation confidence and actual testing are distinguished.
+- Completion uses structured evidence; legacy Verify prose requires rechecking. Force needs a reason and leaves a signed override.
+- Markdown parsing supports fenced examples, OpenSpec headings and Unicode; edits preserve unknown content and sharding rejects unsafe paths.
+- Malformed host JSON fails without replacement; generated-surface reconciliation protects user content.
+- Task checkboxes remain advisory. Settled decisions cannot be silently reopened, and structured assumptions require explicit settlement.
+- Package name is scoped as `@atingaii/keelson`; the executable remains `keelson`. Syntax checks run on every CI platform.
+
+### Migration
+
+Review `keelson update --dry-run`, run update, then review and rerun the configured checks with `--trust --record`. Old evidence cannot satisfy the new completion gate. See [verification](docs/verification.md) for trust and recovery limits.
 
 ## [0.3.0] - 2026-09-19
 

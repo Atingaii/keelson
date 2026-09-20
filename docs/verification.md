@@ -1,102 +1,64 @@
-# Verification
+# Verification, evidence, and trust
 
-Completion is a claim with evidence attached. Evidence can fail in two independent ways: the record can be invalid (the check never ran, ran against older code, or ran partially), and the content can be invalid (it ran, passed, and still did not check what was asked). Keelson handles the first mechanically and gives the agent a structure for the second.
-
-The two halves have names. **Mechanical evidence** is the full set of configured checks passing on the current tree: tests, lint, type checks, the build, and any `fitness` check (an architecture or quality constraint turned into a command). **Behavioural evidence** is the acceptance list of `change.md`, each item mapped to the test, command, manual check, or review that covers it, and ticked only after that check ran. Mechanical evidence is necessary and never sufficient; a landing needs both.
-
-## Ready transition
-
-Verification is necessary but not sufficient. After a recorded check, Keelson re-evaluates the focused change. If its acceptance/tasks, open questions, assumptions, rollout and current-tree verification all satisfy the gates, work becomes `ready` and the CLI prints a land-now hint. The agent lands before making a completion claim; the user does not need to announce completion.
-
-## Record validity
-
-### keelson check --record
+Run the configured suite after the final code and acceptance edits:
 
 ```bash
-keelson check --record "pagination end to end"
+keelson check --trust --record "pagination acceptance passes"
+keelson status --json
+keelson attest change-name --json > attestation.json
+keelson land change-name
 ```
 
-The command:
+Review `.keelson/config.yaml → check` before the first use of `--trust`. Trust is local and bound to the exact command list. Commands run as your user, with the environment available to the CLI. Trusting a command such as `npm test` also trusts the project code that command executes; this is not a sandbox. Later code edits require fresh evidence but do not automatically revoke command trust.
 
-1. runs every entry under `config.yaml → check`, in order, through the shell, with colour disabled; an entry is a command string or `{name, command, kind}` with `kind` in `test`, `lint`, `typecheck`, `build`, `fitness`, `check`;
-2. prints each command's output (unless `--quiet`) and its exit code;
-3. saves the full output of each command to `.keelson/.runtime/evidence/<timestamp>-<n>.log`;
-4. computes the worktree fingerprint;
-5. appends a `Verify:` entry to the active change's `ledger.md` (or the one named with `--change`):
+## What is recorded
 
-```markdown
-### Verify: pagination end to end
-`npm run lint` exit 0; `npm run test` exit 0 · tree 5bcb829dae
-```
+`changes/<name>/ledger.jsonl` is an append-only sequence of DSSE envelopes. A verification envelope has payload type `application/vnd.in-toto+json` and an in-toto Statement v1 containing:
 
-Without `--record` it prints the entry instead of appending it. A single extra command can be run and recorded with `keelson check "npm test -- orders" --record`. The command exits 1 when any check failed; the entry is still written, with the failing exit code, so the failure is on record.
+- a full Git tree object ID (or SHA-256 worktree digest outside Git);
+- a SHA-256 contract digest covering configuration, intent, main specs, rules, change acceptance, delta specs, and structured decisions;
+- exact commands, exit codes, duration, timeout/output-limit status, and SHA-256 output digests;
+- timestamps, CLI version, suite completeness, and whether inputs stayed unchanged during checking;
+- optional host/model labels, explicitly marked as caller-supplied attribution.
 
-### The worktree fingerprint
+`evidence/<sha256>.log` stores command output. `evidence/keys/<keyid>.pem` exports public keys so a reader can check the cryptographic envelope. `ledger.md` is a readable summary and is never an authorization source.
 
-A stable identity for "the code as it is now". In a git repository Keelson builds a tree object from a throw-away index with `.keelson/` excluded: tracked and untracked files count, `.gitignore` is respected, and appending to a ledger does not invalidate the evidence it records. Without git, it is a content hash. See [How it works](how-it-works.md#the-worktree-fingerprint).
+Checks default to a ten-minute deadline per command. Override with `--timeout <milliseconds>` or `check_timeout_ms` in configuration. Output exceeding 2 MiB stops the command with exit 125; timeout yields exit 124. These records fail verification. Commands run with closed stdin, so interactive checks must be made noninteractive first.
 
-### Staleness
+## Freshness and completeness
 
-`keelson status`, `land`, and `doctor` recompute the fingerprint and compare it with the last `Verify:` entry:
+The current tree must equal the recorded tree. The current contract must equal the recorded contract. The latest verification must contain every configured command, in order, with exit zero; an older successful run cannot hide a later failed run. Partial commands can be recorded for diagnosis but cannot authorize landing.
 
-| State | Meaning |
-|---|---|
-| `not-run` | No `Verify:` entry |
-| `partial` | An entry without an exit code |
-| `failed` | Non-zero exit |
-| `stale` | Exit 0, but the tree has changed since |
-| `passed` | Exit 0 and the tree matches |
+For Git projects, the worktree fingerprint includes tracked and non-ignored untracked project files, excluding `.keelson/`. Contract files under `.keelson/` are hashed separately. Ignored build products and dependencies are not hashed. This is not a hermetic environment digest: a changed interpreter, dependency installation, network service, clock, or external file requires the operator to rerun checks even if the tree is unchanged.
 
-`land` refuses anything but `passed`. Evidence written by hand without a `tree` counts as passed with staleness unknown; `validate` warns about it.
+Concurrent record writers use a lock and durable append. Logs are content-addressed. A check detects inputs changed between its start and finish. No completion claim is made while another check is active. There is no protection against an adversarial process changing a file and restoring it between the two snapshots.
 
-### Partial verification
+## Trust boundary
 
-If a check cannot run (environment missing, service down), the agent records it as a `Note:` in the ledger and under `NOW.md → Blocked / uncertain`. Partial verification is reported as partial; it is never rounded up to passed.
+The private Ed25519 key, command trust and session state live in Git's private `keelson-runtime` directory (worktree-specific). Non-Git projects use `~/.cache/keelson/<project-path-hash>`. They do not require a `.gitignore` entry.
 
-## Content validity
+A local signature detects edited or fabricated records whose writer lacks the private key. It **does not** isolate an agent running as the same OS user. That agent can access the key, execute commands, or replace the CLI. A stronger hostile-agent boundary needs a separately controlled runner and independently trusted key.
 
-### Acceptance mapping
+Copied records are not automatically trusted for local completion. Run the checks on the receiving machine to add a locally signed record; historical exported keys remain available to verify the older records. Exported keys alone do not establish who controlled them. Authentic model attribution and legal compliance are outside this mechanism.
 
-This is the behavioural half. `change.md → Acceptance` maps the request to the evidence. One checkbox per criterion, each saying how it is checked:
+Logs can contain secrets printed by project commands. Review them before sharing. Do not silently redact a signed log: that changes its digest. Preserve restricted originals or create a fresh, deliberately sanitized check and record.
 
-```markdown
-## Acceptance
-- [x] listing returns 20 by default — test: `orders.list.default`
-- [x] page 2 returns the next 20 — check: `npm test -- orders.paging`
-- [ ] oversized page returns 400 with code size_too_large — manual: curl size=500
-- [ ] no caller still relies on the unbounded listing — review: grep callers of listOrders
-```
+## Landing, overrides, and recovery
 
-Four kinds: `test:` names a test, `check:` a command, `manual:` a human check, `review:` something to read. An item is ticked only when its check has run. `keelson land` refuses while any is unchecked and refuses a spec-tier change with no acceptance list at all. `validate` warns when an item does not say how it is checked.
+Landing checks acceptance, decisions, active dependencies, contract drift and evidence. It refuses while checks are running. It snapshots the files it will change under the private runtime, then folds contracts and archives the complete evidence bundle. On an ordinary write failure it restores those files; the next landing restores an interrupted transaction before refusing and asking for review and re-verification. This is recoverability, not a distributed transaction or a guarantee against storage-device failure.
 
-The agent fills this list from the original request and the delta spec's scenarios, not from its own summary of the work.
-
-### Negative checks for bug fixes
-
-A regression test that passes with and without the fix proves nothing. For a fix, the agent keeps the negative check: with the fix reverted, the test must fail. The `debug.md` reference asks for it before `keelson check --record`.
-
-### Tests may change, not quietly weaken
-
-Editing a test is normal when the requirement changed. Deleting an assertion, skipping a case, widening a tolerance, or replacing a real check with a mock changes the acceptance criteria. That needs the owner's decision or an explicit authorization from `INTENT.md`, and it goes into the ledger as a `Ruling:` naming what was weakened and why.
-
-### Fresh-reader review
-
-For spec changes the agent dispatches a reviewer that has not seen the conversation, at the `deep` tier, with the original request, `change.md`, the delta specs, and the diff. The reviewer looks for acceptance items without real coverage, requirement gaps, rule violations, and risky assumptions. Each finding is addressed or ledgered. A second agent agreeing is a signal, not a proof; the acceptance list is what gets checked.
-
-## The completion report
-
-```text
-Done: offset pagination on /orders, pager in the table.
-Evidence: `npm run lint` exit 0; `npm test` exit 0 · tree 5bcb829dae. Acceptance 3/3.
-Open: none. Change in review; `keelson land add-pagination` when integrated.
-```
-
-What was done, what the evidence is, what is left. Words such as "should", "probably", and "seems to" about a status mean the command has not been run.
-
-## In CI
+An explicit owner-authorized emergency may use:
 
 ```bash
-keelson validate && keelson check
+keelson land change-name --force --reason "owner-authorized emergency and follow-up"
 ```
 
-`check` in CI runs without `--record`; it produces the exit code. The ledger entry is written by the agent on its own machine, against the fingerprint of the code it actually ran.
+The archive contains `forced.md` and a signed override record with the reason and bypassed gates. The CLI records the supplied authorization; it cannot authenticate a natural-language owner's identity. A force record does not turn failed checks into passed checks.
+
+An invalid signature or missing/edited log fails closed. Restore the intact evidence bundle from a known copy before rerunning checks. An abandoned lock reports its location: confirm that no writer remains before removing that specific lock. Do not delete all runtime state to suppress a validation error.
+
+An archived record describes the pre-landing snapshot. Landing itself changes contracts; historical evidence must not be advertised as fresh proof for a later tree.
+
+## Migrating 0.3 projects
+
+Run `keelson update`, review the generated diff, and rerun checks with `--trust --record`. Old Markdown verification entries remain readable history but do not satisfy the completion gate. Existing `.keelson/.runtime` and `.local` directories are legacy data; inspect them before removing them. Keelson does not edit your existing ignore rules. Use `update --vendor` if you deliberately want package guidance copied into the project.

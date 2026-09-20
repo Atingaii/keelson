@@ -65,7 +65,7 @@ When the project has an issue tracker, it stays the source of what is wanted and
 
 `keelson init` appends its block to `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md` between `<!-- keelson:start -->` and `<!-- keelson:end -->` markers. Everything already in the file stays. `keelson update` refreshes only the block. `keelson uninstall` removes only the block. `keelson init --dry-run` shows whether the file would be created, appended to, or refreshed.
 
-Existing hooks in `.claude/settings.json` are preserved. Keelson adds two entries whose command path contains `.keelson/hooks/` and removes only those.
+Existing hooks in `.claude/settings.json` are preserved. Keelson registers its own hook commands and removes only identified owned registrations. Malformed settings fail without being overwritten.
 
 ## Existing decision records
 
@@ -81,9 +81,9 @@ The skill's `plan.md` reference tells the agent to link, not restate.
 ## CI
 
 ```yaml
-- run: npm install -g keelson
+# Install a reviewed, pinned Keelson Git revision first; see getting-started.md.
 - run: keelson validate
-- run: keelson check
+- run: keelson check --trust
 ```
 
 `validate` fails on structural errors and prints warnings for anything that will block a landing later. `check` runs the commands in `config.yaml → check`.
@@ -94,4 +94,4 @@ The skill's `plan.md` reference tells the agent to link, not restate.
 keelson doctor
 ```
 
-It reports the Node version, config migration state, whether the canonical `.keelson/workflow.md` and `.keelson/skill/` are present, whether each configured tool's discovery shim points to them and matches the CLI version, hook registration, every `validate` finding, stale verification, moved HEAD since a handoff, shared-contract conflicts, and which tool CLIs are on the path.
+It reports Node/configuration status, selected integration surfaces, guidance mode, host capabilities, validation findings, stale evidence and shared-contract conflicts. Fixture coverage and live host support are distinct; see [platforms](platforms.md).

@@ -49,7 +49,7 @@ function alreadyInjected(command) {
 
 // Project-local OpenCode plugin. It does one thing: carry the current OpenCode
 // session identity into shell commands so Keelson CLI calls resolve the same
-// .keelson/.runtime/sessions/<key>.json pointer. It never decides work status.
+// private keelson-runtime/sessions/<key>.json pointer. It never decides work status.
 export default async ({ platform = process.platform, env = process.env } = {}) => ({
   'tool.execute.before': async (input, output) => {
     if (String(input?.tool ?? '').toLowerCase() !== 'bash') return;
