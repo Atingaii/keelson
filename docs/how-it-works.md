@@ -84,9 +84,14 @@ Conversation state is machine-local and deliberately separated from durable work
 
 A session record stores a pointer such as `change: order-search`. It never stores completion/cancellation. Raw host session ids are hashed/normalized before Keelson writes anything to disk.
 
-On Claude Code, the verified SessionStart bridge receives the host session id, creates/touches the local session file, and exports an opaque `KEELSON_SESSION_ID` through Claude's environment bridge so later Keelson CLI commands in that conversation resolve the same pointer. UserPromptSubmit refreshes the session and injects only the focused work summary.
+Native session focus currently has four implementations:
 
-On hosts where Keelson has not verified a stable identity bridge, session focus is **degraded, not guessed**. Branch match / a sole active change can be used by `keelson focus --auto`; ambiguous work requires an explicit change name. Durable change state remains correct either way.
+- **Claude Code** — SessionStart/UserPromptSubmit hooks hash the host session id and bridge an opaque `KEELSON_SESSION_ID` into later CLI commands.
+- **OpenCode** — one project plugin uses the documented tool hook to prepend an opaque `KEELSON_SESSION_ID` to Bash commands.
+- **Pi** — no Keelson adapter file is needed; the CLI already exposes `PI_SESSION_ID` to shell tools, which Keelson hashes before storing a pointer.
+- **CodeBuddy** — project hooks receive `session_id`; a Bash `PreToolUse` hook deterministically injects the opaque Keelson identity, while SessionStart/UserPromptSubmit inject compact focus context.
+
+Codex, Gemini CLI, and Kiro CLI remain **degraded, not guessed** until an equally deterministic bridge is implemented and exercised. Branch match / a sole active change can still be used by `keelson focus --auto`; ambiguity requires an explicit change name. Durable work state remains correct either way.
 
 `keelson new` binds a new work item to the current session when identity is available. `check --record`, `land`, `cancel`, and `handoff` prefer the focused change. Landing/cancelling clears every local pointer that referenced that durable change.
 
