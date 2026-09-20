@@ -42,14 +42,14 @@ function resolveArchivedChange(archiveDir, name) {
   const matches = candidates
     .filter(({ recorded, directory: archiveName }) => {
       return recorded === name || (!recorded && legacyArchiveMatches(archiveName, name));
-    })
-  if (matches.length === 1) return matches[0].change;
-  if (matches.length > 1) {
-    throw new Error(`ambiguous archived change "${name}"; specify an exact archive directory: ${matches.map(({ directory }) => directory).join(', ')}`);
-  }
+    });
   const uncertain = candidates.filter(({ recorded, directory }) => !recorded && uncertainLegacyArchives(directory, name));
   if (uncertain.length) {
     throw new Error(`cannot prove original name "${name}" from legacy archive suffixes; specify an exact archive directory: ${uncertain.map(({ directory }) => directory).join(', ')}`);
+  }
+  if (matches.length === 1) return matches[0].change;
+  if (matches.length > 1) {
+    throw new Error(`ambiguous archived change "${name}"; specify an exact archive directory: ${matches.map(({ directory }) => directory).join(', ')}`);
   }
   return null;
 }

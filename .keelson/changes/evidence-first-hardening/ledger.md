@@ -38,4 +38,11 @@ The integrated suite at `8d15bd1` passed 124/125 tests; its only failure is the 
 
 ### Dispatch: archived attestation review → deep (gpt-5.6-terra)
 Result: fail
-The new original-name resolver could confuse a legacy change named `tidy-cancelled` or `tidy-<digits>` with a suffix belonging to `tidy`. Legacy names without explicit metadata must not guess across those suffixes; an exact archive directory remains available. This finding is being fixed before the benchmark freeze.
+The new original-name resolver could confuse a legacy change named `tidy-cancelled` or `tidy-<digits>` with a suffix belonging to `tidy`. Legacy names without explicit metadata must not guess across those suffixes; an exact archive directory remains available.
+
+### Dispatch: archived attestation re-review → deep (gpt-5.6-terra)
+Result: pass
+Original-name aliases now refuse uncertain legacy suffixes, including mixtures with a proven ordinary or metadata-backed candidate. Exact archive names and active changes retain priority. The two attestation tests pass; real counterfactual runs against `8d15bd1` and `703860c` each fail the relevant regression. Read-only independent review confirmed the P1 and mixed-candidate P2 are resolved.
+
+### Ruling: benchmark code freeze and migration work
+The clean implementation at this attestation fix is frozen for fresh-install Flask comparisons. The previous integrated test run passed all tests except this repository's old installation migration. That migration and user-file preservation remain release gates, but do not block measuring the already-covered fresh-install path. The report must identify the exact measured commit and separately disclose later migration-only changes; if a later change affects the measured path, assess and rerun affected experiments explicitly.

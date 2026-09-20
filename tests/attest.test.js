@@ -54,6 +54,18 @@ test('attest prefers an active change and never aliases legacy suffixes to anoth
   assert.match(unproven.stderr, /cannot prove original name "tidy"/);
   assert.match(unproven.stderr, /2026-09-20-tidy-cancelled/);
 
+  // A proven candidate cannot establish uniqueness while an older archive may
+  // have the same original name. Recorded identity only resolves that archive.
+  const proven = '.keelson/changes/archive/2026-09-21-tidy';
+  change(dir, proven, { publicKey: 'plain-name\n' });
+  for (const recorded of [false, true]) {
+    if (recorded) write(dir, `${proven}/landed.json`, JSON.stringify({ change: 'tidy' }));
+    const mixed = run(dir, ['attest', 'tidy', '--json'], { allowFail: true });
+    assert.notEqual(mixed.code, 0);
+    assert.equal(mixed.stdout, '', 'an uncertain candidate prevents proving a unique original name');
+    assert.match(mixed.stderr, /cannot prove original name "tidy"/);
+  }
+
   const exact = run(dir, ['attest', '2026-09-20-tidy-cancelled', '--json'], { allowFail: true });
   assert.equal(exact.code, 1);
   assert.equal(JSON.parse(exact.stdout).publicKey, 'cancelled-name\n');
