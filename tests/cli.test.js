@@ -666,11 +666,24 @@ test('auto-sharding preserves pre-existing unmanaged requirements directories', 
   run(dir, ['new', 'extend-existing', '--tier', 'quick', '--capability', 'orders'], { env });
   write(dir, '.keelson/changes/extend-existing/change.md', read(dir, '.keelson/changes/extend-existing/change.md').replace('- [ ] … — check: `…`', '- [x] works — check: `true`'));
   write(dir, '.keelson/changes/extend-existing/ledger.md', '### Verify: ok\n`true` exit 0\n');
-  const delta = read(dir, '.keelson/changes/extend-existing/specs/orders/spec.md').replace(
-    '## ADDED Requirements\n\n### Requirement: …\n…',
-    '## ADDED Requirements\n\n### Requirement: Added\nnew\n#### Scenario: added\n- WHEN new\n- THEN present'
-  );
-  write(dir, '.keelson/changes/extend-existing/specs/orders/spec.md', delta);
+  const deltaPath = '.keelson/changes/extend-existing/specs/orders/spec.md';
+  const base = read(dir, deltaPath).match(/^base: (\S+)/m)[1];
+  write(dir, deltaPath, [
+    '---',
+    `base: ${base}`,
+    '---',
+    '## ADDED Requirements',
+    '### Requirement: Added',
+    'new',
+    '#### Scenario: added',
+    '- WHEN new',
+    '- THEN present',
+    '',
+    '## MODIFIED Requirements',
+    '',
+    '## REMOVED Requirements',
+    ''
+  ].join('\n'));
   run(dir, ['land', 'extend-existing'], { env });
   assert.equal(read(dir, '.keelson/specs/orders/requirements/manual.md'), '# user-owned\nkeep me\n');
   assert.match(read(dir, '.keelson/specs/orders/spec.md'), /^requirements_dir: keelson-requirements$/m);
