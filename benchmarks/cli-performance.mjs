@@ -112,6 +112,7 @@ function main() {
   const persistPartial = (status, error = null) => {
     fs.mkdirSync(path.dirname(OUTPUT), { recursive: true });
     fs.writeFileSync(OUTPUT, `${JSON.stringify({
+      ...priorResult,
       schemaVersion: 2,
       status,
       latestAttempt: {
@@ -212,7 +213,7 @@ function main() {
     const checkEstimatedOverhead = {
       samples: checkEstimatedOverheadSamples,
       summary: roundedSummary(checkEstimatedOverheadSamples),
-      method: 'paired end-to-end `keelson check --trust --quiet` wall time minus a direct shell execution of the identical no-op command, clamped at zero',
+      method: 'index-aligned subtraction of independently collected 30-sample batches: end-to-end `keelson check --trust --quiet` wall time minus a direct shell execution of the identical no-op command, clamped at zero',
       limitation: 'This is an estimate: the direct baseline cannot perfectly reproduce the CLI process, shell, scheduler, filesystem-cache, or child-process interactions. End-to-end check samples remain authoritative.',
     };
     groups.checkEstimatedOverhead = checkEstimatedOverhead;
@@ -232,7 +233,7 @@ function main() {
     const checkWithRecordEstimatedOverhead = {
       samples: checkWithRecordEstimatedOverheadSamples,
       summary: roundedSummary(checkWithRecordEstimatedOverheadSamples),
-      method: 'paired end-to-end `keelson check --trust --record --change <fresh-change> --quiet` wall time minus a direct shell execution of the identical no-op command, clamped at zero',
+      method: 'index-aligned subtraction of independently collected 30-sample batches: end-to-end `keelson check --trust --record --change <fresh-change> --quiet` wall time minus a direct shell execution of the identical no-op command, clamped at zero',
       limitation: 'This is an estimate: record creation also has change-directory writes. The direct baseline cannot perfectly reproduce the CLI process, shell, scheduler, filesystem-cache, or child-process interactions. End-to-end check samples remain authoritative.',
     };
     groups.checkWithRecordEstimatedOverhead = checkWithRecordEstimatedOverhead;
@@ -274,7 +275,7 @@ function main() {
         samples: SAMPLES,
         warmups: WARMUPS,
         percentile: 'nearest-rank: sorted[ceil(n * 0.95) - 1]',
-        checkOverheadMethod: 'paired end-to-end check wall time minus the same no-op shell command, measured separately for no-record and fresh-record paths',
+        checkOverheadMethod: 'index-aligned subtraction of independently collected end-to-end and direct-command batches, measured separately for no-record and fresh-record paths',
         fixture: 'fresh local Git repository with 5,000 tracked one-line JavaScript files; each init sample receives an independent local clone',
         isolation: 'temporary project, temporary HOME/USERPROFILE/XDG_CACHE_HOME, and temporary Git runtime only; all are removed after the run',
         unsignedPath: 'status/context/ask/impact/validate first run against one active quick change with no signed ledger; status still fingerprints all 5,000 tracked files',
@@ -304,7 +305,7 @@ function main() {
         checkEndToEnd: 'keelson check --trust --quiet (no record)',
         checkCommandBaseline: CHECK_COMMAND,
         checkWithRecord: 'keelson check --trust --record --change bench-check-<sample> --quiet',
-        checkWithRecordEstimatedOverhead: 'paired fresh-record check wall time minus direct no-op shell command',
+        checkWithRecordEstimatedOverhead: 'index-aligned fresh-record check batch minus direct no-op shell batch',
         land: 'keelson land bench-land-<sample> --keep',
       },
       targets,
