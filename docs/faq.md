@@ -12,8 +12,8 @@ No. You talk normally. The Agent runs the CLI, binds/recovers session focus when
 **What happens with a tiny change?**
 Nothing. Trivial changes (style, typos, a one-file fix with no behaviour change) get no change directory and no write-back. The agent just does them.
 
-**Can I approve quick changes before the agent starts?**
-Set `confirm.quick: wait` in `.keelson/config.yaml`. Spec changes always wait for approval unless you set `confirm.spec: proceed`.
+**Can I require approval before the agent starts?**
+Yes. Set `confirm.quick: wait` and/or `confirm.spec: wait` in `.keelson/config.yaml`. By default both proceed after the short write-back when no unresolved owner-owned decision remains; irreversible/production/permission/breaking actions still require their normal explicit confirmation.
 
 **What happens in a scripted run where nobody can approve?**
 The agent does not stall. It writes the understanding and the plan, marks its working assumptions `(assumed)` under `Decisions`, builds and verifies under them, records evidence, and stops before landing. `NOW.md` says the change awaits review. You read the plan and the diff together and run `keelson land <name> --confirm-assumptions`, or `keelson cancel <name>`.
@@ -46,7 +46,7 @@ Yes. Rules are routed by path glob, so `packages/api/**` and `packages/web/**` c
 Run `keelson init --guide` (or set `guide: true` in `config.yaml`). The agent then asks about scenarios before technology, presents each choice with a recommendation, the reason, the alternatives, and the trade-off, explains a rule in one sentence when it applies it, names the engineering idea after you have decided, and ends each spec change with a short teaching note. The files, gates, and states are the same as for anyone else, so what you build is not a beginner's version of the project.
 
 **Documents keep growing. What stops them?**
-Keelson bounds **hot files, not total project knowledge**. The Agent handles knowledge-health findings during normal RECONCILE without asking you to do housekeeping. Large capability specs automatically become a small `spec.md` index plus `requirements/*.md` and optional `decisions.md`; rules split by scope; NOW/INTENT are rewritten as concise current-state views; old runtime evidence/session files are garbage-collected. ADR/spec/rule directories may keep growing as the project evolves, but only relevant files are loaded for a task. `keelson doctor` remains available for diagnostics, not routine maintenance.
+Keelson bounds **hot files, not total project knowledge**. The Agent handles knowledge-health findings during normal RECONCILE without asking you to do housekeeping. Large capability specs automatically become a small `spec.md` index plus `requirements/*.md` and `decisions/*.md` when needed; rules split by scope; NOW/INTENT are rewritten as concise current-state views; old runtime evidence/session files are garbage-collected. ADR/spec/rule directories may keep growing as the project evolves, but only relevant files are loaded for a task. `keelson doctor` remains available for diagnostics, not routine maintenance.
 
 **Is it opinionated about test-driven development?**
 No. The `verify` reference asks for evidence that matches the code and covers the acceptance list. The `guided` profile adds a note suggesting test-first when a scenario exists in the delta spec and a prototype when the problem is visual or an unknown API. The `lean` profile leaves the method to the agent.
