@@ -4,11 +4,14 @@ import { exists, read, readOr, write, walk, rmrf } from './fs.js';
 import { parseFrontmatter, parseSpec, renderSpec } from './markdown.js';
 
 const lineCount = (text) => String(text ?? '').split('\n').length;
-const slugify = (s) => String(s)
-  .toLowerCase()
-  .replace(/[^a-z0-9]+/g, '-')
-  .replace(/^-+|-+$/g, '')
-  .slice(0, 60) || 'requirement';
+export const slugify = (s) => Array.from(String(s)
+  .normalize('NFKD')
+  .replace(/\p{Mark}/gu, '')
+  .toLocaleLowerCase()
+  .replace(/[^\p{Letter}\p{Number}]+/gu, '-')
+  .replace(/^-+|-+$/g, ''))
+  .slice(0, 60)
+  .join('') || 'requirement';
 
 export const specFingerprint = (text) => crypto.createHash('sha1').update(text).digest('hex').slice(0, 10);
 

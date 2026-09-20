@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fc from 'fast-check';
 import { parseTasks, parseSlices, parseAcceptance, parseOpenQuestions, parseDecisions, parseHandoff, parseLedger, parseSpec, parseDelta, renderSpec, parseFrontmatter, sections } from '../src/lib/markdown.js';
+import { slugify } from '../src/lib/specs.js';
 
 test('parseTasks reads state, id, effort, verify', () => {
   const t = parseTasks(`# Tasks\n- [ ] 1. Add thing (effort: light) — verify: \`npm test -- a\`\n- [x] 2.1 Other (effort: deep)\n- plain bullet`);
@@ -29,12 +31,43 @@ test('spec round-trips through parse/render', () => {
   assert.deepEqual(again.decisions, s.decisions);
 });
 
+test('spec parser supports legacy and OpenSpec requirement layouts without reading fenced examples', () => {
+  const source = `# 支付\r\n\r\n## Notes\r\n\r\n\`\`\`md\r\n## Requirement: not real\r\n### Scenario: not real\r\n\`\`\`\r\n\r\n## Requirements\r\n\r\n### Requirement: 退款\r\n\r\n系统 SHALL 退款。\r\n\r\n#### Scenario: 已支付订单\r\n- WHEN 已支付\r\n- THEN 退款\r\n\r\n## Requirement: Legacy\r\n\r\nThe system SHALL keep compatibility.\r\n\r\n### Scenario: old client\r\n- WHEN it calls\r\n- THEN it works\r\n`;
+  const spec = parseSpec(source);
+  assert.deepEqual(spec.requirements.map((r) => r.name), ['退款', 'Legacy']);
+  assert.equal(renderSpec(spec), source.replace(/\r\n/g, '\n'));
+  assert.equal(sections(source, 2).some((s) => s.title === 'Requirement: not real'), false);
+});
+
+test('spec parse/render property preserves Unicode, CRLF, unknown sections, and fenced headings', () => {
+  const word = fc.array(fc.constantFrom('支付', 'café', 'Δ', '🧪', 'alpha'), { minLength: 1, maxLength: 5 }).map((parts) => parts.join(' '));
+  fc.assert(fc.property(word, word, (requirement, note) => {
+    const lf = `# ${requirement}\n\n## Context\n\n${note}\n\n\`\`\`markdown\n## Requirement: ignored\n### Scenario: ignored\n\`\`\`\n\n## Requirements\n\n### Requirement: ${requirement}\n\nThe system SHALL preserve text.\n\n#### Scenario: ${note}\n- WHEN input is supplied\n- THEN it is retained\n\n## Appendix\n\n${note}\n`;
+    const crlf = lf.replace(/\n/g, '\r\n');
+    const parsed = parseSpec(crlf);
+    assert.equal(parsed.requirements.length, 1);
+    assert.equal(renderSpec(parsed), lf);
+  }), { numRuns: 75 });
+});
+
+test('Unicode requirement names produce distinct readable storage slugs', () => {
+  assert.equal(slugify('Déploiement 支付 🧪'), 'deploiement-支付');
+  assert.equal(slugify('Δοκιμή'), 'δοκιμη');
+});
+
 test('parseDelta reads all three sections and normalises scenario depth', () => {
   const d = parseDelta(`## ADDED Requirements\n### Requirement: N\nbody\n#### Scenario: z\n- WHEN\n## MODIFIED Requirements\n### Requirement: M\nm\n## REMOVED Requirements\n### Requirement: R`);
   assert.equal(d.added[0].name, 'N');
   assert.match(d.added[0].body, /^### Scenario: z/m);
   assert.equal(d.modified[0].name, 'M');
   assert.equal(d.removed[0].name, 'R');
+});
+
+test('parseDelta ignores fenced requirements and reports malformed sections', () => {
+  const delta = parseDelta(`## ADDED Requirements\n\`\`\`md\n### Requirement: ignored\n\`\`\`\n\n### Requirement: Real\nbody\n#### Scenario: real\n- WHEN\n- THEN\n\n## NOTED Requirements\n### Requirement: wrong place\n`);
+  assert.deepEqual(delta.added.map((r) => r.name), ['Real']);
+  assert.match(delta.added[0].body, /^### Scenario: real/m);
+  assert.deepEqual(delta.issues, ['unrecognized requirements section "NOTED Requirements"']);
 });
 
 test('frontmatter and sections', () => {

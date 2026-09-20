@@ -1,6 +1,31 @@
 /** Small, dependency-free helpers for the Markdown shapes Keelson relies on. */
 
-const normalizeNewlines = (text) => String(text ?? '').replace(/\r\n?/g, '\n');
+export const normalizeNewlines = (text) => String(text ?? '').replace(/\r\n?/g, '\n');
+
+/**
+ * Return ATX headings while deliberately ignoring fenced code blocks. Markdown
+ * examples are common in specs, and treating their headings as document
+ * structure corrupts everything that follows them.
+ */
+function headings(text) {
+  const out = [];
+  let fence = null;
+  for (const [line, raw] of normalizeNewlines(text).split('\n').entries()) {
+    const opening = raw.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if (fence) {
+      if (new RegExp(`^ {0,3}${fence.char}{${fence.size},}\\s*$`).test(raw)) fence = null;
+      continue;
+    }
+    if (opening) {
+      fence = { char: opening[1][0], size: opening[1].length };
+      continue;
+    }
+    const m = raw.match(/^ {0,3}(#{1,6})(?:[ \t]+(.*?)\s*|[ \t]*)$/);
+    if (!m || !m[2]) continue;
+    out.push({ line, level: m[1].length, title: m[2].replace(/[ \t]+#+[ \t]*$/, '').trim() });
+  }
+  return out;
+}
 
 export function parseFrontmatter(text) {
   text = normalizeNewlines(text);
@@ -23,22 +48,21 @@ export function renderFrontmatter(data) {
 /** Split into sections by heading level (default: h2). Returns [{title, level, body}]. */
 export function sections(text, level = 2) {
   text = normalizeNewlines(text);
-  const re = new RegExp(`^#{${level}}\\s+(.+)$`, 'm');
   const lines = text.split('\n');
   const out = [];
   let cur = null;
-  for (const line of lines) {
-    const m = line.match(new RegExp(`^(#{1,${level}})\\s+(.+)$`));
-    if (m && m[1].length === level) {
-      cur = { title: m[2].trim(), level, body: '' };
+  const byLine = new Map(headings(text).map((h) => [h.line, h]));
+  for (const [i, line] of lines.entries()) {
+    const heading = byLine.get(i);
+    if (heading?.level === level) {
+      cur = { title: heading.title, level, body: '' };
       out.push(cur);
-    } else if (m && m[1].length < level) {
+    } else if (heading && heading.level < level) {
       cur = null;
     } else if (cur) {
       cur.body += (cur.body ? '\n' : '') + line;
     }
   }
-  void re;
   return out;
 }
 
@@ -198,34 +222,91 @@ export const ROOT_CAUSES = ['missing-rule', 'cross-layer', 'propagation', 'test-
  * containing "### Requirement: Name" blocks.
  */
 export function parseSpec(text) {
-  const { data, body } = parseFrontmatter(text);
+  const source = normalizeNewlines(text);
+  const { data, body } = parseFrontmatter(source);
   const reqs = [];
   const decisions = [];
   let purpose = '';
   for (const s of sections(body, 2)) {
     const rm = s.title.match(/^Requirement:\s*(.+)$/i);
     if (rm) reqs.push({ name: rm[1].trim(), body: s.body.trim() });
+    else if (/^Requirements$/i.test(s.title)) {
+      for (const r of sections(s.body, 3)) {
+        const requirement = r.title.match(/^Requirement:\s*(.+)$/i);
+        if (requirement) reqs.push({ name: requirement[1].trim(), body: r.body.trim() });
+      }
+    }
     else if (/^Decisions?$/i.test(s.title)) decisions.push(...s.body.split('\n').filter((l) => /^\s*[-*]\s+/.test(l)).map((l) => l.replace(/^\s*[-*]\s+/, '').trim()));
     else if (/^Purpose$/i.test(s.title)) purpose = s.body.trim();
   }
-  return { data, purpose, requirements: reqs, decisions, body };
+  const name = headings(body).find((h) => h.level === 1)?.title ?? '';
+  return {
+    data,
+    name,
+    purpose,
+    requirements: reqs,
+    decisions,
+    body,
+    // Keep the normalized source and its semantic snapshot. This lets callers
+    // round-trip a parsed contract without silently dropping sections the
+    // renderer does not own, while still falling back to canonical rendering
+    // after they edit any semantic field.
+    source,
+    snapshot: JSON.stringify({ data, name, purpose, requirements: reqs, decisions }),
+  };
 }
 
 export function parseDelta(text) {
-  const out = { added: [], modified: [], removed: [] };
+  const out = { added: [], modified: [], removed: [], issues: [] };
+  const seen = new Set();
   for (const s of sections(text, 2)) {
     const m = s.title.match(/^(ADDED|MODIFIED|REMOVED)\s+Requirements?$/i);
-    if (!m) continue;
+    if (!m) {
+      if (/Requirements?$/i.test(s.title)) out.issues.push(`unrecognized requirements section "${s.title}"`);
+      continue;
+    }
     const key = m[1].toLowerCase();
+    if (seen.has(key)) out.issues.push(`duplicate ${m[1].toUpperCase()} Requirements section`);
+    seen.add(key);
     for (const r of sections(s.body, 3)) {
       const rm = r.title.match(/^Requirement:\s*(.+)$/i);
-      if (rm) out[key].push({ name: rm[1].trim(), body: r.body.trim().replace(/^####(\s)/gm, '###$1') });
+      if (rm) {
+        out[key].push({ name: rm[1].trim(), body: shiftHeadings(r.body.trim(), -1) });
+      } else if (/^Requirement:\s*$/i.test(r.title)) {
+        out.issues.push(`${m[1].toUpperCase()} Requirements has a requirement with no name`);
+      }
     }
   }
+  if (!seen.size) out.issues.push('contains no ADDED, MODIFIED, or REMOVED Requirements section');
   return out;
 }
 
-export function renderSpec({ name, purpose, requirements, decisions }) {
+function shiftHeadings(text, by) {
+  const lines = normalizeNewlines(text).split('\n');
+  const byLine = new Map(headings(text).map((h) => [h.line, h]));
+  return lines.map((line, i) => {
+    const heading = byLine.get(i);
+    if (!heading || heading.level + by < 1) return line;
+    return line.replace(/^ {0,3}#+/, '#'.repeat(heading.level + by));
+  }).join('\n');
+}
+
+export function hasScenario(text) {
+  return headings(text).some((heading) => heading.level >= 3 && /^Scenario:\s*\S/i.test(heading.title));
+}
+
+export const requirementKey = (name) => String(name ?? '').normalize('NFC').toLocaleLowerCase();
+
+export function renderSpec(spec) {
+  const { name, purpose = '', requirements = [], decisions = [] } = spec;
+  const now = JSON.stringify({
+    data: spec.data ?? {},
+    name: name ?? '',
+    purpose,
+    requirements,
+    decisions,
+  });
+  if (spec.source && spec.snapshot === now) return spec.source;
   const parts = [`# ${name}`, ''];
   if (purpose) parts.push('## Purpose', '', purpose, '');
   for (const r of requirements) parts.push(`## Requirement: ${r.name}`, '', r.body, '');

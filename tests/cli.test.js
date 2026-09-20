@@ -493,6 +493,46 @@ test('validate catches dated model IDs, bad tiers, missing rule files', () => {
   assert.ok(errors.some((e) => /missing file: nope.md/.test(e)));
 });
 
+test('validate checks OpenSpec contracts and rejects empty, duplicate, and malformed delta requirements', () => {
+  const valid = tmpProject({});
+  run(valid, ['init', '--no-hooks'], { env });
+  write(valid, '.keelson/specs/payments/spec.md', [
+    '# payments',
+    '',
+    '## Notes',
+    '',
+    '```markdown',
+    '### Requirement: example only',
+    '#### Scenario: example only',
+    '```',
+    '',
+    '## Requirements',
+    '',
+    '### Requirement: 退款',
+    '',
+    'The system SHALL issue a refund.',
+    '',
+    '#### Scenario: paid order',
+    '- WHEN an order is paid',
+    '- THEN it is refunded',
+    '',
+  ].join('\r\n'));
+  const validResult = JSON.parse(run(valid, ['validate', '--json'], { env }).stdout);
+  assert.equal(validResult.ok, true, validResult.errors.join('\n'));
+
+  const invalid = tmpProject({});
+  run(invalid, ['init', '--no-hooks'], { env });
+  write(invalid, '.keelson/specs/orders/spec.md', '# orders\n\n## Requirement: 重复\n\n## Requirement: 重复\n');
+  run(invalid, ['new', 'bad-delta', '--tier', 'spec', '--capability', 'orders'], { env });
+  write(invalid, '.keelson/changes/bad-delta/specs/orders/spec.md', '---\nbase: new\n---\n## ADDED Requirements\n### Requirement:\n\n## NOTED Requirements\n### Requirement: misplaced\n');
+  const result = JSON.parse(run(invalid, ['validate', '--json'], { env, allowFail: true }).stdout);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => /duplicate requirement/.test(e)));
+  assert.ok(result.errors.some((e) => /empty body/.test(e)));
+  assert.ok(result.errors.some((e) => /malformed delta: ADDED Requirements has a requirement with no name/.test(e)));
+  assert.ok(result.errors.some((e) => /malformed delta: unrecognized requirements section/.test(e)));
+});
+
 test('context routes rules by path', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--no-hooks'], { env });

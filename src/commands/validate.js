@@ -3,7 +3,7 @@ import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { exists, readOr, listDirs, walk, read } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
 import { parseRulesIndex } from '../lib/rules.js';
-import { parseSpec, parseDelta, parseFrontmatter, hasSection, EFFORT_TIERS, ROOT_CAUSES, WORK_STATUSES } from '../lib/markdown.js';
+import { parseSpec, parseDelta, parseFrontmatter, renderSpec, hasScenario, normalizeNewlines, requirementKey, hasSection, EFFORT_TIERS, ROOT_CAUSES, WORK_STATUSES } from '../lib/markdown.js';
 import { loadAllChanges } from '../lib/changes.js';
 import { datedIdPatterns } from '../lib/models.js';
 import { knowledgeHealth } from '../lib/health.js';
@@ -36,10 +36,15 @@ export function validateProject(root) {
       errors.push(`${p.specsRel}/${cap}/ has no spec.md`);
       continue;
     }
-    const s = parseSpec(readCapabilitySpec(p.specs, cap));
-    if (!s.requirements.length) warnings.push(`${p.specsRel}/${cap}/spec.md has no "## Requirement:" sections`);
-    for (const r of s.requirements) if (!/###\s+Scenario:/i.test(r.body)) warnings.push(`${p.specsRel}/${cap}: requirement "${r.name}" has no scenario`);
-    const names = s.requirements.map((r) => r.name.toLowerCase());
+    const logical = readCapabilitySpec(p.specs, cap);
+    const s = parseSpec(logical);
+    if (renderSpec(s) !== normalizeNewlines(logical)) errors.push(`${p.specsRel}/${cap}/spec.md does not round-trip through the Markdown spec parser`);
+    if (!s.requirements.length) warnings.push(`${p.specsRel}/${cap}/spec.md has no Requirement sections`);
+    for (const r of s.requirements) {
+      if (!r.body.trim()) errors.push(`${p.specsRel}/${cap}: requirement "${r.name}" has an empty body`);
+      if (!hasScenario(r.body)) warnings.push(`${p.specsRel}/${cap}: requirement "${r.name}" has no scenario`);
+    }
+    const names = s.requirements.map((r) => requirementKey(r.name));
     for (const n of new Set(names.filter((n, i) => names.indexOf(n) !== i))) errors.push(`${p.specsRel}/${cap}: duplicate requirement "${n}"`);
   }
 
@@ -76,7 +81,11 @@ export function validateProject(root) {
     for (const df of c.deltaFiles) {
       const raw = read(path.join(c.dir, 'specs', df));
       const d = parseDelta(parseFrontmatter(raw).body);
-      if (!d.added.length && !d.modified.length && !d.removed.length) warnings.push(`${tag}/specs/${df}: no ADDED/MODIFIED/REMOVED requirements`);
+      for (const issue of d.issues) errors.push(`${tag}/specs/${df}: malformed delta: ${issue}`);
+      const deltaRequirements = [...d.added, ...d.modified, ...d.removed];
+      const deltaNames = deltaRequirements.map((r) => requirementKey(r.name));
+      for (const n of new Set(deltaNames.filter((n, i) => deltaNames.indexOf(n) !== i))) errors.push(`${tag}/specs/${df}: duplicate delta requirement "${n}"`);
+      for (const r of [...d.added, ...d.modified]) if (!r.body.trim()) errors.push(`${tag}/specs/${df}: ${r.name} has an empty requirement body`);
     }
     if (c.handoff && !c.handoff.at) warnings.push(`${tag}/handoff.md has no "at:" commit; run \`keelson handoff ${c.name}\` to stamp it`);
   }
