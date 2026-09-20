@@ -132,3 +132,7 @@ The third retained 30-sample performance iteration (`997c94e` plus documented `3
 
 ### Note: second exploratory candidate outcome
 All three frozen `3090c72` original D-17 task evaluations pass. Independent replay of the unchanged supplemental probe gives PASS/FAIL/PASS (2/3). The failed repetition loaded the early failure-contract guidance before implementation but still let a late observer replace the earlier error group. This does not satisfy the exploration's declared 3/3 supplemental target and is not evidence that another wording-only iteration will solve the issue. Preserve the original five-method comparison and both exploratory rounds; the extra probe does not rewrite original acceptance.
+
+### Dispatch: second exploration and delivery claims review → deep (gpt-5.6-terra)
+Result: pass
+Independent review at `05b2564` confirms all three original summaries, the two passing and one failing supplemental replay, complete event/token/time matching, clean frozen candidate provenance, and the retained full-package co-change disclosure. It independently matched all nine CLI p95 values and the five misses/four passes to the 30-sample artifact. README wording explicitly withholds an all-dimensions-excellent claim. This review verifies report accuracy, not the unmet outcome targets.
