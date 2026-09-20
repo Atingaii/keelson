@@ -61,8 +61,49 @@ export function landingBlockers(c, fingerprint, { confirmAssumptions = false, ac
   const lifecycle = evaluateLifecycle(c, fingerprint, { activeNames, confirmAssumptions });
   const b = [...lifecycle.blockers];
   if (specsDir && !acceptDrift) {
-    // Project every durable spec write first. Nothing is written until drift,
-  // lifecycle gates, and knowledge budgets all pass.
+    for (const df of c.deltaFiles) {
+      const cap = path.dirname(df).replace(/\\/g, '/');
+      const { data } = parseFrontmatter(read(path.join(c.dir, 'specs', df)));
+      if (!data.base || cap === '.') continue;
+      const main = readCapabilitySpec(specsDir, cap);
+      const now = main ? specBase(main) : 'new';
+      if (now !== data.base) b.push(`specs/${cap} changed since this delta was written (base ${data.base}, now ${now}); re-read it, then pass --accept-drift`);
+    }
+  }
+  return b;
+}
+
+export async function land({ flags, positional }, cwd = process.cwd()) {
+  const root = requireProjectRoot(cwd);
+  const cfg = loadConfig(projectPaths(root).config);
+  const p = projectPaths(root, cfg);
+  let name = positional[0];
+  if (!name) {
+    const all = loadAllChanges(p.changes);
+    const focused = readSession(root).state?.change;
+    if (focused && all.some((c) => c.name === focused)) name = focused;
+    else if (all.length === 1) name = all[0].name;
+    else throw new Error(all.length ? `several active changes (${all.map((c) => c.name).join(', ')}); bind one with \`keelson focus <name>\` or name one` : 'no active change to land');
+  }
+  const allChanges = loadAllChanges(p.changes);
+  const c = loadChange(p.changes, name);
+  if (!c) throw new Error(`no change named "${name}"`);
+  const fp = worktreeFingerprint(root);
+  const activeNames = new Set(allChanges.map((x) => x.name));
+  const blockers = landingBlockers(c, fp, { confirmAssumptions: Boolean(flags.confirmAssumptions), acceptDrift: Boolean(flags.acceptDrift), specsDir: p.specs, activeNames });
+  if (blockers.length && !flags.force) throw new Error(`cannot land "${name}":\n  - ${blockers.join('\n  - ')}\nFix them, or pass --force if the user explicitly asked.`);
+  if (blockers.length) warn(`landing with --force despite:\n  - ${blockers.join('\n  - ')}`);
+  const uncheckedPlan = c.progress.total ? c.progress.total - c.progress.done : 0;
+  if (uncheckedPlan > 0) warn(`${uncheckedPlan} task(s) remain unchecked; tasks are planning notes, not landing gates. Reconcile or remove stale plan items if they still matter.`);
+
+  heading(`Landing ${name} (${c.tier})`);
+  const dry = Boolean(flags.dryRun);
+  for (const k of sharedContracts(allChanges).filter((k) => k.a === name || k.b === name)) {
+    const other = k.a === name ? k.b : k.a;
+    const o = loadChange(p.changes, other);
+    warn(`shared contract with active change ${other}${o?.owner ? ` (${o.owner})` : ''}: ${[...k.capabilities.map((cap) => `${p.specsRel}/${cap}`), ...k.paths].join(', ')} — its delta will drift after this landing and its owner must re-read the merged spec before landing`);
+  }
+  // Project every durable write before mutating project truth.
   const projected = new Map();
   const deltaReports = [];
   for (const df of c.deltaFiles) {
@@ -111,8 +152,6 @@ export function landingBlockers(c, fingerprint, { confirmAssumptions = false, ac
     if (pressure.state === 'hard' && !flags.force) {
       throw new Error(`cannot land "${name}": projected NOW.md is ${pressure.lines} lines, above hard limit ${pressure.hardLimit} (budget ${pressure.budget}). Rewrite NOW as current state only.`);
     }
-    if (pressure.state === 'hard') warn(`NOW.md exceeds hard knowledge limit (${pressure.lines}/${pressure.hardLimit}) but owner explicitly forced landing`);
-    else if (pressure.state === 'compact') warn(`NOW.md will be ${pressure.lines} lines (budget ${pressure.budget}); compact it to current state`);
   }
 
   for (const [cap, item] of projected) if (!dry) writeCapabilityStorage(p.specs, cap, item.storage);
