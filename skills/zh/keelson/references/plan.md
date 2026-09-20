@@ -17,12 +17,12 @@
 - **Why** — 用 1 到 3 句话写问题或机会。去掉方案也应能独立成立。
 - **What** — 变更的要点列表。以 **BREAKING** 开头的条目标记破坏性变更；它需要一个 **Rollout** 段（兼容窗口、迁移、回滚），`keelson land` 会检查。
 - **How** — 技术方案，写评审者想知道的部分。不是任务清单。
-- **Alternatives** — 至少两个真实选项。每个被否决的选项先写它最强的论据，再写它为什么输。只列弱点的否决是稻草人。
+- **Alternatives** — 只有真正存在重要分叉时才写。记录最强的真实备选以及它为什么输。如果项目已有清晰惯例、根本没有真实分叉，就写 `follows <existing pattern>` 并指出依据，不要为了模板硬造两个选项。
 - **Impact** — 你靠阅读发现的，而不是 diff 的文件列表。见 `context.md`。
-- **Acceptance** — 每条验收标准一个复选框，各自写明怎么检查：`— test: name`、`— check: \`cmd\``、`— manual: how` 或 `— review: what`。这是从请求到证据的映射；任何一项未勾选，`keelson land` 都拒绝。
+- **Acceptance** — 每条验收标准一个复选框，各自写明怎么检查：`— test: name`、`— check: \`cmd\``、`— manual: how` 或 `— review: what`。这是从请求到证据的映射。`design-lenses.md` 触发且真正影响正确性的风险，要变成 acceptance/evidence 场景，而不是多写一篇散文。
 - **Open questions** — `- question — blocks: <slice>`。还有未决问题时落地会被拒绝；什么都不阻塞的问题是备注，不是未决问题。
 - **Rollout** — 仅用于破坏性变更、迁移或生产步骤。
-- **Decisions** — `- capability: decision; rejected option and why`，现在时。工作假设写成 `- (assumed) capability: …`。落地时折叠进该能力的 spec。
+- **Decisions** — 只保存 capability 局部的当前理由，并用现在时表达。工作假设写成 `- (assumed) capability: …`。跨领域、出人意料或昂贵且难撤销的架构决定，如果项目配置了 `refs.decisions`，应进入 ADR；ADR 保持短小且不可改写，后续变化用 supersede。
 
 ## 把审计结果路由到已有工件
 <!-- keelson: id=plan.assumption-routing | without: clarification creates a new diary document, or critical assumptions stay only in chat and disappear across sessions | sunset: never -->
@@ -58,9 +58,9 @@ The API SHALL reject `size` above 200 with HTTP 400.
 ### Requirement: Legacy CSV export
 ```
 
-一个 capability 在逻辑上仍是一份行为契约，但物理上不必永远只有一个文件。当合并后的契约超过配置的 spec 预算时，`keelson land` 会自动把它改写成小型 `spec.md` 索引 + `requirements/*.md`，需要时再加 `decisions.md`；后续 delta 仍把该 capability 当成一份逻辑 spec，base hash 也覆盖整份逻辑契约。不要手工重新合并 shards。
+一个 capability 在逻辑上仍是一份行为契约，但物理上不必永远只有一个文件。当合并后的契约超过配置的 spec 预算时，`keelson land` 会自动把它改写成小型 `spec.md` 索引 + `requirements/*.md` + 按需 `decisions/*.md`；后续 delta 仍把该 capability 当成一份逻辑 spec，base hash 也覆盖整份逻辑契约。不要手工重新合并 shards。
 
-spec 是行为契约：可观察的行为、输入、输出、错误条件、外部约束。如果实现可以改而客户端看到的不变，它就不属于这里。架构约束（谁可以依赖谁、哪一层拥有某个决定）放在 `rules/`；项目有 `refs.decisions` 时，长期决策记录放在那里；链接过去，不要复述。
+spec 是行为契约：可观察行为、输入、输出、错误条件、外部约束。如果实现改变而客户端看到的不变，它就不属于这里。架构不变量放在 `rules/` 或可执行 check；跨领域架构历史在项目有 `refs.decisions` 时进入 ADR；capability 局部的当前理由可以留在 decision shards。相同解释只链接，不重复。
 
 ## tasks.md 与切片
 <!-- keelson: id=plan.tasks | without: 工作凭记忆执行；进度、切片和 effort 路由在会话之间不可见 | sunset: never -->
