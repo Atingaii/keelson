@@ -22,12 +22,12 @@ Keep prose verification was rejected because it cannot distinguish generated cla
 Legacy prose needs a new check. Default guidance loads from the installed package; vendor mode remains available. No npm release is performed.
 
 ## Acceptance
-- [ ] Structured evidence rejects prose forgery, tampering, stale code/contracts, partial checks, and checks that modify inputs. — test: tests/evidence.test.js
-- [ ] Atomic writes, concurrent records, command trust and bounded execution have regression coverage. — test: tests/evidence.test.js and tests/transaction.test.js
-- [ ] Markdown contracts preserve code fences and Unicode through parsing, merging and sharding. — test: tests/markdown.test.js and tests/land.test.js
-- [ ] Default Codex installation stays small, preserves user content and does not edit .gitignore. — test: tests/cli.test.js
-- [ ] Decision records support bounded questions and prevent silent reopening of settled decisions. — test: tests/decisions.test.js
-- [ ] Fixed open-source tasks are evaluated using local Codex with gpt-5.6-terra against OpenSpec, Trellis and Superpowers; raw evidence and limitations are retained. — manual: benchmarks/README.md and retained run records
+- [x] Structured evidence rejects prose forgery, tampering, stale code/contracts, partial checks, and checks that modify inputs. — test: tests/evidence.test.js
+- [x] Atomic writes, concurrent records, command trust and bounded execution have regression coverage. — test: tests/evidence.test.js and tests/transaction.test.js
+- [x] Markdown contracts preserve code fences and Unicode through parsing, merging and sharding. — test: tests/markdown.test.js and tests/land.test.js
+- [x] Default Codex installation stays small, preserves user content and does not edit .gitignore. — test: tests/cli.test.js
+- [x] Decision records support bounded questions and prevent silent reopening of settled decisions. — test: tests/decisions.test.js
+- [x] Fixed open-source tasks are evaluated using local Codex with gpt-5.6-terra against OpenSpec, Trellis and Superpowers; raw evidence and limitations are retained. — manual: benchmarks/README.md and retained run records
 - [ ] English and Chinese README, migration/security documentation and generated wide banner match shipped behavior. — manual: README.md, README_CN.md, docs/verification.md and docs/assets/keelson-banner.png
 - [ ] All required local checks pass, main is pushed, and remote branch cleanup is verified. — manual: npm run lint, npm test, keelson validate and git ls-remote
 

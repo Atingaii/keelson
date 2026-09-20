@@ -603,6 +603,13 @@
       },
       "command": "node --test tests/git.test.js tests/benchmark.patch.test.js",
       "note": "Linux targeted suite; single-separator Python/Rust and non-boundary imports, literal LF patch fixture, platform-specific filename skip. Real remote CI remains required."
+    },
+    {
+      "file": "ci-34da3a0.json",
+      "sha256": "234a135bc0cbd1a894c313ee2de205dc3994997d84d8261b923b836da5519b63",
+      "bytes": 2368,
+      "source_commit": "34da3a07798198ce4e3fc056080900ab322942ef",
+      "note": "Actual GitHub Actions API result: all six Ubuntu/macOS/Windows x Node 20/22 jobs pass after portable importer and fixture fixes."
     }
   ],
   "updated_at_utc": "2026-09-20T12:35:04.321907+00:00"
