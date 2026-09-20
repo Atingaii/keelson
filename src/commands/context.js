@@ -3,7 +3,8 @@ import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { readOr, listDirs, exists } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
 import { matchRules } from '../lib/rules.js';
-import { loadAllChanges, verificationStatus, derivedWorkStatus } from '../lib/changes.js';
+import { loadAllChanges } from '../lib/changes.js';
+import { evaluateLifecycle } from '../lib/lifecycle.js';
 import { readSession } from '../lib/session.js';
 import { gitStatusShort, recentCommits, worktreeFingerprint } from '../lib/git.js';
 import { list } from '../lib/args.js';
@@ -18,6 +19,7 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
   const changes = loadAllChanges(p.changes);
   const session = readSession(root);
   const focus = session.state?.change && changes.some((c) => c.name === session.state.change) ? session.state.change : null;
+  const activeNames = new Set(changes.map((c) => c.name));
   const orderedChanges = focus ? [...changes].sort((a, b) => (a.name === focus ? -1 : b.name === focus ? 1 : 0)) : changes;
   const specs = listDirs(p.specs);
   const refs = Object.entries(cfg.refs ?? {}).filter(([, v]) => v);
@@ -35,7 +37,10 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
     specs: specs.map((s) => `${p.specsRel}/${s}/spec.md`),
     focus,
     sessionAvailable: session.available,
-    changes: orderedChanges.map((c) => ({ name: c.name, tier: c.tier, owner: c.owner, work: derivedWorkStatus(c, fp), verification: verificationStatus(c, fp).state, progress: c.progress, open: c.open.map((o) => o.text), handoffNext: c.handoff?.next ?? null })),
+    changes: orderedChanges.map((c) => {
+      const lifecycle = evaluateLifecycle(c, fp, { activeNames });
+      return { name: c.name, tier: c.tier, owner: c.owner, work: lifecycle.work, verification: lifecycle.verification.state, blockedBy: lifecycle.blockedBy, progress: c.progress, open: c.open.map((o) => o.text), handoffNext: c.handoff?.next ?? null };
+    }),
     git: { dirty: gitStatusShort(root), recent: recentCommits(root, 5) },
   };
   if (flags.json) {
@@ -54,6 +59,7 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
   if (!data.changes.length) out.push('none');
   for (const c of data.changes) {
     out.push(`- ${c.name} · ${c.tier} · work ${c.work} · verify ${c.verification} · ${c.progress.done}/${c.progress.total} tasks${c.owner ? ` · ${c.owner}` : ''}`);
+    if (c.blockedBy?.length) out.push(`  depends on active: ${c.blockedBy.join(', ')}`);
     if (c.open.length) out.push(`  open: ${c.open.join('; ')}`);
     if (c.handoffNext) out.push(`  handoff next: ${c.handoffNext.split('\n')[0]}`);
   }
