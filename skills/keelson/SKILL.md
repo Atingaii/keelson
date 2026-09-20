@@ -29,6 +29,7 @@ Completion is **not** an intent and never depends on the user saying “done”.
 - Size only the work: trivial = direct edit; quick = lightweight change; spec = acceptance + behavior delta + plan, then approval.
 - Artifacts are information containers, not ceremony. Do not create empty roadmap/glossary/rule/task/ledger/handoff/spec files.
 - `tasks.md` is an execution plan, not completion authority. Unchecked plan items never override satisfied acceptance + fresh evidence; reconcile or remove stale tasks when the implementation path changes.
+- Knowledge maintenance is internal. During RECONCILE, automatically rewrite/split/dedupe pressured durable docs and let `land` auto-shard large specs; never ask the owner to maintain Keelson unless a product-semantic decision is required.
 - Keep **code reality**, **confirmed truth**, and **planned change** distinct. Open questions block only dependent slices.
 - Fresh `keelson check --record` evidence is required for completion claims. Never weaken acceptance to make a check pass.
 - A `ready` change should be landed without waiting for a special user phrase. If landing still needs an owner decision, stop on that decision only.
