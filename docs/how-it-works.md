@@ -95,7 +95,7 @@ Codex, Gemini CLI, and Kiro CLI remain **degraded, not guessed** until an equall
 
 `keelson new` binds a new work item to the current session when identity is available. `check --record`, `land`, `cancel`, and `handoff` prefer the focused change. Landing/cancelling clears every local pointer that referenced that durable change.
 
-Session files are gitignored. Deleting them affects convenience only.
+Session files are gitignored. Deleting them affects convenience only. Normal Keelson commands opportunistically garbage-collect stale session pointers and old evidence logs, so runtime storage does not require user housekeeping.
 
 ## Hooks (Claude Code)
 
@@ -124,7 +124,7 @@ The canonical Skill classifies **conversation turns** into five intents:
 
 Completion is not a sixth intent. Work readiness is derived mechanically from durable state.
 
-After each modifying pass the agent reconciles the focused change. When tasks/acceptance are satisfied, blocking questions/assumptions are gone, rollout requirements are met, and fresh verification matches the current tree, `keelson status` reports `ready`. `keelson check --record` also emits `ready → land now`. The agent lands before it tells the user the work is complete.
+After each modifying pass the agent reconciles the focused change. When acceptance is satisfied, active dependencies and blocking questions/assumptions are gone, rollout requirements are met, and fresh verification matches the current tree, `keelson status` reports `ready`. `tasks.md` remains a mutable execution plan and never owns completion. `keelson check --record` also emits `ready → land now`. The agent lands before it tells the user the work is complete.
 
 Ending a chat or switching topics cannot cause this transition.
 
@@ -181,6 +181,8 @@ The system SHALL ...
 - orders: offset pagination over cursor; cursor rejected because the table needs page jumps
 ```
 
+A capability remains one **logical** contract even when it grows beyond one readable file. When the merged contract crosses the configured spec budget, landing automatically stores it as a bounded `spec.md` index plus one file per current requirement under `requirements/` and, when needed, small capability-local records under `decisions/`. The index remains constant-size; future base hashes and delta merges operate on the reconstructed logical contract, so sharding is transparent to changes.
+
 A delta spec in a change carries a `base:` stamp (a hash of the main spec when the delta was created, or `new`) and three sections:
 
 ```markdown
@@ -234,7 +236,7 @@ Verification staleness needs a stable identity for "the code as it is now". In a
 - for each active change, the newest modification time among `change.md`, `tasks.md`, `ledger.md`, and `handoff.md` (idle after 14 days) and the task count (oversized above 25);
 - for files under `docs/generated/`, whether they are more than a day older than the newest file under `src/` (or the project root when there is no `src/`).
 
-Each finding carries a suggested fix. The output is a list of small compactions for a person or the agent to make and land like any other change.
+Each finding carries a suggested fix. These findings are internal maintenance signals for the agent during RECONCILE: routine splitting, deduplication, current-state rewrites, and index repair happen without asking the owner. Only a cleanup that would change product semantics or owner-controlled policy is surfaced as a decision.
 
 ## NOW.md
 

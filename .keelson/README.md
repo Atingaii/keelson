@@ -5,11 +5,11 @@
 
 ## Start here
 
-- **Agent starting work:** `workflow.md` → `skill/SKILL.md`.
-- **Person asking “what is happening?”:** `NOW.md`.
-- **Why / boundaries / authority:** `INTENT.md`.
-- **Behavior of one capability:** `specs/<capability>/spec.md` when that capability has a contract.
-- **Work already in flight:** `changes/<name>/change.md`, then only the artifacts that actually exist beside it.
+People normally need only two files:
+- **What is happening now?** → `NOW.md`
+- **Why does this project exist / what are its boundaries?** → `INTENT.md`
+
+Agents start from `workflow.md` → `skill/SKILL.md`. Everything else is maintained on demand; nobody needs to manage Keelson folders as part of normal development.
 
 ## Always present after init
 
@@ -29,7 +29,9 @@
 |---|---|
 | `ROADMAP.md` | The project has a milestone/direction that is not already clear from its tracker |
 | `GLOSSARY.md` | Shared vocabulary becomes load-bearing or ambiguous |
-| `specs/<capability>/spec.md` | A capability has observable behavior worth treating as a contract |
+| `specs/<capability>/spec.md` | A capability has observable behavior worth treating as a contract; it stays a small index when the contract auto-shards |
+| `specs/<capability>/requirements/*.md` | Automatically appears when one capability contract outgrows a single readable file |
+| `specs/<capability>/decisions/*.md` | Automatically appears when capability-local durable decisions grow; one small durable decision file per item |
 | `rules/index.md` + `rules/*.md` | A stable engineering invariant applies to a path and is not better expressed as a check |
 | `changes/<name>/change.md` | Non-trivial work needs a reviewable boundary |
 | `changes/<name>/tasks.md` | The work needs an explicit multi-step / multi-slice plan |
@@ -55,4 +57,4 @@ Temporary change files fold or archive when work lands. Empty optional artifacts
 
 ## Human reading rule
 
-Prefer present-tense current truth. If a file becomes hard to scan, `keelson doctor` reports the knowledge-health signal; compact or split it instead of appending another history section.
+Prefer present-tense current truth. Keelson keeps high-frequency files bounded, auto-shards large specs, and routes internal compaction work to the agent. A person should not need to run housekeeping commands or understand the storage layout to keep working.

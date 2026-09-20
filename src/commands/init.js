@@ -183,7 +183,7 @@ export async function init({ flags }, cwd = process.cwd()) {
     write(target, fill(read(path.join(tpl, file)), { project, ...vars }));
     return true;
   };
-  if (seed('INTENT.md', p.intent)) ok('.keelson/INTENT.md (the agent drafts it from the code on first contact; confirm it when it asks)');
+  if (seed('INTENT.md', p.intent)) ok('.keelson/INTENT.md (the agent derives it from repository evidence on first contact; owner questions only when a boundary is load-bearing)');
   if (seed('NOW.md', p.now)) ok('.keelson/NOW.md');
   // Progressive disclosure: ROADMAP, GLOSSARY, rules/, specs/, and changes/ are created only when the project actually needs them.
   if (ensureGitignore(root)) ok('.gitignore: .keelson/.runtime/ (session focus and evidence stay on this machine)');
@@ -225,14 +225,15 @@ export async function init({ flags }, cwd = process.cwd()) {
     warn(`model detection skipped: ${e.message}`);
   }
 
-  // A fresh project starts with one onboarding task: infer and confirm project intent.
-  // Specs and rules grow later, only when real work exposes a durable contract or invariant.
+  // A fresh project starts with one invisible onboarding task: infer project intent
+  // from repository evidence. Owner questions are reserved for load-bearing boundaries.
+  // Specs and rules grow later only when real work exposes durable truth.
   if (fresh || flags.onboard) writeOnboardNote(p, project, cfg, hasCode(root));
 
   console.log('');
   if (fresh) {
     heading('Done. Open your agent in this directory and start talking.');
-    console.log(dim('  On first contact it drafts .keelson/INTENT.md from the repository and confirms it with you; specs/rules grow only when real work needs them.'));
+    console.log(dim('  On first contact it derives .keelson/INTENT.md from repository evidence; it asks only if a project boundary actually changes the work.'));
   }
   return 0;
 }
@@ -257,7 +258,7 @@ function hasCode(root) {
 
 function writeOnboardNote(p, project, cfg, existingCode) {
   const refs = Object.entries(cfg.refs ?? {}).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`);
-  const intent = `Draft \`.keelson/INTENT.md\` from what the repository already shows (README, package manifest, directory layout${existingCode ? ', and the code' : ''}): why it exists, its boundaries, hard constraints, and a first Authorizations section. Ask the owner to confirm or correct it in one short exchange; keep their answers, drop your guesses.`;
+  const intent = `Draft \`.keelson/INTENT.md\` from what the repository already shows (README, package manifest, directory layout${existingCode ? ', and the code' : ''}): why it exists, its boundaries, hard constraints, and a first Authorizations section. Treat repository-backed facts as established. Do not ask for blanket approval; only ask one owner question if a missing project boundary is load-bearing for the current work.`;
   const grow = existingCode
     ? ' Do not inventory the whole repository into specs or rules. As the first real task touches a capability or stable engineering invariant, create only the spec/rule needed to preserve that truth across future sessions.'
     : '';
@@ -265,14 +266,14 @@ function writeOnboardNote(p, project, cfg, existingCode) {
     p.now,
     `# Now
 
-First contact with ${project}: Keelson was just initialised and project intent has not been confirmed yet.
+First contact with ${project}: Keelson was just initialised. Project intent will be derived from repository evidence as part of the first real task.
 
-## Blocked / uncertain
-INTENT.md is a draft until the owner confirms it. Existing documents${refs.length ? ` (${refs.join(', ')})` : ''} are referenced, never copied.
+## Context
+Existing documents${refs.length ? ` (${refs.join(', ')})` : ''} are referenced, never copied. INTENT.md may be refined silently when evidence is clear; owner input is needed only for a load-bearing boundary the repository cannot answer.
 
 ## Next
 ${intent}${grow} Do this before, or together with, the first non-trivial thing the owner asks for. Then rewrite this file to the actual current state.
 `,
   );
-  ok('.keelson/NOW.md: first-contact task written for the agent (confirm project intent; grow contracts only when work needs them)');
+  ok('.keelson/NOW.md: first-contact task written for the agent (derive project intent; ask only at a load-bearing boundary)');
 }

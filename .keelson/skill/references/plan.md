@@ -17,12 +17,12 @@ Sections, in order. Quick changes need only **Why**, **What**, and **Acceptance*
 - **Why** — the problem or opportunity in 1–3 sentences. Should stand on its own without the solution.
 - **What** — bullet list of changes. A bullet that starts with **BREAKING** marks a breaking change; it needs a **Rollout** section (compatibility window, migration, rollback), and `keelson land` checks for it.
 - **How** — technical approach, the parts a reviewer would want to know. Not a task list.
-- **Alternatives** — at least two real options. For each rejected one, write its strongest argument first, then why it loses. A rejection that only lists weaknesses is a straw man.
+- **Alternatives** — only when a material fork actually exists. Record the strongest credible alternative and why it loses. If the project already has a clear precedent and no real fork exists, say `follows <existing pattern>` instead of inventing options to satisfy a template.
 - **Impact** — what you found by reading, not the diff file list. See `context.md`.
-- **Acceptance** — one checkbox per criterion, each with how it is checked: `— test: name`, `— check: \`cmd\``, `— manual: how`, or `— review: what`. This is the map from the request to the evidence; `keelson land` refuses while any box is open.
+- **Acceptance** — one checkbox per criterion, each with how it is checked: `— test: name`, `— check: \`cmd\``, `— manual: how`, or `— review: what`. This is the map from request to evidence. Any triggered `design-lenses.md` risk that matters to correctness becomes an acceptance/evidence case, not extra prose.
 - **Open questions** — `- question — blocks: <slice>`. Landing refuses while any remain; a question that blocks nothing is a note, not an open question.
 - **Rollout** — only for breaking changes, migrations, or production steps.
-- **Decisions** — `- capability: decision; rejected option and why`, present tense. Working assumptions are `- (assumed) capability: …`. Folded into the capability's spec on landing.
+- **Decisions** — capability-local current rationale, present tense. Working assumptions are `- (assumed) capability: …`. A surprising or expensive-to-reverse cross-cutting architecture decision belongs in the project's `refs.decisions` ADR system when present; keep ADRs short and immutable, and supersede rather than rewrite them.
 
 ## Route the audit into existing artifacts
 <!-- keelson: id=plan.assumption-routing | without: clarification creates a new diary document, or critical assumptions stay only in chat and disappear across sessions | sunset: never -->
@@ -58,7 +58,9 @@ The API SHALL reject `size` above 200 with HTTP 400.
 ### Requirement: Legacy CSV export
 ```
 
-A spec is a behaviour contract: observable behaviour, inputs, outputs, error conditions, external constraints. If the implementation could change without changing what a client sees, it does not belong here. Architecture constraints (who may depend on whom, which layer owns a decision) belong in `rules/`, and long-lived decision records in `refs.decisions` when the project has one; link, do not restate.
+A capability is logically one behaviour contract, but it does not have to stay one physical file. When the merged contract crosses the configured spec budget, `keelson land` automatically rewrites it as a small `spec.md` index plus `requirements/*.md` and `decisions/*.md` as needed; future deltas still target the capability as one logical spec, and base hashes cover the whole logical contract. Do not manually recombine shards.
+
+A spec is a behaviour contract: observable behaviour, inputs, outputs, error conditions, external constraints. If implementation can change without changing what a client sees, it does not belong here. Architecture invariants belong in `rules/` or executable checks. Cross-cutting architecture history belongs in `refs.decisions` ADRs when present; capability-local current rationale may stay in spec decision shards. Link instead of duplicating the same explanation.
 
 ## tasks.md and slices
 <!-- keelson: id=plan.tasks | without: work is executed from memory; progress, slices, and effort routing are invisible across sessions | sunset: never -->

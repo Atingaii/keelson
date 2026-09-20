@@ -2,10 +2,14 @@ import path from 'node:path';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { readOr, listDirs } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
-import { loadAllChanges, verificationStatus, derivedWorkStatus, sharedContracts } from '../lib/changes.js';
+import { loadAllChanges, sharedContracts } from '../lib/changes.js';
+import { evaluateLifecycle } from '../lib/lifecycle.js';
 import { readSession } from '../lib/session.js';
 import { worktreeFingerprint, headSha, lastTag, foldedSince, gitStatusShort, isGitRepo } from '../lib/git.js';
 import { heading, dim, warn } from '../lib/out.js';
+import { knowledgeHealth } from '../lib/health.js';
+import { maintainRuntime } from '../lib/maintenance.js';
+import { changeSpecDrift } from '../lib/specs.js';
 
 export function projectStatus(root) {
   const cfg = loadConfig(projectPaths(root).config);
@@ -17,17 +21,22 @@ export function projectStatus(root) {
   const dirty = gitStatusShort(root) ?? [];
   const session = readSession(root);
   const focus = session.state?.change && changes.some((c) => c.name === session.state.change) ? session.state.change : null;
+  const activeNames = new Set(changes.map((c) => c.name));
   const rows = changes.map((c) => {
-    const verification = verificationStatus(c, fp);
-    const blockedBy = c.depends.filter((d) => changes.some((x) => x.name === d));
+    const contractDrift = changeSpecDrift(c, p.specs);
+    const lifecycle = evaluateLifecycle(c, fp, { activeNames, contractDrift });
+    const verification = lifecycle.verification;
+    const blockedBy = lifecycle.blockedBy;
     const handoff = c.handoff ? { updated: c.handoff.updated, at: c.handoff.at, headMoved: Boolean(c.handoff.at && head && !head.startsWith(c.handoff.at) && !c.handoff.at.startsWith(head)), next: c.handoff.next } : null;
     return {
       name: c.name,
       tier: c.tier,
       owner: c.owner,
       branch: c.branch,
-      work: derivedWorkStatus(c, fp),
+      work: lifecycle.work,
       verification,
+      gates: lifecycle.gates,
+      lifecycleWarnings: lifecycle.warnings,
       release: c.release ?? 'unreleased',
       progress: c.progress,
       slices: c.slices,
@@ -42,6 +51,12 @@ export function projectStatus(root) {
       tasks: c.tasks,
     };
   });
+  const knowledgeFindings = knowledgeHealth(root, cfg, p).filter((h) => h.kind === 'budget' || h.kind === 'budget-hard');
+  const knowledge = {
+    critical: knowledgeFindings.filter((h) => h.level === 'error').length,
+    overBudget: knowledgeFindings.filter((h) => h.level === 'warn').length,
+    findings: knowledgeFindings.map((h) => ({ level: h.level, kind: h.kind, text: h.text })),
+  };
   return {
     root,
     head,
@@ -53,6 +68,7 @@ export function projectStatus(root) {
     focus,
     sessionAvailable: session.available,
     changes: rows,
+    knowledge,
     conflicts: sharedContracts(changes),
     release: tag ? { lastTag: tag, landedSince: foldedSince(root, tag) } : null,
   };
@@ -62,6 +78,7 @@ const GLYPH = { 'not-run': '·', passed: '✓', failed: '✗', stale: '~', parti
 
 export async function status({ flags }, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
+  maintainRuntime(root);
   const s = projectStatus(root);
   if (flags.json) {
     console.log(JSON.stringify(s, null, 2));

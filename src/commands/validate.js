@@ -6,6 +6,8 @@ import { parseRulesIndex } from '../lib/rules.js';
 import { parseSpec, parseDelta, parseFrontmatter, hasSection, EFFORT_TIERS, ROOT_CAUSES, WORK_STATUSES } from '../lib/markdown.js';
 import { loadAllChanges } from '../lib/changes.js';
 import { datedIdPatterns } from '../lib/models.js';
+import { knowledgeHealth } from '../lib/health.js';
+import { readCapabilitySpec } from '../lib/specs.js';
 import { ok, fail, warn } from '../lib/out.js';
 
 export function validateProject(root) {
@@ -34,7 +36,7 @@ export function validateProject(root) {
       errors.push(`${p.specsRel}/${cap}/ has no spec.md`);
       continue;
     }
-    const s = parseSpec(read(f));
+    const s = parseSpec(readCapabilitySpec(p.specs, cap));
     if (!s.requirements.length) warnings.push(`${p.specsRel}/${cap}/spec.md has no "## Requirement:" sections`);
     for (const r of s.requirements) if (!/###\s+Scenario:/i.test(r.body)) warnings.push(`${p.specsRel}/${cap}: requirement "${r.name}" has no scenario`);
     const names = s.requirements.map((r) => r.name.toLowerCase());
@@ -48,10 +50,8 @@ export function validateProject(root) {
     if (!WORK_STATUSES.includes(c.work)) errors.push(`${tag}: status must be one of ${WORK_STATUSES.join('|')}`);
     for (const sec of ['Why', 'What']) if (!hasSection(c.body, sec)) errors.push(`${tag}/change.md: missing "## ${sec}"`);
     if (c.tier === 'spec') {
-      for (const sec of ['How', 'Alternatives', 'Impact']) if (!hasSection(c.body, sec)) errors.push(`${tag}/change.md: spec tier requires "## ${sec}"`);
+      for (const sec of ['How', 'Impact']) if (!hasSection(c.body, sec)) errors.push(`${tag}/change.md: spec tier requires "## ${sec}"`);
       if (!c.deltaFiles.length) warnings.push(`${tag}: spec tier but no delta specs under specs/ (fine only if behaviour does not change)`);
-      const alts = (c.body.match(/^##\s+Alternatives[\s\S]*?(?=^##\s|\Z)/m) || [''])[0];
-      if ((alts.match(/^\s*[-*]\s+/gm) || []).length < 2) errors.push(`${tag}/change.md: Alternatives needs at least two options`);
       if (!hasSection(c.body, 'Acceptance')) warnings.push(`${tag}/change.md: spec tier without "## Acceptance" — landing will refuse until each acceptance item maps to a check`);
     }
     for (const a of c.acceptance) if (!a.kind) warnings.push(`${tag}/change.md: acceptance "${a.text}" does not say how it is checked (— check: \`cmd\` | test: name | manual: how)`);
@@ -79,6 +79,10 @@ export function validateProject(root) {
       if (!d.added.length && !d.modified.length && !d.removed.length) warnings.push(`${tag}/specs/${df}: no ADDED/MODIFIED/REMOVED requirements`);
     }
     if (c.handoff && !c.handoff.at) warnings.push(`${tag}/handoff.md has no "at:" commit; run \`keelson handoff ${c.name}\` to stamp it`);
+  }
+
+  for (const h of knowledgeHealth(root, cfg, p)) {
+    if (h.level === 'error') errors.push(`${h.kind}: ${h.text} → ${h.fix}`);
   }
 
   const patterns = datedIdPatterns();

@@ -94,8 +94,8 @@ export function workflowContent(lang, guide = false) {
   let text = read(file).replace(/\r\n?/g, '\n');
   if (!guide) return text;
   const line = lang === 'zh'
-    ? '> 引导模式：项目所有者正在学习工程实践。用具体场景提问，给出推荐与取舍，解释术语；spec 变更收尾时附一段简短教学说明。'
-    : '> Guided mode: the owner is learning engineering. Ask with concrete scenarios, recommend with trade-offs, explain terms, and close spec changes with a short teaching note.';
+    ? '> 引导模式：项目所有者希望边做边学。基础提问仍保持场景化；额外解释已采用的工程概念、约束理由，并在 spec 变更收尾时附一段简短教学说明。'
+    : '> Guided mode: the owner wants to learn while building. Keep the same accessible questions; additionally name the engineering ideas behind decisions, explain constraint rationale, and close spec changes with a short teaching note.';
   return text.replace(/^# ([^\n]+)\n/, (m) => `${m}\n${line}\n`);
 }
 

@@ -15,7 +15,7 @@ profile: lean
 default_tier: auto
 confirm:
   quick: proceed
-  spec: wait
+  spec: proceed
 land: fold
 check:
   - npm run lint
@@ -61,12 +61,12 @@ effort:
 | `profile` | `lean` | `lean` ships stance and principles only. `guided` keeps the extra step lists and examples. `keelson init --profile` sets it |
 | `default_tier` | `auto` | Informational. `auto` means the agent sizes each change. Set `quick` or `spec` to state a preference in the file the agent reads |
 | `confirm.quick` | `proceed` | `proceed`: the agent writes back its understanding and starts. `wait`: it waits for approval first |
-| `confirm.spec` | `wait` | Spec changes always wait unless you set `proceed` |
+| `confirm.spec` | `proceed` | `proceed`: after the short write-back, spec-sized work starts unless a real owner decision remains. Set `wait` when your team wants an explicit plan-approval checkpoint |
 | `land` | `fold` | `fold` removes the change directory after merging. `keep` moves it to `changes/archive/` |
 | `check` | detected | What `keelson check` runs, in order, from the project root through the shell. Each entry is a command string, or an object `{name, command, kind}` where `kind` is one of `test`, `lint`, `typecheck`, `build`, `fitness`, `check`. For a plain string the kind is guessed from the command. Detected from `package.json` scripts, `pyproject.toml`, `pytest.ini`, `go.mod`, or `Cargo.toml` on first init |
-| `guide` | `false` | `true` when the owner is learning engineering. Adds a guided-mode line to `.keelson/workflow.md` and a note to `keelson context`; the skill then explains with scenarios and trade-offs and closes spec changes with a short teaching note. `keelson init --guide` sets it |
+| `guide` | `false` | Optional teaching mode. Questions are already scenario-first and understandable by default; `true` additionally names the engineering ideas behind settled decisions, explains constraint rationale, and closes spec changes with a short teaching note. `keelson init --guide` sets it |
 | `hooks` | `true` | Whether Keelson-managed lifecycle/session hooks or plugins are installed for selected hosts. This currently controls Claude, OpenCode, and CodeBuddy bridges; Pi stays native because `PI_SESSION_ID` is provided by Pi itself. `--no-hooks` persists `false`; `--hooks` turns managed bridges back on |
-| `budgets` | see below | Line budgets per document type. `keelson doctor` reports a document over its budget and asks for a compaction; nothing is rewritten automatically |
+| `budgets` | see below | Soft line budgets per document type. Keelson routes pressure to the Agent internally; large specs auto-shard, singleton/rule compaction happens during RECONCILE, and durable files hard-fail only at 2× budget |
 | `context` | `""` | Free text printed at the top of `keelson context` output. Use it for facts that do not fit INTENT.md, such as a tech stack summary |
 | `paths.specs` | `.keelson/specs` | Directory of behaviour contracts, one `<capability>/spec.md` each. Point it at an existing contracts directory to reuse it |
 | `refs.architecture` | detected | Path to architecture notes, referenced by `keelson context`, never copied |
@@ -96,7 +96,7 @@ effort:
 | `handoff` | `100` | each active `handoff.md` |
 | `always-on` | `300` | the rule files routed by `**` or `*`, added together, because every session reads them |
 
-Budgets are in lines. Crossing one is a signal to compact that document (rewrite in the present tense, split by capability or scope, delete what git already keeps, move a checkable rule into `check:`), never an error. Set a key to `0` to disable that budget.
+Budgets are in lines and are soft compaction thresholds. Crossing one warns and surfaces knowledge pressure in `status` / `context`. Durable truth (`INTENT`, `ROADMAP`, `NOW`, `GLOSSARY`, specs, rules, and the always-on rule set) has a hard ceiling at **2× the configured budget**; `validate` / `doctor` fail beyond it, and `land` refuses a projected spec or NOW that would cross it before writing anything. Active `change.md` and `handoff.md` are temporary scaffolding, so they only warn. Set a key to `0` to disable that budget.
 
 ### Check kinds
 

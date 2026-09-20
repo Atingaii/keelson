@@ -5,11 +5,11 @@
 
 ## 从这里开始
 
-- **Agent 开始工作：** `workflow.md` → `skill/SKILL.md`。
-- **人想知道“现在怎样了”：** `NOW.md`。
-- **项目为什么存在 / 边界 / 权限：** `INTENT.md`。
-- **某个能力今天怎样工作：** 有契约时看 `specs/<capability>/spec.md`。
-- **已有进行中的工作：** 先看 `changes/<name>/change.md`，再只看旁边实际存在的工件。
+人通常只需要看两个文件：
+- **现在在做什么？** → `NOW.md`
+- **项目为什么存在 / 边界是什么？** → `INTENT.md`
+
+Agent 从 `workflow.md` → `skill/SKILL.md` 开始。其他内容都按需自动维护；正常开发不需要任何人管理 Keelson 目录。
 
 ## init 后始终存在
 
@@ -29,7 +29,9 @@
 |---|---|
 | `ROADMAP.md` | 项目存在 tracker 没有清楚表达的里程碑/方向 |
 | `GLOSSARY.md` | 共享术语开始重要或出现歧义 |
-| `specs/<capability>/spec.md` | 某能力的可观察行为值得成为契约 |
+| `specs/<capability>/spec.md` | 某能力的可观察行为值得成为契约；契约变大后它自动保持为小型索引 |
+| `specs/<capability>/requirements/*.md` | 某个 capability 契约超出单文件可读范围时自动出现 |
+| `specs/<capability>/decisions/*.md` | capability 局部长期决策增长时自动出现；每个长期决策一个小文件 |
 | `rules/index.md` + `rules/*.md` | 稳定工程不变量适用于某路径，并且不适合直接变成 check |
 | `changes/<name>/change.md` | 非平凡工作需要可评审的边界 |
 | `changes/<name>/tasks.md` | 工作需要明确的多步骤 / 多切片计划 |
@@ -55,4 +57,4 @@
 
 ## 人类阅读原则
 
-优先写现在时的当前真相。某份文件开始难扫读时，`keelson doctor` 会给出 knowledge-health 信号；应压缩或拆分，而不是继续追加历史段落。
+优先写现在时的当前真相。Keelson 会让高频文件保持有界、自动分片大型 spec，并把内部压缩任务交给 Agent。人不需要执行 housekeeping 命令，也不需要理解底层存储布局才能继续工作。

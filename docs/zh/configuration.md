@@ -17,7 +17,7 @@ profile: lean
 default_tier: auto
 confirm:
   quick: proceed
-  spec: wait
+  spec: proceed
 land: fold
 check:
   - npm run lint
@@ -63,12 +63,12 @@ effort:
 | `profile` | `lean` | `lean` 只发出姿态和原则。`guided` 保留额外的步骤清单和示例。`keelson init --profile` 设置它 |
 | `default_tier` | `auto` | 仅供参考。`auto` 表示代理给每个变更定大小。设为 `quick` 或 `spec` 可在代理读的文件里表明偏好 |
 | `confirm.quick` | `proceed` | `proceed`：代理写回理解后开始。`wait`：先等批准 |
-| `confirm.spec` | `wait` | spec 变更总是等批准，除非你设为 `proceed` |
+| `confirm.spec` | `proceed` | `proceed`：短 write-back 后，只要没有真实的所有者决定未解决就直接推进。团队需要显式 plan 审批点时设为 `wait` |
 | `land` | `fold` | `fold` 在合并后删除变更目录。`keep` 把它移到 `changes/archive/` |
 | `check` | 自动探测 | `keelson check` 按顺序从项目根目录通过 shell 运行的内容。每个条目是一个命令字符串，或对象 `{name, command, kind}`，其中 `kind` 取 `test`、`lint`、`typecheck`、`build`、`fitness`、`check` 之一。对纯字符串，kind 从命令猜测。首次 init 时从 `package.json` 脚本、`pyproject.toml`、`pytest.ini`、`go.mod` 或 `Cargo.toml` 探测 |
-| `guide` | `false` | 所有者正在学习工程时设为 `true`。往 `.keelson/workflow.md` 加一行引导模式说明，往 `keelson context` 加一条提示；技能随后用场景和取舍解释，并在 spec 变更收尾时附一段简短的教学说明。`keelson init --guide` 设置它 |
+| `guide` | `false` | 可选教学模式。默认提问本来就使用场景和易懂语言；设为 `true` 后额外解释已落定决定背后的工程概念、约束理由，并在 spec 变更收尾时附一段简短教学说明。`keelson init --guide` 设置它 |
 | `hooks` | `true` | 是否安装由 Keelson 管理的 lifecycle/session hook 或 plugin。当前控制 Claude、OpenCode、CodeBuddy bridge；Pi 的 `PI_SESSION_ID` 由宿主内置，所以仍保持 native。`--no-hooks` 持久写成 `false`；`--hooks` 重新开启 |
-| `budgets` | 见下文 | 每种文档的行数预算。`keelson doctor` 报告超预算的文档并要求压缩；没有任何东西被自动重写 |
+| `budgets` | 见下文 | 每种文档的软行数预算。Keelson 把压力作为内部信号交给 Agent：大型 spec 自动分片，单例/rule 在 RECONCILE 中自动整理，长期文档只有到 2× 预算才硬失败 |
 | `context` | `""` | 打印在 `keelson context` 输出顶部的自由文本。用于放不进 INTENT.md 的事实，比如技术栈概要 |
 | `paths.specs` | `.keelson/specs` | 行为契约目录，每个能力一个 `<capability>/spec.md`。指向已有的契约目录即可复用 |
 | `refs.architecture` | 自动探测 | 架构说明的路径，由 `keelson context` 引用，从不复制 |
@@ -98,7 +98,7 @@ effort:
 | `handoff` | `100` | 每个活动的 `handoff.md` |
 | `always-on` | `300` | 由 `**` 或 `*` 路由的 rule 文件之和，因为每个会话都会读它们 |
 
-预算以行计。超过预算是压缩那份文档的信号（用现在时重写、按能力或范围拆分、删除 git 已经保留的内容、把可检查的规则移进 `check:`），从不是错误。把某个键设为 `0` 可关闭该预算。
+预算按行计算，是软压缩阈值。超过预算会警告，并在 `status` / `context` 中显示知识压力。长期真相（`INTENT`、`ROADMAP`、`NOW`、`GLOSSARY`、specs、rules，以及常驻 rule 集合）的硬上限是**配置预算的 2 倍**；超过后 `validate` / `doctor` 会失败，`land` 也会在写入前拒绝会越过硬上限的 spec 或 NOW。活跃 `change.md` 与 `handoff.md` 是临时脚手架，因此只警告。把某个键设为 `0` 可关闭对应预算。
 
 ### 检查类型
 

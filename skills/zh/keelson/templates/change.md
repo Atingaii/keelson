@@ -17,10 +17,6 @@ status: clarifying
 ## How
 …
 
-## Alternatives
-- **Option A (chosen)** — …
-- **Option B** — strongest argument for it: … Rejected because: …
-
 ## Impact
 - …（调用方、其他入口、数据、权限、兼容性；`keelson impact <files>` 给提示，阅读给答案）
 
@@ -32,5 +28,5 @@ status: clarifying
 - … — blocks: <它阻塞的切片或任务>
 
 ## Decisions
-- {{capability}}: …（现在时；写明被否决的选项）
+- {{capability}}: …（现在时；只记录未来仍有价值的长期理由）
 - (assumed) {{capability}}: …（你的工作假设；落地前由负责人确认）

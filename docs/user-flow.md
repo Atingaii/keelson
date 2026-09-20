@@ -194,17 +194,18 @@ Those are all conversation turns. They do not need “task start/finish” marke
 A change becomes `ready` only when the mechanical/durable state says so:
 
 ```text
-required tasks complete
-AND acceptance complete
+acceptance complete
 AND no blocking open questions
+AND no active dependencies
 AND no unconfirmed assumptions
+AND no unresolved spec drift
 AND breaking change has rollout
 AND verification passes on current tree
 ```
 
-For a quick change, absence of a tasks file is fine.
+`tasks.md` is a mutable execution plan in every tier. It may be absent, incomplete, or rewritten without preventing readiness when the accepted outcome is satisfied.
 
-For a spec change, the planned tasks/acceptance contract matters.
+For a spec change, the Acceptance contract and behaviour delta are authoritative; the plan is not.
 
 If verification was green and code is edited afterward, readiness disappears because evidence becomes stale.
 
@@ -342,9 +343,10 @@ keelson status
 Diagnostics/update:
 
 ```bash
-keelson doctor
 keelson update
 ```
+
+Knowledge maintenance itself is automatic: the Agent consumes internal health signals during RECONCILE, specs auto-shard when needed, and runtime caches self-prune. `doctor` is a diagnostic tool, not a required housekeeping step.
 
 The Agent handles `focus`, `new`, `context`, `impact`, `check`, `land`, and exceptional `handoff`.
 

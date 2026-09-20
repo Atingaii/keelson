@@ -1,12 +1,13 @@
 import path from 'node:path';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
-import { read, exists, listDirs } from '../lib/fs.js';
+import { exists, listDirs } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
 import { matchRules } from '../lib/rules.js';
 import { importers } from '../lib/git.js';
 import { loadAllChanges } from '../lib/changes.js';
 import { list } from '../lib/args.js';
 import { heading, dim, warn } from '../lib/out.js';
+import { readCapabilitySpec } from '../lib/specs.js';
 
 /** Mechanical impact hints for a set of files. Navigation, never proof of completeness. */
 export function impactOf(root, cfg, files) {
@@ -18,7 +19,7 @@ export function impactOf(root, cfg, files) {
   for (const cap of listDirs(p.specs)) {
     const f = path.join(p.specs, cap, 'spec.md');
     if (!exists(f)) continue;
-    const txt = read(f).toLowerCase();
+    const txt = readCapabilitySpec(p.specs, cap).toLowerCase();
     const hit = words.filter((w) => txt.includes(w.toLowerCase()));
     if (hit.length || rel.some((r) => r.toLowerCase().includes(cap.toLowerCase()))) specs.push({ capability: cap, matched: hit });
   }

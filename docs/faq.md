@@ -12,14 +12,14 @@ No. You talk normally. The Agent runs the CLI, binds/recovers session focus when
 **What happens with a tiny change?**
 Nothing. Trivial changes (style, typos, a one-file fix with no behaviour change) get no change directory and no write-back. The agent just does them.
 
-**Can I approve quick changes before the agent starts?**
-Set `confirm.quick: wait` in `.keelson/config.yaml`. Spec changes always wait for approval unless you set `confirm.spec: proceed`.
+**Can I require approval before the agent starts?**
+Yes. Set `confirm.quick: wait` and/or `confirm.spec: wait` in `.keelson/config.yaml`. By default both proceed after the short write-back when no unresolved owner-owned decision remains; irreversible/production/permission/breaking actions still require their normal explicit confirmation.
 
 **What happens in a scripted run where nobody can approve?**
 The agent does not stall. It writes the understanding and the plan, marks its working assumptions `(assumed)` under `Decisions`, builds and verifies under them, records evidence, and stops before landing. `NOW.md` says the change awaits review. You read the plan and the diff together and run `keelson land <name> --confirm-assumptions`, or `keelson cancel <name>`.
 
 **Why did `keelson land` refuse?**
-It lists every reason: unchecked tasks or acceptance items, a spec change without an acceptance list, open questions, verification that is not-run, failed, partial, or stale, `(assumed)` decisions without `--confirm-assumptions`, a `**BREAKING**` bullet without a `Rollout` section, or a delta written against a spec that has since changed (pass `--accept-drift` after re-reading). Fix the reason rather than reaching for `--force`; `--force` exists for your explicit decision and prints what it overrode.
+It lists every real lifecycle blocker: incomplete acceptance, active dependencies, a spec change without an acceptance list, open questions, stale contract drift, verification that is not-run/failed/partial/stale, `(assumed)` decisions without `--confirm-assumptions`, or a `**BREAKING**` change without `Rollout`. Unchecked tasks are advisory planning state, not blockers. Fix the reason rather than reaching for `--force`; `--force` exists for your explicit decision and prints what it overrode.
 
 **How do I confirm the agent's assumptions?**
 Read the `(assumed)` lines under `Decisions` in `change.md`. If they are right, land with `--confirm-assumptions`; they fold into the spec as confirmed. If one is wrong, edit the line (or tell the agent), and let the work that depended on it be redone before landing.
@@ -42,11 +42,11 @@ From git tags. `keelson land` marks integration; `keelson status` prints the las
 **Does it work in a monorepo?**
 Yes. Rules are routed by path glob, so `packages/api/**` and `packages/web/**` can each have their own rule file. Specs are organised by capability name, which can include a path segment such as `api/orders`. `touches` on a change uses the same globs.
 
-**I'm new to engineering. Does it help me learn?**
-Run `keelson init --guide` (or set `guide: true` in `config.yaml`). The agent then asks about scenarios before technology, presents each choice with a recommendation, the reason, the alternatives, and the trade-off, explains a rule in one sentence when it applies it, names the engineering idea after you have decided, and ends each spec change with a short teaching note. The files, gates, and states are the same as for anyone else, so what you build is not a beginner's version of the project.
+**I'm new to engineering. Will the questions make sense?**
+Yes by default. Keelson always asks owner decisions in plain-language scenarios, recommends a grounded default, and treats “not sure” as a valid route; you do not need `--guide` for that. Enable `keelson init --guide` (or `guide: true`) only if you also want short teaching notes that name the engineering idea behind settled decisions and explain why constraints exist. The files, gates, and states stay identical.
 
 **Documents keep growing. What stops them?**
-Line budgets in `config.yaml → budgets` and `keelson doctor`. Doctor reports a document over its budget, requirement text that reads like history, duplicated requirement names, changes idle for two weeks, changes with more than 25 tasks, always-on rules over budget, and generated docs older than the code. Each finding suggests a compaction (rewrite in the present tense, split, delete what git keeps, move a checkable rule into `check:`). Nothing is rewritten for you; the skill's `reconcile.md` reference tells the agent where each fact belongs and how to compact.
+Keelson bounds **hot files, not total project knowledge**. The Agent handles knowledge-health findings during normal RECONCILE without asking you to do housekeeping. Large capability specs automatically become a small `spec.md` index plus `requirements/*.md` and `decisions/*.md` when needed; rules split by scope; NOW/INTENT are rewritten as concise current-state views; old runtime evidence/session files are garbage-collected. ADR/spec/rule directories may keep growing as the project evolves, but only relevant files are loaded for a task. `keelson doctor` remains available for diagnostics, not routine maintenance.
 
 **Is it opinionated about test-driven development?**
 No. The `verify` reference asks for evidence that matches the code and covers the acceptance list. The `guided` profile adds a note suggesting test-first when a scenario exists in the delta spec and a prototype when the problem is visual or an unknown API. The `lean` profile leaves the method to the agent.
@@ -54,8 +54,8 @@ No. The `verify` reference asks for evidence that matches the code and covers th
 **What does it cost in tokens?**
 The discovery block is under 10 lines and the canonical Skill loads references on demand. Native session adapters inject only a compact focus/candidate hint: Claude and CodeBuddy at lifecycle prompts, OpenCode/Pi mostly through shell identity with no extra prose. Rules are read only when their glob matches. Keelson deliberately avoids replaying the whole work history into every turn.
 
-**What if the agent ignores it?**
-Run `keelson doctor`. It checks the canonical runtime, discovery shims, manifest, native session adapter files/registrations where enabled, stale session pointers, and project validation. `keelson update` repairs package-owned drift. If the agent sizes a change wrongly, say “treat this as spec” or “just do it”.
+**What if the integration is unhealthy?**
+`keelson doctor` is available as a diagnostic check for canonical runtime, discovery shims, manifest, session adapters, lifecycle state, and project validation. `keelson update` repairs package-owned drift. Normal development should not require either command beyond upgrades or troubleshooting.
 
 **How do I get rid of it?**
 `keelson uninstall` removes generated runtime/integration surfaces (`.keelson/workflow.md`, `.keelson/skill/`, host discovery shims, hooks, local state) while keeping project facts under `.keelson/`; add `--purge` to remove `.keelson/` entirely. For a temporary comparison, `keelson ablate` stashes every surface and `keelson restore` brings it back byte for byte.

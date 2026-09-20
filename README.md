@@ -38,7 +38,7 @@ The agent creates/binds one durable change and keeps this conversation focused o
 
 You can keep asking questions like this indefinitely. No “finish task” phrase is required.
 
-When acceptance is satisfied and fresh verification matches the current tree, Keelson derives the work state as **ready**. The agent lands it automatically before claiming completion. If you simply close the window first, the durable change remains in progress; only the local session focus disappears.
+When acceptance is satisfied, active dependencies/blockers/assumptions/spec drift are clear, and fresh verification matches the current tree, Keelson derives the work state as **ready**. The agent lands it automatically before claiming completion. If you simply close the window first, the durable change remains in progress; only the local session focus disappears.
 
 A later session can deliberately resume it with `keelson focus --auto` when the candidate is unambiguous. A committed `handoff.md` is reserved for a real ownership/machine transfer, not ordinary chat continuation.
 
@@ -56,17 +56,13 @@ That is the normal setup.
 
 Then open Claude Code, Codex, OpenCode, Pi, Gemini CLI, Kiro CLI, or CodeBuddy CLI in the project and work as usual.
 
-Most users only ever run:
+Normal use requires only:
 
 ```bash
-keelson init       # once
-keelson status     # optional: inspect current state
-keelson doctor     # diagnose
-keelson update     # after upgrading or changing hosts
-keelson uninstall  # remove generated integration surfaces
+keelson init       # once, then talk to your agent normally
 ```
 
-The rest of the CLI exists primarily for the coding agent.
+`status` is optional inspection, `doctor` is for troubleshooting, `update` is for upgrades/host changes, and `uninstall` removes the integration. Knowledge compaction, spec sharding, runtime cleanup, and the remaining engineering commands are internal Keelson/agent work.
 
 ## One golden path
 
@@ -87,6 +83,19 @@ Keelson routes user messages into five conversational intents:
 A session is only a local focus pointer. Ending a session never completes, cancels, or lands a change.
 
 See the full walkthrough: **[Complete user flow](docs/user-flow.md)**.
+
+## You do not need to be the architect
+
+Keelson does not turn every feature into an architecture interview. The agent reads the repository first, decides reversible implementation details itself, and asks only when **your answer changes the product, risk boundary, public compatibility, cost, or another durable commitment**.
+
+When it must ask, it defaults to one concrete decision at a time:
+
+> **You:** Build a shared memory service for several agents.  
+> **Agent:** One choice changes the design: should a memory be private until explicitly shared, or visible to the whole team by default? I recommend private-by-default + explicit sharing because it keeps the permission boundary narrow while still allowing collaboration. If you are not sure, I can use that default.
+
+Technical vocabulary comes after the consequence is understood. “Not sure” is a valid answer: Keelson then investigates, uses a reversible default, or makes the trade-off visible with a small prototype. `guide: true` adds teaching explanations; understandable questions are the default for everyone.
+
+Cross-domain concerns are risk-triggered, not a questionnaire. A payment change may trigger data integrity and audit/reconciliation; a webhook may trigger idempotency/retry; an auth change may trigger security/privacy. Those concerns become acceptance tests, rules, or evidence—not a generic architecture document.
 
 ## A small control plane that grows only when needed
 
@@ -111,7 +120,7 @@ Optional durable knowledge appears only when it carries real information:
 ROADMAP.md                   # milestone/direction if the tracker does not already own it
 GLOSSARY.md                  # load-bearing vocabulary
 rules/                       # durable scoped invariants
-specs/<capability>/spec.md   # behavior contracts
+specs/<capability>/          # behavior contract; monolith when small, auto-sharded when large
 changes/<name>/              # durable work items in flight
 ```
 
@@ -134,7 +143,9 @@ changes/rename-buyer/
 
 `tasks.md`, `ledger.md`, delta specs, and `handoff.md` appear only when they carry a plan, evidence, contract delta, or explicit ownership transfer.
 
-**Empty scaffolding is not progress; a closed conversation is not completion.**
+Large capabilities automatically become a small `spec.md` index + `requirements/*.md` + `decisions/*.md` when needed. ADR/rule/spec file counts may grow with the project, while individual hot files and current context remain bounded. Old session/evidence cache entries are pruned automatically.
+
+**Empty scaffolding is not progress; a closed conversation is not completion; control-plane maintenance is not user work.**
 
 ## One canonical runtime
 

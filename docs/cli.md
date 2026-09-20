@@ -179,7 +179,7 @@ keelson land [name] [--now "<text>"] [--confirm-assumptions] [--accept-drift]
              [--keep] [--force] [--dry-run]
 ```
 
-Refuses, listing every reason, while tasks or acceptance items are unchecked, a spec-tier change has no acceptance list, open questions remain, verification is not `passed`, `(assumed)` decisions exist without `--confirm-assumptions`, a `**BREAKING**` bullet has no `## Rollout`, or a delta's `base:` no longer matches the main spec without `--accept-drift`. Then merges each delta into `<paths.specs>/<capability>/spec.md`, appends `Decisions` lines, and removes the change directory (or archives it as `integrated` with `--keep` or `land: keep`). `--now` rewrites `NOW.md`. `--dry-run` previews. `--force` overrides the gates and prints what it overrode.
+Refuses, listing every real lifecycle blocker, while acceptance is incomplete, an active dependency remains, a spec-tier change has no acceptance contract, open questions or unreconciled contract drift remain, verification is not `passed`, `(assumed)` decisions still need owner confirmation, or a breaking change has no rollout. Task checkboxes are advisory only. Landing projects all durable writes first; large capability contracts automatically shard into a bounded `spec.md` index + `requirements/*.md` + `decisions/*.md` when needed, then the change folds or archives. `--now` rewrites `NOW.md`; `--dry-run` previews; `--force` is reserved for explicit owner overrides.
 
 ```text
 $ keelson land add-pagination
@@ -227,7 +227,7 @@ Reports the Node version, pending config migration, canonical runtime integrity,
 
 ### Knowledge health
 
-Findings about the project's documents, reported as warnings or information with a suggested fix, never applied automatically:
+`keelson doctor` itself is read-only: it reports document-health signals and suggested fixes. During normal Agent work, the same signals are consumed internally during RECONCILE; deterministic structure maintenance may happen automatically, while semantic rewrites are re-verified and only owner-owned semantic decisions are surfaced:
 
 | Kind | Reported when |
 |---|---|
@@ -239,9 +239,9 @@ Findings about the project's documents, reported as warnings or information with
 | `stale-generated` | a file under `docs/generated/` is older than the source tree by more than a day |
 
 ```text
-knowledge health: findings are suggestions for small compactions, never automatic rewrites
-! budget: INTENT.md is 153 lines (budget 120) → compact: rewrite the current truth, split by capability or scope, delete history that git already keeps, move automatable rules into checks
-! narrative: .keelson/specs/orders/spec.md reads like history in places → current truth is present tense; reasons go to Decisions, the sequence of changes stays in git
+knowledge health: diagnostics for Keelson/Agent maintenance
+! budget: INTENT.md is 153 lines (budget 120) → internal RECONCILE rewrites current truth
+! narrative: .keelson/specs/orders reads like history in places → internal RECONCILE keeps current truth present-tense
 ```
 
 ## `keelson ablate` / `keelson restore`

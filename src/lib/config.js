@@ -9,7 +9,7 @@ export const DEFAULT_CONFIG = {
   lang: 'en',
   profile: 'lean',
   default_tier: 'auto',
-  confirm: { quick: 'proceed', spec: 'wait' },
+  confirm: { quick: 'proceed', spec: 'proceed' },
   land: 'fold',
   check: [],
   guide: false,
@@ -66,7 +66,7 @@ export function renderConfig(cfg) {
     '# Keelson project configuration. Every key is optional; defaults are shown.',
     '# paths.specs: where behaviour contracts live. refs.*: existing project material, referenced, never copied.',
     '# check: commands (strings, or {name, command, kind}) that prove the code works. guide: learning mode. hooks: persist host hook installation.',
-    '# budgets: line budgets per document type; `keelson doctor` asks for a compaction when one is exceeded.',
+    '# budgets: soft line budgets per document type; durable truth hard-fails at 2x, while temporary change/handoff files only warn.',
     '# Docs: https://github.com/Atingaii/keelson/blob/main/docs/configuration.md',
     doc.toString(),
   ].join('\n');
