@@ -194,10 +194,11 @@ Those are all conversation turns. They do not need “task start/finish” marke
 A change becomes `ready` only when the mechanical/durable state says so:
 
 ```text
-required tasks complete
-AND acceptance complete
+acceptance complete
 AND no blocking open questions
+AND no active dependencies
 AND no unconfirmed assumptions
+AND no unresolved spec drift
 AND breaking change has rollout
 AND verification passes on current tree
 ```
