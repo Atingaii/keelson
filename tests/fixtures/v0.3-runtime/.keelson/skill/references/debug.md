@@ -37,7 +37,3 @@ Categories, one per entry:
 
 If the category is `missing-rule` or `cross-layer`, propose the rule or the spec requirement that would have prevented it, and add it while the context is fresh.
 
-<!-- guided -->
-## When the fix is not obvious
-Ask what changed recently (`git log -p` on the failing area), what the data looked like, and whether the failure is in your code or in an assumption about a dependency. Each of these is a distinct layer; pick the layer before the line.
-<!-- /guided -->

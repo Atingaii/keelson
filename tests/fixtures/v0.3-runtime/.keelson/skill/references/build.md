@@ -52,10 +52,3 @@ When the other owner cannot be reached (an unattended run, a colleague offline),
 
 Tick tasks as they are verified, not as they are written. Tick acceptance items when their check has run. When the design changes mid-build, edit `change.md` and, if behaviour changed, the delta spec. Nothing is locked; the only rule is that the files reflect reality at every commit. If you stop before the change is done, `keelson handoff <name>` and fill it in (see `handoff.md`).
 
-<!-- guided -->
-## Test-first when behaviour is specified
-Where a scenario exists in the delta spec, write the failing test from the scenario first, watch it fail, implement, watch it pass. Where no scenario exists, judge whether a test is the cheapest evidence. Visual exploration and unknown APIs may start with a small prototype instead.
-
-## Narration
-Between tool calls, at most one short line. The ledger and tool output carry the record.
-<!-- /guided -->

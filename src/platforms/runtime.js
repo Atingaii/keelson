@@ -77,10 +77,12 @@ function normalize(text) {
   return String(text).replace(/\r\n?/g, '\n');
 }
 
+// These hashes are the exact lean v0.3 output. Some references had guided
+// blocks removed at render time, so raw package files are not ownership proof.
 const LEGACY_V03_SKILL_HASHES = new Map(`SKILL.md 6c1d26976fdc0c0ddf714f20ee0150ddd4f5a90f86aa9e484f4492de8d8bb12e
-references/build.md c377ac5951cef8e64cead62d34cfa517200e1d0ba15afa793e33492ca41f466b
-references/context.md e671afb8dbdb29ee246585db00c0eed79a8dbff7a7b1f7b571a3eae580b63095
-references/debug.md 7255e959677b0b4a5e0d2b069920e5e21bb541009d0215559c07901c180fdafd
+references/build.md db9cbde5a8325ba02653455f618408de879d946ca2e5dbe313bcb65b48191b8c
+references/context.md 30e0a08427fd542b407afa607b62f7649e5a4d94f80c47e3ff049fa1898e5012
+references/debug.md 7709ac8366ace80ebca52deb297b284d21597b92a21a2488bf4aa36bb83e4b3d
 references/design-lenses.md fd4f2f98433411426534a28d8dde809e63203cce106c6f834a64e9fbb6848576
 references/discover.md e5254a3e45f06e6660398652bb4ebcb7d7dc1d4b13fffc7d19333828f1dec027
 references/engineer.md 5446edf1abdc5f611a60891e3e99c8a5630b3a7364cb1aa239dadb681beaf17b
@@ -92,7 +94,9 @@ references/model.md 23f8414ff2b04e08660d94f72003f85b006547d87c19140746d58015071a
 references/plan.md 92fc655e6381d195a4a3fe803a98f1c3b7f5691a92370c1c91902326f0896565
 references/reconcile.md f10681dce0a99e4b775ab50dfa0025639f9f718ce80ab2514f89b3aa990ae19c
 references/shape.md 15ad8313300a9abb30d648c52544c6a089cf7293aa55fb12a7e964e6d74a18ad
-references/verify.md 03293659d21e64cd30abe93be81a154d5be04fed820e683783170267b0c4147b`.split('\n').map((line) => line.split(' ')));
+references/verify.md b8f617f5060a598bb135e62a2087252b5e9bc2f2dde58bd2e26f0fc5249e3faf`.split('\n').map((line) => line.split(' ')));
+
+const LEGACY_V03_SKILL_SHIM_HASH = '68a1924866f8ee5af87d0cd75884d3d1ba5bb3138c4daa2d6bd0f6a7d53cd2ef';
 
 function fileHash(text) {
   return crypto.createHash('sha256').update(normalize(text)).digest('hex');
@@ -122,13 +126,48 @@ export function installCanonicalSkill(root, { lang, profile, version, force = fa
   return path.relative(root, dest);
 }
 
-export function installSkill(root, target, { lang, version, force = false }) {
+function legacyV03SkillShimMatches(dest, legacyVersion) {
+  const skill = path.join(dest, 'SKILL.md');
+  return legacyVersion === '0.3.0' && exists(skill) && walk(dest).length === 1 && fileHash(read(skill)) === LEGACY_V03_SKILL_SHIM_HASH;
+}
+
+function skillShimMatches(dest, content, legacyVersion) {
+  const skill = path.join(dest, 'SKILL.md');
+  return exists(skill) && walk(dest).length === 1 &&
+    (normalize(read(skill)) === content || legacyV03SkillShimMatches(dest, legacyVersion));
+}
+
+function assertSkillInstallable(root, target, { lang, version, legacyVersion, force }) {
+  const p = typeof target === 'string' ? PLATFORMS[target] : target;
+  const dest = path.join(root, p.skillsDir, 'keelson');
+  if (exists(dest) && !skillShimMatches(dest, renderSkillShim(lang, version), legacyVersion) && !force) {
+    throw new Error('discovery shim differs from this CLI output; Keelson left it unchanged. Review it, then pass --force only if replacing the whole directory is intended.');
+  }
+}
+
+/** Validate discovery replacements before init changes config or legacy runtime. */
+export function assertSkillsInstallable(root, targets, options) {
+  const seen = new Set();
+  for (const target of targets) {
+    const p = typeof target === 'string' ? PLATFORMS[target] : target;
+    if (seen.has(p.skillsDir)) continue;
+    seen.add(p.skillsDir);
+    assertSkillInstallable(root, p, options);
+  }
+}
+
+/** True only for a complete current shim or the byte-exact v0.3 shim. */
+export function managedSkillShimMatches(root, target, version) {
+  const p = typeof target === 'string' ? PLATFORMS[target] : target;
+  const dest = path.join(root, p.skillsDir, 'keelson');
+  return ['en', 'zh'].some((lang) => skillShimMatches(dest, renderSkillShim(lang, version), version));
+}
+
+export function installSkill(root, target, { lang, version, legacyVersion = null, force = false }) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
   const dest = path.join(root, p.skillsDir, 'keelson');
   const content = renderSkillShim(lang, version);
-  if (exists(dest) && (!exists(path.join(dest, 'SKILL.md')) || walk(dest).length !== 1 || normalize(read(path.join(dest, 'SKILL.md'))) !== content) && !force) {
-    throw new Error('discovery shim differs from this CLI output; Keelson left it unchanged. Review it, then pass --force only if replacing the whole directory is intended.');
-  }
+  assertSkillInstallable(root, p, { lang, version, legacyVersion, force });
   withLock(dest, () => replaceDirSafe(dest, (tmp) => write(path.join(tmp, 'SKILL.md'), content)));
   return path.relative(root, dest);
 }

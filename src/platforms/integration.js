@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { exists, read, readJson, readOr, rmrf, write, writeJson } from '../lib/fs.js';
 import { installTargets, PLATFORMS } from './registry.js';
-import { residentBlock } from './runtime.js';
+import { managedSkillShimMatches, residentBlock } from './runtime.js';
 
 export const MANAGED_STATE = path.join('.keelson', 'manifest.json');
 export const LEGACY_MANAGED_STATE = path.join('.keelson', '.managed.json');
@@ -11,9 +11,8 @@ export const LEGACY_MANAGED_STATE = path.join('.keelson', '.managed.json');
 // v0.3 copied these package scripts into the project.  Retire only byte-for-byte
 // known copies: a user amendment to an old hook is their file, not ours.
 const LEGACY_COPIED_HOOK_HASHES = new Map([
-  ['session-start.mjs', '2b2f3523abaf14671764a0f1967ad649881013cc8cc3cb70b51e91b4b5d9dee7'],
-  ['prompt-state.mjs', '10cf6cb9781c58330160602d85dcd2d417bc11c1e99223a7e55477a2529448a7'],
-  ['codebuddy-session.mjs', 'cbdcbac42ab752387721c3b53f9fae50a22e04d2e04dbb612dba45d90efc25a8'],
+  ['session-start.mjs', '2c425e68f52b1b9c8febeb410916b14b302893bf0b241ea1b9ba4275452ee217'],
+  ['prompt-state.mjs', 'cd7301e7efa00368a437d8a3e084844df1cd611969ae2465c82d8ac8f6707131'],
 ]);
 
 export const LEGACY_MANAGED_PATHS = [
@@ -101,18 +100,11 @@ export function staleManagedTargets(root, targets) {
   return managedTargets(root).filter((t) => !current.has(targetKey(t)));
 }
 
-function looksKeelsonOwned(root, rel) {
-  const target = path.join(root, rel);
-  if (!exists(target)) return false;
-  const candidate = fs.statSync(target).isDirectory() ? path.join(target, 'SKILL.md') : target;
-  if (!exists(candidate)) return false;
-  const text = readOr(candidate, '');
-  return /^name:\s*keelson\s*$/m.test(text) || /<!-- keelson:start -->|#\s+Keelson|Keelson project workflow/i.test(text);
-}
-
 export function legacyManagedRemovals(root, targets) {
-  const current = new Set(targets.flatMap(managedSurfacePaths));
-  return LEGACY_MANAGED_PATHS.filter((rel) => !current.has(rel) && looksKeelsonOwned(root, rel));
+  // Older releases did not record byte-level ownership for these retired paths.
+  // A title or frontmatter is not sufficient proof that a directory is ours.
+  // Keep unknown legacy content for the owner to review instead of deleting it.
+  return [];
 }
 
 export function plannedManagedRemovals(root, targets) {
@@ -167,7 +159,8 @@ export function installInstructions(root, target, { lang }) {
   return touched;
 }
 
-const HOOK_MARK = 'keelson hook ';
+const CLAUDE_HOOK_COMMANDS = new Set(['keelson hook session-start', 'keelson hook prompt-state']);
+const isClaudeHook = (hook) => hook?.type === 'command' && CLAUDE_HOOK_COMMANDS.has(String(hook.command));
 
 export function installHooks(root) {
   const settingsPath = path.join(root, '.claude', 'settings.json');
@@ -175,9 +168,10 @@ export function installHooks(root) {
   settings.hooks ??= {};
   const ensure = (event, matcher, script) => {
     settings.hooks[event] ??= [];
-    const already = settings.hooks[event].some((g) => (g.hooks ?? []).some((h) => String(h.command ?? '').includes(`${HOOK_MARK}${script}`)));
+    const command = `keelson hook ${script.replace(/\.mjs$/, '')}`;
+    const already = settings.hooks[event].some((g) => (g.hooks ?? []).some((h) => h?.type === 'command' && h.command === command));
     if (already) return;
-    const group = { hooks: [{ type: 'command', command: `keelson hook ${script.replace(/\.mjs$/, '')}`, timeout: 10 }] };
+    const group = { hooks: [{ type: 'command', command, timeout: 10 }] };
     if (matcher) group.matcher = matcher;
     settings.hooks[event].push(group);
   };
@@ -191,21 +185,30 @@ export function removeHooks(root) {
   const settingsPath = path.join(root, '.claude', 'settings.json');
   const settings = readJson(settingsPath, null);
   if (!settings?.hooks) return;
+  let changed = false;
   for (const ev of Object.keys(settings.hooks)) {
-    settings.hooks[ev] = settings.hooks[ev].filter((g) => !(g.hooks ?? []).some((h) => String(h.command ?? '').includes(HOOK_MARK)));
+    const groups = settings.hooks[ev].map((g) => {
+      const hooks = (g.hooks ?? []).filter((h) => !isClaudeHook(h));
+      if (hooks.length === (g.hooks ?? []).length) return g;
+      changed = true;
+      return hooks.length ? { ...g, hooks } : null;
+    }).filter(Boolean);
+    settings.hooks[ev] = groups;
     if (!settings.hooks[ev].length) delete settings.hooks[ev];
   }
+  if (!changed) return;
   if (!Object.keys(settings.hooks).length) delete settings.hooks;
   writeJson(settingsPath, settings);
 }
 
-const CODEBUDDY_SESSION_MARK = 'keelson hook codebuddy-session';
+const CODEBUDDY_SESSION_COMMAND = 'keelson hook codebuddy-session';
+const isCodeBuddyHook = (hook) => hook?.type === 'command' && hook.command === CODEBUDDY_SESSION_COMMAND;
 
 function ensureCodeBuddyHook(settings, event, matcher = null) {
   settings.hooks ??= {};
   settings.hooks[event] ??= [];
   const found = settings.hooks[event].find((g) =>
-    (g.hooks ?? []).some((h) => String(h.command ?? '').includes(CODEBUDDY_SESSION_MARK)),
+    (g.hooks ?? []).some(isCodeBuddyHook),
   );
   if (found) {
     if (matcher && found.matcher !== matcher) found.matcher = matcher;
@@ -215,7 +218,7 @@ function ensureCodeBuddyHook(settings, event, matcher = null) {
   const group = {
     hooks: [{
       type: 'command',
-      command: CODEBUDDY_SESSION_MARK,
+      command: CODEBUDDY_SESSION_COMMAND,
       timeout: 10,
     }],
   };
@@ -249,7 +252,7 @@ export function plannedSessionAdapterFiles(root, target) {
     const settings = readJson(path.join(root, '.codebuddy', 'settings.json'), {}) ?? {};
     const has = (event, matcher = null) => (settings.hooks?.[event] ?? []).some((g) =>
       (matcher === null || g.matcher === matcher) &&
-      (g.hooks ?? []).some((h) => String(h.command ?? '').includes(CODEBUDDY_SESSION_MARK)),
+      (g.hooks ?? []).some(isCodeBuddyHook),
     );
     const ready = has('SessionStart') && has('UserPromptSubmit') && has('PreToolUse', 'Bash|PowerShell');
     rows.push({ path: '.codebuddy/settings.json (Keelson session hooks)', status: ready ? 'unchanged' : exists(path.join(root, '.codebuddy', 'settings.json')) ? 'update' : 'create' });
@@ -264,11 +267,12 @@ function removeCodeBuddyHooks(root) {
   if (!settings?.hooks) return false;
   let changed = false;
   for (const event of Object.keys(settings.hooks)) {
-    const before = settings.hooks[event].length;
-    settings.hooks[event] = settings.hooks[event].filter((g) =>
-      !(g.hooks ?? []).some((h) => String(h.command ?? '').includes(CODEBUDDY_SESSION_MARK)),
-    );
-    if (settings.hooks[event].length !== before) changed = true;
+    settings.hooks[event] = settings.hooks[event].map((g) => {
+      const hooks = (g.hooks ?? []).filter((h) => !isCodeBuddyHook(h));
+      if (hooks.length === (g.hooks ?? []).length) return g;
+      changed = true;
+      return hooks.length ? { ...g, hooks } : null;
+    }).filter(Boolean);
     if (!settings.hooks[event].length) delete settings.hooks[event];
   }
   if (!changed) return false;
@@ -296,7 +300,7 @@ export function sessionAdapterProblems(root, target) {
     const settings = readJson(path.join(root, '.codebuddy', 'settings.json'), {}) ?? {};
     const has = (event, matcher = null) => (settings.hooks?.[event] ?? []).some((g) =>
       (matcher === null || g.matcher === matcher) &&
-      (g.hooks ?? []).some((h) => String(h.command ?? '').includes(CODEBUDDY_SESSION_MARK)),
+      (g.hooks ?? []).some(isCodeBuddyHook),
     );
     if (!has('SessionStart')) problems.push(`${p.label}: SessionStart session hook not registered`);
     if (!has('UserPromptSubmit')) problems.push(`${p.label}: UserPromptSubmit session hook not registered`);
@@ -310,7 +314,8 @@ function removeTargetSurfaces(root, p, keep = new Set()) {
   const removed = [];
   const skillRel = path.join(p.skillsDir, 'keelson');
   const skill = path.join(root, skillRel);
-  if (!keep.has(skillRel) && exists(skill)) {
+  const managed = readManagedState(root);
+  if (!keep.has(skillRel) && exists(skill) && managedSkillShimMatches(root, p, managed?.packageVersion)) {
     rmrf(skill);
     removed.push(path.relative(root, skill));
   }

@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { projectPaths, findProjectRoot } from '../lib/paths.js';
 import { exists, write, read, mkdirp, readOr } from '../lib/fs.js';
 import { loadConfig, saveConfig, DEFAULT_CONFIG, CONFIG_VERSION } from '../lib/config.js';
-import { PLATFORMS, PLATFORM_IDS, RETIRED_PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, installSessionAdapter, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile, plannedManagedRemovals, plannedSessionAdapterFiles, readManagedState, reconcileManagedTargets, removeCanonicalRuntime, removeLegacyCopiedHooks, writeManagedState } from '../platforms/index.js';
+import { PLATFORMS, PLATFORM_IDS, RETIRED_PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, installSessionAdapter, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile, plannedManagedRemovals, plannedSessionAdapterFiles, readManagedState, reconcileManagedTargets, removeCanonicalRuntime, removeLegacyCopiedHooks, writeManagedState, assertSkillsInstallable } from '../platforms/index.js';
 import { list } from '../lib/args.js';
 import { ok, info, warn, heading, dim } from '../lib/out.js';
 import { detectAndCache, detectLocal } from '../lib/models.js';
@@ -110,6 +110,8 @@ export async function init({ flags }, cwd = process.cwd()) {
   else cfg.hooks = cfg.hooks !== false;
   if (!['lean', 'guided'].includes(cfg.profile)) throw new Error('profile must be lean or guided');
   const targets = installTargets(cfg.tools, cfg);
+  const priorManaged = readManagedState(root);
+  const legacyVersion = priorManaged?.vendor === undefined ? priorManaged?.packageVersion : null;
 
   const project = path.basename(root);
   const tpl = path.join(skillSource(cfg.lang), 'templates');
@@ -145,6 +147,8 @@ export async function init({ flags }, cwd = process.cwd()) {
   }
 
   heading(`Keelson ${fresh ? 'init' : 'update'} in ${root}`);
+  // Refuse a protected shim before changing config or removing v0.3 runtime.
+  assertSkillsInstallable(root, targets, { lang: cfg.lang, version: PKG_VERSION, legacyVersion, force: flags.force });
   if (retiredFromConfig.length) warn(`retired host adapters removed from config: ${retiredFromConfig.join(', ')}; use the portable agents layer or select one of: ${PLATFORM_IDS.filter((id) => id !== 'agents').join(', ')}`);
   if (retiredOverrides.length) warn(`retired platform overrides removed: ${retiredOverrides.join(', ')}`);
   if (retiredModelOverrides.length) warn(`retired model overrides removed: ${retiredModelOverrides.join(', ')}`);
@@ -155,7 +159,6 @@ export async function init({ flags }, cwd = process.cwd()) {
   }
   const p0 = projectPaths(root, cfg);
   mkdirp(p0.keelson);
-  const priorManaged = readManagedState(root);
   if (fresh) {
     const det = detectRefs(root);
     cfg.refs = { ...cfg.refs, ...Object.fromEntries(Object.entries(det.refs).filter(([, v]) => v)) };
@@ -207,7 +210,7 @@ export async function init({ flags }, cwd = process.cwd()) {
     const discoveryKey = `${t.instructions}|${t.skillsDir}|${t.rulesFile ?? ''}`;
     if (!discoveryInstalled.has(discoveryKey)) {
       discoveryInstalled.add(discoveryKey);
-      const skillPath = installSkill(root, t, { lang: cfg.lang, version: PKG_VERSION, force: flags.force });
+      const skillPath = installSkill(root, t, { lang: cfg.lang, version: PKG_VERSION, legacyVersion, force: flags.force });
       const files = installInstructions(root, t, { lang: cfg.lang });
       ok(`${t.label}: discovery shim → ${skillPath}; instructions → ${files.join(', ')}${t.confidence === 'convention' ? dim(' (path by convention; run `keelson doctor` after your first session)') : ''}`);
     } else {
