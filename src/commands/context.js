@@ -8,6 +8,7 @@ import { evaluateLifecycle } from '../lib/lifecycle.js';
 import { readSession } from '../lib/session.js';
 import { gitStatusShort, recentCommits, worktreeFingerprint } from '../lib/git.js';
 import { list } from '../lib/args.js';
+import { knowledgeHealth } from '../lib/health.js';
 
 export async function context({ flags, positional }, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
@@ -23,6 +24,7 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
   const orderedChanges = focus ? [...changes].sort((a, b) => (a.name === focus ? -1 : b.name === focus ? 1 : 0)) : changes;
   const specs = listDirs(p.specs);
   const refs = Object.entries(cfg.refs ?? {}).filter(([, v]) => v);
+  const knowledgeFindings = knowledgeHealth(root, cfg, p).filter((h) => h.kind === 'budget' || h.kind === 'budget-hard');
   const data = {
     root,
     intent: readOr(p.intent).trim(),
@@ -37,6 +39,10 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
     specs: specs.map((s) => `${p.specsRel}/${s}/spec.md`),
     focus,
     sessionAvailable: session.available,
+    knowledge: {
+      critical: knowledgeFindings.filter((h) => h.level === 'error').length,
+      overBudget: knowledgeFindings.filter((h) => h.level === 'warn').length,
+    },
     changes: orderedChanges.map((c) => {
       const lifecycle = evaluateLifecycle(c, fp, { activeNames });
       return { name: c.name, tier: c.tier, owner: c.owner, work: lifecycle.work, verification: lifecycle.verification.state, blockedBy: lifecycle.blockedBy, progress: c.progress, open: c.open.map((o) => o.text), handoffNext: c.handoff?.next ?? null };
@@ -54,6 +60,7 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
   if (data.glossary) out.push('## GLOSSARY.md', '', data.glossary, '');
   if (data.guide) out.push('Guided mode is on: the owner is learning; ask with scenarios, recommend with trade-offs, explain terms.', '');
   out.push('## NOW.md', '', data.now || '(empty)', '');
+  if (data.knowledge.critical || data.knowledge.overBudget) out.push(`Knowledge pressure: ${data.knowledge.critical} hard-limit, ${data.knowledge.overBudget} over-budget. Run \`keelson doctor\` and compact before adding more durable prose.`, '');
   if (refs.length) out.push('## Existing project material (read, do not duplicate)', '', ...refs.map(([k, v]) => `- ${k}: ${v}`), '');
   out.push(`## Active changes${data.focus ? ` (session focus: ${data.focus})` : ''}`, '');
   if (!data.changes.length) out.push('none');
