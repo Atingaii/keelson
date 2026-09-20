@@ -80,3 +80,7 @@ Read-only review of `599ee44` found no remaining P1/P2 in this scope. It indepen
 ## 2026-09-20 complete ownership regression
 
 `npm test` passes 133/133 with zero skips on Linux after production code 599ee44 (documentation-only 61a48e0 landed during the run). Raw TAP and SHA-256 are archived in `evals/engineering/2026-09-20-local/`. Lint, project validation and package dry run pass; package has 121 files and no `.keelson/` entries. Independent migration review is PASS. Performance and fixed model comparisons remain open; this is not the final release gate.
+
+## 2026-09-20 first remote CI
+
+Main 5504180 was pushed. Run https://github.com/Atingaii/keelson/actions/runs/35509408551 passed Ubuntu Node 20/22; macOS Node 20 exposed a test-fixture identity error: `/var` aliases resolve in child-process cwd, while the test computed its expected recovery key from the alias. Reproduced the exact failure on Linux using a symlinked TMPDIR, then canonicalized newly created fixture directories; the regression passes. Production permission behavior was unchanged. Matrix fail-fast is disabled so all six environments report independently; canceled jobs are not passes.

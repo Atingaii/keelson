@@ -380,6 +380,34 @@
         "todo": 0
       },
       "note": "Complete integrated suite after link ownership and fresh/historical hook fixes. Code unchanged during run; ledger/tasks updated in 61a48e0. Linux, zero skips."
+    },
+    {
+      "file": "macos-path-negative.tap.log",
+      "sha256": "3bb4074fe64c7e3295444ef0b246ba5a7b925e3f1d4824b992a90ca65cae8582",
+      "bytes": 1124,
+      "tap_counts": {
+        "tests": 1,
+        "pass": 0,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "note": "Linux reproduction of macOS temporary-directory symlink identity: fails with 5504180 test fixture"
+    },
+    {
+      "file": "macos-path-positive.tap.log",
+      "sha256": "3e3958595be6cc28695736c81eb0544719a2de6713d15670deb278284871bfa3",
+      "bytes": 337,
+      "tap_counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "note": "Linux reproduction of macOS temporary-directory symlink identity: passes after canonicalizing newly created fixture paths"
     }
   ]
 }

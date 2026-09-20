@@ -16,7 +16,9 @@ after(() => {
 });
 
 export function tmpProject(files = {}) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'keelson-'));
+  // Child-process cwd resolves directory aliases (for example /var on macOS).
+  // Use that same identity for expected runtime paths and fixture cleanup.
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'keelson-')));
   ownedProjects.add(dir);
   for (const [f, content] of Object.entries(files)) {
     fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });
