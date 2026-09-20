@@ -101,7 +101,7 @@ test('Git importer search includes untracked code, excludes ignored code, and tr
     'src/ignored.js': "import { value } from './module.js';\n",
     'src/nimbus.js': 'export const nimbus = 1;\n',
     'src/uses-nimbus.js': "import { nimbus } from './nimbus.js';\n",
-    'src/non-boundary.js': 'const supernimbus = 1;\n',
+    'src/non-boundary.js': "import value from './supernimbus.js';\n",
     '.gitignore': 'src/ignored.js\n',
   });
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
@@ -111,6 +111,23 @@ test('Git importer search includes untracked code, excludes ignored code, and tr
   assert.deepEqual(importers(root, ['src/module.js']).sort(), ['src/tracked.js', 'src/untracked.js']);
   assert.deepEqual(importers(root, ['src/nimbus.js']), ['src/uses-nimbus.js']);
   assert.deepEqual(importers(root, ['src/missing.js']), []);
+});
+
+test('importer search preserves single-separator syntax and word boundaries with and without Git', () => {
+  const files = {
+    'nimbus.js': 'export const value = 1;\n',
+    'from.py': 'from nimbus import value\n',
+    'import.py': 'import nimbus\n',
+    'use.rs': 'use nimbus::value;\n',
+    'require.js': 'const value = require("nimbus");\n',
+    'negative.py': 'import supernimbus\nfrom nimbus_extra import value\n',
+  };
+  const expected = ['from.py', 'import.py', 'require.js', 'use.rs'];
+  for (const useGit of [false, true]) {
+    const root = tmpProject(files);
+    if (useGit) execFileSync('git', ['init', '-q'], { cwd: root });
+    assert.deepEqual(importers(root, ['nimbus.js']).sort(), expected, `Git enabled: ${useGit}`);
+  }
 });
 
 test('a project nested in Git fingerprints its own subtree', () => {
@@ -138,7 +155,8 @@ test('non-Git fallback frames current file contents without timestamp shortcuts'
   assert.notEqual(worktreeFingerprint(root), beforeNewline);
 });
 
-test('untracked tab names remain paths, rather than being parsed as stage metadata', () => {
+test('untracked tab names remain paths, rather than being parsed as stage metadata', (t) => {
+  if (process.platform === 'win32') return t.skip('Win32 filenames cannot contain tab characters');
   const root = tmpProject({ 'tracked.txt': 'one' });
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
   git('init', '-q');

@@ -21,6 +21,7 @@ test('final patch applies tracked modifications and only untracked additions onc
   try {
     fs.mkdirSync(source, { recursive: true });
     git(source, ['init']);
+    git(source, ['config', 'core.autocrlf', 'false']);
     git(source, ['config', 'user.email', 'benchmark@example.invalid']);
     git(source, ['config', 'user.name', 'benchmark']);
     fs.writeFileSync(path.join(source, 'tracked.txt'), 'before\n');
@@ -37,7 +38,7 @@ test('final patch applies tracked modifications and only untracked additions onc
     fs.writeFileSync(path.join(source, '.git', 'info', 'exclude'), '.bench-pydeps/\n');
     const result = finalPatch(source, git);
     assert.deepEqual(result.untracked_paths, ['tests/new_test.py']);
-    git(root, ['clone', source, target]);
+    git(root, ['clone', '--config', 'core.autocrlf=false', source, target]);
     git(target, ['checkout', 'benchmark-baseline']);
     fs.writeFileSync(path.join(target, 'result.patch'), result.patch);
     assert.equal(git(target, ['apply', 'result.patch']).exit_code, 0);

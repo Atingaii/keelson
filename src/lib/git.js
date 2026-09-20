@@ -245,7 +245,7 @@ export function importers(root, files) {
   const re = `(import|require|from|include|use)\\b[^\\n]*\\b(${pattern})\\b`;
   // Git uses platform ERE implementations. Keep its expression to POSIX ERE:
   // GNU-only \b is not a word boundary there, and [^\n] excludes the letter n.
-  const gitRe = `(import|require|from|include|use)([[:space:]]|[(]).*[^[:alnum:]_](${pattern})([^[:alnum:]_]|$)`;
+  const gitRe = `(import|require|from|include|use)([^A-Za-z0-9_].*[^A-Za-z0-9_]|[^A-Za-z0-9_])(${pattern})([^A-Za-z0-9_]|$)`;
   let matches = null;
   if (isGitRepo(root)) {
     try {

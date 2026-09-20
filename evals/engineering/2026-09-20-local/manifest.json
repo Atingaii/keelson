@@ -553,6 +553,56 @@
         "todo": 0
       },
       "note": "Actual macOS Node 20 CI failure retained: two importer-search expectations fail after Git ERE optimization; remote repair remains pending."
+    },
+    {
+      "file": "ci-windows20-7bdaf7b.tap.log",
+      "sha256": "fa765c2f972ec9553b454d5d05f953b5e3d9b087ca6bd95d439e5b1764001d2e",
+      "bytes": 31634,
+      "source_commit": "7bdaf7b",
+      "tap_counts": {
+        "tests": 150,
+        "pass": 143,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 5,
+        "todo": 0
+      },
+      "workflow_run": 35511042265,
+      "workflow_job": 106078888914,
+      "note": "Actual Windows CI failure retained: fixture depends on global autocrlf and attempts a Win32-illegal tab filename."
+    },
+    {
+      "file": "ci-windows22-7bdaf7b.tap.log",
+      "sha256": "d1e89d7f0332a2ed1c6127faba3f547a7bcb0d42d6ff91c565a2a3202925bc8c",
+      "bytes": 33734,
+      "source_commit": "7bdaf7b",
+      "tap_counts": {
+        "tests": 150,
+        "pass": 143,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 5,
+        "todo": 0
+      },
+      "workflow_run": 35511042265,
+      "workflow_job": 106078888880,
+      "note": "Actual Windows CI failure retained: fixture depends on global autocrlf and attempts a Win32-illegal tab filename."
+    },
+    {
+      "file": "portable-fixtures.tap.log",
+      "sha256": "792b4ebde2b495db0e1a7b1a876734a74811c897b4899a52c72eae95178d907a",
+      "bytes": 3825,
+      "source_commit": "d19e402 plus portable fixture and importer repair",
+      "tap_counts": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "command": "node --test tests/git.test.js tests/benchmark.patch.test.js",
+      "note": "Linux targeted suite; single-separator Python/Rust and non-boundary imports, literal LF patch fixture, platform-specific filename skip. Real remote CI remains required."
     }
   ],
   "updated_at_utc": "2026-09-20T12:35:04.321907+00:00"

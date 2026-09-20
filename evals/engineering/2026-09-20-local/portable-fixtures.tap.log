@@ -1,0 +1,97 @@
+TAP version 13
+# hint: Using 'master' as the name for the initial branch. This default branch name
+# hint: is subject to change. To configure the initial branch name to use in all
+# hint: of your new repositories, which will suppress this warning, call:
+# hint: 
+# hint: \\tgit config --global init.defaultBranch <name>
+# hint: 
+# hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+# hint: 'development'. The just-created branch can be renamed via this command:
+# hint: 
+# hint: \\tgit branch -m <name>
+# Cloning into '/tmp/keelson-bench-patch-YW3bPE/target'...
+# done.
+# Switched to a new branch 'benchmark-baseline'
+# Subtest: final patch applies tracked modifications and only untracked additions once
+ok 1 - final patch applies tracked modifications and only untracked additions once
+  ---
+  duration_ms: 83.868061
+  ...
+# warning: adding embedded git repository: nested
+# hint: You've added another git repository inside your current repository.
+# hint: Clones of the outer repository will not contain the contents of
+# hint: the embedded repository and will not know how to obtain it.
+# hint: If you meant to add a submodule, use:
+# hint: 
+# hint: \\tgit submodule add <url> nested
+# hint: 
+# hint: If you added this path by mistake, you can remove it from the
+# hint: index with:
+# hint: 
+# hint: \\tgit rm --cached nested
+# hint: 
+# hint: See "git help submodule" for more information.
+# Subtest: fingerprints include ignored tracked code, exclude Keelson, and preserve the real index
+ok 2 - fingerprints include ignored tracked code, exclude Keelson, and preserve the real index
+  ---
+  duration_ms: 55.361955
+  ...
+# Subtest: fingerprints direct contents even when Git cannot see a same-mtime same-size edit
+ok 3 - fingerprints direct contents even when Git cannot see a same-mtime same-size edit
+  ---
+  duration_ms: 33.494835
+  ...
+# Subtest: fingerprints executable mode and symlink targets without following links
+ok 4 - fingerprints executable mode and symlink targets without following links
+  ---
+  duration_ms: 53.791851
+  ...
+# Subtest: fingerprints deleted tracked files and NUL-delimited Git paths with newlines
+ok 5 - fingerprints deleted tracked files and NUL-delimited Git paths with newlines
+  ---
+  duration_ms: 44.503685
+  ...
+# Subtest: fingerprints a tracked gitlink by its nested repository HEAD
+ok 6 - fingerprints a tracked gitlink by its nested repository HEAD
+  ---
+  duration_ms: 56.58083
+  ...
+# Subtest: Git importer search includes untracked code, excludes ignored code, and treats no match as success
+ok 7 - Git importer search includes untracked code, excludes ignored code, and treats no match as success
+  ---
+  duration_ms: 34.879291
+  ...
+# Subtest: importer search preserves single-separator syntax and word boundaries with and without Git
+ok 8 - importer search preserves single-separator syntax and word boundaries with and without Git
+  ---
+  duration_ms: 14.536782
+  ...
+# Subtest: a project nested in Git fingerprints its own subtree
+ok 9 - a project nested in Git fingerprints its own subtree
+  ---
+  duration_ms: 39.75548
+  ...
+# Subtest: non-Git fallback frames current file contents without timestamp shortcuts
+ok 10 - non-Git fallback frames current file contents without timestamp shortcuts
+  ---
+  duration_ms: 14.528198
+  ...
+# Subtest: untracked tab names remain paths, rather than being parsed as stage metadata
+ok 11 - untracked tab names remain paths, rather than being parsed as stage metadata
+  ---
+  duration_ms: 40.685702
+  ...
+# Subtest: fingerprint path resolution accepts a filesystem root and refuses escapes
+ok 12 - fingerprint path resolution accepts a filesystem root and refuses escapes
+  ---
+  duration_ms: 1.089634
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 690.994609
