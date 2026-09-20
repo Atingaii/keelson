@@ -35,8 +35,11 @@ export function capabilityStorageOptions(specsDir, capability) {
   if (data.layout === 'sharded') {
     return {
       requirementsDir: data.requirements_dir || 'requirements',
-      decisionsDir: data.decisions_dir || null,
-      decisionsFile: data.decisions_file || null,
+      // Older Keelson layouts used one decisions_file. New writes migrate that
+      // representation to a directory without touching an unmanaged decisions/
+      // neighbor that the project may already own.
+      decisionsDir: data.decisions_dir || firstFree(dir, 'decisions', 'keelson-decisions'),
+      decisionsFile: null,
     };
   }
   return {
