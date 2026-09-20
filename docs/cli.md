@@ -74,7 +74,7 @@ keelson cancel add-pagination --reason "Superseded"
 
 Landing requires completed acceptance, fresh complete evidence, resolved questions/dependencies, reconciled contracts and a rollout for breaking changes. Task checkboxes are advisory. Accept-drift acknowledges a reviewed spec-base conflict; changed inputs still require rechecking. Confirm-assumptions applies to legacy prose assumptions; structured ones must be settled.
 
-`--force --reason "..."` records a signed override and failed gates; it does not turn failed checks into success. Use only for an authorized override. Active checks block landing and cancellation. Landing snapshots affected files, rolls back ordinary failures, and recovers interrupted transactions on the next landing.
+`--force --reason "..."` records a signed override and failed gates; it does not turn failed checks into success. Use only for an authorized override. Active checks block landing and cancellation. Landing snapshots affected files and rolls back ordinary failures. After a process crash, confirm no writer remains and resolve any abandoned lock before retrying; the next landing then recovers the interrupted transaction. See [recovery instructions](verification.md).
 
 Delta specs and durable decisions merge into main specs; large specs shard automatically. Signed changes archive even with land: fold. Cancellation archives without merging.
 
