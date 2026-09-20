@@ -41,9 +41,15 @@ const managedTarget = (t) => ({
   rulesFile: t.rulesFile ?? null,
   rulesFormat: t.rulesFormat ?? null,
   hooks: Boolean(t.hooks),
+  sessionAdapter: t.sessionAdapter ?? null,
 });
-const targetKey = (t) => [t.instructions, t.skillsDir, t.instructionsFormat ?? '', t.rulesFile ?? '', t.rulesFormat ?? '', Boolean(t.hooks)].join('|');
-const managedSurfacePaths = (t) => [path.join(t.skillsDir, 'keelson'), t.instructions, t.rulesFile].filter(Boolean);
+const sessionAdapterPaths = (t) => {
+  if (t.sessionAdapter === 'opencode-plugin') return ['.opencode/plugins/keelson-session.js'];
+  if (t.sessionAdapter === 'codebuddy-hooks') return ['.keelson/hooks/codebuddy-session.mjs'];
+  return [];
+};
+const targetKey = (t) => [t.instructions, t.skillsDir, t.instructionsFormat ?? '', t.rulesFile ?? '', t.rulesFormat ?? '', Boolean(t.hooks), t.sessionAdapter ?? ''].join('|');
+const managedSurfacePaths = (t) => [path.join(t.skillsDir, 'keelson'), t.instructions, t.rulesFile, ...sessionAdapterPaths(t)].filter(Boolean);
 
 export function readManagedState(root) {
   return readJson(path.join(root, MANAGED_STATE), null) ?? readJson(path.join(root, LEGACY_MANAGED_STATE), null);
@@ -170,6 +176,125 @@ export function removeHooks(root) {
   writeJson(settingsPath, settings);
 }
 
+const CODEBUDDY_SESSION_MARK = '.keelson/hooks/codebuddy-session.mjs';
+
+function ensureCodeBuddyHook(settings, event, matcher = null) {
+  settings.hooks ??= {};
+  settings.hooks[event] ??= [];
+  const found = settings.hooks[event].some((g) =>
+    (g.hooks ?? []).some((h) => String(h.command ?? '').includes(CODEBUDDY_SESSION_MARK)),
+  );
+  if (found) return;
+  const group = {
+    hooks: [{
+      type: 'command',
+      command: 'node "$CODEBUDDY_PROJECT_DIR/.keelson/hooks/codebuddy-session.mjs"',
+      timeout: 10,
+    }],
+  };
+  if (matcher) group.matcher = matcher;
+  settings.hooks[event].push(group);
+}
+
+export function installSessionAdapter(root, target) {
+  const p = typeof target === 'string' ? PLATFORMS[target] : target;
+  if (!p?.sessionAdapter || p.sessionAdapter === 'pi-env' || p.sessionAdapter === 'claude-hooks') return [];
+
+  if (p.sessionAdapter === 'opencode-plugin') {
+    const dest = path.join(root, '.opencode', 'plugins', 'keelson-session.js');
+    write(dest, read(path.join(PKG_ROOT, 'hooks', 'opencode-session.mjs')));
+    return [path.relative(root, dest)];
+  }
+
+  if (p.sessionAdapter === 'codebuddy-hooks') {
+    const script = path.join(root, '.keelson', 'hooks', 'codebuddy-session.mjs');
+    write(script, read(path.join(PKG_ROOT, 'hooks', 'codebuddy-session.mjs')));
+    const settingsPath = path.join(root, '.codebuddy', 'settings.json');
+    const settings = readJson(settingsPath, {}) ?? {};
+    ensureCodeBuddyHook(settings, 'SessionStart');
+    ensureCodeBuddyHook(settings, 'UserPromptSubmit');
+    ensureCodeBuddyHook(settings, 'PreToolUse', 'Bash');
+    writeJson(settingsPath, settings);
+    return [path.relative(root, script), path.relative(root, settingsPath)];
+  }
+
+  return [];
+}
+
+function removeCodeBuddyHooks(root) {
+  const settingsPath = path.join(root, '.codebuddy', 'settings.json');
+  const settings = readJson(settingsPath, null);
+  if (!settings?.hooks) return false;
+  let changed = false;
+  for (const event of Object.keys(settings.hooks)) {
+    const before = settings.hooks[event].length;
+    settings.hooks[event] = settings.hooks[event].filter((g) =>
+      !(g.hooks ?? []).some((h) => String(h.command ?? '').includes(CODEBUDDY_SESSION_MARK)),
+    );
+    if (settings.hooks[event].length !== before) changed = true;
+    if (!settings.hooks[event].length) delete settings.hooks[event];
+  }
+  if (!changed) return false;
+  if (!Object.keys(settings.hooks).length) delete settings.hooks;
+  if (!Object.keys(settings).length) rmrf(settingsPath);
+  else writeJson(settingsPath, settings);
+  return true;
+}
+
+export function removeSessionAdapter(root, target) {
+  const p = typeof target === 'string' ? PLATFORMS[target] : target;
+  const removed = [];
+  if (p?.sessionAdapter === 'opencode-plugin') {
+    const rel = '.opencode/plugins/keelson-session.js';
+    if (exists(path.join(root, rel))) {
+      rmrf(path.join(root, rel));
+      removed.push(rel);
+    }
+  }
+  if (p?.sessionAdapter === 'codebuddy-hooks') {
+    const rel = '.keelson/hooks/codebuddy-session.mjs';
+    if (exists(path.join(root, rel))) {
+      rmrf(path.join(root, rel));
+      removed.push(rel);
+    }
+    if (removeCodeBuddyHooks(root)) removed.push('.codebuddy/settings.json (Keelson hooks)');
+  }
+  return removed;
+}
+
+export function sessionAdapterProblems(root, target) {
+  const p = typeof target === 'string' ? PLATFORMS[target] : target;
+  const problems = [];
+  if (!p?.sessionAdapter || p.sessionAdapter === 'pi-env' || p.sessionAdapter === 'claude-hooks') return problems;
+
+  if (p.sessionAdapter === 'opencode-plugin') {
+    const rel = '.opencode/plugins/keelson-session.js';
+    const actual = readOr(path.join(root, rel), null);
+    const expected = read(path.join(PKG_ROOT, 'hooks', 'opencode-session.mjs'));
+    if (actual === null) problems.push(`${p.label}: session adapter missing at ${rel}`);
+    else if (actual.replace(/\r\n?/g, '\n') !== expected.replace(/\r\n?/g, '\n')) problems.push(`${p.label}: session adapter drifted at ${rel}`);
+  }
+
+  if (p.sessionAdapter === 'codebuddy-hooks') {
+    const rel = '.keelson/hooks/codebuddy-session.mjs';
+    const actual = readOr(path.join(root, rel), null);
+    const expected = read(path.join(PKG_ROOT, 'hooks', 'codebuddy-session.mjs'));
+    if (actual === null) problems.push(`${p.label}: session hook script missing at ${rel}`);
+    else if (actual.replace(/\r\n?/g, '\n') !== expected.replace(/\r\n?/g, '\n')) problems.push(`${p.label}: session hook script drifted at ${rel}`);
+
+    const settings = readJson(path.join(root, '.codebuddy', 'settings.json'), {}) ?? {};
+    const has = (event, matcher = null) => (settings.hooks?.[event] ?? []).some((g) =>
+      (matcher === null || g.matcher === matcher) &&
+      (g.hooks ?? []).some((h) => String(h.command ?? '').includes(CODEBUDDY_SESSION_MARK)),
+    );
+    if (!has('SessionStart')) problems.push(`${p.label}: SessionStart session hook not registered`);
+    if (!has('UserPromptSubmit')) problems.push(`${p.label}: UserPromptSubmit session hook not registered`);
+    if (!has('PreToolUse', 'Bash')) problems.push(`${p.label}: Bash PreToolUse session hook not registered`);
+  }
+
+  return problems;
+}
+
 function removeTargetSurfaces(root, p, keep = new Set()) {
   const removed = [];
   const skillRel = path.join(p.skillsDir, 'keelson');
@@ -190,6 +315,7 @@ function removeTargetSurfaces(root, p, keep = new Set()) {
     removed.push(p.rulesFile);
   }
   if (p.hooks && !keep.has('.claude/settings.json')) removeHooks(root);
+  removed.push(...removeSessionAdapter(root, p));
   return removed;
 }
 
