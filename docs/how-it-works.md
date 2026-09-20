@@ -8,7 +8,7 @@ Keelson separates three stores. Project knowledge under `.keelson/` is durable a
 
 Supported hook entries invoke `keelson hook <event>` from the installed executable. They do not invoke JavaScript copied from the project. This reduces one source of unexpected repository code execution; it does not make the host or project safe to run without review.
 
-Generated-file ownership and digests are kept in a manifest. `update`, `doctor` and `uninstall` use it to distinguish generated surfaces from user modifications. Invalid host JSON is an error and is not silently replaced with empty configuration. Initialization leaves `.gitignore` unchanged.
+The manifest records the package version, selected host surfaces and vendor mode. Generated content is compared with known package output before replacing or removing it; the manifest itself is not a per-file digest database. `doctor` reports drift. Invalid host JSON is an error and is not silently replaced with empty configuration. Initialization leaves `.gitignore` unchanged.
 
 ## Changes and decisions
 
