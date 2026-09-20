@@ -85,7 +85,7 @@ Keelson 保留长期项目需要的能力，把它们分布在文件里，而不
 
 ## 知识健康
 
-项目资料随项目增长；每次任务读取的内容不能随全部历史一起增长。`config.yaml → budgets` 给每种文档一个行数预算，`keelson doctor` 报告超预算的文档、读起来像历史的需求文字、跨能力重复的需求名、闲置两周及以上的变更、超过 25 个任务的变更、超预算的常驻 rules，以及比源码树旧的生成文档。每条发现都是一个可以单独落地的小修复建议。没有任何东西被自动重写。
+项目知识可以随项目多年增长；当前任务的高频工作集不能跟全部历史一起增长。Keelson 把结构维护放在内部：大型 capability 契约自动拆成有界索引 + requirement/decision 文件，runtime 缓存自动回收，只加载相关 shard/rule。语义维护（去重、改成现在时、拆解过大的不变量）由 Agent 在 RECONCILE 中自动完成并重新验证。只有整理会改变产品语义、授权、兼容性或其他真正属于所有者的长期承诺时才询问用户。
 
 ## 决策状态
 
@@ -112,12 +112,15 @@ Keelson 保留长期项目需要的能力，把它们分布在文件里，而不
 
 关键状态 `ready` **由仓库状态推导，而不是用户宣布**。同时满足以下条件才 ready：
 
-- 已存在的 tasks 全部完成（quick change 没有 tasks 完全合法）；
 - 必需 acceptance 完成；
 - 没有 blocking open questions；
+- 没有仍处于 active 的依赖 change；
+- 没有未对齐的 spec drift；
 - 没有未确认 assumptions；
 - breaking change 有 rollout；
 - 当前 worktree 上最后一次 verification 通过。
+
+`tasks.md` 只是可变执行计划；未勾选或被重写的 task 不拥有完成判定权。
 
 结束一次 session 对 work state 没有任何影响。进入 ready 后，Agent 应在宣称完成前自动 land。显式的 `blocked`、`integrated`、`cancelled` 仍是长期覆盖状态。
 

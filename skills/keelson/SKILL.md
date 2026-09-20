@@ -26,7 +26,7 @@ Completion is **not** an intent and never depends on the user saying “done”.
 - On Resume, use `keelson focus --auto`; branch match or a sole active change may be suggested. Never silently bind an ambiguous session.
 - If `NOW.md` says “First contact”, infer and confirm `INTENT.md`; do not inventory the whole repository into specs/rules.
 - Non-trivial modifying work starts from current context; shared modules get `keelson impact <files>`.
-- Ask only at the decision frontier. Use `interview.md`: one owner-owned decision at a time, plain-language scenario first, recommended default, and `not sure` as a valid route. Never ask what the repo, evidence, or agent engineering judgment can settle.
+- Ask only at the decision frontier. Run the triggered blindspot pass, then use `interview.md`: one owner-owned decision at a time, concrete scenario/options, recommended default, and `not sure` as a valid route. Never ask what repo evidence, an experiment, or agent engineering judgment can settle.
 - Size only the work: trivial = direct edit; quick = lightweight change; spec = acceptance + behavior delta + plan, then approval.
 - Artifacts are information containers, not ceremony. Do not create empty roadmap/glossary/rule/task/ledger/handoff/spec files.
 - `tasks.md` is an execution plan, not completion authority. Unchecked plan items never override satisfied acceptance + fresh evidence; reconcile or remove stale tasks when the implementation path changes.
