@@ -157,14 +157,14 @@ changes/rename-buyer/
 |---|---|---|---|---|
 | Claude Code | `CLAUDE.md` | `.claude/skills/` | **native** | verified |
 | Codex CLI | `AGENTS.md` | `.agents/skills/` | degraded | verified |
-| OpenCode | `AGENTS.md` | `.agents/skills/` | degraded | documented |
-| Pi | `AGENTS.md` | `.agents/skills/` | degraded | documented |
+| OpenCode | `AGENTS.md` | `.agents/skills/` | **native** | documented |
+| Pi | `AGENTS.md` | `.agents/skills/` | **native** | documented |
 | Gemini CLI | `GEMINI.md` | `.agents/skills/` | degraded | documented |
 | Kiro CLI | `AGENTS.md` | `.kiro/skills/` | degraded | documented |
-| CodeBuddy CLI | `CODEBUDDY.md` | `.codebuddy/skills/` | degraded | documented |
+| CodeBuddy CLI | `CODEBUDDY.md` | `.codebuddy/skills/` | **native** | documented |
 | 通用 Agent Skills 读取器 | `AGENTS.md` | `.agents/skills/` | degraded | fallback |
 
-只有 discovery/lifecycle 路径经过真实验证或宿主官方文档支撑，并通过统一契约的宿主才叫 first-class。Session focus 是独立能力：`native` 表示 Keelson 已验证稳定 identity bridge；`degraded` 表示长期 work 仍正确，但有歧义的对话必须显式选择 change。
+只有 discovery/lifecycle 路径经过真实验证或宿主官方文档支撑，并通过统一契约的宿主才叫 first-class。Session focus 是独立能力：当前 Claude hooks、OpenCode 项目 plugin、Pi 内置 session env、CodeBuddy hooks 为 `native`；`degraded` 表示长期 work 仍正确，但有歧义的对话必须显式选择 change。`--no-hooks` 会关闭 hook/plugin bridge（Pi 的 session env 是宿主内置，因此仍 native）。
 
 ## 高可用不是附加项
 
