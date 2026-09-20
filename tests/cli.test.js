@@ -212,11 +212,17 @@ test('hooks preference disables and restores managed OpenCode and CodeBuddy sess
   const dir = tmpProject({ '.codebuddy/settings.json': JSON.stringify({ theme: 'mine' }, null, 2) + '\n' });
 
   run(dir, ['init', '--tools', 'opencode,codebuddy', '--no-hooks'], { env });
+  const disabledPlatforms = JSON.parse(run(dir, ['platforms', '--json'], { env }).stdout);
+  assert.equal(disabledPlatforms.find((p) => p.id === 'opencode').effectiveSessionFocus, 'degraded');
+  assert.equal(disabledPlatforms.find((p) => p.id === 'codebuddy').effectiveSessionFocus, 'degraded');
   assert.ok(!exists(dir, '.opencode/plugins/keelson-session.js'));
   assert.ok(!exists(dir, '.keelson/hooks/codebuddy-session.mjs'));
   assert.equal(JSON.parse(read(dir, '.codebuddy/settings.json')).theme, 'mine');
 
   run(dir, ['update', '--hooks'], { env });
+  const enabledPlatforms = JSON.parse(run(dir, ['platforms', '--json'], { env }).stdout);
+  assert.equal(enabledPlatforms.find((p) => p.id === 'opencode').effectiveSessionFocus, 'native');
+  assert.equal(enabledPlatforms.find((p) => p.id === 'codebuddy').effectiveSessionFocus, 'native');
   assert.ok(exists(dir, '.opencode/plugins/keelson-session.js'));
   assert.ok(exists(dir, '.keelson/hooks/codebuddy-session.mjs'));
   assert.match(read(dir, '.codebuddy/settings.json'), /codebuddy-session\.mjs/);
@@ -292,6 +298,7 @@ test('CodeBuddy native hooks inject session identity and preserve unrelated sett
   assert.ok(settings.hooks.SessionStart);
   assert.ok(settings.hooks.UserPromptSubmit);
   assert.ok(settings.hooks.PreToolUse);
+  assert.equal(settings.hooks.PreToolUse[0].matcher, 'Bash|PowerShell');
   assert.ok(settings.hooks.Notification);
 
   const input = JSON.stringify({
@@ -303,9 +310,21 @@ test('CodeBuddy native hooks inject session identity and preserve unrelated sett
   });
   const out = execFileSync('node', [path.resolve('hooks/codebuddy-session.mjs')], { input, encoding: 'utf8' });
   const payload = JSON.parse(out);
+  assert.equal(payload.continue, true);
+  assert.equal(payload.hookSpecificOutput.permissionDecision, 'allow');
   const command = payload.hookSpecificOutput.modifiedInput.command;
   assert.match(command, /^export KEELSON_SESSION_ID='[0-9a-f]{32}'; keelson status$/);
   const opaque = command.match(/KEELSON_SESSION_ID='([0-9a-f]{32})'/)[1];
+
+  const psInput = JSON.stringify({
+    session_id: 'codebuddy-session-1',
+    cwd: dir,
+    hook_event_name: 'PreToolUse',
+    tool_name: 'PowerShell',
+    tool_input: { command: 'keelson status' },
+  });
+  const psPayload = JSON.parse(execFileSync('node', [path.resolve('hooks/codebuddy-session.mjs')], { input: psInput, encoding: 'utf8' }));
+  assert.match(psPayload.hookSpecificOutput.modifiedInput.command, /^\$env:KEELSON_SESSION_ID='[0-9a-f]{32}'; keelson status$/);
 
   run(dir, ['new', 'buddy-work'], { env: { ...env, KEELSON_SESSION_ID: opaque } });
   assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: { ...env, KEELSON_SESSION_ID: opaque } }).stdout).focus, 'buddy-work');
@@ -816,7 +835,10 @@ test('init is the only step: first-class platform flags, standards-first surface
   assert.equal(list.length, 8);
   assert.deepEqual(list.map((p) => p.id).sort(), ['claude', 'codex', 'opencode', 'pi', 'gemini', 'kiro', 'codebuddy', 'agents'].sort());
   assert.ok(list.find((p) => p.id === 'kiro').configured);
-  for (const id of ['claude', 'opencode', 'pi', 'codebuddy']) assert.equal(list.find((p) => p.id === id).sessionFocus, 'native', id);
+  for (const id of ['claude', 'opencode', 'pi', 'codebuddy']) {
+    assert.equal(list.find((p) => p.id === id).sessionFocus, 'native', id);
+    assert.equal(list.find((p) => p.id === id).effectiveSessionFocus, id === 'pi' || list.find((p) => p.id === id).configured ? 'native' : 'native', id);
+  }
   for (const id of ['codex', 'gemini', 'kiro']) assert.equal(list.find((p) => p.id === id).sessionFocus, 'degraded', id);
   run(dir, ['uninstall'], { env });
   assert.ok(!exists(dir, '.kiro/steering/keelson.md'));
