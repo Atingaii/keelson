@@ -8,10 +8,21 @@ export const runtimeDir = (root) => path.join(root, '.keelson', '.runtime');
 export const sessionsDir = (root) => path.join(runtimeDir(root), 'sessions');
 
 export function resolveSessionIdentity(env = process.env) {
-  const raw = typeof env.KEELSON_SESSION_ID === 'string' ? env.KEELSON_SESSION_ID.trim() : '';
-  if (!raw) return null;
-  const key = crypto.createHash('sha256').update(raw).digest('hex').slice(0, 24);
-  return { key, source: 'KEELSON_SESSION_ID' };
+  const sources = [
+    ['KEELSON_SESSION_ID', env.KEELSON_SESSION_ID],
+    // Pi exposes the current session to every shell tool invocation.
+    ['PI_SESSION_ID', env.PI_SESSION_ID],
+  ];
+  for (const [source, value] of sources) {
+    const raw = typeof value === 'string' ? value.trim() : '';
+    if (!raw) continue;
+    const opaque = source === 'KEELSON_SESSION_ID'
+      ? raw
+      : crypto.createHash('sha256').update(`${source.toLowerCase()}:${raw}`).digest('hex').slice(0, 32);
+    const key = crypto.createHash('sha256').update(opaque).digest('hex').slice(0, 24);
+    return { key, source };
+  }
+  return null;
 }
 
 export function sessionFile(root, key) {
