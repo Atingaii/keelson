@@ -615,6 +615,48 @@ test('depends is a real lifecycle gate for status and land', () => {
   assert.match(refused.stderr, /depends on active change\(s\): base-work/);
 });
 
+test('large logical specs auto-shard without user maintenance', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--no-hooks'], { env });
+  write(dir, '.keelson/config.yaml', read(dir, '.keelson/config.yaml').replace('spec: 250', 'spec: 12'));
+  run(dir, ['new', 'grow-orders', '--tier', 'quick', '--capability', 'orders'], { env });
+  write(dir, '.keelson/changes/grow-orders/change.md', read(dir, '.keelson/changes/grow-orders/change.md').replace('- [ ] … — check: `…`', '- [x] works — check: `true`'));
+  write(dir, '.keelson/changes/grow-orders/ledger.md', '### Verify: ok\n`true` exit 0\n');
+  write(dir, '.keelson/changes/grow-orders/specs/orders/spec.md', [
+    '---',
+    'base: new',
+    '---',
+    '## ADDED Requirements',
+    '### Requirement: Create',
+    'Create works.',
+    '#### Scenario: create',
+    '- WHEN create',
+    '- THEN created',
+    '### Requirement: Read',
+    'Read works.',
+    '#### Scenario: read',
+    '- WHEN read',
+    '- THEN returned',
+    '### Requirement: Revoke',
+    'Revoke works.',
+    '#### Scenario: revoke',
+    '- WHEN revoke',
+    '- THEN refused',
+    ''
+  ].join('\n'));
+  const landed = run(dir, ['land', 'grow-orders'], { env });
+  assert.match(landed.stdout, /auto-organize/);
+  assert.match(read(dir, '.keelson/specs/orders/spec.md'), /^layout: sharded$/m);
+  assert.ok(exists(dir, '.keelson/specs/orders/requirements/create.md'));
+  assert.ok(exists(dir, '.keelson/specs/orders/requirements/read.md'));
+  assert.ok(exists(dir, '.keelson/specs/orders/requirements/revoke.md'));
+  assert.equal(JSON.parse(run(dir, ['validate', '--json'], { env }).stdout).ok, true);
+
+  // A later change hashes and edits the whole logical contract, not just the index.
+  run(dir, ['new', 'extend-orders', '--tier', 'spec', '--capability', 'orders'], { env });
+  assert.match(read(dir, '.keelson/changes/extend-orders/specs/orders/spec.md'), /^base: [0-9a-f]{10}$/m);
+});
+
 test('hard knowledge limits fail validate and preflight land before writing specs', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--no-hooks'], { env });
@@ -652,8 +694,27 @@ test('hard knowledge limits fail validate and preflight land before writing spec
   ].join('\n'));
   const refused = run(dir, ['land', 'bounded-spec'], { env, allowFail: true });
   assert.equal(refused.code, 1);
-  assert.match(refused.stderr, /projected .*orders\/spec\.md.*hard limit/);
+  assert.match(refused.stderr, /auto-sharding still leaves oversized spec shard/);
   assert.ok(!exists(dir, '.keelson/specs/orders/spec.md'), 'budget refusal must happen before any durable spec write');
+});
+
+test('runtime sessions and evidence are garbage-collected invisibly', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--no-hooks'], { env });
+  const sessionDir = path.join(dir, '.keelson/.runtime/sessions');
+  const evidenceDir = path.join(dir, '.keelson/.runtime/evidence');
+  fs.mkdirSync(sessionDir, { recursive: true });
+  fs.mkdirSync(evidenceDir, { recursive: true });
+  const oldSession = path.join(sessionDir, 'old.json');
+  const oldEvidence = path.join(evidenceDir, 'old.log');
+  fs.writeFileSync(oldSession, '{}\n');
+  fs.writeFileSync(oldEvidence, 'old\n');
+  const old = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000);
+  fs.utimesSync(oldSession, old, old);
+  fs.utimesSync(oldEvidence, old, old);
+  run(dir, ['status', '--json'], { env });
+  assert.equal(fs.existsSync(oldSession), false);
+  assert.equal(fs.existsSync(oldEvidence), false);
 });
 
 test('handoff and session hook tolerate CRLF files', () => {
