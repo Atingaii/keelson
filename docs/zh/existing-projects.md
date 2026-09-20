@@ -67,7 +67,7 @@ Agent 随后：
 
 `keelson init` 把它的块追加到 `CLAUDE.md`、`AGENTS.md` 或 `GEMINI.md`，位于 `<!-- keelson:start -->` 和 `<!-- keelson:end -->` 标记之间。文件里已有的一切保留。`keelson update` 只刷新这个块。`keelson uninstall` 只移除这个块。`keelson init --dry-run` 显示文件将被创建、追加还是刷新。
 
-`.claude/settings.json` 里已有的 hook 被保留。Keelson 添加两个命令路径包含 `.keelson/hooks/` 的条目，也只移除这些条目。
+`.claude/settings.json` 里已有的 hook 被保留。Keelson 注册自己的 hook 命令，只移除能识别为自身所有的注册项。格式损坏的配置会报错，不会被覆盖。
 
 ## 已有的决策记录
 

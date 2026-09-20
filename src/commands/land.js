@@ -77,6 +77,7 @@ export function landingBlockers(c, fingerprint, { confirmAssumptions = false, ac
 export async function land(args, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
   return withLock(path.join(runtimeDir(root), 'landing'), () => {
+    if (activeChecks(root).length) throw new Error('cannot land while checks are running; wait for every active check to finish');
     if (recoverLanding(root)) throw new Error('restored an interrupted landing; review the restored files and run checks again');
     return landUnlocked(args, cwd);
   });

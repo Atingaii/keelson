@@ -5,6 +5,7 @@ import path from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
 import { tmpProject, run, write, read, BIN } from './helpers.js';
 import { runtimeDir } from '../src/lib/runtime-path.js';
+import { runCommand } from '../src/commands/check.js';
 
 function fixture(t, command = 'node -e "console.log(42)"') {
   const dir = tmpProject({ 'code.js': 'export const n = 1;\n' });
@@ -87,6 +88,31 @@ test('force requires a reason and archives every bypass', (t) => {
   const [name] = fs.readdirSync(archive);
   assert.match(fs.readFileSync(path.join(archive, name, 'forced.md'), 'utf8'), /owner emergency/);
   assert.ok(fs.existsSync(path.join(archive, name, 'ledger.jsonl')));
+});
+
+test('deadline returns when an escaped descendant retains output pipes', { skip: process.platform === 'win32' }, async (t) => {
+  const dir = tmpProject({
+    'escape.cjs': `const { spawn } = require('node:child_process');
+const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)'], { detached: true, stdio: ['ignore', process.stdout, process.stderr] });
+require('node:fs').writeFileSync('escaped.pid', String(child.pid));
+child.unref();\n`,
+  });
+  let watchdog;
+  t.after(() => {
+    clearTimeout(watchdog);
+    const pidFile = path.join(dir, 'escaped.pid');
+    if (fs.existsSync(pidFile)) {
+      try { process.kill(Number(fs.readFileSync(pidFile, 'utf8')), 'SIGKILL'); } catch { /* already exited */ }
+    }
+  });
+  const result = await Promise.race([
+    runCommand('node escape.cjs', dir, 800),
+    new Promise((resolve) => { watchdog = setTimeout(() => resolve(null), 5000); }),
+  ]);
+  assert.ok(result, 'a detached descendant must not make the check wait indefinitely');
+  assert.equal(result.exit, 124);
+  assert.equal(result.timedOut, true);
+  assert.equal(result.terminationUnconfirmed, true);
 });
 
 test('sixteen concurrent writers retain every signed record and valid log reference', async (t) => {

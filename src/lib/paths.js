@@ -43,7 +43,9 @@ export function resolveWithin(root, relative) {
   let current = root;
   for (const part of rel.split(path.sep)) {
     current = path.join(current, part);
-    if (exists(current) && fs.lstatSync(current).isSymbolicLink()) throw new Error(`project data path must not be a symlink: ${current}`);
+    // A single lstat also sees dangling links and tolerates an atomic-write
+    // temporary file disappearing between directory enumeration and this scan.
+    if (fs.lstatSync(current, { throwIfNoEntry: false })?.isSymbolicLink()) throw new Error(`project data path must not be a symlink: ${current}`);
   }
   return absolute;
 }

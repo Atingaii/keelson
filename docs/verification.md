@@ -23,6 +23,8 @@ Review `.keelson/config.yaml → check` before the first use of `--trust`. Trust
 
 `evidence/<sha256>.log` stores command output. `evidence/keys/<keyid>.pem` exports public keys so a reader can check the cryptographic envelope. `ledger.md` is a readable summary and is never an authorization source.
 
+`attest` exports the envelopes and current local status as JSON. To let another reader check the logs and every historical signer, share the complete change or archive directory, including `evidence/`; those files are not embedded in the JSON export.
+
 Checks default to a ten-minute deadline per command. Override with `--timeout <milliseconds>` or `check_timeout_ms` in configuration. Output exceeding 2 MiB stops the command with exit 125; timeout yields exit 124. These records fail verification. Commands run with closed stdin, so interactive checks must be made noninteractive first.
 
 ## Freshness and completeness
@@ -32,6 +34,8 @@ The current tree must equal the recorded tree. The current contract must equal t
 For Git projects, the worktree fingerprint includes tracked and non-ignored untracked project files, excluding `.keelson/`. Contract files under `.keelson/` are hashed separately. Ignored build products and dependencies are not hashed. This is not a hermetic environment digest: a changed interpreter, dependency installation, network service, clock, or external file requires the operator to rerun checks even if the tree is unchanged.
 
 Concurrent record writers use a lock and durable append. Logs are content-addressed. A check detects inputs changed between its start and finish. No completion claim is made while another check is active. There is no protection against an adversarial process changing a file and restoring it between the two snapshots.
+
+On timeout or excessive output, Keelson terminates the command's process group (the process tree on Windows) and bounds its own wait for output pipes. A child that deliberately detaches can escape that termination; `terminationUnconfirmed: true` reports when pipe closure was forced. Such a run fails and cannot authorize landing. Use an operating-system sandbox for untrusted commands.
 
 ## Trust boundary
 
@@ -45,7 +49,7 @@ Logs can contain secrets printed by project commands. Review them before sharing
 
 ## Landing, overrides, and recovery
 
-Landing checks acceptance, decisions, active dependencies, contract drift and evidence. It refuses while checks are running. It snapshots the files it will change under the private runtime, then folds contracts and archives the complete evidence bundle. On an ordinary write failure it restores those files; the next landing restores an interrupted transaction before refusing and asking for review and re-verification. This is recoverability, not a distributed transaction or a guarantee against storage-device failure.
+Landing checks acceptance, decisions, active dependencies, contract drift and evidence. It refuses while checks are running. It snapshots the files it will change under the private runtime, then folds contracts and archives the complete evidence bundle. On an ordinary write failure it restores those files. After an interrupted process, first resolve any abandoned lock as described below; the next landing restores the transaction before refusing and asking for review and re-verification. This is recoverability, not a distributed transaction or a guarantee against storage-device failure.
 
 An explicit owner-authorized emergency may use:
 

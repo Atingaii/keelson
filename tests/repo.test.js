@@ -22,8 +22,9 @@ test('no dated model IDs in registry, skills, hooks, or docs', () => {
   assert.deepEqual(offenders, []);
 });
 
-test('generated directory replacement preserves the last good copy across failure and interrupted residue', () => {
+test('generated directory replacement preserves the last good copy across failure and interrupted residue', (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'keelson-replace-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const dest = path.join(root, 'skill');
   fs.mkdirSync(dest, { recursive: true });
   fs.writeFileSync(path.join(dest, 'state.txt'), 'old');

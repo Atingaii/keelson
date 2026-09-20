@@ -8,7 +8,7 @@ Keelson keeps project facts, planned changes and observed results separate.
 | Specs and scoped rules | Confirmed behavior and recurring constraints | Project |
 | `changes/<name>/change.md` | Requested outcome, acceptance, impact | Change |
 | `decisions.json` | Owner, prerequisites, answer, basis and history | Change/archive |
-| `tasks.md` | Optional execution plan | Change |
+| `tasks.md` | Optional mutable execution plan | Change |
 | `ledger.jsonl` and `evidence/` | Signed checks and their output | Change/archive |
 | Private session state | Which change this conversation is about | Machine/session |
 

@@ -44,4 +44,7 @@ test('project data paths reject traversal and symbolic-link parents', (t) => {
   assert.throws(() => resolveWithin(root, '.'), /escapes/);
   fs.symlinkSync(path.dirname(root), path.join(root, 'link'), process.platform === 'win32' ? 'junction' : 'dir');
   assert.throws(() => resolveWithin(root, 'link/specs'), /symlink/);
+  fs.symlinkSync(path.join(root, 'missing'), path.join(root, 'dangling'), process.platform === 'win32' ? 'junction' : 'dir');
+  assert.throws(() => resolveWithin(root, 'dangling/specs'), /symlink/);
+  assert.equal(resolveWithin(root, 'new/spec.md'), path.join(root, 'new/spec.md'));
 });
