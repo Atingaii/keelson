@@ -22,7 +22,7 @@ quick 工作存在实质性歧义时，以及每一个 spec 变更里，都要�
 ## 写回你的理解
 <!-- keelson: id=shape.write-back | without: 代理按自己的解读去做；不一致要到代码写出来之后才暴露 | sunset: never -->
 
-每个非平凡变更在创建任何东西之前，用 3 到 6 行写清：结果、边界（明确不做什么）、你发现的约束、成功的检验方式。把用户说的和你假设的分开。quick 变更写完就继续，除非 `config.yaml` 设了 `confirm.quick: wait`。spec 变更则等待。
+每个非平凡变更在创建任何东西之前，用 3 到 6 行写清：结果、边界（明确不做什么）、你发现的约束、成功的检验方式。把用户说的和你假设的分开。写回后默认继续；只有对应的 `confirm.quick|spec` 设为 `wait`，或仍存在真正属于所有者的未决决定时才等待。高风险动作仍按 `INTENT.md → Authorizations` 确认。
 
 > 我的理解是：给 `/orders` 加偏移分页（`page`、`size`，默认 20），沿用 `rules/api.md` 里的统一响应封装；表格加分页器，不做无限滚动。假设：排序仍按 `created_at desc`。`npm test -- orders` 通过且分页器能渲染即为完成。
 
