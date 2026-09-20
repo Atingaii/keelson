@@ -46,7 +46,7 @@ Default initialization installs a small configuration, project notes, and host d
 
 ## Three useful guarantees
 
-**Checks are recorded, not inferred.** An Ed25519-signed DSSE envelope contains an in-toto Statement with the full tree digest, contract digest, command exits, and output digests. Timeouts kill the command process group. A partial suite cannot authorize landing.
+**Checks are recorded, not inferred.** An Ed25519-signed DSSE envelope contains an in-toto Statement with the full tree digest, contract digest, command exits, and output digests. Timeouts fail the check and attempt process-group termination. A partial suite cannot authorize landing.
 
 **Decisions survive a conversation.** `keelson ask` separates user choices from engineering judgment and facts to investigate. Dependency-aware frontiers show at most three ready user questions. A settled decision requires an explicit reason to reopen; irreversible choices cannot be assumed.
 

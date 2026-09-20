@@ -4,7 +4,7 @@
 
 **为 AI 辅助开发保留决策，以及能够核验的检查记录。**
 
-[English](README.md) · [快速开始](docs/zh/getting-started.md) · [命令参考](docs/cli.md) · [证据与信任](docs/verification.md) · [Benchmark](benchmarks/README.md)
+[English](README.md) · [快速开始](docs/zh/getting-started.md) · [命令参考](docs/zh/cli.md) · [证据与信任](docs/zh/verification.md) · [Benchmark](benchmarks/README.md)
 
 聊天里的“测试通过”容易丢失，也容易夸大。Keelson 记录实际执行的命令、输出摘要，以及检查对应的代码和契约。代码、规格、规则、配置、验收标准或决策变化后，证据就会失效。`land` 要求当前、完整、在本机受信任的检查记录，以及已完成的验收条件。
 
@@ -46,7 +46,7 @@ keelson land fix-pagination
 
 ## 核心能力
 
-**记录实际检查。** Ed25519 签名的 DSSE envelope 包含 in-toto Statement，绑定完整代码树摘要、契约摘要、命令退出码和输出摘要。超时会终止命令进程组，局部检查不能授权归档。
+**记录实际检查。** Ed25519 签名的 DSSE envelope 包含 in-toto Statement，绑定完整代码树摘要、契约摘要、命令退出码和输出摘要。超时会使检查失败，并尝试终止命令进程组；局部检查不能授权归档。
 
 **跨会话保留决策。** `keelson ask` 区分用户选择、工程判断和待查事实。决策前沿按照依赖关系，每次展示至多三个已具备前提的用户问题。重新打开已确定的决定必须说明原因；不可逆决定不能靠假设通过。
 

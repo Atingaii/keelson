@@ -1,20 +1,13 @@
 # Now
 
-The continuous-conversation lifecycle redesign is implemented on top of the golden path. Keelson separates project truth, durable changes/work items, ephemeral conversation focus, and mutable execution plans. Users can keep asking questions indefinitely; session/window lifetime never marks work complete, and task checkboxes no longer act as a second manual completion signal. A change becomes `ready` only when durable acceptance/gates and current-tree verification say so, and the Agent lands it without waiting for a “done” phrase.
+The 0.4 remediation is in progress on main. Signed local check records bind code and contracts; prose alone cannot authorize completion. Default installation loads guidance from the installed package, keeps machine-local runtime outside tracked project data, and never writes ignore rules. Decision records preserve ownership, prerequisites and explicit reopening history.
 
-Native session focus is now implemented for four first-class hosts:
-- Claude Code — SessionStart/UserPromptSubmit bridge + `CLAUDE_ENV_FILE`; raw session ids are never stored.
-- OpenCode — one project plugin injects opaque `KEELSON_SESSION_ID` into Bash commands.
-- Pi — zero adapter files; Keelson uses Pi's built-in `PI_SESSION_ID` and hashes it before local storage.
-- CodeBuddy — SessionStart/UserPromptSubmit + Bash/PowerShell PreToolUse bridge; unrelated settings/hooks are preserved.
+Core verification passed 17 targeted tests, including concurrent writers, escaped-child deadlines, foreign signatures, transaction recovery and real Git index preservation. Markdown and landing tests passed 22/22 after fixing lossless sharding regressions. These are targeted results; the final whole-project check and remote CI are still pending.
 
-Codex CLI, Gemini CLI, and Kiro CLI remain deliberately degraded until Keelson has a deterministic, field-verified bridge. Degraded mode keeps durable work correct and refuses ambiguous automatic focus.
+## Remaining work
+- Finish and review installation migration without replacing modified user files; update this repository's generated integration to Codex.
+- Complete fixed local Codex comparisons on Flask with gpt-5.6-terra, retaining environment failures and all declared metrics. Baseline dependencies come from upstream locks.
+- Run the complete test/validation/package checks, record real evidence, push main and verify remote branch cleanup and CI.
 
-## Blocked / uncertain
-- The new four-host session runtime and adapter lifecycle still need the full Ubuntu/macOS/Windows × Node 20/22 CI matrix and package smoke on this branch.
-- Codex, Gemini CLI, and Kiro CLI still need native session adapter evidence before promotion; API existence alone is not enough.
-- Long-running parallel sessions, changed requirements, interrupted updates, host switching, and merge conflicts still need field evidence.
-- Session focus improves routing only; it is intentionally not a distributed lock or backlog/ownership system.
-
-## Next
-Run the full CI matrix. If green, exercise real parallel conversations on Claude/OpenCode/Pi/CodeBuddy, then implement native adapters for the remaining hosts one at a time only where the host contract is deterministic. Use those field runs to remove unnecessary context injection before adding new process.
+## Evidence boundaries
+Codex session identity is exercised locally. Other host adapters have declared discovery contracts and fixture coverage, with support levels in the platform registry; those are not interchangeable with live host validation. Local signatures do not isolate same-user processes or prove model identity or legal compliance.

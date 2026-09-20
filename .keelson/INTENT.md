@@ -4,7 +4,7 @@
 Coding agents are good at one task and bad at a project that lasts years: they forget why things were decided, let specs drift from code, treat green tests as met requirements, cannot resume each other's work, and collide when they run in parallel. Keelson is the project-local engineering control plane that keeps those facts in the repository in a form agents read at the right moment, keeps work, verification, and release state apart, and refuses to call anything done without evidence that matches the code. The user manages a conversation, not a process.
 
 ## Boundaries
-- In scope: the `.keelson/` directory contract, the CLI that reconciles it, one canonical skill/runtime with thin discovery adapters for the seven first-class CLI hosts plus the portable Agent Skills layer, hook scripts where a host has a proven lifecycle API, and the effort-tier registry.
+- In scope: the `.keelson/` directory contract, the CLI that reconciles it, package-loaded guidance with thin discovery adapters and optional vendoring, host hooks that dispatch installed package code where a host has a documented lifecycle API, and the effort-tier registry.
 - Explicitly not: a task runner, a test framework, a hosted service, per-tool plugins beyond files the tool already reads, any behaviour gate on the agent itself.
 
 ## Authorizations

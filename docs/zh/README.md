@@ -21,6 +21,8 @@ Keelson 只有一条黄金路径：**初始化一次，之后继续像原来一�
 - [配置](configuration.md)
 - [CLI](cli.md)
 - [FAQ](faq.md)
+- [平台支持范围](../platforms.md)
+- [Benchmark 协议及结果](../../benchmarks/README.md)
 
 ## 用户通常真正需要运行的命令
 

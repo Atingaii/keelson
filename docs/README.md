@@ -21,6 +21,8 @@ Keelson is designed around one golden path: **initialize once, then keep using y
 - [Configuration](configuration.md)
 - [CLI](cli.md)
 - [FAQ](faq.md)
+- [Platform support](platforms.md)
+- [Benchmark protocol and results](../benchmarks/README.md)
 
 ## What users normally run
 
