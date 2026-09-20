@@ -28,7 +28,7 @@ Legacy prose needs a new check. Default guidance loads from the installed packag
 - [x] Default Codex installation stays small, preserves user content and does not edit .gitignore. — test: tests/cli.test.js
 - [x] Decision records support bounded questions and prevent silent reopening of settled decisions. — test: tests/decisions.test.js
 - [x] Fixed open-source tasks are evaluated using local Codex with gpt-5.6-terra against OpenSpec, Trellis and Superpowers; raw evidence and limitations are retained. — manual: benchmarks/README.md and retained run records
-- [ ] English and Chinese README, migration/security documentation and generated wide banner match shipped behavior. — manual: README.md, README_CN.md, docs/verification.md and docs/assets/keelson-banner.png
+- [x] English and Chinese README, migration/security documentation and generated wide banner match shipped behavior. — manual: README.md, README_CN.md, docs/verification.md and docs/assets/keelson-banner.png
 - [ ] All required local checks pass, main is pushed, and remote branch cleanup is verified. — manual: npm run lint, npm test, keelson validate and git ls-remote
 
 ## Decisions

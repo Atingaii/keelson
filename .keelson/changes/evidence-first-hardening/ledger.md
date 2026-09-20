@@ -120,3 +120,7 @@ The frozen fa7c874 candidate passes original D-17 acceptance 3/3 and the unchang
 ### Dispatch: fingerprint allocation review → deep (gpt-5.6-terra)
 Result: pass for 314de04; repository error routing requires repair
 The reviewer confirmed byte-equivalent v2 length framing and valid path handling after reducing allocation overhead. A subsequent optimization's repository probe could treat shared Git configuration/metadata errors as a non-Git directory; it is held from integration until that path fails closed with regression coverage. Current performance measurements retain real content and mode reads.
+
+### Dispatch: documentation and experiment audit → deep (gpt-5.6-terra)
+Result: pass
+At defba00 the independent reviewer found no P1/P2 in README parity, implementation claims, trust/migration boundaries, banner/link completeness or experiment reporting. It verified 45 unique formal cells with summaries, raw events and patches; sampled both passes and failures; checked the separate supplemental/exploratory accounting and all four third-party license hashes/provenance. This does not certify a latency target: the new 30-sample attempt still misses status/context/check budgets and is retained as a failed target result.
