@@ -157,14 +157,14 @@ Official support is intentionally bounded to seven CLI hosts plus the portable s
 |---|---|---|---|---|
 | Claude Code | `CLAUDE.md` | `.claude/skills/` | **native** | verified |
 | Codex CLI | `AGENTS.md` | `.agents/skills/` | degraded | verified |
-| OpenCode | `AGENTS.md` | `.agents/skills/` | degraded | documented |
-| Pi | `AGENTS.md` | `.agents/skills/` | degraded | documented |
+| OpenCode | `AGENTS.md` | `.agents/skills/` | **native** | documented |
+| Pi | `AGENTS.md` | `.agents/skills/` | **native** | documented |
 | Gemini CLI | `GEMINI.md` | `.agents/skills/` | degraded | documented |
 | Kiro CLI | `AGENTS.md` | `.kiro/skills/` | degraded | documented |
-| CodeBuddy CLI | `CODEBUDDY.md` | `.codebuddy/skills/` | degraded | documented |
+| CodeBuddy CLI | `CODEBUDDY.md` | `.codebuddy/skills/` | **native** | documented |
 | Portable Agent Skills readers | `AGENTS.md` | `.agents/skills/` | degraded | fallback |
 
-A host becomes first-class only when discovery/lifecycle paths are verified or backed by primary documentation and it passes the shared contract. Session focus is a separate capability: `native` means Keelson has a verified identity bridge; `degraded` means durable work remains correct but ambiguous conversations must select a change explicitly.
+A host becomes first-class only when discovery/lifecycle paths are verified or backed by primary documentation and it passes the shared contract. Session focus is a separate capability: `native` currently covers Claude hooks, the OpenCode project plugin, Pi's built-in session environment, and CodeBuddy hooks. `degraded` means durable work remains correct but ambiguous conversations must select a change explicitly. `--no-hooks` disables hook/plugin bridges (Pi remains native because its session environment is built in).
 
 ## Reliability is part of the product
 
