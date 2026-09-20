@@ -113,7 +113,7 @@ function hasSymbolicLink(dir) {
     }
     return false;
   };
-  try { return visit(dir); } catch { return true; }
+  try { return fs.lstatSync(dir).isSymbolicLink() || visit(dir); } catch { return true; }
 }
 
 function treeHash(dir) {
@@ -135,7 +135,7 @@ function canonicalSkillMatches(root, { lang, profile, version }) {
 export function installCanonicalSkill(root, { lang, profile, version, force = false }) {
   const dest = path.join(root, CANONICAL_SKILL_DIR);
   const files = renderSkillFiles(lang, profile, version);
-  if (exists(dest) && !canonicalSkillMatches(root, { lang, profile, version }) && !force) {
+  if (fs.lstatSync(dest, { throwIfNoEntry: false }) && !canonicalSkillMatches(root, { lang, profile, version }) && !force) {
     throw new Error('vendored skill differs from this CLI output; Keelson left it unchanged. Review it, then pass --force only if replacing the whole directory is intended.');
   }
   withLock(dest, () => {
@@ -161,7 +161,7 @@ function assertSkillInstallable(root, target, { lang, version, legacyVersion, pr
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
   const dest = path.join(root, p.skillsDir, 'keelson');
   const priorOutput = previousVersion && managedSkillShimMatches(root, p, previousVersion);
-  if (exists(dest) && !skillShimMatches(dest, renderSkillShim(lang, version), legacyVersion) && !priorOutput && !force) {
+  if (fs.lstatSync(dest, { throwIfNoEntry: false }) && !skillShimMatches(dest, renderSkillShim(lang, version), legacyVersion) && !priorOutput && !force) {
     throw new Error('discovery shim differs from this CLI output; Keelson left it unchanged. Review it, then pass --force only if replacing the whole directory is intended.');
   }
 }
@@ -213,7 +213,8 @@ export function plannedWorkflowFile(root, { lang, guide = false }) {
 export function installWorkflow(root, { lang, guide = false, force = false }) {
   const target = path.join(root, CANONICAL_WORKFLOW);
   const content = workflowContent(lang, guide);
-  if (exists(target) && normalize(read(target)) !== content && !force) {
+  const stat = fs.lstatSync(target, { throwIfNoEntry: false });
+  if (stat && (stat.isSymbolicLink() || normalize(read(target)) !== content) && !force) {
     throw new Error('vendored workflow differs from this CLI output; Keelson left it unchanged. Review it, then pass --force only if replacing it is intended.');
   }
   write(target, content);
@@ -235,7 +236,9 @@ export function removeCanonicalRuntime(root, { lang, profile, version, guide = f
     } else preserved.push(CANONICAL_SKILL_DIR);
   }
   const workflow = path.join(root, CANONICAL_WORKFLOW);
-  if (exists(workflow)) {
+  if (fs.lstatSync(workflow, { throwIfNoEntry: false })?.isSymbolicLink()) {
+    preserved.push(CANONICAL_WORKFLOW);
+  } else if (exists(workflow)) {
     const legacyWorkflow = version === '0.3.0' && LEGACY_V03_WORKFLOW_HASHES.has(fileHash(read(workflow)));
     if (normalize(read(workflow)) === workflowContent(lang, guide) || legacyWorkflow) {
       rmrf(workflow);

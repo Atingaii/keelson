@@ -65,3 +65,7 @@ The baseline-derived en/zh × lean/guided × guide-on/off fixtures now cover all
 
 ### Note: measured CLI latency baseline
 The fixed 5000-file, 30-sample CLI baseline is retained in `benchmarks/cli-performance.json`. Signed status/context, impact and check overhead exceed the declared p95 targets. Profiling identified repeated Git snapshot creation and private-runtime lookups; an optimization is in progress and must retain content-based freshness, fail closed on unreadable inputs, and preserve all earlier samples. No threshold is being relaxed to turn these misses into passes.
+
+### Dispatch: migration ownership re-review → deep (gpt-5.6-terra)
+Result: fail
+The reviewer confirmed that scanning children did not reject a symbolic link at the generated directory root. Workflow and copied-hook ownership also followed file links. Matching target bytes must not authorize removing the user's link. Root-authored directory/file-link regressions both fail on `5c66985`; lstat-based protection makes both and the targeted migration selection pass (10 executed, 51 unselected). Directory links use Windows junctions in that test; file-link assertions explicitly require POSIX privileges. A further review found that the baseline's checked-in old Claude hooks differ from its CLI's newly generated hooks; both proven historical variants need separate provenance and ownership coverage.

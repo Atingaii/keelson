@@ -70,9 +70,11 @@ export function removeLegacyCopiedHooks(root) {
   const preserved = [];
   for (const [name, expectedHash] of LEGACY_COPIED_HOOK_HASHES) {
     const target = path.join(hooksDir, name);
-    if (!exists(target) || !fs.statSync(target).isFile()) continue;
-    const actualHash = crypto.createHash('sha256').update(read(target).replace(/\r\n?/g, '\n')).digest('hex');
     const rel = path.join('.keelson', 'hooks', name);
+    const stat = fs.lstatSync(target, { throwIfNoEntry: false });
+    if (stat?.isSymbolicLink()) { preserved.push(rel); continue; }
+    if (!stat?.isFile()) continue;
+    const actualHash = crypto.createHash('sha256').update(read(target).replace(/\r\n?/g, '\n')).digest('hex');
     if (actualHash === expectedHash) {
       rmrf(target);
       removed.push(rel);

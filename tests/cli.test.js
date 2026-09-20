@@ -140,6 +140,45 @@ test('an unchanged discovery shim with hidden user neighbors is never removed', 
   assert.equal(read(dir, '.claude/skills/keelson/.git/owner'), 'owner metadata\n');
 });
 
+test('migration and uninstall preserve user directory links to exact generated content', () => {
+  for (const surface of ['.keelson/skill', '.agents/skills/keelson']) {
+    for (const operation of ['update', 'uninstall']) {
+      const dir = tmpProject({}); restoreV03Project(dir);
+      const external = tmpProject({});
+      const source = path.join(dir, surface);
+      const target = path.join(external, 'linked-content');
+      fs.renameSync(source, target);
+      const before = fixtureTreeHash(target);
+      fs.symlinkSync(target, source, process.platform === 'win32' ? 'junction' : 'dir');
+      const config = read(dir, '.keelson/config.yaml');
+      const result = run(dir, operation === 'update' ? ['update', '--codex', '--no-hooks'] : ['uninstall'], { env, allowFail: true });
+      const refused = surface === '.agents/skills/keelson' && operation === 'update';
+      assert.equal(result.code, refused ? 1 : 0, `${surface}: ${operation}`);
+      assert.ok(fs.lstatSync(source).isSymbolicLink(), `${surface}: ${operation} preserves the link`);
+      assert.equal(fixtureTreeHash(target), before, `${surface}: ${operation} preserves its target`);
+      if (refused) assert.equal(read(dir, '.keelson/config.yaml'), config);
+    }
+  }
+});
+
+test('migration and uninstall preserve user file links to exact legacy workflows and hooks', (t) => {
+  if (process.platform === 'win32') return t.skip('file symlinks require privileges not assumed on Windows');
+  for (const surface of ['.keelson/workflow.md', '.keelson/hooks/session-start.mjs', '.keelson/hooks/codebuddy-session.mjs']) {
+    for (const operation of ['update', 'uninstall']) {
+      const dir = tmpProject({}); restoreV03Project(dir, { codeBuddyHook: true });
+      const external = tmpProject({});
+      const source = path.join(dir, surface);
+      const target = path.join(external, 'linked-content');
+      fs.renameSync(source, target);
+      const before = fs.readFileSync(target);
+      fs.symlinkSync(target, source);
+      run(dir, operation === 'update' ? ['update', '--codex', '--no-hooks'] : ['uninstall'], { env });
+      assert.ok(fs.lstatSync(source).isSymbolicLink(), `${surface}: ${operation} preserves the link`);
+      assert.deepEqual(fs.readFileSync(target), before, `${surface}: ${operation} preserves its target`);
+    }
+  }
+});
+
 test('Kiro upsert retains frontmatter and user content', () => {
   const dir = tmpProject({ 'AGENTS.md': '---\ninclusion: always\n---\n\n# User note\n' });
   run(dir, ['init', '--tools', 'kiro', '--no-hooks'], { env });

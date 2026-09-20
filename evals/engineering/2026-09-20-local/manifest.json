@@ -302,6 +302,36 @@
         "todo": 0
       },
       "note": "Full integrated suite after all v0.3 language/profile/guide ownership variants were added; this is an exact historical revision, not a claim about later HEAD."
+    },
+    {
+      "file": "link-ownership-negative.tap.log",
+      "sha256": "ebf65d70eed24bddf357af44d7fc3a8f7ece1bcfbf8517c3c7e1174e69f18ef9",
+      "bytes": 15314,
+      "source_mtime_utc": "2026-09-20T11:49:34.989707+00:00",
+      "tap_counts": {
+        "tests": 61,
+        "pass": 0,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 59,
+        "todo": 0
+      },
+      "note": "Two link ownership regressions fail against 5c66985; no production fix applied."
+    },
+    {
+      "file": "link-ownership-positive.tap.log",
+      "sha256": "a64786c0c2e9057de34c535ef61df15794c5253d6494f587742a5a22c1845551",
+      "bytes": 13592,
+      "source_mtime_utc": "2026-09-20T11:50:37.615927+00:00",
+      "tap_counts": {
+        "tests": 61,
+        "pass": 10,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 51,
+        "todo": 0
+      },
+      "note": "Both link regressions and targeted migration selection pass after root-link lstat protections; selection skips are not passes."
     }
   ]
 }
