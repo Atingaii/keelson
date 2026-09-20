@@ -9,6 +9,7 @@ import { git, isGitRepo, currentBranch, gitUserName } from '../lib/git.js';
 import { list } from '../lib/args.js';
 import { ok, info, warn } from '../lib/out.js';
 import { bindSession } from '../lib/session.js';
+import { readCapabilitySpec } from '../lib/specs.js';
 
 const fill = (tpl, vars) => tpl.replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? `{{${k}}}`);
 export const specBase = (text) => crypto.createHash('sha1').update(text).digest('hex').slice(0, 10);
@@ -55,8 +56,7 @@ export async function newChange({ flags, positional }, cwd = process.cwd()) {
   if (tier === 'spec') write(path.join(dir, 'tasks.md'), fill(read(path.join(tpl, 'tasks.md')), vars));
   // ledger.md and handoff.md are event artifacts: create them only when evidence or a handoff actually exists.
   for (const cap of caps) {
-    const mainPath = path.join(p.specs, cap, 'spec.md');
-    const main = readOr(mainPath, '');
+    const main = readCapabilitySpec(p.specs, cap);
     const delta = fill(read(path.join(tpl, 'delta-spec.md')), { ...vars, capability: cap });
     // Stamp the base so `keelson land` can detect that the main spec moved while this delta was being written.
     write(path.join(dir, 'specs', cap, 'spec.md'), `---\nbase: ${main ? specBase(main) : 'new'}\n---\n${delta}`);
