@@ -81,6 +81,10 @@ Example:
 
 Once confirmed, work continues normally.
 
+The agent does **not** ask you to choose databases, queues, consistency models, or architecture patterns just because they exist. Before every question it asks: what will this answer change, who owns the answer, and can repository evidence or a cheap experiment settle it? If the choice is reversible engineering detail, the agent chooses a sensible project-aligned default. If you say “not sure,” that is useful information, not a failed answer.
+
+If you explicitly say “grill me,” the agent continues through the material decision tree. Otherwise it stops questioning as soon as the next safe vertical slice has a clear outcome, boundary, and acceptance check.
+
 ## What grows later
 
 Project knowledge appears only when useful:
