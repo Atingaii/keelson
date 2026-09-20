@@ -62,10 +62,13 @@ function renderIndex(capability, spec, reqFiles, hasDecisions) {
     '',
   ];
   if (spec.purpose) parts.push('## Purpose', '', spec.purpose.trim(), '');
-  parts.push('## Files', '');
-  for (const r of reqFiles) parts.push(`- \`${r.rel}\` — Requirement: ${r.name}`);
-  if (hasDecisions) parts.push('- `decisions.md` — durable decisions');
-  parts.push('', 'This index is maintained by Keelson. Read only the requirement files relevant to the current change.', '');
+  parts.push(
+    '## Files',
+    '',
+    `- \`requirements/\` — ${reqFiles.length} current requirement file(s); read only those relevant to the current change`,
+  );
+  if (hasDecisions) parts.push('- `decisions.md` — capability-local durable decisions');
+  parts.push('', 'This bounded index is maintained automatically by Keelson.', '');
   return parts.join('\n');
 }
 
