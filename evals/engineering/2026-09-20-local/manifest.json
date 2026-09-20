@@ -498,6 +498,12 @@
       "workflow_run": 35509551218,
       "workflow_job": 106074951656,
       "note": "TAP extracted from remote GitHub job log, timestamp prefixes removed. Windows Node 20/22 concurrency failures retained."
+    },
+    {
+      "file": "ci-544391f.json",
+      "sha256": "1b767f0cd9c9d1db25c0044ac5f616b292709cb9196be1827664c883c8a55825",
+      "bytes": 2206,
+      "note": "GitHub Actions run 35510170688 at 544391f: all six OS/Node jobs successful; Windows runs explicitly skip three POSIX-only cases."
     }
   ]
 }

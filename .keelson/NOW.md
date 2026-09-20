@@ -2,7 +2,7 @@
 
 The 0.4 remediation is in progress on main. Signed local check records bind code and contracts; prose alone cannot authorize completion. Default installation loads guidance from the installed package, keeps machine-local runtime outside tracked project data, and never writes ignore rules. Decision records preserve ownership, prerequisites and explicit reopening history.
 
-The complete integrated suite passes 133/133 after covering the full 0.3 language/profile migration matrix and actual 0.3 migration to the Codex lightweight layout without force. Lint, project validation, package smoke checks and native Codex session diagnostics pass. Independent migration review passes at 599ee44; final remote CI remains a release gate.
+The full 0.3 language/profile migration matrix and actual 0.3 migration to the Codex lightweight layout pass without force. At 544391f, GitHub Actions passes all six Ubuntu/macOS/Windows × Node 20/22 jobs; the suite contains 138 cases, with three explicitly POSIX-only cases skipped on Windows. Independent ownership and Windows write/lock reviews pass. Performance changes and benchmark integration still need their final full-suite and remote-CI checks.
 
 ## Remaining work
 - Fix and remeasure the CLI p95 latency misses without weakening content fingerprints.

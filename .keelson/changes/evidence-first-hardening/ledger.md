@@ -96,3 +96,5 @@ Remote 6e2a3f8 passes Ubuntu/macOS Node 20/22. Windows Node 20 fails concurrent 
 Remote old branches were rechecked at fcfbb76 and had no unique commits. Explicit SHA leases deleted all three; `git ls-remote --heads origin` now reports only main. Local active worktrees remain until delivery.
 
 - Independent Windows remediation review: PASS, no P1/P2 findings. The reviewer reproduced all 14 filesystem/evidence cases with no skips and verified archived CI/error-injection hashes. Linux syntax and `validate` checks pass. Real Windows CI remains the platform acceptance gate; a persistent Windows ACL error can report lock timeout after the bounded wait.
+
+- Remote CI at 544391f is green: GitHub Actions run 35510170688 completed all six Ubuntu/macOS/Windows × Node 20/22 jobs successfully. Windows log confirms 138 tests, 135 pass, zero fail and three explicit POSIX-only skips. The API result is retained at `evals/engineering/2026-09-20-local/ci-544391f.json`; later integration requires another final CI run.
