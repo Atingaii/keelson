@@ -58,6 +58,8 @@ The API SHALL reject `size` above 200 with HTTP 400.
 ### Requirement: Legacy CSV export
 ```
 
+一个 capability 在逻辑上仍是一份行为契约，但物理上不必永远只有一个文件。当合并后的契约超过配置的 spec 预算时，`keelson land` 会自动把它改写成小型 `spec.md` 索引 + `requirements/*.md`，需要时再加 `decisions.md`；后续 delta 仍把该 capability 当成一份逻辑 spec，base hash 也覆盖整份逻辑契约。不要手工重新合并 shards。
+
 spec 是行为契约：可观察的行为、输入、输出、错误条件、外部约束。如果实现可以改而客户端看到的不变，它就不属于这里。架构约束（谁可以依赖谁、哪一层拥有某个决定）放在 `rules/`；项目有 `refs.decisions` 时，长期决策记录放在那里；链接过去，不要复述。
 
 ## tasks.md 与切片
