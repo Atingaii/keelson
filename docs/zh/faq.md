@@ -48,7 +48,7 @@
 运行 `keelson init --guide`（或在 `config.yaml` 里设 `guide: true`）。代理随后先问场景再问技术，给每个选择配上推荐、原因、备选和取舍，应用一条规则时用一句话解释它，在你决定之后说出对应的工程概念，并在每个 spec 变更收尾时留一段简短的教学说明。文件、门禁和状态与其他任何人相同，所以你做出来的不是一个"新手版"的项目。
 
 **文档一直在长。什么能止住它？**
-`config.yaml → budgets` 里的行数预算和 `keelson doctor`。doctor 报告超预算的文档、读起来像历史的需求文字、重复的需求名、闲置两周的变更、超过 25 个任务的变更、超预算的常驻 rules，以及比代码旧的生成文档。每条发现都给出一个压缩建议（用现在时重写、拆分、删除 git 已保留的内容、把可检查的规则移进 `check:`）。没有任何东西会替你重写；技能的 `reconcile.md` reference 告诉代理每条事实属于哪里、如何压缩。
+Keelson 限制的是**高频读取文件的大小，而不是项目知识总量**。Agent 会在正常 RECONCILE 中自动处理 knowledge-health signal，不把 housekeeping 丢给用户。大型 capability spec 自动变成小型 `spec.md` 索引 + `requirements/*.md` + 可选 `decisions.md`；rules 按 scope 拆分；NOW/INTENT 重写为简洁当前状态；旧 runtime evidence/session 自动回收。ADR/spec/rule 的文件数量可以随着项目演进持续增加，但每次只按需读取相关文件。`keelson doctor` 保留为诊断工具，不是日常维护步骤。
 
 **它对测试驱动开发有立场吗？**
 没有。`verify` reference 要求与代码匹配且覆盖验收清单的证据。`guided` profile 加了一条说明：delta spec 里有场景时建议先写测试，问题是视觉性的或涉及未知 API 时建议先做原型。`lean` profile 把方法留给代理。
@@ -56,8 +56,8 @@
 **它消耗多少 token？**
 发现块不到 10 行，canonical Skill 按需读取 references。Native session adapter 只注入极小的 focus/candidate 提示：Claude/CodeBuddy 在生命周期事件里注入，OpenCode/Pi 主要通过 shell identity 工作，不额外重复大段 prose。Rules 只在 glob 匹配时读；Keelson 不会每轮重放整个工作历史。
 
-**代理不理它怎么办？**
-运行 `keelson doctor`。它会检查 canonical runtime、discovery shim、manifest、启用的 native session adapter 文件/注册、stale session pointer 与项目 validation。`keelson update` 修复 Keelson 自己拥有的 drift。变更大小判断错时，直接说“按 spec 处理”或“直接做”。
+**集成状态不健康怎么办？**
+`keelson doctor` 可用于诊断 canonical runtime、discovery shim、manifest、session adapter、lifecycle state 与项目 validation；`keelson update` 修复 Keelson 自己拥有的 drift。正常开发除升级或排障外不需要主动运行这些命令。
 
 **怎么把它去掉？**
 `keelson uninstall` 移除生成的运行时/集成表面（`.keelson/workflow.md`、`.keelson/skill/`、宿主发现 shim、hook、本地状态），但保留 `.keelson/` 中的项目事实；加 `--purge` 连整个 `.keelson/` 一起移除。临时对照的话，`keelson ablate` 暂存每个表面，`keelson restore` 逐字节恢复。
