@@ -77,6 +77,7 @@ test('canonical skill separates five conversation intents from automatic complet
     assert.match(skill, /Completion is \*\*not\*\* an intent|“完成”\*\*不是一种用户意图\*\*/);
     assert.match(skill, /ready/);
     assert.match(skill, /Artifacts are information containers|工件是信息容器/);
+    assert.match(skill, /engineer\.md/);
   }
 });
 
@@ -135,6 +136,10 @@ test('shaping audits assumptions without turning clarification into ceremony', (
   const zhInterview = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/interview.md'), 'utf8');
   const enLenses = fs.readFileSync(path.join(ROOT, 'skills/keelson/references/design-lenses.md'), 'utf8');
   const zhLenses = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/design-lenses.md'), 'utf8');
+  const enEngineer = fs.readFileSync(path.join(ROOT, 'skills/keelson/references/engineer.md'), 'utf8');
+  const zhEngineer = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/engineer.md'), 'utf8');
+  const enVerify = fs.readFileSync(path.join(ROOT, 'skills/keelson/references/verify.md'), 'utf8');
+  const zhVerify = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/verify.md'), 'utf8');
   assert.match(enInterview, /not sure/i);
   assert.match(zhInterview, /不确定/);
   for (const id of ['interview.protocol', 'interview.blindspots', 'interview.one-at-a-time', 'interview.presentation', 'interview.implementation', 'interview.order', 'interview.adaptive', 'interview.uncertain', 'interview.stop']) {
@@ -155,6 +160,16 @@ test('shaping audits assumptions without turning clarification into ceremony', (
   assert.match(zhLenses, /id=lenses\.fitness/);
   assert.match(enLenses, /simplest design/i);
   assert.match(zhLenses, /最简单设计/);
+  for (const id of ['engineer.first-principles', 'engineer.hypothesis', 'engineer.experiment', 'engineer.ablation', 'engineer.architecture', 'engineer.structure', 'engineer.evolution', 'engineer.fitness']) {
+    assert.match(enEngineer, new RegExp(`id=${id.replace('.', '\\.')}\\b`), id);
+    assert.match(zhEngineer, new RegExp(`id=${id.replace('.', '\\.')}\\b`), id);
+  }
+  assert.match(enEngineer, /2×2|2x2/i);
+  assert.match(zhEngineer, /2×2|2x2/i);
+  assert.match(enVerify, /id=verify\.counterfactual/);
+  assert.match(zhVerify, /id=verify\.counterfactual/);
+  assert.match(enVerify, /candidate enabled.*candidate disabled/is);
+  assert.match(zhVerify, /candidate enabled.*disabled/s);
   assert.doesNotMatch(enPlan, /at least two real options/i);
   assert.doesNotMatch(zhPlan, /至少两个真实选项/);
 

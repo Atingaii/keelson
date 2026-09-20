@@ -27,6 +27,17 @@ For a bug fix, keep the negative check: with the fix reverted, the regression te
 
 For each risk lens that actually triggered during shaping, verify the corresponding obligation rather than re-running a generic checklist: security needs the relevant negative/abuse case, concurrency needs duplicate/order/failure behavior, compatibility needs old-consumer or migration coverage, accessibility needs the affected interaction check, and performance needs a measured target/baseline. If the repository already proves it, reuse that evidence; do not duplicate it.
 
+## Counterfactual evidence for mechanisms that claim a benefit
+<!-- keelson: id=verify.counterfactual | without: the selected design passes its tests, but nobody verifies that the new cache, queue, retry layer, abstraction, model stage, or reviewer actually causes the benefit used to justify its complexity | sunset: never -->
+
+Routine product behavior does not need an ablation. Use this only when the rationale for a mechanism is empirical: performance, reliability, cost, quality, safety margin, or another measurable response.
+
+Verify the claim against the baseline from `engineer.md`: same representative workload/environment, candidate enabled, candidate disabled or simplified, and the predeclared response/threshold. For reliability mechanisms, inject the failure they claim to handle; for AI/Agent stages, compare the same eval cases with and without the stage.
+
+If removing the mechanism does not materially worsen the target, its necessity is unsupported: remove it or record the result as inconclusive rather than preserving complexity because “everything is green.” If two mechanisms may interact, test the smallest useful combinations instead of trusting one-at-a-time removal.
+
+Promote stable response thresholds to a fitness check when practical; keep noisy exploratory runs as evidence/ledger notes rather than permanent gates.
+
 ## Tests may change; they may not be quietly weakened
 <!-- keelson: id=verify.no-silent-weakening | without: "all green" is achieved by deleting an assertion or skipping a case, and the weakening is invisible in the completion report | sunset: never -->
 

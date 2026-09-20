@@ -64,15 +64,16 @@ Keelson keeps the capabilities a long-lived project needs, and spreads them acro
 
 These are internal capability areas, not seven steps. A trivial change touches none of them visibly.
 
-## Discover, model, engineer, reconcile
+## Discover, model, engineer, risk, reconcile
 
-Four references in the skill carry the engineering judgment that the file layout alone cannot. None is a stage; each is read when the situation calls for it.
+These core references carry the engineering judgment that the file layout alone cannot. None is a stage; each is read when the situation calls for it.
 
 | Reference | Read when | What it carries |
 |---|---|---|
 | `discover.md` | The owner is not sure what they want, or is learning | Scenario before technology: ask which use is at the centre before any storage or framework question. Which unknowns to raise: read what the code answers, follow existing conventions, decide the reversible, default the technical, ask only what changes the product, confirm what destroys data or touches production. A scope guard that names bundled domains and proposes an order. Explore before committing: a spike, prototype, mock, or benchmark when a cheap experiment beats an abstract decision |
 | `model.md` | Words or boundaries are drifting | One meaning per term in `.keelson/GLOSSARY.md`; a term that means two things in two parts of the system marks a boundary, and the two parts talk through an explicit translation. Invariants per capability. Interfaces that hide what changes rather than mirror the implementation. Two design sketches before choosing, the rejected one recorded with its strongest argument |
-| `engineer.md` | A design or reliability question | Engineering lenses grouped by delivery, structure, evolution, and operation; the agent picks the one to four that change this design and never runs the whole list. Named patterns are shared vocabulary for a shape that already fits, never a requirement. Quality targets are numbers with a scope, written as requirements with scenarios, and turned into a `fitness` check when a command can measure them |
+| `engineer.md` | A non-obvious technical choice, architecture fork, or claim that “X will be faster/safer/more reliable” | First-principles reduction (facts/outcome/constraints/invariants/assumptions/mechanisms) → falsifiable hypothesis → smallest discriminating experiment/ablation → architecture only when the cost of change demands it. Architecture is driven by quality-attribute scenarios; Design It Twice only for real forks; ablation accounts for interactions; legacy work follows characterize → seam → small refactor → change. Durable measurable qualities become `fitness` checks |
+| `design-lenses.md` | The change triggers data, security, concurrency, compatibility, operations, performance, UI, or AI risk | Identifies **which risk dimension matters**; it is not a second engineering method. Investigation, experimentation, and architecture choice still route through `engineer.md` |
 | `reconcile.md` | After landing, and when `keelson status` shows nothing in flight | Where each new fact goes: behaviour to the spec, reasons to `Decisions`, terms to the glossary, moved responsibilities to rules, checkable constraints to `check:`, defects to regression tests, remaining work to the tracker. Current truth is rewritten, never appended. Budgets and the compaction moves: rewrite, split, delete, move, automate, archive |
 
 Slices follow the same judgment: `plan.md` asks for vertical slices, one real user action carried through every layer, thin but complete, before the next action starts. `keelson validate` warns when a slice is named after a layer.

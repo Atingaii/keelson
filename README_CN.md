@@ -102,6 +102,8 @@ Keelson 不会把每个功能都变成架构访谈。Agent 先读仓库，可逆
 
 跨领域工程问题也不是全量问卷，而是按风险触发：支付可能触发数据完整性和对账，webhook 触发幂等/重试，登录权限触发安全/隐私。最终这些风险应该变成 acceptance、rule 或 evidence，而不是一篇没人维护的“架构检查文档”。
 
+遇到非显然技术选择时，Keelson 不用“最佳实践”替代思考，而走一条 evidence-driven loop：**事实/结果/不变量 → baseline + 可证伪 hypothesis → 最便宜的实验或消融 → 只有难以撤销的边界或质量属性真正需要时才升级为架构设计 → 用 fitness check 固化值得长期保护的性质**。Cache、queue、microservice、database、framework、抽象层或额外 Agent stage 都必须证明自己值得那份复杂度；移除之后目标没有明显变差，就优先删掉，而不是替它寻找理由。
+
 ## 控制面一开始很小，只在需要时增长
 
 Fresh init 只有：

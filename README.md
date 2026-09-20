@@ -102,6 +102,8 @@ Technical vocabulary comes after the consequence is understood. “Not sure” i
 
 Cross-domain concerns are risk-triggered, not a questionnaire. A payment change may trigger data integrity and audit/reconciliation; a webhook may trigger idempotency/retry; an auth change may trigger security/privacy. Those concerns become acceptance tests, rules, or evidence—not a generic architecture document.
 
+For a non-obvious technical choice, Keelson uses an evidence-driven loop instead of “best-practice” cargo culting: **facts/outcome/invariants → baseline + falsifiable hypothesis → cheapest experiment or ablation → architecture only if a hard-to-reverse boundary or quality attribute requires it → fitness check for the property worth preserving**. A cache, queue, microservice, database, framework, abstraction, or extra Agent stage must earn its complexity; if removing it does not materially hurt the target, Keelson should remove it rather than defend it.
+
 ## A small control plane that grows only when needed
 
 Fresh init deliberately starts small:

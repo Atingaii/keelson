@@ -27,6 +27,17 @@ Ready/完成是由长期 gate 与证据支撑的状态，而证据有两个会�
 
 成形阶段真正触发了哪个风险镜头，就验证对应义务，而不是再跑一张通用清单：安全看相关负向/滥用场景，并发看重复/顺序/故障行为，兼容性看旧消费者或迁移覆盖，可访问性看受影响交互，性能看有测量依据的目标/基线。仓库已经能证明的就复用证据，不重复制造检查。
 
+## 对“这个机制有收益”的主张做反事实验证
+<!-- keelson: id=verify.counterfactual | without: 方案本身测试全绿，但没人验证新增 cache、queue、retry 层、抽象、模型阶段或 reviewer 是否真的产生了用来证明其复杂度合理的收益 | sunset: never -->
+
+普通产品行为不需要做消融。只有当某个机制的理由本身是经验性主张时才使用：性能、可靠性、成本、质量、安全余量或其他可测响应。
+
+按照 `engineer.md` 里的 baseline 验证：使用同一代表性 workload/环境，分别让 candidate enabled，以及 disabled/简化，再对照实验前声明的 response/threshold。可靠性机制要注入它声称能处理的故障；AI/Agent stage 要用同一批 eval case 对比有无该 stage。
+
+如果移除机制并没有让目标明显变差，它的必要性就没有证据支持：删除它，或者把结论记为 inconclusive，而不是因为“全绿”就永久保留复杂度。两个机制可能交互时，测试最小有用组合，不要迷信 one-at-a-time removal。
+
+稳定的 response threshold 能自动化时升级成 fitness check；带噪声的探索实验留在 evidence/ledger note，不变成永久 gate。
+
 ## 测试可以改，但不能悄悄削弱
 <!-- keelson: id=verify.no-silent-weakening | without: 靠删断言、跳用例做到"全绿"，而完成报告里看不出这种削弱 | sunset: never -->
 
