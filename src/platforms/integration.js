@@ -213,7 +213,7 @@ export function installSessionAdapter(root, target) {
     const settings = readJson(settingsPath, {}) ?? {};
     ensureCodeBuddyHook(settings, 'SessionStart');
     ensureCodeBuddyHook(settings, 'UserPromptSubmit');
-    ensureCodeBuddyHook(settings, 'PreToolUse', 'Bash');
+    ensureCodeBuddyHook(settings, 'PreToolUse', 'Bash|PowerShell');
     writeJson(settingsPath, settings);
     return [path.relative(root, script), path.relative(root, settingsPath)];
   }
@@ -246,7 +246,7 @@ export function plannedSessionAdapterFiles(root, target) {
       (matcher === null || g.matcher === matcher) &&
       (g.hooks ?? []).some((h) => String(h.command ?? '').includes(CODEBUDDY_SESSION_MARK)),
     );
-    const ready = has('SessionStart') && has('UserPromptSubmit') && has('PreToolUse', 'Bash');
+    const ready = has('SessionStart') && has('UserPromptSubmit') && has('PreToolUse', 'Bash|PowerShell');
     rows.push({ path: '.codebuddy/settings.json (Keelson session hooks)', status: ready ? 'unchanged' : exists(path.join(root, '.codebuddy', 'settings.json')) ? 'update' : 'create' });
   }
 
@@ -330,7 +330,7 @@ export function sessionAdapterProblems(root, target) {
     );
     if (!has('SessionStart')) problems.push(`${p.label}: SessionStart session hook not registered`);
     if (!has('UserPromptSubmit')) problems.push(`${p.label}: UserPromptSubmit session hook not registered`);
-    if (!has('PreToolUse', 'Bash')) problems.push(`${p.label}: Bash PreToolUse session hook not registered`);
+    if (!has('PreToolUse', 'Bash|PowerShell')) problems.push(`${p.label}: Bash|PowerShell PreToolUse session hook not registered`);
   }
 
   return problems;
