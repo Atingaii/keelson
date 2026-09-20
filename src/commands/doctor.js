@@ -135,7 +135,7 @@ export async function doctor({ flags }, cwd = process.cwd()) {
   for (const t of cfg.tools ?? []) if (det.tools[t] && !det.tools[t].installed) add('info', `${PLATFORMS[t]?.label ?? t} CLI not found on PATH (fine if you use it through an IDE)`);
 
   heading(`keelson doctor — ${path.basename(root)} ${dim(`(keelson ${PKG_VERSION})`)}`);
-  if (health.length) console.log(dim('knowledge health: findings are suggestions for small compactions, never automatic rewrites'));
+  if (health.length) console.log(dim('knowledge health: structural maintenance is automatic; remaining findings are internal Agent reconciliation signals unless semantics require owner input'));
   for (const f of findings) (f.level === 'error' ? fail : f.level === 'warn' ? warn : ok)(f.text);
   const errs = findings.filter((f) => f.level === 'error').length;
   if (!findings.length) ok('everything in place');

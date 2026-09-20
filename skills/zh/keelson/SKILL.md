@@ -26,7 +26,7 @@ description: 面向含 .keelson/ 目录项目的工程控制层。用于探索�
 - Resume 时先用 `keelson focus --auto`；可以根据 branch 或唯一活动 change 给出候选，但存在歧义时绝不静默绑定。
 - `NOW.md` 为 First contact 时，只推断并确认 `INTENT.md`；不要盘点整个仓库生成 specs/rules。
 - 非平凡修改先读取当前上下文；改共享模块前运行 `keelson impact <files>`。
-- 只在 decision frontier 提问。按 `interview.md` 一次解决一个真正属于所有者的决定：先讲场景，再给推荐默认值；“不确定”是合法路由。仓库、证据或 Agent 工程判断能解决的事绝不问用户。
+- 只在 decision frontier 提问。先做风险触发式盲点扫描，再按 `interview.md` 一次解决一个真正属于所有者的决定：具体场景/选项、推荐默认值，“不确定”是合法路由。仓库证据、小实验或 Agent 工程判断能解决的事绝不问用户。
 - 只给工作本身定大小：trivial 直接改；quick 轻量 change；spec 先写验收、行为 delta 和计划，再等批准。
 - 工件是信息容器，不是仪式。不要创建空 roadmap/glossary/rule/task/ledger/handoff/spec。
 - `tasks.md` 只是执行计划，不拥有“完成”判定权。只要 acceptance 与新鲜证据已经满足，未勾选的旧计划不能覆盖这个事实；实现路径变化时应重写或删除过时任务。

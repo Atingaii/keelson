@@ -137,8 +137,20 @@ test('shaping audits assumptions without turning clarification into ceremony', (
   const zhLenses = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/design-lenses.md'), 'utf8');
   assert.match(enInterview, /not sure/i);
   assert.match(zhInterview, /不确定/);
+  for (const id of ['interview.protocol', 'interview.blindspots', 'interview.one-at-a-time', 'interview.presentation', 'interview.order', 'interview.adaptive', 'interview.uncertain', 'interview.stop']) {
+    assert.match(enInterview, new RegExp(`id=${id.replace('.', '\\.')}\\b`), id);
+    assert.match(zhInterview, new RegExp(`id=${id.replace('.', '\\.')}\\b`), id);
+  }
+  assert.match(enInterview, /recognition over recall/i);
+  assert.match(zhInterview, /优先“识别”而不是“回忆”/);
+  assert.match(enInterview, /If you cannot name a material consequence.*do not ask/is);
+  assert.match(zhInterview, /如果说不清实质后果.*不要问/s);
   for (const term of ['Security', 'Concurrency', 'accessibility', 'AI']) assert.match(enLenses, new RegExp(term, 'i'));
   for (const term of ['安全', '并发', '可访问性', 'AI']) assert.match(zhLenses, new RegExp(term));
+  assert.match(enLenses, /id=lenses\.fitness/);
+  assert.match(zhLenses, /id=lenses\.fitness/);
+  assert.match(enLenses, /simplest design/i);
+  assert.match(zhLenses, /最简单设计/);
   assert.doesNotMatch(enPlan, /at least two real options/i);
   assert.doesNotMatch(zhPlan, /至少两个真实选项/);
 
@@ -148,6 +160,15 @@ test('shaping audits assumptions without turning clarification into ceremony', (
   assert.match(zhChange, /非目标：/);
   assert.doesNotMatch(enChange, /^## Alternatives$/m);
   assert.doesNotMatch(zhChange, /^## Alternatives$/m);
+});
+
+test('public docs keep outcome-driven readiness and automatic maintenance coherent', () => {
+  for (const pathRel of ['docs/concepts.md', 'docs/zh/concepts.md']) {
+    const txt = fs.readFileSync(path.join(ROOT, pathRel), 'utf8');
+    assert.doesNotMatch(txt, /all existing tasks are complete|tasks 全部完成/);
+    assert.match(txt, /tasks\.md.*mutable execution plan|tasks\.md.*可变执行计划/s);
+    assert.doesNotMatch(txt, /Nothing is rewritten automatically|没有任何东西被自动重写/);
+  }
 });
 
 test('skill frontmatter stamping is CRLF-safe and emits LF', () => {

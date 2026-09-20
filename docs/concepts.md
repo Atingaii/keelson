@@ -83,7 +83,7 @@ Slices follow the same judgment: `plan.md` asks for vertical slices, one real us
 
 ## Knowledge health
 
-Project material grows with the project; what is read per task must not grow with the whole history. `config.yaml → budgets` gives each document type a line budget, and `keelson doctor` reports documents over budget, requirement text that reads like history, duplicated requirement names across capabilities, changes idle for two weeks or more, changes with more than 25 tasks, always-on rules over budget, and generated documents older than the source tree. Every finding is a suggestion for a small, separately landable fix. Nothing is rewritten automatically.
+Project knowledge may grow for years; the hot working set must not grow with the whole history. Keelson keeps structural maintenance internal: large capability contracts auto-shard into bounded indexes plus requirement/decision files, runtime caches self-prune, and only relevant shards/rules are loaded. Semantic maintenance (deduplication, present-tense rewrite, splitting an oversized invariant) is routed to the Agent during RECONCILE and re-verified. The owner is involved only when cleanup would change product semantics, authorization, compatibility, or another owner-owned commitment.
 
 ## Decision states
 
@@ -110,12 +110,15 @@ A single “done” conflates implementation, evidence, integration, and release
 
 The important transition is `ready`, which is **derived rather than announced by the user**. A change is ready when:
 
-- all existing tasks are complete (no tasks is valid for quick changes);
 - required acceptance is complete;
 - no blocking open questions remain;
+- no active dependency remains;
+- no unresolved spec drift remains;
 - no unconfirmed assumptions remain;
 - a breaking change has its rollout contract;
 - the latest verification passes on the current worktree.
+
+`tasks.md` is only a mutable execution plan; unchecked or rewritten tasks do not own completion.
 
 A session ending has no effect on this state. Once ready, the agent should land automatically before claiming completion. Explicit `blocked`, `integrated`, and `cancelled` remain durable overrides.
 
