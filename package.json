@@ -1,7 +1,7 @@
 {
   "name": "keelson",
   "version": "0.3.0",
-  "description": "An engineering collaboration layer for coding agents on long-lived projects: a small kernel, engineering capability that unfolds on demand, reviewable project state, and verification wired into the Git, tests, and CI you already have.",
+  "description": "A project-local engineering control plane for coding agents: durable work state, session-aware focus, progressive specs/rules, and revision-bound verification without forcing users to operate another workflow.",
   "type": "module",
   "bin": {
     "keelson": "bin/keelson.js"
@@ -33,11 +33,16 @@
     "coding-agent",
     "claude-code",
     "codex",
-    "cursor",
+    "opencode",
+    "gemini-cli",
+    "kiro",
+    "codebuddy",
+    "pi-agent",
+    "agent-skills",
     "spec-driven",
     "workflow",
-    "agent-skills",
-    "subagents"
+    "session",
+    "verification"
   ],
   "author": "Atingaii",
   "license": "MIT",
