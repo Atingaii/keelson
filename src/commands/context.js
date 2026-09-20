@@ -10,6 +10,7 @@ import { gitStatusShort, recentCommits, worktreeFingerprint } from '../lib/git.j
 import { list } from '../lib/args.js';
 import { knowledgeHealth } from '../lib/health.js';
 import { maintainRuntime } from '../lib/maintenance.js';
+import { changeSpecDrift } from '../lib/specs.js';
 
 export async function context({ flags, positional }, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
@@ -47,7 +48,8 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
       maintenance: knowledgeFindings.map((h) => ({ level: h.level, kind: h.kind, text: h.text, fix: h.fix })),
     },
     changes: orderedChanges.map((c) => {
-      const lifecycle = evaluateLifecycle(c, fp, { activeNames });
+      const contractDrift = changeSpecDrift(c, p.specs);
+      const lifecycle = evaluateLifecycle(c, fp, { activeNames, contractDrift });
       return { name: c.name, tier: c.tier, owner: c.owner, work: lifecycle.work, verification: lifecycle.verification.state, blockedBy: lifecycle.blockedBy, progress: c.progress, open: c.open.map((o) => o.text), handoffNext: c.handoff?.next ?? null };
     }),
     git: { dirty: gitStatusShort(root), recent: recentCommits(root, 5) },
