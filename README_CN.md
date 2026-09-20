@@ -130,7 +130,7 @@ changes/rename-buyer/
 
 只有真正需要计划、证据、行为 delta 或明确所有权交接时，`tasks.md`、`ledger.md`、delta specs、`handoff.md` 才出现。
 
-大型 capability 会在需要时自动变成小型 `spec.md` 索引 + `requirements/*.md` + 可选 `decisions.md`；ADR/rule/spec 的文件数量可以随项目演进增加，但 Agent 每次只按需读取相关文件。旧 session/evidence 会自动回收，用户不需要维护这些目录。
+大型 capability 会在需要时自动变成小型 `spec.md` 索引 + `requirements/*.md` + `decisions/*.md`；ADR/rule/spec 的文件数量可以随项目演进增加，但单个高频文件和每次注入上下文始终保持有界。旧 session/evidence 会自动回收，用户不需要维护这些目录。
 
 **空脚手架不是进度；关闭一次对话也不是完成；控制面维护也不是用户任务。**
 
