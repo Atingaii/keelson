@@ -77,7 +77,7 @@ Budget: 足以区分方案的最小实验。
 - 决定跨领域且以后很贵时，如果项目配置了 `refs.decisions`，写一个短 ADR：context、decision、consequences，以及**什么时候应该重审**。
 - 可以度量的架构特征变成 `fitness` check。
 
-架构不是图画了多少张、pattern 用了多少个；架构是会塑造后续变化成本的关键边界和取舍。
+架构不是图画了多少张、pattern 用了多少个；架构是会塑造后续变化成本的关键边界和取舍。保持 **conceptual integrity**：宁要少量一致的概念和边界，也不要每个局部都很聪明、结果每加一个功能就得再学一套心智模型。
 
 ## 让变化尽量局部
 <!-- keelson: id=engineer.structure | without: 接口直接镜像 framework/database，调用方知道太多实现细节，一个小产品改动会扩散到很多无关模块 | sunset: never -->
@@ -97,6 +97,8 @@ Budget: 足以区分方案的最小实验。
 无法一次安全替换时，优先 parallel change / branch by abstraction 或增量 strangler：新旧实现先在受控边界后共存，traffic/data/caller 再逐步迁移。风险高时明确 rollback 或 reverse migration。
 
 绿地集成先用一条薄 tracer bullet 证明完整路径，再横向铺开。除非所有者接受 cutover 风险，并且有证据表明增量迁移显著更差，否则不要默认 big-bang rewrite。
+
+**Second-system 检查：** 旧系统很痛苦，不代表重写时可以把多年积压的 feature、abstraction、platform 想法一次全塞进去。替换范围仍然只服务当前 outcome；与验收无关的 wishlist 拆成独立 change。
 
 ## 把长期质量变成可执行约束
 <!-- keelson: id=engineer.fitness | without: 架构质量只能依靠 reviewer 记住散文，导致同一约束被一遍遍重新发现、重新违反 | sunset: never -->

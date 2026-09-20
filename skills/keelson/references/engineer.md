@@ -77,7 +77,7 @@ For a material architecture fork:
 - If the decision is cross-cutting and expensive to revisit, record a short ADR (when the project has `refs.decisions`) with context, decision, consequences, and a **revisit trigger**.
 - Turn measurable architectural characteristics into `fitness` checks.
 
-Architecture is not a diagram count or a collection of named patterns. It is the set of consequential boundaries and trade-offs that shape future change.
+Architecture is not a diagram count or a collection of named patterns. It is the set of consequential boundaries and trade-offs that shape future change. Preserve **conceptual integrity**: prefer a small, coherent set of concepts and boundaries to locally clever exceptions that make every feature require a new mental model.
 
 ## Structure code so change stays local
 <!-- keelson: id=engineer.structure | without: interfaces mirror frameworks and databases, callers know implementation details, and a small product change fans out across unrelated modules | sunset: never -->
@@ -97,6 +97,8 @@ For existing/legacy code: **characterize → find a seam → make a small behavi
 For replacements that cannot safely land at once, prefer parallel change / branch by abstraction or an incremental strangler-style path: old and new coexist behind a controlled boundary while traffic/data/callers move gradually. Make rollback or reverse migration explicit when the risk warrants it.
 
 For greenfield integration, a thin tracer bullet should prove one complete path before broad horizontal construction. Avoid a big-bang rewrite unless the owner accepts the cutover risk and there is evidence that incremental migration is materially worse.
+
+**Second-system check:** replacing a painful system is not permission to add every deferred feature, abstraction, or platform idea at once. Keep the replacement bounded to its outcome; unrelated wishlist items become separate changes unless acceptance truly depends on them.
 
 ## Make durable quality executable
 <!-- keelson: id=engineer.fitness | without: architecture quality survives only while reviewers remember prose, so the same constraint is rediscovered and violated repeatedly | sunset: never -->

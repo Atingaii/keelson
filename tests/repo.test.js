@@ -166,6 +166,14 @@ test('shaping audits assumptions without turning clarification into ceremony', (
   }
   assert.match(enEngineer, /2×2|2x2/i);
   assert.match(zhEngineer, /2×2|2x2/i);
+  assert.match(enEngineer, /conceptual integrity/i);
+  assert.match(zhEngineer, /conceptual integrity/i);
+  assert.match(enEngineer, /Second-system check/i);
+  assert.match(zhEngineer, /Second-system 检查/i);
+  const enBuild = fs.readFileSync(path.join(ROOT, 'skills/keelson/references/build.md'), 'utf8');
+  const zhBuild = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/build.md'), 'utf8');
+  assert.match(enBuild, /coordination and merge cost/i);
+  assert.match(zhBuild, /coordination\/merge cost/i);
   assert.match(enVerify, /id=verify\.counterfactual/);
   assert.match(zhVerify, /id=verify\.counterfactual/);
   assert.match(enVerify, /candidate enabled.*candidate disabled/is);

@@ -19,6 +19,8 @@ Outside your authorization, it is an open question: add it to `change.md → Ope
 
 When tasks are mostly independent and the host offers subagents, dispatch a fresh subagent per task with the model resolved from its effort tier: `keelson models --resolve <tier>` prints the alias for this platform (or map tiers onto the aliases your subagent tool exposes, in ascending capability order). Give the subagent the task text, the matched rules, the relevant spec, and the verification command. Never hand it your whole conversation.
 
+More agents are not a linear throughput multiplier. When tasks share mutable state or the same contract, or need constant synchronization, coordination and merge cost can exceed the parallelism benefit; keep them sequential. Parallelize only when boundaries are clear, outputs are independently verifiable, and the merge contract is explicit. Do not try to rescue tightly coupled work by simply adding agents.
+
 After each task, a reviewer subagent (tier ≥ `standard`, never below the implementer) checks the diff against the spec and the rules. Record both in the ledger:
 
 ```markdown

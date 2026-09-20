@@ -19,6 +19,8 @@ At-least-once with idempotent consumers. Exactly-once would need a broker featur
 
 任务大体独立、宿主提供子代理时，每个任务派一个全新的子代理，模型由它的 effort 层级解析：`keelson models --resolve <tier>` 打印当前平台的别名（或者把层级按能力从低到高映射到子代理工具暴露的别名上）。交给子代理的是任务文本、命中的 rules、相关 spec 和验证命令。绝不把你的整段对话塞给它。
 
+更多 Agent 不是线性的 throughput multiplier。任务共享可变状态、同一契约，或者需要持续互相同步时，coordination/merge cost 可能超过并行收益；此时保持串行。只有边界清楚、输出可以独立验证、最终 merge contract 明确时才并行。不要靠“再加几个 Agent”挽救一个高度耦合的任务。
+
 每个任务之后，由一个评审子代理（层级 ≥ `standard`，绝不低于实施者）对照 spec 和 rules 检查 diff。两者都记进 ledger：
 
 ```markdown
