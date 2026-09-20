@@ -22,6 +22,8 @@ For a bug fix, keep the negative check: with the fix reverted, the regression te
 
 For each risk lens that actually triggered during shaping, verify the corresponding obligation rather than re-running a generic checklist: security needs the relevant negative/abuse case, concurrency needs duplicate/order/failure behavior, compatibility needs old-consumer or migration coverage, accessibility needs the affected interaction check, and performance needs a measured target/baseline. If the repository already proves it, reuse that evidence; do not duplicate it.
 
+For changes to error handling, cleanup or resource lifecycles, trace the complete entry-to-return path, including finalizers and notifications after cleanup. Inject failures at more than one phase together: an early error must not hide a later required action, and a late error must not silently replace earlier failures. Check which actions ran, which errors escaped, and the state visible both to final observers and to the caller, including pre-existing outer state. Assert error identity/count and any ordering the contract requires; a callback count alone does not establish correct propagation or restoration. Keep additional robustness probes distinct from the owner's stated acceptance criteria.
+
 ## Counterfactual evidence for mechanisms that claim a benefit
 <!-- keelson: id=verify.counterfactual | without: the selected design passes its tests, but nobody verifies that the new cache, queue, retry layer, abstraction, model stage, or reviewer actually causes the benefit used to justify its complexity | sunset: never -->
 

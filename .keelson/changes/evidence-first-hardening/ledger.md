@@ -84,3 +84,7 @@ Read-only review of `599ee44` found no remaining P1/P2 in this scope. It indepen
 ## 2026-09-20 first remote CI
 
 Main 5504180 was pushed. Run https://github.com/Atingaii/keelson/actions/runs/35509408551 passed Ubuntu Node 20/22; macOS Node 20 exposed a test-fixture identity error: `/var` aliases resolve in child-process cwd, while the test computed its expected recovery key from the alias. Reproduced the exact failure on Linux using a symlinked TMPDIR, then canonicalized newly created fixture directories; the regression passes. Production permission behavior was unchanged. Matrix fail-fast is disabled so all six environments report independently; canceled jobs are not passes.
+
+## 2026-09-20 exploratory verification guidance
+
+The first original Keelson D-17 supplemental replay fails at the extra context-popped boundary: a late receiver exception replaces collected errors. The original acceptance still passes. Added a general English/Chinese verification paragraph covering failure chains, late observers and preserved outer state. Declared three fresh repetitions and unchanged supplemental replay in `evals/supplemental/ITERATION.md` before running them. This is a post-observation exploratory iteration, not a replacement ranking or proven causal benefit. Repository guidance checks pass 17/17 (`node --test tests/repo.test.js`).
