@@ -221,6 +221,38 @@ export function installSessionAdapter(root, target) {
   return [];
 }
 
+export function plannedSessionAdapterFiles(root, target) {
+  const p = typeof target === 'string' ? PLATFORMS[target] : target;
+  const rows = [];
+  if (!p?.sessionAdapter || p.sessionAdapter === 'pi-env' || p.sessionAdapter === 'claude-hooks') return rows;
+
+  const compareFile = (rel, expected) => {
+    const full = path.join(root, rel);
+    const actual = readOr(full, null);
+    rows.push({
+      path: rel,
+      status: actual === null ? 'create' : actual.replace(/\r\n?/g, '\n') === expected.replace(/\r\n?/g, '\n') ? 'unchanged' : 'update',
+    });
+  };
+
+  if (p.sessionAdapter === 'opencode-plugin') {
+    compareFile('.opencode/plugins/keelson-session.js', read(path.join(PKG_ROOT, 'hooks', 'opencode-session.mjs')));
+  }
+
+  if (p.sessionAdapter === 'codebuddy-hooks') {
+    compareFile('.keelson/hooks/codebuddy-session.mjs', read(path.join(PKG_ROOT, 'hooks', 'codebuddy-session.mjs')));
+    const settings = readJson(path.join(root, '.codebuddy', 'settings.json'), {}) ?? {};
+    const has = (event, matcher = null) => (settings.hooks?.[event] ?? []).some((g) =>
+      (matcher === null || g.matcher === matcher) &&
+      (g.hooks ?? []).some((h) => String(h.command ?? '').includes(CODEBUDDY_SESSION_MARK)),
+    );
+    const ready = has('SessionStart') && has('UserPromptSubmit') && has('PreToolUse', 'Bash');
+    rows.push({ path: '.codebuddy/settings.json (Keelson session hooks)', status: ready ? 'unchanged' : exists(path.join(root, '.codebuddy', 'settings.json')) ? 'update' : 'create' });
+  }
+
+  return rows;
+}
+
 function removeCodeBuddyHooks(root) {
   const settingsPath = path.join(root, '.codebuddy', 'settings.json');
   const settings = readJson(settingsPath, null);
