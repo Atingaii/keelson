@@ -1,5 +1,0 @@
-{
-  "environment_valid": false,
-  "stage": "source-root-validation",
-  "error": "ENOENT: mistakenly supplied nonexistent formal-frozen-3-keelson root; no candidate evaluated; retained and excluded."
-}

@@ -34,7 +34,7 @@ test('spec round-trips through parse/render', () => {
   assert.deepEqual(again.decisions, s.decisions);
 });
 
-test('spec parser supports legacy and OpenSpec requirement layouts without reading fenced examples', () => {
+test('spec parser supports legacy and nested requirement layouts without reading fenced examples', () => {
   const source = `# 支付\r\n\r\n## Notes\r\n\r\n\`\`\`md\r\n## Requirement: not real\r\n### Scenario: not real\r\n\`\`\`\r\n\r\n## Requirements\r\n\r\n### Requirement: 退款\r\n\r\n系统 SHALL 退款。\r\n\r\n#### Scenario: 已支付订单\r\n- WHEN 已支付\r\n- THEN 退款\r\n\r\n## Requirement: Legacy\r\n\r\nThe system SHALL keep compatibility.\r\n\r\n### Scenario: old client\r\n- WHEN it calls\r\n- THEN it works\r\n`;
   const spec = parseSpec(source);
   assert.deepEqual(spec.requirements.map((r) => r.name), ['退款', 'Legacy']);
@@ -79,7 +79,7 @@ Old text.
 
 ### Notes
 
-OpenSpec notes.
+nested notes.
 
 ## Appendix
 
@@ -101,14 +101,14 @@ Keep appendix.
   assert.match(updated, /owner: 团队/);
   assert.match(updated, /## Context\n\nKeep this paragraph\./);
   assert.match(updated, /```md\n## Requirement: fake\n```/);
-  assert.match(updated, /### Notes\n\nOpenSpec notes\./);
+  assert.match(updated, /### Notes\n\nnested notes\./);
   assert.match(updated, /## Appendix\n\nKeep appendix\./);
   assert.deepEqual(parseSpec(updated).requirements.map((r) => r.name), ['Pay', 'Refund']);
   assert.deepEqual(parseSpec(updated).decisions, ['checkout: existing', 'checkout: preserve custom Markdown']);
 
   const removed = renderSpec({ ...parsed, requirements: [] });
   assert.doesNotMatch(removed, /### Requirement: Pay/);
-  assert.match(removed, /### Notes\n\nOpenSpec notes\./);
+  assert.match(removed, /### Notes\n\nnested notes\./);
   assert.match(removed, /## Appendix\n\nKeep appendix\./);
 });
 

@@ -2,6 +2,9 @@
 
 Ready/完成是由长期 gate 与证据支撑的状态，而证据有两个会独立失效的属性：记录可能无效（从没跑过、跑在旧代码上、只跑了一部分），内容可能无效（跑了、通过了，却仍没检查负责人要的东西）。本参考两者都管。它不会随模型变强而变薄，因为它关乎的是世界，不是判断。
 
+
+界面工作按需加载 `frontend.md`；视觉与交互验收遵循 `frontend-review.md` 和 `frontend-delivery.md`。
+
 ## 记录有效性：`keelson check --record`
 <!-- keelson: id=verify.fresh | without: "应该能过"和"看起来对"取代了运行命令；最后一次改动之前的证据被当成当前的 | sunset: never -->
 

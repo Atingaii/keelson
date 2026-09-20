@@ -6,7 +6,8 @@ const { version } = require('../package.json');
 
 const COMMANDS = {
   ask: ['ask <add|frontier|list|settle|assume|reject|reopen> [id] [--change name] [--json]', 'Persist decisions and show up to three ready owner questions', () => import('./commands/ask.js').then((m) => m.ask)],
-  guide: ['guide [reference]', 'Read the installed workflow or one reference on demand', () => import('./commands/guide.js').then((m) => m.guide)],
+  design: ['design [action] [target] [--lang en|zh] [--json]', 'Prepare focused frontend design guidance for your agent', () => import('./commands/design.js').then((m) => m.design)],
+  guide: ['guide [reference] [--list] [--json] [--lang en|zh]', 'Read the installed workflow or one reference on demand', () => import('./commands/guide.js').then((m) => m.guide)],
   hook: ['hook <event>', 'Run an installed host adapter', () => import('./commands/hook.js').then((m) => m.hook)],
   attest: ['attest [change] [--json]', 'Export structured evidence and its local trust status', () => import('./commands/attest.js').then((m) => m.attest)],
   init: ['init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided] [--lang en|zh] [--no-hooks] [--vendor] [--dry-run]', 'Set up the minimal .keelson/ control plane and host discovery. Project artifacts grow only when the work needs them', () => import('./commands/init.js').then((m) => m.init)],
@@ -25,18 +26,18 @@ const COMMANDS = {
   retro: ['retro [--json]', 'Metrics from ledgers plus suggestions to prune guidance or add rules', () => import('./commands/retro.js').then((m) => m.retro)],
   models: ['models [--detect] [--refresh] [--resolve <tier>] [rank <alias> <tier>] [--platform <id>]', 'Resolve effort tiers to model aliases for this platform', () => import('./commands/models.js').then((m) => m.models)],
   doctor: ['doctor [--session] [--json]', 'Diagnose the install: versions, hooks, config migration, validation, stale evidence, conflicts', () => import('./commands/doctor.js').then((m) => m.doctor)],
-  ablate: ['ablate [--dry-run]', 'Temporarily remove every Keelson surface for an A/B comparison', () => import('./commands/ablate.js').then((m) => m.ablate)],
+  ablate: ['ablate [--dry-run]', 'Temporarily disable Keelson integration, preserving it for restore', () => import('./commands/ablate.js').then((m) => m.ablate)],
   restore: ['restore [--force] [--dry-run]', 'Restore an ablated project byte-for-byte', () => import('./commands/ablate.js').then((m) => m.restore)],
   uninstall: ['uninstall [--purge]', 'Remove generated surfaces; keep .keelson/ unless --purge', () => import('./commands/uninstall.js').then((m) => m.uninstall)],
 };
 
 const COMMAND_GROUPS = [
-  ['Your commands', ['init', 'status', 'doctor', 'update', 'platforms', 'uninstall']],
+  ['Your commands', ['init', 'design', 'status', 'doctor', 'update', 'platforms', 'uninstall']],
   ['Agent workflow', ['ask', 'context', 'impact', 'focus', 'new', 'check', 'handoff', 'validate', 'land', 'cancel']],
   ['Maintenance / advanced', ['guide', 'attest', 'retro', 'models', 'ablate', 'restore']],
 ];
 
-export function help() {
+export function help({ all = false } = {}) {
   const lines = [
     `keelson ${version} — verifiable checks and durable decisions for coding agents`,
     '',
@@ -47,32 +48,38 @@ export function help() {
     lines.push('', `${title}:`);
     for (const name of names) {
       const [usage, desc] = COMMANDS[name];
-      lines.push(`  ${usage}`, `      ${desc}`);
+      if (all) lines.push(`  ${usage}`, `      ${desc}`);
+      else lines.push(`  ${name.padEnd(12)} ${desc.split(';')[0].split('. ')[0]}`);
     }
   }
-  lines.push('', 'Docs: https://github.com/Atingaii/keelson/tree/main/docs');
+  lines.push('', 'Details: keelson help <command> · All options: keelson --help --all', '', 'Docs: https://github.com/Atingaii/keelson/tree/main/docs');
   return lines.join('\n');
 }
 
 export async function main(argv) {
   const { flags, positional } = parseArgs(argv);
-  const cmd = positional.shift();
+  let cmd = positional.shift();
+  if (flags.h) flags.help = true;
+  if (flags.v) flags.version = true;
+  if (cmd === 'help') {
+    cmd = positional.shift();
+    flags.help = true;
+  }
   if (flags.version || cmd === 'version') {
     console.log(version);
     return 0;
   }
-  if (flags.help && cmd && COMMANDS[cmd]) {
+  if (flags.help && cmd && Object.hasOwn(COMMANDS, cmd)) {
     console.log(`Usage: keelson ${COMMANDS[cmd][0]}\n\n  ${COMMANDS[cmd][1]}`);
     return 0;
   }
-  if (!cmd || flags.help || cmd === 'help') {
-    console.log(help());
+  if (!cmd) {
+    console.log(help({ all: Boolean(flags.all) }));
     return 0;
   }
-  const entry = COMMANDS[cmd];
+  const entry = Object.hasOwn(COMMANDS, cmd) ? COMMANDS[cmd] : undefined;
   if (!entry) {
-    console.error(`unknown command "${cmd}"\n`);
-    console.log(help());
+    console.error(`unknown command "${cmd}". Run \`keelson --help\` to list commands.`);
     return 2;
   }
   const run = await entry[2]();

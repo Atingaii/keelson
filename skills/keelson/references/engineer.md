@@ -36,13 +36,13 @@ Examples: “A cache keeps list p95 below 200 ms at 500 rps”; “an idempotenc
 If the claim cannot be measured directly, identify the strongest observable proxy or structural evidence. If neither exists, treat the choice as an owner trade-off or a reversible default, not as a proven engineering fact.
 
 ## Use the cheapest experiment that can change the decision
-<!-- keelson: id=engineer.experiment | without: teams argue from intuition for hours when a thin end-to-end slice, spike, benchmark, or failure injection could answer the question | sunset: never -->
+<!-- keelson: id=engineer.experiment | without: teams argue from intuition for hours when a thin end-to-end slice, spike, measurement, or failure injection could answer the question | sunset: never -->
 
 Choose the least expensive probe that discriminates between designs:
 
 - **Tracer bullet** — one real user action end to end through every necessary layer.
 - **Spike / prototype** — throwaway code to learn an API, integration, UI interaction, or migration constraint.
-- **Benchmark / load test** — performance or cost claim against a representative workload.
+- **measurement / load test** — performance or cost claim against a representative workload.
 - **Failure injection** — timeout, retry, duplicate, crash, dependency loss, or partial failure.
 - **Ablation / counterfactual** — remove or simplify the mechanism and see whether the claimed benefit disappears.
 

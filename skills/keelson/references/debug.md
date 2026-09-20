@@ -2,6 +2,9 @@
 
 A fix without a known cause is a guess that happened to pass. This reference exists so the cause is found, named, and fed back into the project.
 
+
+For interface work, load `frontend.md`; visual and interaction acceptance follow `frontend-review.md` and `frontend-delivery.md`.
+
 ## Reproduce, then locate, then fix
 <!-- keelson: id=debug.reproduce-first | without: agent edits code on a hypothesis; symptom moves, cause stays, the bug returns under another name | sunset: when retro shows guessed-fix = 0 across the last 20 root-cause entries -->
 

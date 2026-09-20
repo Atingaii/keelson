@@ -15,6 +15,7 @@ Keelson is designed around one golden path: **initialize once, then keep using y
 - [Collaboration](collaboration.md) — sessions, people, parallel changes, handoffs, worktrees.
 - [Verification](verification.md) — evidence, worktree fingerprints, stale checks.
 - [Effort tiers and models](models.md) — `light | standard | deep` without dated model IDs.
+- [Frontend design](frontend.md) — design actions, interaction states and browser verification.
 
 ## Reference
 
@@ -22,7 +23,6 @@ Keelson is designed around one golden path: **initialize once, then keep using y
 - [CLI](cli.md)
 - [FAQ](faq.md)
 - [Platform support](platforms.md)
-- [Benchmark protocol and results](../benchmarks/README.md)
 
 ## What users normally run
 

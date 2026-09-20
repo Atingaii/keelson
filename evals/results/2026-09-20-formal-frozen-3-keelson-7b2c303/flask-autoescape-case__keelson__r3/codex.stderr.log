@@ -1,8 +1,0 @@
-Reading additional input from stdin...
-2026-09-20T11:28:57.150983Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /workspace/tests/test_templating.py:
-def test_escaping_without_template_filename(app, client, req_ctx):
-    assert flask.render_template_string("{{ foo }}", foo="<test>") == "&lt;test&gt;"
-    assert flask.render_template("mail.txt", foo="<test>") == "<test> Mail"
-
-
-def test_template_filter(app):

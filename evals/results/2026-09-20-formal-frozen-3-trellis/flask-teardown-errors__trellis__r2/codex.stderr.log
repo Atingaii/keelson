@@ -1,3 +1,0 @@
-Reading additional input from stdin...
-2026-09-20T11:17:45.377543Z ERROR codex_core::tools::router: error=collab spawn failed: no thread with id: 01a0be86-c8da-7260-b117-0d776259b771
-2026-09-20T11:21:06.288035Z ERROR codex_core::tools::router: error=apply_patch verification failed: invalid patch: multiple operations target /workspace/src/flask/ctx.py

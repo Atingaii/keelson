@@ -2,6 +2,9 @@
 
 Readiness/completion is a lifecycle state backed by evidence, and evidence has two properties that fail independently: the record can be invalid (never ran, ran on older code, ran partially) and the content can be invalid (ran, passed, and still did not check what the owner asked for). This reference covers both. It does not get thinner as models improve, because it is about the world, not about judgment.
 
+
+For interface work, load `frontend.md`; visual and interaction acceptance follow `frontend-review.md` and `frontend-delivery.md`.
+
 ## Record validity: `keelson check --record`
 <!-- keelson: id=verify.fresh | without: "should pass" and "looks right" replace running the command; evidence from before the last edit is presented as current | sunset: never -->
 

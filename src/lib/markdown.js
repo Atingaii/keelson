@@ -321,7 +321,7 @@ function headingRanges(text, level) {
   });
 }
 
-function rewriteOpenSpecRequirements(raw, take) {
+function rewriteNestedRequirements(raw, take) {
   const lines = raw.split('\n');
   const ranges = headingRanges(raw, 3);
   if (!ranges.length) return raw;
@@ -366,7 +366,7 @@ function renderUpdatedRequirements(spec) {
         ? range.raw
         : renderRequirement(2, current);
     } else if (/^Requirements$/i.test(range.heading.title)) {
-      out += rewriteOpenSpecRequirements(range.raw, take);
+      out += rewriteNestedRequirements(range.raw, take);
     } else {
       out += range.raw;
     }

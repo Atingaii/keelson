@@ -1,9 +1,0 @@
-{"type":"thread.started","thread_id":"01a0bea6-421e-72a3-86e8-5db646548a1a"}
-{"type":"turn.started"}
-{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"I’ll run only those two read-only OpenSpec commands from `/workspace` and report their exit status."}}
-{"type":"item.started","item":{"id":"item_1","type":"command_execution","command":"/bin/bash -lc 'openspec --version'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
-{"type":"item.completed","item":{"id":"item_1","type":"command_execution","command":"/bin/bash -lc 'openspec --version'","aggregated_output":"1.13.1\n","exit_code":0,"status":"completed"}}
-{"type":"item.started","item":{"id":"item_2","type":"command_execution","command":"/bin/bash -lc 'openspec list --json'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
-{"type":"item.completed","item":{"id":"item_2","type":"command_execution","command":"/bin/bash -lc 'openspec list --json'","aggregated_output":"{\n  \"changes\": [],\n  \"root\": {\n    \"path\": \"/workspace\",\n    \"source\": \"nearest\"\n  }\n}\n","exit_code":0,"status":"completed"}}
-{"type":"item.completed","item":{"id":"item_3","type":"agent_message","text":"- `openspec --version` — succeeded (exit code 0): `1.13.1`\n- `openspec list --json` — succeeded (exit code 0): no changes listed; root is `/workspace`."}}
-{"type":"turn.completed","usage":{"input_tokens":26431,"cached_input_tokens":19968,"cache_write_input_tokens":0,"output_tokens":172,"reasoning_output_tokens":0}}

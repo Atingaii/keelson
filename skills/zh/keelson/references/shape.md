@@ -2,6 +2,9 @@
 
 在工件存在之前，把一个请求或想法变成共同的理解。先查事实，再提问，然后写回。有三层需要弄清，但不必一次全清：项目层（服务谁、永远不做什么，在 `INTENT.md`）、当前目标层（这个里程碑，在 `ROADMAP.md` 或任务系统里）、本次变更层（改变什么行为，别人怎样知道它做完了）。
 
+
+界面工作按需加载 `frontend.md`；视觉与交互验收遵循 `frontend-review.md` 和 `frontend-delivery.md`。
+
 ## 先探索
 <!-- keelson: id=shape.explore-first | without: 代理向用户询问它本可以自己读到的事实，浪费对方时间，还让对方学会跳过问题 | sunset: never -->
 

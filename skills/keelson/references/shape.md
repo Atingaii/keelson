@@ -2,6 +2,9 @@
 
 Turn a request or an idea into a shared understanding before artifacts exist. Facts first, then questions, then a write-back. Three layers need to be clear, and not all at once: the project (who it serves, what it will never do, in `INTENT.md`), the current goal (this milestone, in `ROADMAP.md` or the tracker), and this change (what behaviour changes and how anyone will know it is done).
 
+
+For interface work, load `frontend.md`; visual and interaction acceptance follow `frontend-review.md` and `frontend-delivery.md`.
+
 ## Explore first
 <!-- keelson: id=shape.explore-first | without: agent asks the user for facts it could read, wasting their time and training them to skip questions | sunset: never -->
 

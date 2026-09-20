@@ -82,10 +82,10 @@ test('canonical skill separates five conversation intents from automatic complet
   }
 });
 
-test('READMEs document the trust boundary, local workflow and reproducible comparisons', () => {
+test('READMEs document the trust boundary, local workflow and frontend entry points', () => {
   for (const file of ['README.md', 'README_CN.md']) {
     const text = fs.readFileSync(path.join(ROOT, file), 'utf8');
-    for (const term of ['check --trust --record', 'OpenSpec', 'Trellis', 'Superpowers', 'verification.md', 'keelson-banner.png']) assert.ok(text.includes(term), `${file}: ${term}`);
+    for (const term of ['check --trust --record', 'keelson design', 'frontend.md', 'verification.md', 'keelson-banner.png']) assert.ok(text.includes(term), `${file}: ${term}`);
   }
 });
 

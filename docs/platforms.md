@@ -4,7 +4,7 @@ The registry describes generated integration and session capabilities. Adapter t
 
 | Host | Discovery | Session identity | Live evaluation in this remediation |
 |---|---|---|---|
-| Codex CLI | `AGENTS.md`, `.agents/skills/keelson` | `CODEX_THREAD_ID` | Local Codex benchmark |
+| Codex CLI | `AGENTS.md`, `.agents/skills/keelson` | `CODEX_THREAD_ID` | Local session identity use and adapter contract tests |
 | Claude Code | `CLAUDE.md`, `.claude/skills/keelson` | Installed hook bridge | Adapter tests only |
 | OpenCode | `AGENTS.md`, `.agents/skills/keelson` | Explicit fallback | Adapter tests only |
 | Gemini CLI | `GEMINI.md`, `.agents/skills/keelson` | Explicit fallback | Adapter tests only |

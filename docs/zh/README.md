@@ -15,6 +15,7 @@ Keelson 只有一条黄金路径：**初始化一次，之后继续像原来一�
 - [协作](collaboration.md) —— 跨会话、跨人、并行变更、handoff、worktree。
 - [验证](verification.md) —— 证据、工作树指纹、stale 检查。
 - [effort 层级与模型](models.md) —— `light | standard | deep`，不使用带日期模型 ID。
+- [前端设计](frontend.md) — 设计能力、交互状态与浏览器验收。
 
 ## 参考
 
@@ -22,7 +23,6 @@ Keelson 只有一条黄金路径：**初始化一次，之后继续像原来一�
 - [CLI](cli.md)
 - [FAQ](faq.md)
 - [平台支持范围](../platforms.md)
-- [Benchmark 协议及结果](../../benchmarks/README.md)
 
 ## 用户通常真正需要运行的命令
 

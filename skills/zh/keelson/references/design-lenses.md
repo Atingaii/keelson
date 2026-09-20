@@ -2,6 +2,9 @@
 
 这些是 **Agent 内部工程镜头，不是架构问卷**。只启用当前变更真正触发的镜头。先读仓库和已有契约，再把发现路由成默认值、实验、验收、检查或一个真正属于所有者的决定。
 
+
+界面工作按需加载 `frontend.md`；视觉与交互验收遵循 `frontend-review.md` 和 `frontend-delivery.md`。
+
 ## 触发、检查、路由
 <!-- keelson: id=lenses.triggered | without: 每个功能都被迫走巨型清单，而真正重要的跨领域风险仍可能因为机械打勾而漏掉 | sunset: never -->
 
@@ -13,7 +16,7 @@
 | 并发 + 异步 | queue、webhook、worker、实时、多写者 | 重复、顺序、幂等、重试、超时、取消、部分失败 | 重复/乱序/重试/故障测试 |
 | API + 兼容性 | 公共 API、event/schema/config/存储格式 | 消费方、版本、breaking 定义、弃用、rollout/rollback | 兼容契约 + rollout 证据 |
 | 可靠性 + 运维 | 错误处理、清理/资源生命周期、关键路径、后台任务、外部依赖 | 完整失败路径、恢复、观察者所见状态、可观测性、安全降级 | 对抗性回归 + 恢复检查；适用时附运维指针 |
-| 性能 + 成本 | 明确延迟/吞吐/数据量/成本目标、测出的热点 | workload、SLO、基线、增长假设、资源上限 | benchmark/load/cost 检查；不凭想象加缓存 |
+| 性能 + 成本 | 明确延迟/吞吐/数据量/成本目标、测出的热点 | workload、SLO、基线、增长假设、资源上限 | 实测/load/cost 检查；不凭想象加缓存 |
 | 界面 + 可访问性 | UI、表单、导航、交互流程 | 主任务、错误/恢复、键盘/focus、理解成本、破坏性操作 | usability/accessibility acceptance |
 | AI + 非确定性 | LLM、Agent、RAG、模型/工具调用 | eval case、fallback、数据边界、prompt/tool injection、授权、可复现性 | eval 集 + 安全/fallback acceptance |
 
@@ -31,7 +34,7 @@
 
 使用能满足当前契约、并保留可信演进路径的最简单设计。新增 service、queue、cache、抽象层、数据库、框架或协议之前，先说清楚**现在**到底是哪一个具体压力需要它。
 
-未来规模/功能只是 hypothesis，不是 requirement。能低成本验证的就做 spike/benchmark；以后能局部修改的就优先采用可逆方案继续推进。优先“深模块 + 窄接口”，不要为了形式漂亮堆很多只镜像实现的浅包装。
+未来规模/功能只是 hypothesis，不是 requirement。能低成本验证的就做 spike/实测；以后能局部修改的就优先采用可逆方案继续推进。优先“深模块 + 窄接口”，不要为了形式漂亮堆很多只镜像实现的浅包装。
 
 ## 把风险变成证据，而不是散文
 <!-- keelson: id=lenses.evidence | without: 设计评审留下大量看起来很完整的文档，但代码变化后关键性质没有真正受到保护 | sunset: never -->
@@ -41,7 +44,7 @@
 - **已有保证**：已有 spec/rule/test 已覆盖 → 直接复用；
 - **所有者决定** → 在 decision frontier 只问那个问题；
 - **工程默认值** → 自行决定；只有未来工作需要理由时才记录；
-- **低成本未知** → spike、原型、benchmark 或查看 telemetry；
+- **低成本未知** → spike、原型、实测 或查看 telemetry；
 - **稳定不变量** → 窄作用域 rule，能自动化时优先 fitness/check；
 - **验收/证据义务** → 加入对应的故障/兼容/安全/性能/迁移/可访问性场景；
 - **明确不在范围内** → 只有省略会像遗漏时才点名一次。

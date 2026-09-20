@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to this project are documented here. The format follows Keep a Changelog, and the project follows Semantic Versioning.
+Notable changes to Keelson, organized by version.
 
 ## [Unreleased] — 0.4.0 development
 
@@ -8,10 +8,11 @@ This version is in the Git repository; an npm publication is a separate release 
 
 ### Added
 
+- Bilingual frontend design workflows with focused action briefs, installed reference discovery and concise command help.
+
 - Ed25519 DSSE/in-toto verification records, full code and acceptance fingerprints, bound output logs, explicit command trust, deadlines and output caps.
 - `keelson ask` decision ownership, dependency-aware question frontier, settlement and reopening history; `attest` evidence export.
 - Git-private runtime, serialized evidence appends, active-check guards and recoverable landing/cancellation transactions.
-- Reproducible local Codex comparison protocol for bare Codex, Keelson, OpenSpec, Trellis and Superpowers, with raw results and explicit limitations.
 - English/Chinese migration and trust documentation plus a generated wide project banner.
 
 ### Changed
@@ -20,7 +21,7 @@ This version is in the Git repository; an npm publication is a separate release 
 - No generated .gitignore changes. Signed logs and public keys stay with archived changes; private keys, trust and focus remain local.
 - Codex uses CODEX_THREAD_ID. Host capability, documentation confidence and actual testing are distinguished.
 - Completion uses structured evidence; legacy Verify prose requires rechecking. Force needs a reason and leaves a signed override.
-- Markdown parsing supports fenced examples, OpenSpec headings and Unicode; edits preserve unknown content and sharding rejects unsafe paths.
+- Markdown parsing supports fenced examples, nested headings and Unicode; edits preserve unknown content and sharding rejects unsafe paths.
 - Malformed host JSON fails without replacement; generated-surface reconciliation protects user content.
 - Task checkboxes remain advisory. Settled decisions cannot be silently reopened, and structured assumptions require explicit settlement.
 - Package name is scoped as `@atingaii/keelson`; the executable remains `keelson`. Syntax checks run on every CI platform.

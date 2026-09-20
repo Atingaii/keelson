@@ -1,9 +1,0 @@
-MISS status: p95 1586.046 ms (target < 200 ms)
-MISS context: p95 1919.527 ms (target < 300 ms)
-PASS ask: p95 248.003 ms (target < 300 ms)
-PASS impact: p95 243.46 ms (target < 500 ms)
-PASS validate: p95 159.898 ms (target < 1000 ms)
-MISS checkEstimatedOverhead: p95 1037.478 ms (target < 200 ms)
-PASS land: p95 1666.308 ms (target < 2000 ms)
-PASS init: p95 876.242 ms (target < 3000 ms)
-wrote benchmarks/cli-performance.json

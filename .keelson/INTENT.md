@@ -16,7 +16,7 @@ Coding agents are good at one task and bad at a project that lasts years: they f
 - Node ≥ 20; runtime dependencies must earn their maintenance cost. Host hooks execute installed package code.
 - No dated model IDs anywhere in this repository or in generated files.
 - Every piece of agent guidance carries a `without:` and a `sunset:` annotation, and the Chinese mirror carries the same ids.
-- Credit prior art and use reproducible comparisons; do not claim universal superiority, compliance, or hostile-agent isolation from local signatures.
+- Describe shipped behavior and verification limits accurately. Local signatures do not establish compliance or hostile-agent isolation.
 - Generated surfaces are re-creatable from the package (`keelson update`), ownership-tracked, drift-diagnosable, recoverably replaced, and removable (`keelson ablate` / `uninstall`).
 - A host is first-class only with verified or primary-documentation discovery paths plus init/update/doctor/uninstall and cross-platform contract coverage; guessed host directories are not support.
 

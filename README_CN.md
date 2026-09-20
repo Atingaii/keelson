@@ -4,7 +4,7 @@
 
 **为 AI 辅助开发保留决策，以及能够核验的检查记录。**
 
-[English](README.md) · [快速开始](docs/zh/getting-started.md) · [命令参考](docs/zh/cli.md) · [证据与信任](docs/zh/verification.md) · [Benchmark](benchmarks/README.md)
+[English](README.md) · [快速开始](docs/zh/getting-started.md) · [命令参考](docs/zh/cli.md) · [证据与信任](docs/zh/verification.md)
 
 聊天里的“测试通过”容易丢失，也容易夸大。Keelson 记录实际执行的命令、输出摘要，以及检查对应的代码和契约。代码、规格、规则、配置、验收标准或决策变化后，证据就会失效。`land` 要求当前、完整、在本机受信任的检查记录，以及已完成的验收条件。
 
@@ -56,15 +56,19 @@ keelson land fix-pagination
 
 ## 平台与测试范围
 
-本地模型 Benchmark 使用 Codex。Claude Code、OpenCode、Gemini CLI、Kiro CLI、CodeBuddy、Pi 和通用 Agent Skills 提供生成式适配器及契约测试，不等于所有宿主都已完成真实端到端测试。请在实际使用环境运行 `keelson doctor`。[平台说明](docs/platforms.md)。
+Codex 的会话标识已在本地使用中验证。Claude Code、OpenCode、Gemini CLI、Kiro CLI、CodeBuddy、Pi 和通用 Agent Skills 提供生成式适配器及契约测试，不等于所有宿主都已完成真实端到端测试。请在实际使用环境运行 `keelson doctor`。[平台说明](docs/platforms.md)。
 
-## 评估及参考来源
+## 前端设计与交互
 
-[Benchmark 的协议、固定版本和原始结果](benchmarks/README.md) 使用相同 Flask 任务、模型和预算，对照 Keelson、裸 Codex、**OpenSpec**、**Trellis**、**Superpowers**。分别报告功能验收、框架激活、耗时、token 和决策行为，小样本结果只说明对应任务，不作为通用排名。
+直接告诉 Agent：“改善设置页，保留现有品牌，补齐错误恢复和手机体验。”Keelson 按需提供设计规划、诊断、排版、配色、布局、动效、文案、首次使用、健壮性、适配、性能和浏览器迭代指导。
 
-查看[实测结果与限制](evals/RESULTS.md)。原始固定任务分数与后续健壮性探测分开报告，失败与环境无效的尝试也全部保留。最新探索的健壮性探测为 2/3，部分 [CLI 时延预算](benchmarks/README.md#cli-时延实测) 仍未达到；现有证据尚不支持“各维度均优秀”的结论。
+```bash
+keelson design                         # 查看设计能力
+keelson design harden "设置表单" --lang zh
+keelson guide --list                   # 查看全部按需指导
+```
 
-Keelson 参考 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 的差量契约、[Trellis](https://github.com/mindfold-ai/Trellis) 的持久项目上下文和 [Superpowers](https://github.com/obra/superpowers) 的实施与评审流程。证据使用 [in-toto Statement](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md) 和 [DSSE](https://github.com/secure-systems-lab/dsse) 格式；本地签名记录不等于 SLSA 认证。
+设计命令生成给 Agent 的执行指导；Agent 负责实施、打开真实页面、检查交互并记录证据。命令本身不会启动浏览器或自动修改页面。[前端设计指南](docs/zh/frontend.md)。
 
 ## 开发
 
@@ -76,4 +80,4 @@ npm run validate
 npm pack --dry-run
 ```
 
-[整改评估](docs/remediation-assessment.md) 记录初稿中采纳、修正和延后的内容。[贡献指南](CONTRIBUTING.md) · [MIT 许可证](LICENSE)。
+[贡献指南](CONTRIBUTING.md) · [MIT 许可证](LICENSE)。

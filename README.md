@@ -4,7 +4,7 @@
 
 **Keep decisions and verifiable check records with AI-assisted code changes.**
 
-[中文](README_CN.md) · [Get started](docs/getting-started.md) · [CLI](docs/cli.md) · [Evidence and trust](docs/verification.md) · [Benchmarks](benchmarks/README.md)
+[中文](README_CN.md) · [Get started](docs/getting-started.md) · [CLI](docs/cli.md) · [Evidence and trust](docs/verification.md)
 
 A green message in chat is easy to lose and easy to overstate. Keelson records what actually ran, the output digest, and the code and contracts it checked. A code, spec, rule, configuration, acceptance, or decision change makes the record stale. `land` requires a current, complete, locally trusted record and resolved acceptance gates.
 
@@ -56,15 +56,19 @@ These are local integrity checks. A process with the same user privileges can re
 
 ## Hosts and measured support
 
-Codex is the host exercised by the local model benchmark. Claude Code, OpenCode, Gemini CLI, Kiro CLI, CodeBuddy, Pi, and portable Agent Skills have generated adapters and contract tests; that does not establish equivalent live end-to-end support on every host. Run `keelson doctor` in the host you use. See [platform support](docs/platforms.md).
+Codex session identity has been exercised locally. Claude Code, OpenCode, Gemini CLI, Kiro CLI, CodeBuddy, Pi, and portable Agent Skills have generated adapters and contract tests; that does not establish equivalent live end-to-end support on every host. Run `keelson doctor` in the host you use. See [platform support](docs/platforms.md).
 
-## Evaluation and prior art
+## Frontend design and interaction
 
-[The benchmark protocol, pinned revisions, and raw results](benchmarks/README.md) compare Keelson with bare Codex, **OpenSpec**, **Trellis**, and **Superpowers** on the same Flask tasks, model, and budget. Mechanical acceptance, framework activation, time, tokens, and decision behavior are reported separately. A small benchmark is evidence for those tasks, not a universal ranking.
+Ask your agent: “Improve the settings page, keep the existing brand, and cover error recovery and mobile use.” Keelson loads focused guidance for planning, review, typography, color, layout, motion, copy, onboarding, resilience, adaptation, performance and browser iteration.
 
-Read the [measured results and limitations](evals/RESULTS.md). Original fixed-task scores and later robustness probes are reported separately, including failed and invalid attempts. The latest exploratory robustness probe passes 2/3, and several [CLI latency budgets](benchmarks/README.md#cli-时延实测) remain unmet; the available evidence does not establish excellence across every dimension.
+```bash
+keelson design                         # discover design actions
+keelson design harden "settings form"
+keelson guide --list                   # discover all guidance
+```
 
-Keelson learns from [OpenSpec](https://github.com/Fission-AI/OpenSpec)'s delta contracts, [Trellis](https://github.com/mindfold-ai/Trellis)'s persistent project context, and [Superpowers](https://github.com/obra/superpowers)' implementation and review workflows. Its evidence format uses [in-toto Statements](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md) and [DSSE](https://github.com/secure-systems-lab/dsse). This is an implementation of local signed records, not SLSA certification.
+Design commands prepare actionable guidance for your agent. The agent implements, opens the real interface, exercises interactions and records evidence. The command itself does not launch a browser or modify a page. [Frontend design guide](docs/frontend.md).
 
 ## Develop
 
@@ -76,4 +80,4 @@ npm run validate
 npm pack --dry-run
 ```
 
-[Remediation assessment](docs/remediation-assessment.md) explains which parts of the original plan were adopted, corrected, or deferred. [Contributing](CONTRIBUTING.md) · [MIT license](LICENSE).
+[Contributing](CONTRIBUTING.md) · [MIT license](LICENSE).

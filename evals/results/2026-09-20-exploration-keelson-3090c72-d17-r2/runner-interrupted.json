@@ -1,7 +1,0 @@
-{
-  "status": "pre_model_interrupted",
-  "comparison_eligible": false,
-  "candidate_evaluated": false,
-  "raw_events_available": false,
-  "reason": "Stopped immediately when the parser performance measurement window began. Setup artifacts were created, but no Codex JSONL or summary exists and no candidate result was evaluated."
-}

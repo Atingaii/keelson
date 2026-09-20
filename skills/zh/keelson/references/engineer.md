@@ -36,13 +36,13 @@ Budget: 足以区分方案的最小实验。
 如果主张不能直接量化，就找最强的可观察 proxy 或结构性证据；两者都没有时，把它当作所有者取舍或可逆默认值，而不是已被证明的工程事实。
 
 ## 用最便宜、但足以改变决定的实验
-<!-- keelson: id=engineer.experiment | without: 本可用一个薄端到端切片、spike、benchmark 或故障注入解决的问题，被长时间停留在直觉争论里 | sunset: never -->
+<!-- keelson: id=engineer.experiment | without: 本可用一个薄端到端切片、spike、实测 或故障注入解决的问题，被长时间停留在直觉争论里 | sunset: never -->
 
 选择能区分方案的最低成本探针：
 
 - **Tracer bullet** —— 先让一个真实用户动作端到端穿过所有必要层。
 - **Spike / prototype** —— 用完即弃，用来学习 API、集成、UI 交互或迁移限制。
-- **Benchmark / load test** —— 用代表性 workload 检验性能或成本主张。
+- **实测 / load test** —— 用代表性 workload 检验性能或成本主张。
 - **Failure injection** —— timeout、retry、duplicate、crash、依赖丢失、partial failure。
 - **Ablation / counterfactual** —— 去掉或简化某个机制，看它宣称的收益是否一起消失。
 

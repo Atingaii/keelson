@@ -1,3 +1,0 @@
-Reading additional input from stdin...
-2026-09-20T11:33:30.428158Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /workspace/src/flask/ctx.py:
-    def __init__(self, app: Flask) -> None:

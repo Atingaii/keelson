@@ -1,9 +1,0 @@
-{
-  "task": "flask-teardown-errors",
-  "method": "openspec",
-  "repetition": 1,
-  "pass": false,
-  "harness_error": "could not make upstream-fix history inaccessible to the model",
-  "elapsed_ms": 4306,
-  "worktree_retained_at": null
-}

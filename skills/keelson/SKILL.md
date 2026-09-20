@@ -1,6 +1,6 @@
 ---
 name: keelson
-description: Engineering control plane for coding work in repositories with a .keelson/ directory. Use for exploring an idea, changing code, fixing/debugging, continuing prior work, or improving recurring engineering failures. Keeps conversation sessions separate from durable work items so users can keep asking questions without having to announce when a task starts or ends.
+description: Engineering control plane for coding work in repositories with a .keelson/ directory. Use for exploring an idea, changing code, fixing/debugging, frontend design and UX review, continuing prior work, or improving recurring engineering failures. Keeps conversation sessions separate from durable work items so users can keep asking questions without having to announce when a task starts or ends.
 ---
 
 # Keelson
@@ -18,6 +18,8 @@ Read the installed workflow with `keelson guide workflow`; load each named refer
 | **Improve** | repeated mistake, harness/rule/process problem, retro | `harness.md` + `reconcile.md` |
 
 Completion is **not** an intent and never depends on the user saying “done”. It is a state transition: when the focused change has satisfied acceptance, no blocking questions/assumptions, required rollout, and fresh verification on the current tree, it becomes `ready`. Run the Finish path (`verify.md` → `land.md` → `reconcile.md`) automatically before claiming completion.
+
+- For interface design, review, interaction or responsive work, load `frontend.md`; use `keelson design` for focused action briefs. Keep browser observations distinct from code checks.
 
 ## Operating rules
 

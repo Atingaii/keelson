@@ -1,9 +1,0 @@
-{
-  "task": "flask-autoescape-case",
-  "method": "openspec",
-  "repetition": 3,
-  "pass": false,
-  "harness_error": "could not make upstream-fix history inaccessible to the model",
-  "elapsed_ms": 5816,
-  "worktree_retained_at": null
-}

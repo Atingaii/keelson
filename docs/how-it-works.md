@@ -18,7 +18,7 @@ The manifest records the package version, selected host surfaces and vendor mode
 
 ## Contracts
 
-Specs accept legacy h2 requirements and OpenSpec-style h3 requirements under `## Requirements`. Fenced examples are not headings. Delta specs add, modify and remove named requirements. Existing custom sections must survive merging. Large contracts may use an index and requirement shards; validation checks the logical contract.
+Specs accept legacy h2 requirements and nested h3 requirements under `## Requirements`. Fenced examples are not headings. Delta specs add, modify and remove named requirements. Existing custom sections must survive merging. Large contracts may use an index and requirement shards; validation checks the logical contract.
 
 ## Verification and landing
 

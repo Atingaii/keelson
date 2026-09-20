@@ -1,7 +1,0 @@
-[
-  "openspec/changes/teardown-cleanup-resilience/.openspec.yaml",
-  "openspec/changes/teardown-cleanup-resilience/design.md",
-  "openspec/changes/teardown-cleanup-resilience/proposal.md",
-  "openspec/changes/teardown-cleanup-resilience/specs/resilient-teardown/spec.md",
-  "openspec/changes/teardown-cleanup-resilience/tasks.md"
-]

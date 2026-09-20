@@ -46,7 +46,7 @@ function hasUnmanagedSpecContent(capability, spec) {
       const h3 = headings.filter((candidate) => candidate.level === 3
         && candidate.line > heading.line && candidate.line < end);
       if (h3.some((candidate) => !requirementTitle(candidate.title))) return true;
-      // Preamble prose under an OpenSpec container is not part of any
+      // Preamble prose under an nested container is not part of any
       // requirement and would disappear when the container becomes a folder.
       if (h3.length && hasText(lines.slice(heading.line + 1, h3[0].line))) return true;
       if (!h3.length && hasText(content)) return true;
@@ -237,7 +237,7 @@ export function planCapabilityStorage(capability, logicalText, budget = 0, {
   const soft = Number(budget) || 0;
   // A shard index has room only for the parsed ownership model. Keep a single
   // file when source content has no shard owner, but accept harmless canonical
-  // layout differences in otherwise fully-modelled legacy/OpenSpec documents.
+  // layout differences in otherwise fully-modelled legacy/nested documents.
   const mustKeepSingle = hasUnmanagedSpecContent(capability, spec);
   if (!soft || lineCount(canonical) <= soft || mustKeepSingle) {
     return {

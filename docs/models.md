@@ -1,6 +1,6 @@
 # Effort tiers and models
 
-Tasks normally carry an effort tier; the host resolves it to a model alias. Explicit user model constraints take precedence. Benchmark records retain the actual selected alias rather than implying a tier launched it.
+Tasks normally carry an effort tier; the host resolves it to a model alias. Explicit user model constraints take precedence. Record the actual selected alias when it matters; resolving a tier does not launch a model.
 
 ## The three tiers
 

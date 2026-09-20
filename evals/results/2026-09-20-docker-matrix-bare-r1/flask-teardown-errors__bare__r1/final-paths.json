@@ -1,6 +1,0 @@
-[
-  "src/flask/app.py",
-  "src/flask/ctx.py",
-  "tests/test_appctx.py",
-  "tests/test_reqctx.py"
-]

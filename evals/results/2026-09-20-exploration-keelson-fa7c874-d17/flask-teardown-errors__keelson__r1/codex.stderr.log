@@ -1,6 +1,0 @@
-Reading additional input from stdin...
-2026-09-20T12:29:12.271381Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /workspace/.keelson/changes/teardown-cleanup/change.md:
-## What
-- Outcome: …
-- Non-goal: … (a bullet that starts with the word BREAKING in bold marks a breaking change and needs a Rollout section)
-2026-09-20T12:33:23.351201Z ERROR codex_core::tools::router: error=collab spawn failed: no thread with id: 01a0bec6-237e-7910-a9b4-0c46a95556a6

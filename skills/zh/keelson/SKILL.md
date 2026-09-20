@@ -1,6 +1,6 @@
 ---
 name: keelson
-description: 面向含 .keelson/ 目录项目的工程控制层。用于探索想法、修改代码、修复/调试、继续之前的工作，或改进反复出现的工程失败。把“对话会话”和“长期 work item”分开，因此用户可以一直追问，而不需要主动宣布任务何时开始或结束。
+description: 面向含 .keelson/ 目录项目的工程控制层。用于探索想法、修改代码、修复/调试、前端设计与 UX 评审、继续之前的工作，或改进反复出现的工程失败。把“对话会话”和“长期 work item”分开，因此用户可以一直追问，而不需要主动宣布任务何时开始或结束。
 ---
 
 # Keelson
@@ -19,6 +19,8 @@ description: 面向含 .keelson/ 目录项目的工程控制层。用于探索�
 
 “完成”**不是一种用户意图**，也绝不依赖用户说“做完了”。它是状态转换：当前 focus change 的 acceptance、阻塞问题/假设、rollout 和当前工作树上的新鲜 verification 全部满足后，状态自动成为 `ready`。这时自动执行 Finish 路径（`verify.md` → `land.md` → `reconcile.md`），然后才能宣称完成。
 
+- 涉及界面设计、评审、交互或响应式时，加载 `frontend.md`；用 `keelson design` 读取具体动作指导。区分浏览器观察与代码检查。
+
 ## 执行规则
 
 - conversation/session 只是焦点指针。关闭窗口、长时间不说话、继续追问，都**不能**把 change 判成完成。
@@ -26,9 +28,9 @@ description: 面向含 .keelson/ 目录项目的工程控制层。用于探索�
 - Resume 时先用 `keelson focus --auto`；可以根据 branch 或唯一活动 change 给出候选，但存在歧义时绝不静默绑定。
 - `NOW.md` 为 First contact 时，只推断并确认 `INTENT.md`；不要盘点整个仓库生成 specs/rules。
 - 非平凡修改先读取当前上下文；改共享模块前运行 `keelson impact <files>`。
-- 只在 decision frontier 提问。先做风险触发式盲点扫描，再按 `interview.md` 一次解决一个真正属于所有者的决定：具体场景/选项、推荐默认值，“不确定”是合法路由。仓库证据、小实验或 Agent 工程判断能解决的事绝不问用户。
+- 只在 decision frontier 提问。先做风险触发式盲点扫描，再按 `interview.md` 每轮最多三个独立、已就绪的所有者决策：具体场景/选项、推荐默认值，“不确定”是合法路由。仓库证据、小实验或 Agent 工程判断能解决的事绝不问用户。
 - 非显然机制/架构选择走 `engineer.md`：先还原事实、结果、约束和不变量，再写可证伪 hypothesis，用最便宜的实验/消融区分方案；复杂度必须用证据证明自己值得存在。
-- 只给工作本身定大小：trivial 直接改；quick 轻量 change；spec 先写验收、行为 delta 和计划，再等批准。
+- 只给工作本身定大小：trivial 直接改；quick 轻量 change；spec 先写验收、行为 delta 和计划，在用户已有授权内推进；只澄清尚未解决的所有者决策。
 - 工件是信息容器，不是仪式。不要创建空 roadmap/glossary/rule/task/ledger/handoff/spec。
 - `tasks.md` 只是执行计划，不拥有“完成”判定权。只要 acceptance 与新鲜证据已经满足，未勾选的旧计划不能覆盖这个事实；实现路径变化时应重写或删除过时任务。
 - 知识维护属于 Keelson 内部职责。RECONCILE 时自动重写、拆分、去重超压的长期文档，大 spec 由 `land` 自动分片；除非涉及产品语义决策，否则绝不要求用户维护 Keelson。

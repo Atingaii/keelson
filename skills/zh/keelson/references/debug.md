@@ -2,6 +2,9 @@
 
 不知道原因的修复只是恰好通过的猜测。本参考的存在，是为了让原因被找到、被命名，并反馈回项目。
 
+
+界面工作按需加载 `frontend.md`；视觉与交互验收遵循 `frontend-review.md` 和 `frontend-delivery.md`。
+
 ## 先复现，再定位，再修
 <!-- keelson: id=debug.reproduce-first | without: 代理凭假设改代码；症状挪了位置，原因还在，bug 换个名字回来 | sunset: 当 retro 显示 guessed-fix = 0 across the last 20 root-cause entries（最近 20 条根因记录中 guessed-fix 为 0）时 -->
 

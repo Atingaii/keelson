@@ -41,7 +41,7 @@ Before asking, classify the gap by who can resolve it:
 | Gap | Action |
 |---|---|
 | Already established in repository/context | Use it; cite the source in the write-back |
-| Reality-owned (code behaviour, API contract, benchmark, dependency capability) | Investigate or run a small experiment |
+| Reality-owned (code behaviour, API contract, measurement, dependency capability) | Investigate or run a small experiment |
 | User-owned and load-bearing (goal, scope, acceptance, risk tolerance, public commitment) | Ask one question |
 | Non-load-bearing or cheap to reverse | Decide under authorization, or leave unresolved for a later slice |
 | Evidence exhausted | Mark it UNKNOWN; do not convert uncertainty into a user belief |
@@ -56,7 +56,7 @@ When a request bundles several domains (identity, payments, real-time collaborat
 ## Explore before committing
 <!-- keelson: id=discover.explore | without: an abstract decision is forced when a cheap experiment would settle it with evidence | sunset: never -->
 
-When a choice is reversible and the owner is unsure, do not press for a decision. Offer a spike, a prototype, a mock, or a benchmark, sized to answer one question: two small UI variants to pick between; a benchmark before adding a cache; a spike before adopting a library. Record the result as evidence in the ledger (`### Note:`) and the decision it produced under `## Decisions`.
+When a choice is reversible and the owner is unsure, do not press for a decision. Offer a spike, a prototype, a mock, or a measurement, sized to answer one question: two small UI variants to pick between; a measurement before adding a cache; a spike before adopting a library. Record the result as evidence in the ledger (`### Note:`) and the decision it produced under `## Decisions`.
 
 ## Guided mode adds teaching, not usability
 <!-- keelson: id=discover.guided | without: accessible questioning is incorrectly gated behind a beginner setting, or teaching content becomes permanent project ceremony | sunset: never -->

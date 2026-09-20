@@ -4,6 +4,12 @@
 
 在项目中运行，使用 `keelson <command> --help` 查看用法。退出码：0 成功、1 操作或检查失败、2 未知命令、4 尚未信任命令、5 持久 JSON 损坏。
 
+## 设计与指导发现
+
+`keelson design` 列出设计动作；`keelson design harden "设置表单" --lang zh` 生成具体 Agent 指导。支持 `--json`，目标文本不会被执行；实际修改与浏览器验证由宿主 Agent 完成。[前端设计](frontend.md)。
+
+`keelson guide --list [--json]` 列出全部可读指导；`keelson guide <name>` 按需读取。`keelson help <command>` 与 `<command> --help` 等效，`--help --all` 显示全部选项。`-h` 和 `-v` 分别显示帮助与版本。
+
 ## 安装与工作
 
 ```bash

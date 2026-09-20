@@ -653,7 +653,7 @@ test('validate catches dated model IDs, bad tiers, missing rule files', () => {
   assert.ok(errors.some((e) => /missing file: nope.md/.test(e)));
 });
 
-test('validate checks OpenSpec contracts and rejects empty, duplicate, and malformed delta requirements', () => {
+test('validate checks nested contracts and rejects empty, duplicate, and malformed delta requirements', () => {
   const valid = tmpProject({});
   run(valid, ['init', '--no-hooks'], { env });
   write(valid, '.keelson/specs/payments/spec.md', [

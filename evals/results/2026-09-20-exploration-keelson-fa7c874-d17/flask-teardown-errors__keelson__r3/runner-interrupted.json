@@ -1,9 +1,0 @@
-{
-  "status": "interrupted_duplicate",
-  "comparison_eligible": false,
-  "candidate_evaluated": false,
-  "raw_events_available": false,
-  "reason": "The serial runner advanced to r3 in the small interval after r2 completed and before its parent was terminated. Its orphaned Docker container was stopped to prevent a duplicate r3; the canonical exploration r3 continues in the independent parallel-r3 result root.",
-  "container_id": "8f62d66a8868336a4b83c189d02913113d607913fce0869dfa7263834443f190",
-  "canonical_result_root": "../2026-09-20-exploration-keelson-fa7c874-d17-parallel-r3/flask-teardown-errors__keelson__r3"
-}

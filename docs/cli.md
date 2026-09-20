@@ -2,6 +2,12 @@
 
 Run inside an initialized project. Use `keelson <command> --help` for the synopsis. Exit codes: 0 success, 1 failed operation/check, 2 unknown command, 4 untrusted commands, 5 malformed persisted JSON. Command success alone does not mean a change can land.
 
+## Design and guidance discovery
+
+`keelson design` lists design actions; `keelson design harden "settings form"` prepares a focused agent brief. Supports `--json`; target text is never executed. The host agent performs implementation and browser verification. See [frontend design](frontend.md).
+
+`keelson guide --list [--json]` lists installed guidance; `keelson guide <name>` reads a reference on demand. `keelson help <command>` equals `<command> --help`; `--help --all` shows every option. `-h` and `-v` show help and version.
+
 ## Installation
 
 ```bash
