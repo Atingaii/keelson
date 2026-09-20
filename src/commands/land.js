@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { exists, read, write, rmrf, mkdirp, readOr } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
-import { loadChange, loadAllChanges, verificationStatus, sharedContracts } from '../lib/changes.js';
+import { loadChange, loadAllChanges, sharedContracts } from '../lib/changes.js';
+import { evaluateLifecycle } from '../lib/lifecycle.js';
 import { parseSpec, parseDelta, renderSpec, parseFrontmatter } from '../lib/markdown.js';
 import { worktreeFingerprint } from '../lib/git.js';
 import { specBase } from './new.js';
@@ -54,15 +55,9 @@ export function appendDecisions(specText, capability, lines) {
 }
 
 /** Everything that stops a landing. Pure; used by `land` and `doctor`. */
-export function landingBlockers(c, fingerprint, { confirmAssumptions = false, acceptDrift = false, specsDir } = {}) {
-  const b = [];
-  if (c.acceptance.length && c.acceptanceProgress.done < c.acceptance.length) b.push(`${c.acceptance.length - c.acceptanceProgress.done} acceptance item(s) unchecked`);
-  if (c.tier === 'spec' && !c.acceptance.length) b.push('spec tier without an "## Acceptance" list');
-  if (c.open.length) b.push(`${c.open.length} open question(s): ${c.open.map((o) => o.text).join('; ')}`);
-  const v = verificationStatus(c, fingerprint);
-  if (v.state !== 'passed') b.push(`verification ${v.state} (${v.detail})`);
-  if (c.assumed.length && !confirmAssumptions) b.push(`${c.assumed.length} assumed decision(s) would be folded as confirmed; pass --confirm-assumptions once the owner agrees`);
-  if (c.breaking && !c.hasRollout) b.push('change is marked **BREAKING** but has no "## Rollout" section (compatibility, migration, rollback)');
+export function landingBlockers(c, fingerprint, { confirmAssumptions = false, acceptDrift = false, specsDir, activeNames = [] } = {}) {
+  const lifecycle = evaluateLifecycle(c, fingerprint, { activeNames, confirmAssumptions });
+  const b = [...lifecycle.blockers];
   if (specsDir && !acceptDrift) {
     for (const df of c.deltaFiles) {
       const cap = path.dirname(df).replace(/\\/g, '/');
@@ -88,10 +83,12 @@ export async function land({ flags, positional }, cwd = process.cwd()) {
     else if (all.length === 1) name = all[0].name;
     else throw new Error(all.length ? `several active changes (${all.map((c) => c.name).join(', ')}); bind one with \`keelson focus <name>\` or name one` : 'no active change to land');
   }
+  const allChanges = loadAllChanges(p.changes);
   const c = loadChange(p.changes, name);
   if (!c) throw new Error(`no change named "${name}"`);
   const fp = worktreeFingerprint(root);
-  const blockers = landingBlockers(c, fp, { confirmAssumptions: Boolean(flags.confirmAssumptions), acceptDrift: Boolean(flags.acceptDrift), specsDir: p.specs });
+  const activeNames = new Set(allChanges.map((x) => x.name));
+  const blockers = landingBlockers(c, fp, { confirmAssumptions: Boolean(flags.confirmAssumptions), acceptDrift: Boolean(flags.acceptDrift), specsDir: p.specs, activeNames });
   if (blockers.length && !flags.force) throw new Error(`cannot land "${name}":\n  - ${blockers.join('\n  - ')}\nFix them, or pass --force if the user explicitly asked.`);
   if (blockers.length) warn(`landing with --force despite:\n  - ${blockers.join('\n  - ')}`);
   const uncheckedPlan = c.progress.total ? c.progress.total - c.progress.done : 0;
@@ -99,7 +96,7 @@ export async function land({ flags, positional }, cwd = process.cwd()) {
 
   heading(`Landing ${name} (${c.tier})`);
   const dry = Boolean(flags.dryRun);
-  for (const k of sharedContracts(loadAllChanges(p.changes)).filter((k) => k.a === name || k.b === name)) {
+  for (const k of sharedContracts(allChanges).filter((k) => k.a === name || k.b === name)) {
     const other = k.a === name ? k.b : k.a;
     const o = loadChange(p.changes, other);
     warn(`shared contract with active change ${other}${o?.owner ? ` (${o.owner})` : ''}: ${[...k.capabilities.map((cap) => `${p.specsRel}/${cap}`), ...k.paths].join(', ')} — its delta will drift after this landing and its owner must re-read the merged spec before landing`);
