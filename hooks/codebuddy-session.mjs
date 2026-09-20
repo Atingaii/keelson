@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // CodeBuddy session bridge for Keelson.
 // SessionStart/UserPromptSubmit: touch local session runtime and inject a tiny focus hint.
-// PreToolUse(Bash): deterministically prepend KEELSON_SESSION_ID to the command.
+// PreToolUse(Bash|PowerShell): deterministically prepend KEELSON_SESSION_ID to the command.
 // Raw CodeBuddy session ids are never written to disk.
 import crypto from 'node:crypto';
 import fs from 'node:fs';
