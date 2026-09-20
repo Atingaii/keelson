@@ -29,7 +29,9 @@ A spec, a rule, or a glossary line says how the system works now. When behaviour
 ## Compact: keep what is read small
 <!-- keelson: id=reconcile.compact | without: documents grow without bound; the always-on set inflates every session and stale text is read as current | sunset: never -->
 
-`config.yaml → budgets` gives each document type a line budget (INTENT, ROADMAP, NOW, GLOSSARY, spec, rule, change, handoff, and the always-on rules as a set). Crossing a budget is not an error; it is the signal to run a compaction pass on that document, choosing per paragraph:
+`config.yaml → budgets` gives each document type a line budget (INTENT, ROADMAP, NOW, GLOSSARY, spec, rule, change, handoff, and the always-on rules as a set). The budget is a **soft compaction threshold**. Durable truth has a hard ceiling at **2× the configured budget**: `validate` / `doctor` fail beyond it, and `land` preflights projected specs and NOW before writing anything. Active change/handoff files are temporary scaffolding, so they warn rather than hard-fail. Nothing is automatically summarized or rewritten; semantic compaction remains an agent/reviewer action.
+
+When the soft budget is crossed, run a compaction pass on that document, choosing per paragraph:
 
 - **Rewrite** it shorter, present tense.
 - **Split** by capability, scope, or bounded context, when the requirements no longer share a purpose.
