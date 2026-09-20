@@ -10,6 +10,7 @@ import { parseFrontmatter } from '../lib/markdown.js';
 import { detectLocal } from '../lib/models.js';
 import { knowledgeHealth } from '../lib/health.js';
 import { listSessionStates } from '../lib/session.js';
+import { maintainRuntime } from '../lib/maintenance.js';
 import { ok, warn, fail, heading, dim } from '../lib/out.js';
 
 const require = createRequire(import.meta.url);
@@ -17,6 +18,7 @@ const { version: PKG_VERSION } = require('../../package.json');
 
 export async function doctor({ flags }, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
+  maintainRuntime(root);
   const cfg = loadConfig(projectPaths(root).config);
   const p = projectPaths(root, cfg);
   const findings = [];
