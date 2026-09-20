@@ -1,0 +1,117 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".keelson",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide\""
+    },
+    {
+      "index": 8,
+      "command": "/bin/bash -lc \"keelson guide model && keelson guide design-lenses && keelson guide plan && find .keelson -maxdepth 3 -type f -print | sort && sed -n '1,220p' .keelson/config.yaml && (test -f .keelson/INTENT.md && sed -n '1,220p' .keelson/INTENT.md || true) && git status --short\""
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc \"keelson guide model && keelson guide design-lenses && keelson guide plan && find .keelson -maxdepth 3 -type f -print | sort && sed -n '1,220p' .keelson/config.yaml && (test -f .keelson/INTENT.md && sed -n '1,220p' .keelson/INTENT.md || true) && git status --short\""
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc \"grep -RIn -C 5 -E 'teardown|request_tearing_down|appcontext_tearing_down' src/flask tests/test_appctx.py tests/test_basic.py | head -n 900 && sed -n '1,260p' .keelson/changes/d17-teardown-errors/change.md && sed -n '1,260p' .keelson/changes/d17-teardown-errors/tasks.md && sed -n '1,220p' .keelson/changes/d17-teardown-errors/specs/context-teardown/spec.md && sed -n '1,220p' pyproject.toml\""
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc \"grep -RIn -C 5 -E 'teardown|request_tearing_down|appcontext_tearing_down' src/flask tests/test_appctx.py tests/test_basic.py | head -n 900 && sed -n '1,260p' .keelson/changes/d17-teardown-errors/change.md && sed -n '1,260p' .keelson/changes/d17-teardown-errors/tasks.md && sed -n '1,220p' .keelson/changes/d17-teardown-errors/specs/context-teardown/spec.md && sed -n '1,220p' pyproject.toml\""
+    },
+    {
+      "index": 52,
+      "command": "/bin/bash -lc \"keelson check --help && keelson status && sed -n '1,220p' .keelson/changes/d17-teardown-errors/ledger.md\""
+    },
+    {
+      "index": 53,
+      "command": "/bin/bash -lc \"keelson check --help && keelson status && sed -n '1,220p' .keelson/changes/d17-teardown-errors/ledger.md\""
+    }
+  ],
+  "guidance_read_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide\""
+    },
+    {
+      "index": 5,
+      "command": "/bin/bash -lc 'keelson guide workflow && keelson guide shape && keelson guide context && keelson guide engineer && keelson guide verify && keelson guide land && keelson guide reconcile && keelson status'"
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc 'keelson guide workflow && keelson guide shape && keelson guide context && keelson guide engineer && keelson guide verify && keelson guide land && keelson guide reconcile && keelson status'"
+    },
+    {
+      "index": 8,
+      "command": "/bin/bash -lc \"keelson guide model && keelson guide design-lenses && keelson guide plan && find .keelson -maxdepth 3 -type f -print | sort && sed -n '1,220p' .keelson/config.yaml && (test -f .keelson/INTENT.md && sed -n '1,220p' .keelson/INTENT.md || true) && git status --short\""
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc \"keelson guide model && keelson guide design-lenses && keelson guide plan && find .keelson -maxdepth 3 -type f -print | sort && sed -n '1,220p' .keelson/config.yaml && (test -f .keelson/INTENT.md && sed -n '1,220p' .keelson/INTENT.md || true) && git status --short\""
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc \"grep -RIn -C 5 -E 'teardown|request_tearing_down|appcontext_tearing_down' src/flask tests/test_appctx.py tests/test_basic.py | head -n 900 && sed -n '1,260p' .keelson/changes/d17-teardown-errors/change.md && sed -n '1,260p' .keelson/changes/d17-teardown-errors/tasks.md && sed -n '1,220p' .keelson/changes/d17-teardown-errors/specs/context-teardown/spec.md && sed -n '1,220p' pyproject.toml\""
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc \"grep -RIn -C 5 -E 'teardown|request_tearing_down|appcontext_tearing_down' src/flask tests/test_appctx.py tests/test_basic.py | head -n 900 && sed -n '1,260p' .keelson/changes/d17-teardown-errors/change.md && sed -n '1,260p' .keelson/changes/d17-teardown-errors/tasks.md && sed -n '1,220p' .keelson/changes/d17-teardown-errors/specs/context-teardown/spec.md && sed -n '1,220p' pyproject.toml\""
+    },
+    {
+      "index": 50,
+      "command": "/bin/bash -lc \"python3 -c 'import flask; print(flask.__file__)' && keelson check --trust --record 'D-17 teardown callbacks and signals complete before errors escape'\""
+    },
+    {
+      "index": 51,
+      "command": "/bin/bash -lc \"python3 -c 'import flask; print(flask.__file__)' && keelson check --trust --record 'D-17 teardown callbacks and signals complete before errors escape'\""
+    },
+    {
+      "index": 52,
+      "command": "/bin/bash -lc \"keelson check --help && keelson status && sed -n '1,220p' .keelson/changes/d17-teardown-errors/ledger.md\""
+    },
+    {
+      "index": 53,
+      "command": "/bin/bash -lc \"keelson check --help && keelson status && sed -n '1,220p' .keelson/changes/d17-teardown-errors/ledger.md\""
+    },
+    {
+      "index": 57,
+      "command": "/bin/bash -lc \"PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q && PYTHONPATH=src:.bench-pydeps python3 -m compileall -q src/flask tests/test_appctx.py && keelson check --trust --record 'D-17 teardown callbacks and signals complete before errors escape'\""
+    },
+    {
+      "index": 58,
+      "command": "/bin/bash -lc \"PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q && PYTHONPATH=src:.bench-pydeps python3 -m compileall -q src/flask tests/test_appctx.py && keelson check --trust --record 'D-17 teardown callbacks and signals complete before errors escape'\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command that reads a project-local guidance artifact (or, for Keelson, invokes guide/ask/check/record) to establish activation. Listing paths alone is insufficient. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

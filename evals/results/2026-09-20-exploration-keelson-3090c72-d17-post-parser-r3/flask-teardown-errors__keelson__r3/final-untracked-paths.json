@@ -1,0 +1,14 @@
+[
+  ".keelson/changes/archive/2026-09-20-teardown-error-aggregation/change.md",
+  ".keelson/changes/archive/2026-09-20-teardown-error-aggregation/evidence/6799375bc753dab5a9f03334152402801489b8dd24260bf11ca835874b26ec8a.log",
+  ".keelson/changes/archive/2026-09-20-teardown-error-aggregation/evidence/a5291430b060745e40bd8fc1b5d760036b6fcd2fd0c3a7d7a8b5633511de8abf.log",
+  ".keelson/changes/archive/2026-09-20-teardown-error-aggregation/evidence/a551bebac057c11666ddc7d9a53bd4382ecf639fe597dec377ceb57315a25b9b.log",
+  ".keelson/changes/archive/2026-09-20-teardown-error-aggregation/evidence/keys/e76a9453f70c96a6ba86edaddd52f37ed666670a8aff3e49d8889a3db3cbccad.pem",
+  ".keelson/changes/archive/2026-09-20-teardown-error-aggregation/evidence/public-key.pem",
+  ".keelson/changes/archive/2026-09-20-teardown-error-aggregation/landed.json",
+  ".keelson/changes/archive/2026-09-20-teardown-error-aggregation/ledger.jsonl",
+  ".keelson/changes/archive/2026-09-20-teardown-error-aggregation/ledger.md",
+  ".keelson/changes/archive/2026-09-20-teardown-error-aggregation/specs/context-lifecycle/spec.md",
+  ".keelson/changes/archive/2026-09-20-teardown-error-aggregation/tasks.md",
+  ".keelson/specs/context-lifecycle/spec.md"
+]

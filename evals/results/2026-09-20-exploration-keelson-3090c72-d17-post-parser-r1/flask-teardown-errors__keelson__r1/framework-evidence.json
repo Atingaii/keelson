@@ -1,0 +1,133 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".keelson",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide\""
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc \"find .keelson -maxdepth 2 -type f -print | sort && sed -n '1,240p' .keelson/INTENT.md && sed -n '1,240p' .keelson/config.yaml && keelson new teardown-resilience --tier quick --touches src/flask/app.py,tests/test_appctx.py,tests/test_reqctx.py && keelson context --paths src/flask/app.py,tests/test_appctx.py,tests/test_reqctx.py && keelson impact src/flask/app.py tests/test_appctx.py tests/test_reqctx.py\""
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc \"find .keelson -maxdepth 2 -type f -print | sort && sed -n '1,240p' .keelson/INTENT.md && sed -n '1,240p' .keelson/config.yaml && keelson new teardown-resilience --tier quick --touches src/flask/app.py,tests/test_appctx.py,tests/test_reqctx.py && keelson context --paths src/flask/app.py,tests/test_appctx.py,tests/test_reqctx.py && keelson impact src/flask/app.py tests/test_appctx.py tests/test_reqctx.py\""
+    },
+    {
+      "index": 14,
+      "command": "/bin/bash -lc \"keelson guide design-lenses && keelson guide verify && keelson guide land && keelson guide reconcile && sed -n '1390,1480p' src/flask/app.py && sed -n '440,510p' src/flask/ctx.py && sed -n '1,230p' tests/test_appctx.py && sed -n '1,110p' tests/test_reqctx.py && sed -n '750,850p' tests/test_basic.py && sed -n '130,205p' tests/test_signals.py && sed -n '1,120p' src/flask/signals.py && sed -n '1,220p' .keelson/changes/teardown-resilience/change.md\""
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"keelson guide design-lenses && keelson guide verify && keelson guide land && keelson guide reconcile && sed -n '1390,1480p' src/flask/app.py && sed -n '440,510p' src/flask/ctx.py && sed -n '1,230p' tests/test_appctx.py && sed -n '1,110p' tests/test_reqctx.py && sed -n '750,850p' tests/test_basic.py && sed -n '130,205p' tests/test_signals.py && sed -n '1,120p' src/flask/signals.py && sed -n '1,220p' .keelson/changes/teardown-resilience/change.md\""
+    },
+    {
+      "index": 18,
+      "command": "/bin/bash -lc \"sed -n '1,115p' src/flask/app.py && sed -n '190,245p' .bench-pydeps/blinker/base.py && sed -n '1,220p' .keelson/changes/teardown-resilience/tasks.md 2>/dev/null || true && find .keelson/changes/teardown-resilience -maxdepth 2 -type f -print\""
+    },
+    {
+      "index": 19,
+      "command": "/bin/bash -lc \"sed -n '1,115p' src/flask/app.py && sed -n '190,245p' .bench-pydeps/blinker/base.py && sed -n '1,220p' .keelson/changes/teardown-resilience/tasks.md 2>/dev/null || true && find .keelson/changes/teardown-resilience -maxdepth 2 -type f -print\""
+    },
+    {
+      "index": 21,
+      "command": "/bin/bash -lc \"sed -n '1,220p' .keelson/NOW.md && sed -n '1,180p' .keelson/INTENT.md && sed -n '1,180p' .keelson/changes/teardown-resilience/change.md && sed -n '1,35p' tests/test_appctx.py\""
+    },
+    {
+      "index": 22,
+      "command": "/bin/bash -lc \"sed -n '1,220p' .keelson/NOW.md && sed -n '1,180p' .keelson/INTENT.md && sed -n '1,180p' .keelson/changes/teardown-resilience/change.md && sed -n '1,35p' tests/test_appctx.py\""
+    },
+    {
+      "index": 34,
+      "command": "/bin/bash -lc 'PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q && python3 -m ruff check src/flask/app.py src/flask/ctx.py tests/test_appctx.py && git diff --check && git diff -- src/flask/app.py src/flask/ctx.py tests/test_appctx.py .keelson/INTENT.md .keelson/NOW.md .keelson/changes/teardown-resilience/change.md .keelson/specs/context-teardown.md'"
+    },
+    {
+      "index": 35,
+      "command": "/bin/bash -lc 'PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q && python3 -m ruff check src/flask/app.py src/flask/ctx.py tests/test_appctx.py && git diff --check && git diff -- src/flask/app.py src/flask/ctx.py tests/test_appctx.py .keelson/INTENT.md .keelson/NOW.md .keelson/changes/teardown-resilience/change.md .keelson/specs/context-teardown.md'"
+    }
+  ],
+  "guidance_read_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide\""
+    },
+    {
+      "index": 5,
+      "command": "/bin/bash -lc 'keelson guide workflow && keelson guide shape && keelson guide context && keelson guide engineer && keelson status'"
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc 'keelson guide workflow && keelson guide shape && keelson guide context && keelson guide engineer && keelson status'"
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc \"find .keelson -maxdepth 2 -type f -print | sort && sed -n '1,240p' .keelson/INTENT.md && sed -n '1,240p' .keelson/config.yaml && keelson new teardown-resilience --tier quick --touches src/flask/app.py,tests/test_appctx.py,tests/test_reqctx.py && keelson context --paths src/flask/app.py,tests/test_appctx.py,tests/test_reqctx.py && keelson impact src/flask/app.py tests/test_appctx.py tests/test_reqctx.py\""
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc \"find .keelson -maxdepth 2 -type f -print | sort && sed -n '1,240p' .keelson/INTENT.md && sed -n '1,240p' .keelson/config.yaml && keelson new teardown-resilience --tier quick --touches src/flask/app.py,tests/test_appctx.py,tests/test_reqctx.py && keelson context --paths src/flask/app.py,tests/test_appctx.py,tests/test_reqctx.py && keelson impact src/flask/app.py tests/test_appctx.py tests/test_reqctx.py\""
+    },
+    {
+      "index": 14,
+      "command": "/bin/bash -lc \"keelson guide design-lenses && keelson guide verify && keelson guide land && keelson guide reconcile && sed -n '1390,1480p' src/flask/app.py && sed -n '440,510p' src/flask/ctx.py && sed -n '1,230p' tests/test_appctx.py && sed -n '1,110p' tests/test_reqctx.py && sed -n '750,850p' tests/test_basic.py && sed -n '130,205p' tests/test_signals.py && sed -n '1,120p' src/flask/signals.py && sed -n '1,220p' .keelson/changes/teardown-resilience/change.md\""
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"keelson guide design-lenses && keelson guide verify && keelson guide land && keelson guide reconcile && sed -n '1390,1480p' src/flask/app.py && sed -n '440,510p' src/flask/ctx.py && sed -n '1,230p' tests/test_appctx.py && sed -n '1,110p' tests/test_reqctx.py && sed -n '750,850p' tests/test_basic.py && sed -n '130,205p' tests/test_signals.py && sed -n '1,120p' src/flask/signals.py && sed -n '1,220p' .keelson/changes/teardown-resilience/change.md\""
+    },
+    {
+      "index": 18,
+      "command": "/bin/bash -lc \"sed -n '1,115p' src/flask/app.py && sed -n '190,245p' .bench-pydeps/blinker/base.py && sed -n '1,220p' .keelson/changes/teardown-resilience/tasks.md 2>/dev/null || true && find .keelson/changes/teardown-resilience -maxdepth 2 -type f -print\""
+    },
+    {
+      "index": 19,
+      "command": "/bin/bash -lc \"sed -n '1,115p' src/flask/app.py && sed -n '190,245p' .bench-pydeps/blinker/base.py && sed -n '1,220p' .keelson/changes/teardown-resilience/tasks.md 2>/dev/null || true && find .keelson/changes/teardown-resilience -maxdepth 2 -type f -print\""
+    },
+    {
+      "index": 21,
+      "command": "/bin/bash -lc \"sed -n '1,220p' .keelson/NOW.md && sed -n '1,180p' .keelson/INTENT.md && sed -n '1,180p' .keelson/changes/teardown-resilience/change.md && sed -n '1,35p' tests/test_appctx.py\""
+    },
+    {
+      "index": 22,
+      "command": "/bin/bash -lc \"sed -n '1,220p' .keelson/NOW.md && sed -n '1,180p' .keelson/INTENT.md && sed -n '1,180p' .keelson/changes/teardown-resilience/change.md && sed -n '1,35p' tests/test_appctx.py\""
+    },
+    {
+      "index": 38,
+      "command": "/bin/bash -lc 'keelson check --trust --record \"D-17 teardown callbacks and signals complete before grouped error propagation\" && git diff --check && git diff --stat && git status --short'"
+    },
+    {
+      "index": 39,
+      "command": "/bin/bash -lc 'keelson check --trust --record \"D-17 teardown callbacks and signals complete before grouped error propagation\" && git diff --check && git diff --stat && git status --short'"
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command that reads a project-local guidance artifact (or, for Keelson, invokes guide/ask/check/record) to establish activation. Listing paths alone is insufficient. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

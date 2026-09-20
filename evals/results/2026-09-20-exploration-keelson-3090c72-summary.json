@@ -1,0 +1,203 @@
+{
+  "generated_by": "benchmarks/summarize-results.mjs",
+  "roots": [
+    "evals/results/2026-09-20-exploration-keelson-3090c72-d17-post-parser-r1",
+    "evals/results/2026-09-20-exploration-keelson-3090c72-d17-post-parser-r2",
+    "evals/results/2026-09-20-exploration-keelson-3090c72-d17-post-parser-r3"
+  ],
+  "limitation": "Only finite values enter each median. Missing token or footprint values remain absent from that metric and are never replaced with zero. Setup footprint describes files provisioned by each treatment in the benchmark worktree; Python evaluation dependencies and transient runner artifacts are excluded by the runner.",
+  "cells": [
+    {
+      "directory": "evals/results/2026-09-20-exploration-keelson-3090c72-d17-post-parser-r1/flask-teardown-errors__keelson__r1",
+      "task": "flask-teardown-errors",
+      "method": "keelson",
+      "repetition": 1,
+      "comparison_eligible": true,
+      "mechanical_pass": true,
+      "codex_elapsed_ms": 630600,
+      "tokens": {
+        "input_tokens": 1022800,
+        "cached_input_tokens": 952832,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 15672,
+        "reasoning_output_tokens": 7780
+      },
+      "setup_footprint": {
+        "paths": [
+          ".agents/skills/keelson/SKILL.md",
+          ".keelson/INTENT.md",
+          ".keelson/NOW.md",
+          ".keelson/README.md",
+          ".keelson/config.yaml",
+          ".keelson/manifest.json",
+          "AGENTS.md"
+        ],
+        "file_count": 7,
+        "bytes": 8462,
+        "lines": 168,
+        "top_level_paths": [
+          ".agents",
+          ".keelson",
+          "AGENTS.md"
+        ]
+      }
+    },
+    {
+      "directory": "evals/results/2026-09-20-exploration-keelson-3090c72-d17-post-parser-r2/flask-teardown-errors__keelson__r2",
+      "task": "flask-teardown-errors",
+      "method": "keelson",
+      "repetition": 2,
+      "comparison_eligible": true,
+      "mechanical_pass": true,
+      "codex_elapsed_ms": 707755,
+      "tokens": {
+        "input_tokens": 1827722,
+        "cached_input_tokens": 1742336,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 17328,
+        "reasoning_output_tokens": 9030
+      },
+      "setup_footprint": {
+        "paths": [
+          ".agents/skills/keelson/SKILL.md",
+          ".keelson/INTENT.md",
+          ".keelson/NOW.md",
+          ".keelson/README.md",
+          ".keelson/config.yaml",
+          ".keelson/manifest.json",
+          "AGENTS.md"
+        ],
+        "file_count": 7,
+        "bytes": 8462,
+        "lines": 168,
+        "top_level_paths": [
+          ".agents",
+          ".keelson",
+          "AGENTS.md"
+        ]
+      }
+    },
+    {
+      "directory": "evals/results/2026-09-20-exploration-keelson-3090c72-d17-post-parser-r3/flask-teardown-errors__keelson__r3",
+      "task": "flask-teardown-errors",
+      "method": "keelson",
+      "repetition": 3,
+      "comparison_eligible": true,
+      "mechanical_pass": true,
+      "codex_elapsed_ms": 888024,
+      "tokens": {
+        "input_tokens": 2146802,
+        "cached_input_tokens": 2059776,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 20281,
+        "reasoning_output_tokens": 10112
+      },
+      "setup_footprint": {
+        "paths": [
+          ".agents/skills/keelson/SKILL.md",
+          ".keelson/INTENT.md",
+          ".keelson/NOW.md",
+          ".keelson/README.md",
+          ".keelson/config.yaml",
+          ".keelson/manifest.json",
+          "AGENTS.md"
+        ],
+        "file_count": 7,
+        "bytes": 8462,
+        "lines": 168,
+        "top_level_paths": [
+          ".agents",
+          ".keelson",
+          "AGENTS.md"
+        ]
+      }
+    }
+  ],
+  "methods": {
+    "keelson": {
+      "cells": 3,
+      "comparison_eligible_cells": 3,
+      "mechanical_pass_cells": 3,
+      "codex_elapsed_ms": {
+        "observed_cells": 3,
+        "median": 707755,
+        "values": [
+          630600,
+          707755,
+          888024
+        ]
+      },
+      "input_tokens": {
+        "observed_cells": 3,
+        "median": 1827722,
+        "values": [
+          1022800,
+          1827722,
+          2146802
+        ]
+      },
+      "cached_input_tokens": {
+        "observed_cells": 3,
+        "median": 1742336,
+        "values": [
+          952832,
+          1742336,
+          2059776
+        ]
+      },
+      "output_tokens": {
+        "observed_cells": 3,
+        "median": 17328,
+        "values": [
+          15672,
+          17328,
+          20281
+        ]
+      },
+      "reasoning_output_tokens": {
+        "observed_cells": 3,
+        "median": 9030,
+        "values": [
+          7780,
+          9030,
+          10112
+        ]
+      },
+      "setup_footprint": {
+        "observed_cells": 3,
+        "file_count": {
+          "observed_cells": 3,
+          "median": 7,
+          "values": [
+            7,
+            7,
+            7
+          ]
+        },
+        "lines": {
+          "observed_cells": 3,
+          "median": 168,
+          "values": [
+            168,
+            168,
+            168
+          ]
+        },
+        "bytes": {
+          "observed_cells": 3,
+          "median": 8462,
+          "values": [
+            8462,
+            8462,
+            8462
+          ]
+        },
+        "top_level_paths_observed": [
+          ".agents",
+          ".keelson",
+          "AGENTS.md"
+        ]
+      }
+    }
+  }
+}

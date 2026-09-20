@@ -1,0 +1,11 @@
+[
+  ".keelson/changes/archive/2026-09-20-teardown-resilience/change.md",
+  ".keelson/changes/archive/2026-09-20-teardown-resilience/evidence/2014a4489be9fa628b1881f7459ae62046039bf39beea4bcd633c39f175b4fa1.log",
+  ".keelson/changes/archive/2026-09-20-teardown-resilience/evidence/keys/fd367768362bbdba20bf4895da1d69ccf948fba258c51a91bd739cf5dc549d23.pem",
+  ".keelson/changes/archive/2026-09-20-teardown-resilience/evidence/public-key.pem",
+  ".keelson/changes/archive/2026-09-20-teardown-resilience/landed.json",
+  ".keelson/changes/archive/2026-09-20-teardown-resilience/ledger.jsonl",
+  ".keelson/changes/archive/2026-09-20-teardown-resilience/ledger.md",
+  ".keelson/specs/context-teardown.md",
+  ".keelson/specs/d-17/spec.md"
+]
