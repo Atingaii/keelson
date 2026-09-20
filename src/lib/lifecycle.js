@@ -28,6 +28,8 @@ const gate = (code, pass, detail) => ({ code, pass, detail });
 export function evaluateLifecycle(change, fingerprint, {
   activeNames = [],
   confirmAssumptions = false,
+  contractDrift = [],
+  acceptDrift = false,
 } = {}) {
   const active = activeNames instanceof Set ? activeNames : new Set(activeNames);
   const verification = verificationStatus(change, fingerprint);
@@ -58,6 +60,11 @@ export function evaluateLifecycle(change, fingerprint, {
       'dependencies',
       blockedBy.length === 0,
       `depends on active change(s): ${blockedBy.join(', ')}`
+    ),
+    gate(
+      'drift',
+      acceptDrift || contractDrift.length === 0,
+      contractDrift.map((d) => d.detail ?? String(d)).join('; ')
     ),
     gate(
       'assumptions',
@@ -107,6 +114,7 @@ export function evaluateLifecycle(change, fingerprint, {
     gates,
     blockers: blockers.map((g) => g.detail),
     blockedBy,
+    contractDrift,
     warnings,
   };
 }
