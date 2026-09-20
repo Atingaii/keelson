@@ -1,0 +1,19 @@
+{
+  "complete": true,
+  "rows": [
+    {
+      "original_evidence": "/home/ubuntu/github/keelson-bench/evals/results/2026-09-20-exploration-keelson-fa7c874-d17-parallel-r3/flask-teardown-errors__keelson__r3",
+      "task": "flask-teardown-errors",
+      "method": "keelson",
+      "repetition": 3,
+      "original_comparison_eligible": true,
+      "original_pass": true,
+      "candidate_patch_sha256": "ff249e3f0e47ab89e266fa5b05f443accfb4cb8863f211828002a8466ef5e053",
+      "stage": "supplemental-verification",
+      "environment_valid": true,
+      "supplemental_exit_code": 0,
+      "pass": true
+    }
+  ],
+  "all_pass": true
+}

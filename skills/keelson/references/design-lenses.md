@@ -12,12 +12,19 @@ These are **internal engineering lenses, not an architecture questionnaire**. Ap
 | Security + privacy | auth, permissions, secrets, PII, uploads, untrusted input/tools | assets, trust boundaries, least privilege, abuse paths, validation | negative acceptance + security check |
 | Concurrency + async | queues, webhooks, workers, realtime, multi-writer | duplicates, ordering, idempotency, retry, timeout, cancellation, partial failure | duplicate/out-of-order/retry/failure tests |
 | API + compatibility | public API, event/schema/config/storage format | consumers, versioning, breaking definition, deprecation, rollout/rollback | compatibility contract + rollout evidence |
-| Reliability + operations | critical path, background process, external dependency | failure behavior, recovery, observability, safe degradation, operator action | recovery check + metric/log/runbook pointer |
+| Reliability + operations | error handling, cleanup/resource lifetime, critical path, background process, external dependency | full failure path, recovery, observer-visible state, observability, safe degradation | adversarial regression + recovery check; operational pointer when relevant |
 | Performance + cost | explicit latency/throughput/volume/cost target, measured hot path | workload, SLO, baseline, growth assumption, resource ceiling | benchmark/load/cost check; no speculative cache |
 | Interface + accessibility | UI, form, navigation, interactive workflow | primary task, error/recovery, keyboard/focus, comprehension, destructive action | usability/accessibility acceptance |
 | AI + nondeterminism | LLM, agent, RAG, model/tool call | eval cases, fallback, data boundary, prompt/tool injection, authorization, reproducibility | eval set + safety/fallback acceptance |
 
 A trigger means “inspect this dimension”, **not** “ask every question in this row”.
+
+## Make failure contracts executable before the fix
+<!-- keelson: id=lenses.failure-contract | without: an error-handling fix covers the first failure but a later finalizer or observer still discards errors or exposes corrupted state | sunset: never -->
+
+For error-handling or resource-lifetime changes, trace the entire call path before editing, including nested cleanup, finalizers, notifications, and the final caller. In the existing plan or test notes, briefly map each phase to: what can fail, what must still run, what state observers must see, and which errors must reach the caller. Derive these obligations from the request and existing contracts; distinguish an explicit requirement from an additional robustness probe.
+
+Turn the highest-risk combination into a failing regression **before** the implementation: inject distinct errors into multiple phases of one execution, including the last applicable observer, and exercise a nested or already-active resource when supported. Assert the required final state and the propagated errors' identities, multiplicity, and order when contractual; assert observer-visible state at the time the observer runs. A passing single-error test does not establish the combined-failure contract. Keep this focused on the affected lifetime rather than inventing a generic framework or an exhaustive fault matrix.
 
 ## Prefer simple, reversible architecture
 <!-- keelson: id=lenses.simplicity | without: the agent designs for hypothetical scale, introduces abstractions before pressure exists, or treats every future possibility as a current requirement | sunset: never -->

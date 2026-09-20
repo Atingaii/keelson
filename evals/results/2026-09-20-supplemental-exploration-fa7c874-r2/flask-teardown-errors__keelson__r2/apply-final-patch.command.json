@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "apply",
+    "--whitespace=nowarn",
+    "/home/ubuntu/github/keelson-bench/evals/results/2026-09-20-exploration-keelson-fa7c874-d17/flask-teardown-errors__keelson__r2/final.patch"
+  ],
+  "cwd": "/tmp/keelson-bench-supplemental-odzzfY/worktree",
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 6
+}

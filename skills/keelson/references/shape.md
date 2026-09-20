@@ -46,7 +46,7 @@ The bar is not "no unknowns in the project". It is: the next slice has a clear o
 ## Interview (only when the decision frontier requires it)
 <!-- keelson: id=shape.interview | without: architectural ambiguity is silently guessed, or every spec change turns into a mandatory questionnaire | sunset: never -->
 
-Use `interview.md` for the interaction protocol. A spec-sized change does **not** automatically require user questions: first resolve repository-owned facts and reversible engineering choices yourself. If the work touches data, security, concurrency, compatibility, operations, performance, UI/accessibility, or AI behavior, inspect only the triggered rows in `design-lenses.md` and turn them into decisions or evidence obligations.
+Use `interview.md` for the interaction protocol. A spec-sized change does **not** automatically require user questions: first resolve repository-owned facts and reversible engineering choices yourself. If the work touches data, security, concurrency, compatibility, error handling/resource lifetime, operations, performance, UI/accessibility, or AI behavior, inspect only the triggered rows in `design-lenses.md` and turn them into decisions or evidence obligations. For failure-path changes, follow its pre-implementation regression step.
 
 Run the assumption check internally. Do not open with an abstract "what are we assuming?" question unless the owner truly owns that uncertainty; translate it into the concrete user-visible or risk consequence instead. Explicit "stress-test this" requests continue through the relevant decision tree; ordinary work stops as soon as the next safe slice is ready.
 
