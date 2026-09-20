@@ -1,0 +1,39 @@
+{
+  "diagnosticOnly": true,
+  "esbuild": "0.28.2",
+  "samples": 10,
+  "cases": {
+    "original": [
+      119.392,
+      121.654,
+      118.226,
+      117.826,
+      116.045,
+      121.585,
+      121.376,
+      152.064,
+      147.58,
+      126.113
+    ],
+    "bundled": [
+      68.868,
+      65.133,
+      68.693,
+      76.565,
+      66.606,
+      67.372,
+      67.131,
+      63.735,
+      66.783,
+      67.179
+    ]
+  },
+  "observed_at": "2026-09-20T13:04:14.395695+00:00",
+  "source_commit": "9bb06d3d7e69c486a5290b59733cea4bfc41373d",
+  "node": "v20.20.2",
+  "platform": "Linux-6.8.0-1060-aws-x86_64-with-glibc2.35",
+  "purpose": "Module import/startup diagnostic only; not command end-to-end timing or a target-qualified performance sample. No bundle is shipped based on this diagnostic.",
+  "method": "Ten source imports followed by ten imports of an esbuild bundle, separate Node processes; shared host and concurrently running model experiments. The bundle retains original source import.meta.url values for this diagnostic only.",
+  "source_spike": "import fs from 'node:fs';\nimport path from 'node:path';\nimport { pathToFileURL } from 'node:url';\nimport { spawnSync } from 'node:child_process';\nimport { performance } from 'node:perf_hooks';\nconst temporary = path.dirname(import.meta.filename);\nconst root = '/home/ubuntu/github/keelson';\nconst esbuild = await import(pathToFileURL(path.join(temporary, 'node_modules/esbuild/lib/main.js')));\nawait esbuild.build({ entryPoints: [path.join(root, 'src/commands/status.js')], bundle: true, platform: 'node', format: 'esm', banner: {js: 'import { createRequire as bundleCreateRequire } from \"node:module\"; const require = bundleCreateRequire(import.meta.url);'}, outfile: path.join(temporary, 'status.mjs'), plugins: [{name:'preserve-original-url-for-diagnostic', setup(build) { build.onLoad({filter:/\\.js$/}, async (args) => ({contents: fs.readFileSync(args.path,'utf8').replaceAll('import.meta.url', JSON.stringify(pathToFileURL(args.path).href)),loader:'js'}));}}] });\nconst output = {diagnosticOnly:true, esbuild:esbuild.version, samples:10, cases:{}};\nfor(const [name,module] of [['original',path.join(root,'src/commands/status.js')],['bundled',path.join(temporary,'status.mjs')]]) {\n const samples=[];\n for(let i=0;i<10;i++) { const start=performance.now(); const result=spawnSync(process.execPath,['--input-type=module','-e',`await import(${JSON.stringify(pathToFileURL(module).href)})`],{encoding:'utf8',cwd:root}); if(result.status!==0)throw new Error(result.stderr);samples.push(+(performance.now()-start).toFixed(3)); }\n output.cases[name]=samples;\n}\nfs.writeFileSync(path.join(temporary,'diagnostic.json'),JSON.stringify(output,null,2)+'\\n');\nconsole.log(JSON.stringify(output));\n",
+  "initial_trial": "The first bundle could not load because an ESM bundle lacked createRequire for yaml/process. It yielded no valid bundled samples; the diagnostic was rerun after adding the require shim."
+}

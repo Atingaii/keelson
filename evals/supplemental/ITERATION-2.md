@@ -26,3 +26,15 @@ claim. This is a second failure-informed exploratory iteration, not an independe
 held-out evaluation, causal ablation or updated five-method ranking. Preserve
 the formal 45-run comparison and the first exploration without changing their
 scores or replacing unsuccessful repetitions.
+
+## Package-scope clarification after launch
+
+Recorded before the root reviewer observed any second-iteration result summary:
+candidate `3090c729b9631abd74013674cd883cdf5e69f8a9` also includes main's
+intervening CLI changes relative to `fa7c874`: Windows write/lock handling,
+batched current-content fingerprints, runtime-path lookup and portable importer
+matching (`src/lib/evidence.js`, `fs.js`, `git.js`, `runtime-path.js`). The four
+guidance files are the new intervention at 3090c72, but the whole candidate is
+not a guidance-only diff from the previous candidate. This is a product
+iteration, not an isolated guidance ablation. No running candidate, prompt,
+budget, probe or outcome is changed by this clarification.
