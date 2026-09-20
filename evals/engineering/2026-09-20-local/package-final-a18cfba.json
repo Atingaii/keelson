@@ -1,0 +1,621 @@
+[
+  {
+    "id": "@atingaii/keelson@0.4.0",
+    "name": "@atingaii/keelson",
+    "version": "0.4.0",
+    "size": 180043,
+    "unpackedSize": 511242,
+    "shasum": "6b9d0fb64964e813938a34aad99dede9997105bd",
+    "integrity": "sha512-1P3ywHLDRKLQwfOxgi9xrhZcF4vzukWEkv1ZVcQFI+FR6txju4J+jX1qLM8hZxp3V8j7jQ2iBCqZ65tAfmKC8A==",
+    "filename": "atingaii-keelson-0.4.0.tgz",
+    "files": [
+      {
+        "path": "LICENSE",
+        "size": 1065,
+        "mode": 420
+      },
+      {
+        "path": "README_CN.md",
+        "size": 5409,
+        "mode": 420
+      },
+      {
+        "path": "README.md",
+        "size": 6044,
+        "mode": 420
+      },
+      {
+        "path": "bin/keelson.js",
+        "size": 514,
+        "mode": 493
+      },
+      {
+        "path": "hooks/codebuddy-session.mjs",
+        "size": 3420,
+        "mode": 420
+      },
+      {
+        "path": "hooks/opencode-session.mjs",
+        "size": 2623,
+        "mode": 420
+      },
+      {
+        "path": "hooks/prompt-state.mjs",
+        "size": 3348,
+        "mode": 493
+      },
+      {
+        "path": "hooks/session-start.mjs",
+        "size": 4744,
+        "mode": 493
+      },
+      {
+        "path": "package.json",
+        "size": 1202,
+        "mode": 420
+      },
+      {
+        "path": "registry/models.json",
+        "size": 3119,
+        "mode": 420
+      },
+      {
+        "path": "registry/platforms.json",
+        "size": 2970,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/build.md",
+        "size": 5949,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/context.md",
+        "size": 2868,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/debug.md",
+        "size": 2464,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/design-lenses.md",
+        "size": 7439,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/discover.md",
+        "size": 5950,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/engineer.md",
+        "size": 10084,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/handoff.md",
+        "size": 3577,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/harness.md",
+        "size": 4991,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/interview.md",
+        "size": 10370,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/land.md",
+        "size": 4781,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/model.md",
+        "size": 3504,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/plan.md",
+        "size": 9993,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/reconcile.md",
+        "size": 6519,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/shape.md",
+        "size": 8558,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/references/verify.md",
+        "size": 7532,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/SKILL.md",
+        "size": 5015,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/change-quick.md",
+        "size": 140,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/change.md",
+        "size": 722,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/delta-spec.md",
+        "size": 184,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/GLOSSARY.md",
+        "size": 344,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/handoff.md",
+        "size": 540,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/INTENT.md",
+        "size": 1044,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/ledger.md",
+        "size": 237,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/NOW.md",
+        "size": 69,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/README.md",
+        "size": 3823,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/resident-block.md",
+        "size": 384,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/ROADMAP.md",
+        "size": 371,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/rules-general.md",
+        "size": 641,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/rules-index.md",
+        "size": 266,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/spec.md",
+        "size": 296,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/tasks.md",
+        "size": 513,
+        "mode": 420
+      },
+      {
+        "path": "skills/keelson/templates/workflow.md",
+        "size": 2711,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/build.md",
+        "size": 5547,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/context.md",
+        "size": 2668,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/debug.md",
+        "size": 2326,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/design-lenses.md",
+        "size": 6758,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/discover.md",
+        "size": 5502,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/engineer.md",
+        "size": 9253,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/handoff.md",
+        "size": 3401,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/harness.md",
+        "size": 4778,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/interview.md",
+        "size": 9471,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/land.md",
+        "size": 4424,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/model.md",
+        "size": 3321,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/plan.md",
+        "size": 9544,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/reconcile.md",
+        "size": 5989,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/shape.md",
+        "size": 8067,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/references/verify.md",
+        "size": 6695,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/SKILL.md",
+        "size": 4679,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/change-quick.md",
+        "size": 140,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/change.md",
+        "size": 684,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/delta-spec.md",
+        "size": 184,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/GLOSSARY.md",
+        "size": 323,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/handoff.md",
+        "size": 513,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/INTENT.md",
+        "size": 1008,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/ledger.md",
+        "size": 239,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/NOW.md",
+        "size": 69,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/README.md",
+        "size": 3476,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/resident-block.md",
+        "size": 383,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/ROADMAP.md",
+        "size": 342,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/rules-general.md",
+        "size": 638,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/rules-index.md",
+        "size": 251,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/spec.md",
+        "size": 283,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/tasks.md",
+        "size": 464,
+        "mode": 420
+      },
+      {
+        "path": "skills/zh/keelson/templates/workflow.md",
+        "size": 2487,
+        "mode": 420
+      },
+      {
+        "path": "src/cli.js",
+        "size": 6280,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/ablate.js",
+        "size": 4579,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/ask.js",
+        "size": 4365,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/attest.js",
+        "size": 3412,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/check.js",
+        "size": 7342,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/context.js",
+        "size": 5851,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/doctor.js",
+        "size": 10820,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/focus.js",
+        "size": 3987,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/guide.js",
+        "size": 2123,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/handoff.js",
+        "size": 2274,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/hook.js",
+        "size": 853,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/impact.js",
+        "size": 3405,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/init.js",
+        "size": 17592,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/land.js",
+        "size": 14187,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/models.js",
+        "size": 3657,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/new.js",
+        "size": 4370,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/platforms.js",
+        "size": 2523,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/retro.js",
+        "size": 7117,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/status.js",
+        "size": 5959,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/uninstall.js",
+        "size": 1567,
+        "mode": 420
+      },
+      {
+        "path": "src/commands/validate.js",
+        "size": 8358,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/args.js",
+        "size": 1611,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/changes.js",
+        "size": 4906,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/check-activity.js",
+        "size": 1158,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/config.js",
+        "size": 3777,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/decisions.js",
+        "size": 2846,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/evidence.js",
+        "size": 8085,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/fs.js",
+        "size": 4824,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/git.js",
+        "size": 14196,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/glob.js",
+        "size": 1449,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/health.js",
+        "size": 7193,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/lifecycle.js",
+        "size": 4470,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/maintenance.js",
+        "size": 1775,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/markdown.js",
+        "size": 18331,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/models.js",
+        "size": 7547,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/out.js",
+        "size": 588,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/paths.js",
+        "size": 3488,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/rules.js",
+        "size": 1080,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/runtime-path.js",
+        "size": 805,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/session.js",
+        "size": 3288,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/specs.js",
+        "size": 13660,
+        "mode": 420
+      },
+      {
+        "path": "src/lib/transaction.js",
+        "size": 4849,
+        "mode": 420
+      },
+      {
+        "path": "src/platforms/index.js",
+        "size": 95,
+        "mode": 420
+      },
+      {
+        "path": "src/platforms/integration.js",
+        "size": 16128,
+        "mode": 420
+      },
+      {
+        "path": "src/platforms/registry.js",
+        "size": 1940,
+        "mode": 420
+      },
+      {
+        "path": "src/platforms/runtime.js",
+        "size": 12288,
+        "mode": 420
+      }
+    ],
+    "entryCount": 121,
+    "bundled": []
+  }
+]

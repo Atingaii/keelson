@@ -1,0 +1,1 @@
+keelson: discovery shim differs from this CLI output; Keelson left it unchanged. Review it, then pass --force only if replacing the whole directory is intended.

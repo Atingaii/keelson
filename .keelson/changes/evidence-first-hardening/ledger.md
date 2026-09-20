@@ -136,3 +136,13 @@ All three frozen `3090c72` original D-17 task evaluations pass. Independent repl
 ### Dispatch: second exploration and delivery claims review → deep (gpt-5.6-terra)
 Result: pass
 Independent review at `05b2564` confirms all three original summaries, the two passing and one failing supplemental replay, complete event/token/time matching, clean frozen candidate provenance, and the retained full-package co-change disclosure. It independently matched all nine CLI p95 values and the five misses/four passes to the 30-sample artifact. README wording explicitly withholds an all-dimensions-excellent claim. This review verifies report accuracy, not the unmet outcome targets.
+
+### Dispatch: final slab framing review → deep (gpt-5.6-terra)
+Result: pass
+The fresh reviewer archived the exact `a88ec5e` commit into an independent temporary tree and passed its legacy-v2 byte-equivalence regression. Length framing, UTF-8/path boundaries, true content reads, symlinks, gitlinks and non-Git fallback remain intact; no P1/P2 findings. Main integrates the change as `a18cfba` and passes the combined 14 Git/framing cases. Temporary review and performance worktrees are removed only after integration and byte comparison.
+
+### Note: final retained CLI measurement and open outcomes
+Clean main `a18cfba3e9b6a5e4d3bef733b896da80a2b3f9c4` completed the unchanged 5000-file, 3-warmup, 30-sample protocol from 13:35 to 13:38 UTC. Five of nine budgets pass. Signed status 658.979 ms, signed context 661.796 ms, plain-check estimated overhead 581.378 ms and record-check estimated overhead 940.336 ms still miss their original budgets. All four complete iterations and six starts remain in the JSON; shared-host load changed during measurement. No target was relaxed and no content cache was introduced. ROADMAP assigns the remaining performance and 3/3 supplemental targets to the owner/implementing agent; engineering landing must not be reported as satisfying those outcomes.
+
+### Note: cleanup and package scope
+Historical diagnostics missing from the earlier engineering manifest were preserved before deleting duplicate temporary logs. Cleanup resolved task-created fixture/cache paths, frozen and development worktrees, local feature branches, source probes and the exact task Docker image. Only main remains locally and remotely; main dependencies, source draft, credentials, final banner and all committed raw evidence are retained. The final shipping-code package dry run contains 121 files (180043 packed / 511242 unpacked bytes), excluding project state, benchmark archives and dependencies. No npm publication is performed.

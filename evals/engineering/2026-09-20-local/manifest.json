@@ -622,7 +622,87 @@
       "sha256": "d607ef4ac85d60d55f7c01be3159720ff310a7e95eb122895f8af8645c395b2a",
       "bytes": 13449,
       "note": "Pre-delivery artifact audit at main 05b2564 plus documented README edits; final framing decisions may require a later package observation."
+    },
+    {
+      "file": "historical-v03-negative.err",
+      "sha256": "5617fc42fb6015e123f18817e7a6ce922226ddba7a0b4bcd7a5a2bf47fe798e4",
+      "bytes": 161,
+      "note": "Historical targeted, counterfactual or diagnostic task output recovered during cleanup; not final HEAD verification. Prior ledger and associated formal artifacts determine scope."
+    },
+    {
+      "file": "historical-rootlink-negative.tap",
+      "sha256": "93a8f7c2004f1997943b443fc4fa81a390c8bbc1ff7147ea0a30b1aa18fcd1b9",
+      "bytes": 14366,
+      "note": "Historical targeted, counterfactual or diagnostic task output recovered during cleanup; not final HEAD verification. Prior ledger and associated formal artifacts determine scope."
+    },
+    {
+      "file": "historical-supplemental-fa-r1.log",
+      "sha256": "1db93a71a392de454c1bdab85d3c72711486af15a3a71aa0c7fdd7e9ee52249a",
+      "bytes": 69,
+      "note": "Historical targeted, counterfactual or diagnostic task output recovered during cleanup; not final HEAD verification. Prior ledger and associated formal artifacts determine scope."
+    },
+    {
+      "file": "historical-verification-guidance-positive.tap",
+      "sha256": "b20c32d0bac42efc61d8c38eeedd43e1bac452059fab9ca04c7f536fc1c4b6f5",
+      "bytes": 3442,
+      "note": "Historical targeted, counterfactual or diagnostic task output recovered during cleanup; not final HEAD verification. Prior ledger and associated formal artifacts determine scope."
+    },
+    {
+      "file": "historical-v03-negative.out",
+      "sha256": "7dca93b34a0c3d90c7aeb0658e3f0e2c482391d49eacfd282100e79be08cd248",
+      "bytes": 52,
+      "note": "Historical targeted, counterfactual or diagnostic task output recovered during cleanup; not final HEAD verification. Prior ledger and associated formal artifacts determine scope."
+    },
+    {
+      "file": "historical-verification-guidance.tap",
+      "sha256": "451f2bd8ec6d52ad54016809437c21e92ad9ee2b5f48149aa090b1f637b11e41",
+      "bytes": 66,
+      "note": "Historical targeted, counterfactual or diagnostic task output recovered during cleanup; not final HEAD verification. Prior ledger and associated formal artifacts determine scope."
+    },
+    {
+      "file": "historical-cli-performance-optimized.log",
+      "sha256": "4600dec4d44cdb53b51d4ab6407406e3518f8ad977cfc683f83cd2daebcdebb9",
+      "bytes": 424,
+      "note": "Historical targeted, counterfactual or diagnostic task output recovered during cleanup; not final HEAD verification. Prior ledger and associated formal artifacts determine scope."
+    },
+    {
+      "file": "historical-portable-git.tap",
+      "sha256": "87d412b9f83f281c4767cf204ff6b2fec732856ce30ac26b16023800e0acbe42",
+      "bytes": 2756,
+      "note": "Historical targeted, counterfactual or diagnostic task output recovered during cleanup; not final HEAD verification. Prior ledger and associated formal artifacts determine scope."
+    },
+    {
+      "file": "historical-macos-path-repro.json",
+      "sha256": "8a6410b024e208405930f2d5b39479bec04951485019eb9bdf570f382f292c56",
+      "bytes": 66,
+      "note": "Historical targeted, counterfactual or diagnostic task output recovered during cleanup; not final HEAD verification. Prior ledger and associated formal artifacts determine scope."
+    },
+    {
+      "file": "slab-integration-a18cfba.tap.log",
+      "sha256": "2c7b2edb81ac5f6ed7547e66d7f7b4a1acfa9c4ccd8465391b5ac920ee34dbfe",
+      "bytes": 4125,
+      "source_commit": "a18cfba3e9b6a5e4d3bef733b896da80a2b3f9c4",
+      "command": "node --test tests/fingerprint-frame.test.js tests/git.test.js",
+      "tap_counts": {
+        "tests": 14,
+        "pass": 14,
+        "fail": 0,
+        "skipped": 0
+      },
+      "note": "Final slab integration and Git semantics regressions, before the complete signed suite."
+    },
+    {
+      "file": "package-final-a18cfba.json",
+      "sha256": "5b39f537d70597ade3af2d489a6dfc67949c7c992843113dcf16ce84bf1750b8",
+      "bytes": 13449,
+      "note": "Final shipping-code a18cfba npm pack --dry-run; subsequent changes are documentation/evidence only. No npm publication performed."
+    },
+    {
+      "file": "cleanup-audit.json",
+      "sha256": "338ebd06c91ba2a6902e569ad3128b8174860f08704d5336c86132c5a8e13bbe",
+      "bytes": 92743,
+      "note": "Resolved task-created temporary paths, task worktrees and branches, duplicate logs and owned Docker image. User data and delivery/verification artifacts retained."
     }
   ],
-  "updated_at_utc": "2026-09-20T12:35:04.321907+00:00"
+  "updated_at_utc": "2026-09-20T13:41:40.439895+00:00"
 }

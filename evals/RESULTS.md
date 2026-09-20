@@ -83,4 +83,4 @@ Frozen-5 将精确固定的 `@fission-ai/openspec@1.13.1` 资源只读挂载，�
 
 ## 可复核性与清理
 
-提交前对 raw 运行 secrets 扫描，只记录命中文件名和数量，不输出值。保留证据所需的结果、固定任务和冻结 package checkout；runner 临时工作树与可丢下载缓存会在审阅后清理。第三方 Flask 源码、竞品技能文本和原始模型工具输出按 [`../benchmarks/NOTICE.md`](../benchmarks/NOTICE.md) 与 [`../benchmarks/licenses/`](../benchmarks/licenses/) 的来源/许可保存，而不视为本项目 MIT 原创内容。
+提交前对 raw 运行 secrets 扫描，只记录命中文件名和数量，不输出值。保留证据所需的结果、固定任务与冻结 package SHA；对应源码提交保留在 Git 历史中。独立审阅完成后清理了临时 checkout、runner 工作树、下载缓存和本轮 Docker 镜像。第三方 Flask 源码、竞品技能文本和原始模型工具输出按 [`../benchmarks/NOTICE.md`](../benchmarks/NOTICE.md) 与 [`../benchmarks/licenses/`](../benchmarks/licenses/) 的来源/许可保存，而不视为本项目 MIT 原创内容。

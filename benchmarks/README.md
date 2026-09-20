@@ -102,4 +102,4 @@ node benchmarks/summarize-results.mjs evals/results/<summary>.json \
 
 运行 `node benchmarks/cli-performance.mjs --out benchmarks/cli-performance.json`，在 5000 文件的固定 Git 项目中，每组预热 3 次、测量 30 次。计时包含新 Node 进程及输出捕获；测试命令自身成本另外测量，`check` 净开销为估计值。signed `status`/`context` 使用已签名的新鲜记录，不以无记录路径替代。每次迭代、失败启动、硬件和环境条件都保留在 [原始结果](cli-performance.json)。
 
-最新完整迭代测量 `997c94e` 加已注明摘要的 `34da3a0` 两文件补丁。p95 为：signed status 634.104 ms、signed context 779.032 ms、ask 323.139 ms、impact 302.530 ms、validate 210.487 ms、check 净开销 988.123 ms、record 净开销 996.910 ms、land 690.677 ms、init 1050.479 ms。按初稿预算分别为五项未达、四项达到；不能据此宣称所有性能目标通过。共享机器的起止负载均已记录。后续短诊断只用于选择实现，不能替代这组完整样本或宣称达标。
+最新完整迭代测量干净主线 `a18cfba3e9b6a5e4d3bef733b896da80a2b3f9c4`，每组仍为 30 个样本。p95 为：signed status 658.979 ms、signed context 661.796 ms、ask 146.824 ms、impact 195.344 ms、validate 144.018 ms、check 净开销 581.378 ms、record 净开销 940.336 ms、land 612.287 ms、init 446.832 ms。按初稿预算为四项未达、五项达到；未达项是 signed status、signed context 和两种 check 净开销。四轮完整迭代和六次启动记录均保留，不能据此宣称所有性能目标通过。共享机器的起止负载分别为 0.71/0.55/0.73 与 2.96/1.69/1.14；不同轮次的负载不恒定，因此时延变化不能全部归因于代码优化。

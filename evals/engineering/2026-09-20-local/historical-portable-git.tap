@@ -1,0 +1,74 @@
+TAP version 13
+# warning: adding embedded git repository: nested
+# hint: You've added another git repository inside your current repository.
+# hint: Clones of the outer repository will not contain the contents of
+# hint: the embedded repository and will not know how to obtain it.
+# hint: If you meant to add a submodule, use:
+# hint: 
+# hint: \\tgit submodule add <url> nested
+# hint: 
+# hint: If you added this path by mistake, you can remove it from the
+# hint: index with:
+# hint: 
+# hint: \\tgit rm --cached nested
+# hint: 
+# hint: See "git help submodule" for more information.
+# Subtest: fingerprints include ignored tracked code, exclude Keelson, and preserve the real index
+ok 1 - fingerprints include ignored tracked code, exclude Keelson, and preserve the real index
+  ---
+  duration_ms: 81.08951
+  ...
+# Subtest: fingerprints direct contents even when Git cannot see a same-mtime same-size edit
+ok 2 - fingerprints direct contents even when Git cannot see a same-mtime same-size edit
+  ---
+  duration_ms: 50.961412
+  ...
+# Subtest: fingerprints executable mode and symlink targets without following links
+ok 3 - fingerprints executable mode and symlink targets without following links
+  ---
+  duration_ms: 80.031274
+  ...
+# Subtest: fingerprints deleted tracked files and NUL-delimited Git paths with newlines
+ok 4 - fingerprints deleted tracked files and NUL-delimited Git paths with newlines
+  ---
+  duration_ms: 70.862928
+  ...
+# Subtest: fingerprints a tracked gitlink by its nested repository HEAD
+ok 5 - fingerprints a tracked gitlink by its nested repository HEAD
+  ---
+  duration_ms: 88.278277
+  ...
+# Subtest: Git importer search includes untracked code, excludes ignored code, and treats no match as success
+ok 6 - Git importer search includes untracked code, excludes ignored code, and treats no match as success
+  ---
+  duration_ms: 54.561998
+  ...
+# Subtest: a project nested in Git fingerprints its own subtree
+ok 7 - a project nested in Git fingerprints its own subtree
+  ---
+  duration_ms: 52.239126
+  ...
+# Subtest: non-Git fallback frames current file contents without timestamp shortcuts
+ok 8 - non-Git fallback frames current file contents without timestamp shortcuts
+  ---
+  duration_ms: 18.448334
+  ...
+# Subtest: untracked tab names remain paths, rather than being parsed as stage metadata
+ok 9 - untracked tab names remain paths, rather than being parsed as stage metadata
+  ---
+  duration_ms: 75.560291
+  ...
+# Subtest: fingerprint path resolution accepts a filesystem root and refuses escapes
+ok 10 - fingerprint path resolution accepts a filesystem root and refuses escapes
+  ---
+  duration_ms: 1.786331
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 799.405935
