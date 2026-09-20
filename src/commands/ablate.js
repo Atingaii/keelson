@@ -28,8 +28,13 @@ export async function ablate({ flags }, cwd = process.cwd()) {
   for (const pl of surfaceTargets) {
     surfaces.push(pl.instructions, path.join(pl.skillsDir, 'keelson'));
     if (pl.rulesFile) surfaces.push(pl.rulesFile);
+    if (pl.hooks) surfaces.push('.claude/settings.json');
+    if (pl.sessionAdapter === 'opencode-plugin') surfaces.push('.opencode/plugins/keelson-session.js');
+    if (pl.sessionAdapter === 'codebuddy-hooks') surfaces.push('.codebuddy/settings.json');
   }
-  surfaces.push('.claude/settings.json', '.keelson');
+  // Canonical runtime, hook scripts, session runtime and project facts are
+  // stashed as one directory so ablate/restore is byte-for-byte transactional.
+  surfaces.push('.keelson');
   if (flags.dryRun) {
     for (const s of surfaces) if (exists(path.join(root, s))) info(`would stash ${s}`);
     return 0;
