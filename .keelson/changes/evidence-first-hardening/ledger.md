@@ -59,3 +59,9 @@ This repository successfully ran `update --codex --no-hooks` without `--force`, 
 ### Dispatch: full legacy migration review → deep (gpt-5.6-terra)
 Result: fail
 Read-only review accepted exact old hook-command matching, neighboring-hook preservation, current generated-shim language switching and POSIX ablation permissions. It found incomplete legacy ownership coverage: v0.3 Chinese shims and Chinese/guided guidance were not recognized, and the known CodeBuddy copied script was missing from the retirement list. The full supported generation matrix now requires exact baseline-derived fixtures and regression coverage before release; the passing English/lean migration does not establish those variants.
+
+### Note: complete legacy ownership matrix
+The baseline-derived en/zh × lean/guided × guide-on/off fixtures now cover all eight migration combinations. Exact CodeBuddy copied hooks retire; byte edits and hidden user neighbors remain. The integrated suite at `0ffa425` passes 130/130 with no skips; lint and project validation pass. Raw TAP and its digest are retained in `evals/engineering/2026-09-20-local/`. Independent review is still pending, so this result does not close its release gate.
+
+### Note: measured CLI latency baseline
+The fixed 5000-file, 30-sample CLI baseline is retained in `benchmarks/cli-performance.json`. Signed status/context, impact and check overhead exceed the declared p95 targets. Profiling identified repeated Git snapshot creation and private-runtime lookups; an optimization is in progress and must retain content-based freshness, fail closed on unreadable inputs, and preserve all earlier samples. No threshold is being relaxed to turn these misses into passes.

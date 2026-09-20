@@ -285,6 +285,23 @@
         "todo": 0
       },
       "note": "Historical integration or targeted run; consult ledger for revision and scope. Not a statement about final HEAD."
+    },
+    {
+      "file": "main-full-matrix-0ffa425.tap.log",
+      "sha256": "aa37d3ec14e20d1c3d41951fc2f7cefe58e8e2f4f91205133de55310d4df48dd",
+      "bytes": 24267,
+      "source_mtime_utc": "2026-09-20T11:47:29.863266+00:00",
+      "source_commit": "0ffa425",
+      "command": "npm test",
+      "tap_counts": {
+        "tests": 130,
+        "pass": 130,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "note": "Full integrated suite after all v0.3 language/profile/guide ownership variants were added; this is an exact historical revision, not a claim about later HEAD."
     }
   ]
 }
