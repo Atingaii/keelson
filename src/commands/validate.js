@@ -50,10 +50,8 @@ export function validateProject(root) {
     if (!WORK_STATUSES.includes(c.work)) errors.push(`${tag}: status must be one of ${WORK_STATUSES.join('|')}`);
     for (const sec of ['Why', 'What']) if (!hasSection(c.body, sec)) errors.push(`${tag}/change.md: missing "## ${sec}"`);
     if (c.tier === 'spec') {
-      for (const sec of ['How', 'Alternatives', 'Impact']) if (!hasSection(c.body, sec)) errors.push(`${tag}/change.md: spec tier requires "## ${sec}"`);
+      for (const sec of ['How', 'Impact']) if (!hasSection(c.body, sec)) errors.push(`${tag}/change.md: spec tier requires "## ${sec}"`);
       if (!c.deltaFiles.length) warnings.push(`${tag}: spec tier but no delta specs under specs/ (fine only if behaviour does not change)`);
-      const alts = (c.body.match(/^##\s+Alternatives[\s\S]*?(?=^##\s|\Z)/m) || [''])[0];
-      if ((alts.match(/^\s*[-*]\s+/gm) || []).length < 2) errors.push(`${tag}/change.md: Alternatives needs at least two options`);
       if (!hasSection(c.body, 'Acceptance')) warnings.push(`${tag}/change.md: spec tier without "## Acceptance" — landing will refuse until each acceptance item maps to a check`);
     }
     for (const a of c.acceptance) if (!a.kind) warnings.push(`${tag}/change.md: acceptance "${a.text}" does not say how it is checked (— check: \`cmd\` | test: name | manual: how)`);
