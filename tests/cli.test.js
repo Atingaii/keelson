@@ -554,6 +554,9 @@ test('sessions focus independent work items; ready is derived without a user fin
   for (const name of ['alpha', 'beta']) {
     write(dir, `.keelson/changes/${name}/change.md`, read(dir, `.keelson/changes/${name}/change.md`).replace('- [ ] … — check: `…`', '- [x] works — check: `npm test`'));
   }
+  // Execution plans are advisory. A stale/alternative task must not become a second
+  // human-maintained completion signal once the accepted outcome is verified.
+  write(dir, '.keelson/changes/alpha/tasks.md', '- [ ] optional cleanup (effort: light) — verify: `true`\n');
 
   const alphaCheck = run(dir, ['check', '--record', 'alpha verified', '--quiet'], { env: envA });
   assert.match(alphaCheck.stdout, /alpha: ready → run `keelson land alpha`/);
@@ -564,8 +567,10 @@ test('sessions focus independent work items; ready is derived without a user fin
   assert.equal(statusA.focus, 'alpha');
   assert.equal(statusA.changes.find((c) => c.name === 'alpha').work, 'ready');
 
-  // Landing is a lifecycle transition, not something that waits for the user to say "done".
-  run(dir, ['land'], { env: envA });
+  // Landing is a lifecycle transition, not something that waits for the user to say "done",
+  // and it does not wait for a stale planning checkbox either.
+  const landedAlpha = run(dir, ['land'], { env: envA });
+  assert.match(landedAlpha.stderr, /tasks are planning notes, not landing gates/);
   assert.ok(!exists(dir, '.keelson/changes/alpha'));
   assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: envA }).stdout).focus, null);
 
