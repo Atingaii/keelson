@@ -13,6 +13,6 @@ Every non-trivial modifying request follows **ORIENT → BOUND → BUILD → SEN
 - `handoff.md` is reserved for real transfer across people/machines or deliberate ownership change. Normal new sessions reconstruct from change/task/ledger state and optional session focus.
 - Create artifacts lazily. Empty documents are not progress.
 - Repeated failure classes become scoped rules or executable fitness checks; shrink prose after automation carries the invariant.
-- First contact confirms `INTENT.md`; specs/rules grow only when real work exposes durable truth.
+- First contact derives `INTENT.md` from repository evidence; ask the owner only if an unresolved project boundary is load-bearing for current work. Specs/rules grow only when real work exposes durable truth.
 
 The canonical router is `.keelson/skill/SKILL.md`. It classifies conversation intent; lifecycle transitions are derived from work state, not user phrasing.
