@@ -44,8 +44,8 @@
 **在 monorepo 里能用吗？**
 能。Rules 按路径 glob 路由，所以 `packages/api/**` 和 `packages/web/**` 可以各有自己的 rule 文件。Specs 按能力名组织，能力名可以带路径段，比如 `api/orders`。变更上的 `touches` 用同样的 glob。
 
-**我是工程新手。它能帮我学吗？**
-运行 `keelson init --guide`（或在 `config.yaml` 里设 `guide: true`）。代理随后先问场景再问技术，给每个选择配上推荐、原因、备选和取舍，应用一条规则时用一句话解释它，在你决定之后说出对应的工程概念，并在每个 spec 变更收尾时留一段简短的教学说明。文件、门禁和状态与其他任何人相同，所以你做出来的不是一个"新手版"的项目。
+**我是工程新手，Agent 的问题能看懂吗？**
+默认就应该能。Keelson 始终用大白话场景询问真正属于所有者的决定，给出有依据的推荐默认值，并把“我不确定”当成合法路由；不需要开启 `--guide` 才获得这种体验。只有你还希望边做边学时才开启 `keelson init --guide`（或 `guide: true`），它会额外补充已落定决定背后的工程概念和约束理由。文件、gate 和状态完全相同。
 
 **文档一直在长。什么能止住它？**
 Keelson 限制的是**高频读取文件的大小，而不是项目知识总量**。Agent 会在正常 RECONCILE 中自动处理 knowledge-health signal，不把 housekeeping 丢给用户。大型 capability spec 自动变成小型 `spec.md` 索引 + `requirements/*.md` + 按需 `decisions/*.md`；rules 按 scope 拆分；NOW/INTENT 重写为简洁当前状态；旧 runtime evidence/session 自动回收。ADR/spec/rule 的文件数量可以随着项目演进持续增加，但每次只按需读取相关文件。`keelson doctor` 保留为诊断工具，不是日常维护步骤。
