@@ -229,6 +229,84 @@ test('fresh init auto-detects only first-class hosts and otherwise uses the port
   assert.equal(reliable.portableFallback, false);
 });
 
+test('Pi uses its native PI_SESSION_ID without installing adapter files', () => {
+  const dir = tmpProject({});
+  const piEnv = { ...env, PI_SESSION_ID: 'pi-native-session' };
+  run(dir, ['init', '--tools', 'pi', '--no-hooks'], { env });
+  run(dir, ['new', 'pi-work'], { env: piEnv });
+  const focus = JSON.parse(run(dir, ['focus', '--json'], { env: piEnv }).stdout);
+  assert.equal(focus.focus, 'pi-work');
+  assert.ok(exists(dir, '.keelson/.runtime/sessions'));
+  assert.ok(!exists(dir, '.pi/extensions/keelson-session.ts'));
+});
+
+test('OpenCode native plugin injects an opaque session identity into Bash', async () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--tools', 'opencode'], { env });
+  assert.ok(exists(dir, '.opencode/plugins/keelson-session.js'));
+  assert.equal(read(dir, '.opencode/plugins/keelson-session.js'), fs.readFileSync(path.resolve('hooks/opencode-session.mjs'), 'utf8'));
+
+  const mod = await import(pathToFileURL(path.resolve('hooks/opencode-session.mjs')).href + `?t=${Date.now()}`);
+  const hooks = await mod.default({ platform: 'linux', env: {} });
+  const input = { tool: 'bash', sessionID: 'opencode-session-1' };
+  const output = { args: { command: 'keelson status' } };
+  await hooks['tool.execute.before'](input, output);
+  assert.match(output.args.command, /^export KEELSON_SESSION_ID='[0-9a-f]{32}'; keelson status$/);
+  const opaque = output.args.command.match(/KEELSON_SESSION_ID='([0-9a-f]{32})'/)[1];
+
+  run(dir, ['new', 'open-work'], { env: { ...env, KEELSON_SESSION_ID: opaque } });
+  assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: { ...env, KEELSON_SESSION_ID: opaque } }).stdout).focus, 'open-work');
+  run(dir, ['doctor', '--json'], { env });
+});
+
+test('CodeBuddy native hooks inject session identity and preserve unrelated settings', () => {
+  const dir = tmpProject({ '.codebuddy/settings.json': JSON.stringify({ theme: 'mine', hooks: { Notification: [{ hooks: [{ type: 'command', command: 'echo mine' }] }] } }, null, 2) + '\n' });
+  run(dir, ['init', '--tools', 'codebuddy'], { env });
+  assert.ok(exists(dir, '.keelson/hooks/codebuddy-session.mjs'));
+  const settings = JSON.parse(read(dir, '.codebuddy/settings.json'));
+  assert.equal(settings.theme, 'mine');
+  assert.ok(settings.hooks.SessionStart);
+  assert.ok(settings.hooks.UserPromptSubmit);
+  assert.ok(settings.hooks.PreToolUse);
+  assert.ok(settings.hooks.Notification);
+
+  const input = JSON.stringify({
+    session_id: 'codebuddy-session-1',
+    cwd: dir,
+    hook_event_name: 'PreToolUse',
+    tool_name: 'Bash',
+    tool_input: { command: 'keelson status' },
+  });
+  const out = execFileSync('node', [path.resolve('hooks/codebuddy-session.mjs')], { input, encoding: 'utf8' });
+  const payload = JSON.parse(out);
+  const command = payload.hookSpecificOutput.modifiedInput.command;
+  assert.match(command, /^export KEELSON_SESSION_ID='[0-9a-f]{32}'; keelson status$/);
+  const opaque = command.match(/KEELSON_SESSION_ID='([0-9a-f]{32})'/)[1];
+
+  run(dir, ['new', 'buddy-work'], { env: { ...env, KEELSON_SESSION_ID: opaque } });
+  assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: { ...env, KEELSON_SESSION_ID: opaque } }).stdout).focus, 'buddy-work');
+  run(dir, ['doctor', '--json'], { env });
+
+  run(dir, ['uninstall'], { env });
+  const after = JSON.parse(read(dir, '.codebuddy/settings.json'));
+  assert.equal(after.theme, 'mine');
+  assert.ok(after.hooks.Notification);
+  assert.equal(after.hooks.SessionStart, undefined);
+  assert.equal(after.hooks.UserPromptSubmit, undefined);
+  assert.equal(after.hooks.PreToolUse, undefined);
+});
+
+test('doctor detects native session adapter drift and update repairs it', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--tools', 'opencode'], { env });
+  write(dir, '.opencode/plugins/keelson-session.js', '// stale\n');
+  let doc = run(dir, ['doctor', '--json'], { env, allowFail: true });
+  assert.equal(doc.code, 1);
+  assert.match(doc.stdout + doc.stderr, /OpenCode: session adapter drifted/);
+  run(dir, ['update'], { env });
+  run(dir, ['doctor', '--json'], { env });
+});
+
 test('guided profile keeps guided blocks; lang zh installs the Chinese skill when present', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--profile', 'guided', '--no-hooks'], { env });
@@ -692,8 +770,8 @@ test('init is the only step: first-class platform flags, standards-first surface
   assert.equal(list.length, 8);
   assert.deepEqual(list.map((p) => p.id).sort(), ['claude', 'codex', 'opencode', 'pi', 'gemini', 'kiro', 'codebuddy', 'agents'].sort());
   assert.ok(list.find((p) => p.id === 'kiro').configured);
-  assert.equal(list.find((p) => p.id === 'claude').sessionFocus, 'native');
-  assert.equal(list.find((p) => p.id === 'codex').sessionFocus, 'degraded');
+  for (const id of ['claude', 'opencode', 'pi', 'codebuddy']) assert.equal(list.find((p) => p.id === id).sessionFocus, 'native', id);
+  for (const id of ['codex', 'gemini', 'kiro']) assert.equal(list.find((p) => p.id === id).sessionFocus, 'degraded', id);
   run(dir, ['uninstall'], { env });
   assert.ok(!exists(dir, '.kiro/steering/keelson.md'));
   assert.ok(!exists(dir, '.cursor/skills/keelson'));
