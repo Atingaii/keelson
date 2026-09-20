@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { requireProjectRoot, projectPaths, PKG_ROOT } from '../lib/paths.js';
+import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { exists, readOr, readJson, walk } from '../lib/fs.js';
 import { loadConfig, CONFIG_VERSION } from '../lib/config.js';
 import { PLATFORMS, installTargets, managedStateMatches, readManagedState, renderSkillFiles, renderSkillShim, residentBlock, workflowContent, sessionAdapterProblems } from '../platforms/index.js';
@@ -9,7 +9,7 @@ import { projectStatus } from './status.js';
 import { parseFrontmatter } from '../lib/markdown.js';
 import { detectLocal } from '../lib/models.js';
 import { knowledgeHealth } from '../lib/health.js';
-import { listSessionStates } from '../lib/session.js';
+import { listSessionStates, readSession } from '../lib/session.js';
 import { maintainRuntime } from '../lib/maintenance.js';
 import { ok, warn, fail, heading, dim } from '../lib/out.js';
 
@@ -31,35 +31,31 @@ export async function doctor({ flags }, cwd = process.cwd()) {
   const rawVersion = Number((readOr(p.config, '').match(/^version:\s*(\d+)/m) || [])[1] ?? 1);
   if (rawVersion < CONFIG_VERSION) add('warn', `config.yaml is v${rawVersion}; run \`keelson update\` to migrate to v${CONFIG_VERSION}`);
 
+  const managed = readManagedState(root);
+  const vendor = cfg.vendor === true || managed?.vendor === true;
   const normalize = (text) => String(text ?? '').replace(/\r\n?/g, '\n');
-  const expectedSkillFiles = renderSkillFiles(cfg.lang, cfg.profile, PKG_VERSION);
-  const expectedSkillPaths = expectedSkillFiles.map((f) => f.rel).sort();
-  const actualSkillPaths = walk(p.skill);
-  if (JSON.stringify(actualSkillPaths) !== JSON.stringify(expectedSkillPaths)) {
-    add('error', 'canonical skill file set drifted from this CLI version (run `keelson update`)');
+  if (vendor) {
+    const expectedSkillFiles = renderSkillFiles(cfg.lang, cfg.profile, PKG_VERSION);
+    const expectedSkillPaths = expectedSkillFiles.map((f) => f.rel).sort();
+    const actualSkillPaths = walk(p.skill);
+    if (JSON.stringify(actualSkillPaths) !== JSON.stringify(expectedSkillPaths)) add('error', 'canonical skill file set drifted from this CLI version (run `keelson update`)');
+    for (const file of expectedSkillFiles) {
+      const actual = readOr(path.join(p.skill, file.rel), null);
+      if (actual !== null && normalize(actual) !== file.content) add('error', `canonical skill drift: .keelson/skill/${file.rel} (run \`keelson update\`)`);
+    }
+    if (exists(p.workflow) && normalize(readOr(p.workflow)) !== workflowContent(cfg.lang, cfg.guide)) add('error', 'canonical workflow drifted from config/profile (run `keelson update`)');
+    for (const suffix of ['.keelson-tmp', '.keelson-bak']) if (exists(p.skill + suffix)) add('warn', `interrupted runtime replacement residue: .keelson/skill${suffix.replace('.keelson', '')} (run \`keelson update\`)`);
+    const canonicalSkill = path.join(p.skill, 'SKILL.md');
+    if (!exists(canonicalSkill)) add('error', 'canonical skill missing at .keelson/skill/SKILL.md (run `keelson update`)');
+    else {
+      const v = parseFrontmatter(readOr(canonicalSkill)).data.version ?? null;
+      if (v && v !== PKG_VERSION) add('warn', `canonical skill is ${v}, CLI is ${PKG_VERSION} (run \`keelson update\`)`);
+    }
+    if (!exists(p.workflow)) add('error', 'canonical workflow missing at .keelson/workflow.md (run `keelson update`)');
   }
-  for (const file of expectedSkillFiles) {
-    const actual = readOr(path.join(p.skill, file.rel), null);
-    if (actual !== null && normalize(actual) !== file.content) add('error', `canonical skill drift: .keelson/skill/${file.rel} (run \`keelson update\`)`);
-  }
-  if (exists(p.workflow) && normalize(readOr(p.workflow)) !== workflowContent(cfg.lang, cfg.guide)) {
-    add('error', 'canonical workflow drifted from config/profile (run `keelson update`)');
-  }
-  for (const suffix of ['.keelson-tmp', '.keelson-bak']) {
-    if (exists(p.skill + suffix)) add('warn', `interrupted runtime replacement residue: .keelson/skill${suffix.replace('.keelson', '')} (run \`keelson update\`)`);
-  }
-
-  const canonicalSkill = path.join(p.skill, 'SKILL.md');
-  if (!exists(canonicalSkill)) add('error', 'canonical skill missing at .keelson/skill/SKILL.md (run `keelson update`)');
-  else {
-    const v = parseFrontmatter(readOr(canonicalSkill)).data.version ?? null;
-    if (v && v !== PKG_VERSION) add('warn', `canonical skill is ${v}, CLI is ${PKG_VERSION} (run \`keelson update\`)`);
-  }
-  if (!exists(p.workflow)) add('error', 'canonical workflow missing at .keelson/workflow.md (run `keelson update`)');
 
   for (const t of cfg.tools ?? []) if (!PLATFORMS[t]) add('error', `unknown tool "${t}" in config.yaml`);
   const currentTargets = installTargets((cfg.tools ?? []).filter((t) => PLATFORMS[t]), cfg);
-  const managed = readManagedState(root);
   if (!managed) add('warn', 'generated-surface ownership manifest is missing (run `keelson update`)');
   else {
     if (managed.packageVersion && managed.packageVersion !== PKG_VERSION) add('warn', `managed surfaces were last written by Keelson ${managed.packageVersion}; CLI is ${PKG_VERSION}`);
@@ -93,8 +89,8 @@ export async function doctor({ flags }, cwd = process.cwd()) {
       const settings = readJson(path.join(root, '.claude', 'settings.json'), {}) ?? {};
       const has = (ev, script) => (settings.hooks?.[ev] ?? []).some((g) => (g.hooks ?? []).some((h) => String(h.command ?? '').includes(script)));
       const registrations = [
-        ['SessionStart', 'session-start.mjs'],
-        ['UserPromptSubmit', 'prompt-state.mjs'],
+        ['SessionStart', 'session-start'],
+        ['UserPromptSubmit', 'prompt-state'],
       ];
       for (const [event, script] of registrations) {
         const registered = has(event, script);
@@ -102,9 +98,6 @@ export async function doctor({ flags }, cwd = process.cwd()) {
           add('warn', `${pl.label}: ${event} hook not registered (fine after init --no-hooks; the agent falls back to the discovery workflow)`);
           continue;
         }
-        const installed = path.join(p.hooks, script);
-        if (!exists(installed)) add('error', `registered hook script missing: .keelson/hooks/${script}`);
-        else if (normalize(readOr(installed)) !== normalize(readOr(path.join(PKG_ROOT, 'hooks', script)))) add('error', `registered hook script drifted: .keelson/hooks/${script} (run \`keelson update\`)`);
       }
     }
   }
@@ -123,7 +116,26 @@ export async function doctor({ flags }, cwd = process.cwd()) {
 
   const activeNames = new Set(st.changes.map((c) => c.name));
   for (const session of listSessionStates(root)) {
-    if (session.change && !activeNames.has(session.change)) add('warn', `stale session focus points to missing change "${session.change}" under .keelson/.runtime/sessions/`);
+    if (session.change && !activeNames.has(session.change)) add('warn', `stale session focus points to missing change "${session.change}" in Keelson local runtime`);
+  }
+
+  let sessionStatus = null;
+  if (flags.session) {
+    const current = readSession(root);
+    sessionStatus = { current: { available: current.available, source: current.source, focusedChange: current.state?.change ?? null }, tools: [] };
+    for (const tool of cfg.tools ?? []) {
+      if (tool === 'codex') {
+        const available = Boolean(process.env.CODEX_THREAD_ID);
+        sessionStatus.tools.push({ tool, available, mode: available ? 'native' : 'degraded', source: available ? 'CODEX_THREAD_ID' : null, reason: available ? null : 'CODEX_THREAD_ID is unavailable in this process' });
+      } else if (tool === 'pi') {
+        const available = Boolean(process.env.PI_SESSION_ID);
+        sessionStatus.tools.push({ tool, available, mode: available ? 'native' : 'degraded', source: available ? 'PI_SESSION_ID' : null, reason: available ? null : 'PI_SESSION_ID is unavailable in this process' });
+      } else if (tool === 'claude' || tool === 'codebuddy') {
+        const available = Boolean(process.env.KEELSON_SESSION_ID);
+        sessionStatus.tools.push({ tool, available, mode: available ? 'bridge' : 'degraded', source: available ? 'KEELSON_SESSION_ID' : null, reason: available ? null : 'this command did not receive a bridge session identity' });
+      } else sessionStatus.tools.push({ tool, available: false, mode: 'degraded', source: null, reason: 'this host has no zero-copy session bridge' });
+    }
+    for (const item of sessionStatus.tools) add('info', `session ${item.tool}: ${item.mode}${item.source ? ` via ${item.source}` : ` — ${item.reason}`}`);
   }
 
   const health = knowledgeHealth(root, cfg, p);
@@ -140,6 +152,6 @@ export async function doctor({ flags }, cwd = process.cwd()) {
   const errs = findings.filter((f) => f.level === 'error').length;
   if (!findings.length) ok('everything in place');
   else console.log(`${errs} error${errs === 1 ? '' : 's'}, ${findings.filter((f) => f.level === 'warn').length} warnings`);
-  if (flags.json) console.log(JSON.stringify({ ok: !errs, version: PKG_VERSION, findings }, null, 2));
+  if (flags.json) console.log(JSON.stringify({ ok: !errs, version: PKG_VERSION, findings, session: sessionStatus }, null, 2));
   return errs ? 1 : 0;
 }

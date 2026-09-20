@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { exists, listFiles, rmrf, walk } from './fs.js';
+import { runtimeDir } from './runtime-path.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -22,7 +23,7 @@ export function maintainRuntime(root, {
   evidenceMaxAgeDays = 14,
   maxEvidenceFiles = 200,
 } = {}) {
-  const runtime = path.join(root, '.keelson', '.runtime');
+  const runtime = runtimeDir(root);
   const sessions = path.join(runtime, 'sessions');
   const evidence = path.join(runtime, 'evidence');
   const result = { sessionsRemoved: 0, evidenceRemoved: 0 };

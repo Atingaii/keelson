@@ -6,6 +6,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { runtimeDir } from '../src/lib/runtime-path.js';
 
 const hash = (value, n) => crypto.createHash('sha256').update(String(value)).digest('hex').slice(0, n);
 const readJson = (p) => { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; } };
@@ -24,7 +25,7 @@ if (!sessionId || !fs.existsSync(path.join(root, '.keelson'))) process.exit(0);
 
 const opaque = hash(`codebuddy:${sessionId}`, 32);
 const key = hash(opaque, 24);
-const sessionFile = path.join(root, '.keelson', '.runtime', 'sessions', `${key}.json`);
+const sessionFile = path.join(runtimeDir(root), 'sessions', `${key}.json`);
 const session = readJson(sessionFile) || { schema: 1, change: null, createdAt: new Date().toISOString() };
 session.updatedAt = new Date().toISOString();
 session.source = 'codebuddy';

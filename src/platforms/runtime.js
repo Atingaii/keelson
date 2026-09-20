@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { PKG_ROOT } from '../lib/paths.js';
-import { exists, read, write, rmrf, replaceDirSafe } from '../lib/fs.js';
+import { exists, read, write, rmrf, replaceDirSafe, withLock } from '../lib/fs.js';
 import { PLATFORMS } from './registry.js';
 
 export const CANONICAL_SKILL_DIR = path.join('.keelson', 'skill');
@@ -50,8 +50,8 @@ export function renderSkillShim(lang, version) {
   const full = stampVersion(read(path.join(skillSource(lang), 'SKILL.md')).replace(/\r\n?/g, '\n'), version);
   const front = full.match(/^---\n[\s\S]*?\n---/)?.[0] ?? '---\nname: keelson\ndescription: Keelson project skill\n---';
   const body = lang === 'zh'
-    ? '# Keelson\n\n这是发现入口，不是技能真源。请立即读取项目根目录下的 `.keelson/skill/SKILL.md` 并按其执行；任务需要更深指导时，只从 `.keelson/skill/references/` 按需加载。不要把完整指导复制回此文件；`keelson update` 会重建这个 shim。\n'
-    : '# Keelson\n\nThis is a discovery shim, not the source of truth. Read `.keelson/skill/SKILL.md` from the project root now and follow it; load deeper guidance only from `.keelson/skill/references/` as routed there. Do not copy the full guidance back into this file; `keelson update` regenerates this shim.\n';
+    ? '# Keelson\n\n这是发现入口，不是技能真源。请立即运行 `keelson guide` 并按其执行；需要更深指导时运行 `keelson guide <reference>`。只有项目需要提交审计副本时才使用 `keelson init --vendor`。\n'
+    : '# Keelson\n\nThis is a discovery shim, not the source of truth. Run `keelson guide` now and follow it; for a routed topic run `keelson guide <reference>`. Use `keelson init --vendor` only when this project needs a checked-in copy of the guidance.\n';
   return `${front}\n\n${body}`;
 }
 
@@ -75,8 +75,10 @@ export function plannedSkillFiles(root, target, { lang, version }) {
 export function installCanonicalSkill(root, { lang, profile, version }) {
   const dest = path.join(root, CANONICAL_SKILL_DIR);
   const files = renderSkillFiles(lang, profile, version);
-  replaceDirSafe(dest, (tmp) => {
-    for (const f of files) write(path.join(tmp, f.rel), f.content);
+  withLock(dest, () => {
+    replaceDirSafe(dest, (tmp) => {
+      for (const f of files) write(path.join(tmp, f.rel), f.content);
+    });
   });
   return path.relative(root, dest);
 }
@@ -85,7 +87,7 @@ export function installSkill(root, target, { lang, version }) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
   const dest = path.join(root, p.skillsDir, 'keelson');
   const content = renderSkillShim(lang, version);
-  replaceDirSafe(dest, (tmp) => write(path.join(tmp, 'SKILL.md'), content));
+  withLock(dest, () => replaceDirSafe(dest, (tmp) => write(path.join(tmp, 'SKILL.md'), content)));
   return path.relative(root, dest);
 }
 

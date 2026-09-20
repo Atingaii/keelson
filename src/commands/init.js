@@ -56,19 +56,6 @@ export function detectChecks(root) {
   return checks;
 }
 
-export function ensureGitignore(root) {
-  const gi = path.join(root, '.gitignore');
-  const cur = readOr(gi, '');
-  const hasRuntime = /^\.keelson\/\.runtime\/?$/m.test(cur);
-  const hasLegacy = /^\.keelson\/\.local\/?$/m.test(cur);
-  if (hasRuntime && hasLegacy) return false;
-  let add = '';
-  if (!hasRuntime) add += '.keelson/.runtime/\n';
-  if (!hasLegacy) add += '.keelson/.local/\n';
-  write(gi, `${cur.replace(/\n*$/, cur ? '\n' : '')}# Keelson: per-machine runtime state and check evidence\n${add}`);
-  return true;
-}
-
 export async function init({ flags }, cwd = process.cwd()) {
   const root = path.resolve(flags.dir ?? cwd);
   const existing = findProjectRoot(root);
@@ -115,6 +102,7 @@ export async function init({ flags }, cwd = process.cwd()) {
   for (const id of retiredModelOverrides) delete cfg.models[id];
   cfg.lang = flags.lang ?? cfg.lang ?? 'en';
   cfg.profile = flags.profile ?? cfg.profile ?? 'lean';
+  if (flags.vendor) cfg.vendor = true;
   if (flags.guide !== undefined) cfg.guide = flags.guide !== 'false' && flags.guide !== false;
   if (flags.hooks && flags.noHooks) throw new Error('choose either --hooks or --no-hooks, not both');
   if (flags.hooks) cfg.hooks = true;
@@ -131,9 +119,11 @@ export async function init({ flags }, cwd = process.cwd()) {
     heading(`Keelson ${fresh ? 'init' : 'update'} (dry run) in ${root}`);
     const mapPath = path.join(root, '.keelson', 'README.md');
     console.log(`  ${(!exists(mapPath) ? 'create' : read(mapPath) === projectMap ? 'unchanged' : 'update').padEnd(9)} .keelson/README.md`);
-    const workflow = plannedWorkflowFile(root, { lang: cfg.lang, guide: cfg.guide });
-    console.log(`  ${workflow.status.padEnd(9)} ${workflow.path}`);
-    for (const f of plannedCanonicalSkillFiles(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
+    if (cfg.vendor) {
+      const workflow = plannedWorkflowFile(root, { lang: cfg.lang, guide: cfg.guide });
+      console.log(`  ${workflow.status.padEnd(9)} ${workflow.path}`);
+      for (const f of plannedCanonicalSkillFiles(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
+    }
     for (const rel of plannedManagedRemovals(root, targets)) console.log(`  ${'remove'.padEnd(9)} ${rel} (stale managed surface)`);
     const dryDiscovery = new Set();
     for (const t of targets) {
@@ -186,15 +176,16 @@ export async function init({ flags }, cwd = process.cwd()) {
   if (seed('INTENT.md', p.intent)) ok('.keelson/INTENT.md (the agent derives it from repository evidence on first contact; owner questions only when a boundary is load-bearing)');
   if (seed('NOW.md', p.now)) ok('.keelson/NOW.md');
   // Progressive disclosure: ROADMAP, GLOSSARY, rules/, specs/, and changes/ are created only when the project actually needs them.
-  if (ensureGitignore(root)) ok('.gitignore: .keelson/.runtime/ (session focus and evidence stay on this machine)');
   saveConfig(p.config, cfg);
   ok(`.keelson/config.yaml${rawVersion < CONFIG_VERSION ? ` (migrated v${rawVersion} → v${CONFIG_VERSION})` : ''}`);
 
   for (const rel of reconcileManagedTargets(root, targets)) ok(`removed stale managed surface → ${rel}`);
 
-  const workflowPath = installWorkflow(root, { lang: cfg.lang, guide: cfg.guide });
-  const canonicalSkillPath = installCanonicalSkill(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION });
-  ok(`canonical runtime → ${workflowPath}; ${canonicalSkillPath}`);
+  if (cfg.vendor) {
+    const workflowPath = installWorkflow(root, { lang: cfg.lang, guide: cfg.guide });
+    const canonicalSkillPath = installCanonicalSkill(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION });
+    ok(`vendored guidance → ${workflowPath}; ${canonicalSkillPath}`);
+  } else info('guidance stays in the installed package; agents load it with `keelson guide`');
 
   const discoveryInstalled = new Set();
   for (const t of targets) {
@@ -215,7 +206,7 @@ export async function init({ flags }, cwd = process.cwd()) {
     if (sessionFiles.length) ok(`${t.label}: native session adapter → ${sessionFiles.join(', ')}`);
     else if (t.sessionAdapter === 'pi-env') info(`${t.label}: native session focus uses PI_SESSION_ID; no adapter file needed`);
   }
-  writeManagedState(root, targets, PKG_VERSION);
+  writeManagedState(root, targets, PKG_VERSION, { vendor: cfg.vendor });
   ok('.keelson/manifest.json (generated-surface ownership)');
 
   try {

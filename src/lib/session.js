@@ -1,15 +1,16 @@
 import crypto from 'node:crypto';
+import { exists, listFiles, readJson, rmrf, withLock, writeJson } from './fs.js';
 import path from 'node:path';
-import { exists, listFiles, readJson, rmrf, writeJson } from './fs.js';
+import { runtimeDir } from './runtime-path.js';
 
 const SCHEMA = 1;
 
-export const runtimeDir = (root) => path.join(root, '.keelson', '.runtime');
 export const sessionsDir = (root) => path.join(runtimeDir(root), 'sessions');
 
 export function resolveSessionIdentity(env = process.env) {
   const sources = [
     ['KEELSON_SESSION_ID', env.KEELSON_SESSION_ID],
+    ['CODEX_THREAD_ID', env.CODEX_THREAD_ID],
     // Pi exposes the current session to every shell tool invocation.
     ['PI_SESSION_ID', env.PI_SESSION_ID],
   ];
@@ -40,16 +41,19 @@ export function writeSession(root, patch, env = process.env) {
   const id = resolveSessionIdentity(env);
   if (!id) return null;
   const file = sessionFile(root, id.key);
-  const prev = readJson(file, {}) ?? {};
-  const next = {
-    schema: SCHEMA,
-    change: null,
-    createdAt: prev.createdAt ?? new Date().toISOString(),
-    ...prev,
-    ...patch,
-    updatedAt: new Date().toISOString(),
-  };
-  writeJson(file, next);
+  const next = withLock(file, () => {
+    const prev = readJson(file, {}) ?? {};
+    const state = {
+      schema: SCHEMA,
+      change: null,
+      createdAt: prev.createdAt ?? new Date().toISOString(),
+      ...prev,
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    };
+    writeJson(file, state);
+    return state;
+  });
   return { key: id.key, file, state: next };
 }
 

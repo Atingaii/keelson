@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { PKG_ROOT } from '../lib/paths.js';
-import { exists, mkdirp, read, readJson, readOr, rmrf, write, writeJson } from '../lib/fs.js';
+import { exists, read, readJson, readOr, rmrf, write, writeJson } from '../lib/fs.js';
 import { installTargets, PLATFORMS } from './registry.js';
 import { residentBlock } from './runtime.js';
 
@@ -43,11 +42,7 @@ const managedTarget = (t) => ({
   hooks: Boolean(t.hooks),
   sessionAdapter: t.sessionAdapter ?? null,
 });
-const sessionAdapterPaths = (t) => {
-  if (t.sessionAdapter === 'opencode-plugin') return ['.opencode/plugins/keelson-session.js'];
-  if (t.sessionAdapter === 'codebuddy-hooks') return ['.keelson/hooks/codebuddy-session.mjs'];
-  return [];
-};
+const sessionAdapterPaths = () => [];
 const targetKey = (t) => [t.instructions, t.skillsDir, t.instructionsFormat ?? '', t.rulesFile ?? '', t.rulesFormat ?? '', Boolean(t.hooks), t.sessionAdapter ?? ''].join('|');
 const managedSurfacePaths = (t) => [path.join(t.skillsDir, 'keelson'), t.instructions, t.rulesFile, ...sessionAdapterPaths(t)].filter(Boolean);
 
@@ -68,8 +63,8 @@ export function managedStateMatches(root, targets) {
   return a === b;
 }
 
-export function writeManagedState(root, targets, packageVersion) {
-  writeJson(path.join(root, MANAGED_STATE), { schema: 1, packageVersion, targets: targets.map(managedTarget) });
+export function writeManagedState(root, targets, packageVersion, { vendor = false } = {}) {
+  writeJson(path.join(root, MANAGED_STATE), { schema: 1, packageVersion, vendor: Boolean(vendor), targets: targets.map(managedTarget) });
   if (exists(path.join(root, LEGACY_MANAGED_STATE))) rmrf(path.join(root, LEGACY_MANAGED_STATE));
   return MANAGED_STATE;
 }
@@ -127,7 +122,11 @@ export function installInstructions(root, target, { lang }) {
   const touched = [];
   const file = path.join(root, p.instructions);
   if (p.instructionsFormat === 'kiro') {
-    write(file, `---\ninclusion: always\n---\n\n${stripMarkers(block)}\n`);
+    const existing = readOr(file, '');
+    const front = existing.match(/^(---\n[\s\S]*?\n---\n?)/)?.[1];
+    if (front) write(file, front.replace(/\n*$/, '\n\n') + upsertBlock(existing.slice(front.length), block));
+    else if (existing) write(file, upsertBlock(existing, block));
+    else write(file, `---\ninclusion: always\n---\n\n${block.trim()}\n`);
   } else {
     write(file, upsertBlock(readOr(file, ''), block));
   }
@@ -141,12 +140,9 @@ export function installInstructions(root, target, { lang }) {
   return touched;
 }
 
-const HOOK_MARK = '.keelson/hooks/';
+const HOOK_MARK = 'keelson hook ';
 
 export function installHooks(root) {
-  const hooksDir = path.join(root, '.keelson', 'hooks');
-  mkdirp(hooksDir);
-  for (const f of ['session-start.mjs', 'prompt-state.mjs']) write(path.join(hooksDir, f), read(path.join(PKG_ROOT, 'hooks', f)));
   const settingsPath = path.join(root, '.claude', 'settings.json');
   const settings = readJson(settingsPath, {}) ?? {};
   settings.hooks ??= {};
@@ -154,14 +150,14 @@ export function installHooks(root) {
     settings.hooks[event] ??= [];
     const already = settings.hooks[event].some((g) => (g.hooks ?? []).some((h) => String(h.command ?? '').includes(`${HOOK_MARK}${script}`)));
     if (already) return;
-    const group = { hooks: [{ type: 'command', command: `node "$CLAUDE_PROJECT_DIR/.keelson/hooks/${script}"`, timeout: 10 }] };
+    const group = { hooks: [{ type: 'command', command: `keelson hook ${script.replace(/\.mjs$/, '')}`, timeout: 10 }] };
     if (matcher) group.matcher = matcher;
     settings.hooks[event].push(group);
   };
   ensure('SessionStart', 'startup|resume|clear|compact', 'session-start.mjs');
   ensure('UserPromptSubmit', null, 'prompt-state.mjs');
   writeJson(settingsPath, settings);
-  return ['.keelson/hooks/session-start.mjs', '.keelson/hooks/prompt-state.mjs', '.claude/settings.json'];
+  return ['.claude/settings.json'];
 }
 
 export function removeHooks(root) {
@@ -176,7 +172,7 @@ export function removeHooks(root) {
   writeJson(settingsPath, settings);
 }
 
-const CODEBUDDY_SESSION_MARK = '.keelson/hooks/codebuddy-session.mjs';
+const CODEBUDDY_SESSION_MARK = 'keelson hook codebuddy-session';
 
 function ensureCodeBuddyHook(settings, event, matcher = null) {
   settings.hooks ??= {};
@@ -192,7 +188,7 @@ function ensureCodeBuddyHook(settings, event, matcher = null) {
   const group = {
     hooks: [{
       type: 'command',
-      command: 'node "$CODEBUDDY_PROJECT_DIR/.keelson/hooks/codebuddy-session.mjs"',
+      command: CODEBUDDY_SESSION_MARK,
       timeout: 10,
     }],
   };
@@ -204,22 +200,14 @@ export function installSessionAdapter(root, target) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
   if (!p?.sessionAdapter || p.sessionAdapter === 'pi-env' || p.sessionAdapter === 'claude-hooks') return [];
 
-  if (p.sessionAdapter === 'opencode-plugin') {
-    const dest = path.join(root, '.opencode', 'plugins', 'keelson-session.js');
-    write(dest, read(path.join(PKG_ROOT, 'hooks', 'opencode-session.mjs')));
-    return [path.relative(root, dest)];
-  }
-
   if (p.sessionAdapter === 'codebuddy-hooks') {
-    const script = path.join(root, '.keelson', 'hooks', 'codebuddy-session.mjs');
-    write(script, read(path.join(PKG_ROOT, 'hooks', 'codebuddy-session.mjs')));
     const settingsPath = path.join(root, '.codebuddy', 'settings.json');
     const settings = readJson(settingsPath, {}) ?? {};
     ensureCodeBuddyHook(settings, 'SessionStart');
     ensureCodeBuddyHook(settings, 'UserPromptSubmit');
     ensureCodeBuddyHook(settings, 'PreToolUse', 'Bash|PowerShell');
     writeJson(settingsPath, settings);
-    return [path.relative(root, script), path.relative(root, settingsPath)];
+    return [path.relative(root, settingsPath)];
   }
 
   return [];
@@ -230,21 +218,7 @@ export function plannedSessionAdapterFiles(root, target) {
   const rows = [];
   if (!p?.sessionAdapter || p.sessionAdapter === 'pi-env' || p.sessionAdapter === 'claude-hooks') return rows;
 
-  const compareFile = (rel, expected) => {
-    const full = path.join(root, rel);
-    const actual = readOr(full, null);
-    rows.push({
-      path: rel,
-      status: actual === null ? 'create' : actual.replace(/\r\n?/g, '\n') === expected.replace(/\r\n?/g, '\n') ? 'unchanged' : 'update',
-    });
-  };
-
-  if (p.sessionAdapter === 'opencode-plugin') {
-    compareFile('.opencode/plugins/keelson-session.js', read(path.join(PKG_ROOT, 'hooks', 'opencode-session.mjs')));
-  }
-
   if (p.sessionAdapter === 'codebuddy-hooks') {
-    compareFile('.keelson/hooks/codebuddy-session.mjs', read(path.join(PKG_ROOT, 'hooks', 'codebuddy-session.mjs')));
     const settings = readJson(path.join(root, '.codebuddy', 'settings.json'), {}) ?? {};
     const has = (event, matcher = null) => (settings.hooks?.[event] ?? []).some((g) =>
       (matcher === null || g.matcher === matcher) &&
@@ -277,32 +251,11 @@ function removeCodeBuddyHooks(root) {
   return true;
 }
 
-function removeEmptyDir(dir) {
-  if (!exists(dir) || !fs.statSync(dir).isDirectory()) return false;
-  if (fs.readdirSync(dir).length) return false;
-  rmrf(dir);
-  return true;
-}
-
 export function removeSessionAdapter(root, target, keep = new Set()) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
   const removed = [];
-  if (p?.sessionAdapter === 'opencode-plugin') {
-    const rel = '.opencode/plugins/keelson-session.js';
-    if (!keep.has(rel) && exists(path.join(root, rel))) {
-      rmrf(path.join(root, rel));
-      removed.push(rel);
-      removeEmptyDir(path.join(root, '.opencode', 'plugins'));
-    }
-  }
   if (p?.sessionAdapter === 'codebuddy-hooks') {
-    const rel = '.keelson/hooks/codebuddy-session.mjs';
-    if (!keep.has(rel) && exists(path.join(root, rel))) {
-      rmrf(path.join(root, rel));
-      removed.push(rel);
-    }
-    if (!keep.has(rel) && removeCodeBuddyHooks(root)) removed.push('.codebuddy/settings.json (Keelson hooks)');
-    if (!keep.has(rel)) removeEmptyDir(path.join(root, '.keelson', 'hooks'));
+    if (removeCodeBuddyHooks(root)) removed.push('.codebuddy/settings.json (Keelson hooks)');
   }
   return removed;
 }
@@ -312,21 +265,7 @@ export function sessionAdapterProblems(root, target) {
   const problems = [];
   if (!p?.sessionAdapter || p.sessionAdapter === 'pi-env' || p.sessionAdapter === 'claude-hooks') return problems;
 
-  if (p.sessionAdapter === 'opencode-plugin') {
-    const rel = '.opencode/plugins/keelson-session.js';
-    const actual = readOr(path.join(root, rel), null);
-    const expected = read(path.join(PKG_ROOT, 'hooks', 'opencode-session.mjs'));
-    if (actual === null) problems.push(`${p.label}: session adapter missing at ${rel}`);
-    else if (actual.replace(/\r\n?/g, '\n') !== expected.replace(/\r\n?/g, '\n')) problems.push(`${p.label}: session adapter drifted at ${rel}`);
-  }
-
   if (p.sessionAdapter === 'codebuddy-hooks') {
-    const rel = '.keelson/hooks/codebuddy-session.mjs';
-    const actual = readOr(path.join(root, rel), null);
-    const expected = read(path.join(PKG_ROOT, 'hooks', 'codebuddy-session.mjs'));
-    if (actual === null) problems.push(`${p.label}: session hook script missing at ${rel}`);
-    else if (actual.replace(/\r\n?/g, '\n') !== expected.replace(/\r\n?/g, '\n')) problems.push(`${p.label}: session hook script drifted at ${rel}`);
-
     const settings = readJson(path.join(root, '.codebuddy', 'settings.json'), {}) ?? {};
     const has = (event, matcher = null) => (settings.hooks?.[event] ?? []).some((g) =>
       (matcher === null || g.matcher === matcher) &&
@@ -351,8 +290,7 @@ function removeTargetSurfaces(root, p, keep = new Set()) {
   const insRel = p.instructions;
   const ins = path.join(root, insRel);
   if (!keep.has(insRel) && exists(ins)) {
-    if (p.instructionsFormat === 'kiro') rmrf(ins);
-    else write(ins, removeBlock(read(ins)));
+    write(ins, removeBlock(read(ins)));
     removed.push(path.relative(root, ins));
   }
   if (p.rulesFile && !keep.has(p.rulesFile) && exists(path.join(root, p.rulesFile))) {
@@ -376,11 +314,6 @@ export function reconcileManagedTargets(root, targets) {
   }
   if (stale.some((p) => p.hooks) && !targets.some((p) => p.hooks)) {
     removeHooks(root);
-    const hooksDir = path.join(root, '.keelson', 'hooks');
-    if (exists(hooksDir)) {
-      rmrf(hooksDir);
-      removed.push(path.relative(root, hooksDir));
-    }
   }
   return [...new Set(removed)];
 }

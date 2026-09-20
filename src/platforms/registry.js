@@ -24,7 +24,7 @@ export function platformFor(id, cfg = null) {
   return over && typeof over === 'object' ? { ...base, ...over } : base;
 }
 
-/** Expand selected hosts into unique concrete discovery targets; portable discovery is always present. */
+/** Expand only explicitly selected hosts into unique concrete discovery targets. */
 export function installTargets(tools, cfg = null) {
   const targets = [];
   const seen = new Set();
@@ -42,6 +42,5 @@ export function installTargets(tools, cfg = null) {
     const sessionAdapter = p.sessionAdapter === 'pi-env' ? 'pi-env' : cfg?.hooks === false ? null : p.sessionAdapter ?? null;
     push({ ...p, hooks: Boolean(p.hooks && cfg?.hooks !== false), sessionAdapter });
   }
-  push(CROSS_TOOL);
   return targets;
 }

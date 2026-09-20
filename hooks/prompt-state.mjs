@@ -4,6 +4,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { runtimeDir } from '../src/lib/runtime-path.js';
 
 const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const k = path.join(root, '.keelson');
@@ -26,7 +27,7 @@ try {
 const hostSession = input.session_id || input.sessionId || null;
 const envIdentity = hostSession ? hash(`claude:${hostSession}`, 32) : (process.env.KEELSON_SESSION_ID || null);
 const sessionKey = envIdentity ? hash(envIdentity, 24) : null;
-const sessionPath = sessionKey ? path.join(k, '.runtime', 'sessions', `${sessionKey}.json`) : null;
+const sessionPath = sessionKey ? path.join(runtimeDir(root), 'sessions', `${sessionKey}.json`) : null;
 let session = sessionPath ? readJson(sessionPath) : null;
 if (sessionPath) {
   session ||= { schema: 1, change: null, createdAt: new Date().toISOString() };

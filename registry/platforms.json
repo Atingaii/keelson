@@ -1,7 +1,7 @@
 {
   "version": 2,
   "updated": "2026-09-20",
-  "note": "First-class host adapters only. Every initialized project keeps canonical workflow/skill guidance under `.keelson/` and always installs the portable `AGENTS.md` + `.agents/skills/` discovery layer. `first-class` means the host's instruction/skill discovery paths are verified or documented, init/update/uninstall ownership is deterministic, and the shared adapter contract is covered by tests. Other Agent-Skills/AGENTS.md readers use the portable `agents` fallback rather than a guessed host-specific directory. Session focus is a separate capability: native means Keelson has a deterministic session-identity bridge (Claude hooks, OpenCode plugin, Pi session env, or CodeBuddy hooks); degraded means durable work remains correct but ambiguous sessions require explicit focus/change selection.",
+  "note": "First-class host adapters only. Default initialization installs only the selected host discovery shim and resident block; `--vendor` adds a checked-in guidance copy. `first-class` means the host's instruction/skill discovery paths are verified or documented, init/update/uninstall ownership is deterministic, and the shared adapter contract is covered by tests. Other Agent-Skills/AGENTS.md readers use the explicit portable `agents` target rather than a guessed host-specific directory. Session focus is a separate capability: native means Keelson has a deterministic session-identity source (Claude hooks, Pi session env, or CodeBuddy hooks); degraded means durable work remains correct but ambiguous sessions require explicit focus/change selection.",
   "platforms": {
     "claude": {
       "label": "Claude Code",
@@ -32,8 +32,7 @@
       "hooks": false,
       "confidence": "documented",
       "support": "first-class",
-      "sessionFocus": "native",
-      "sessionAdapter": "opencode-plugin"
+      "sessionFocus": "degraded"
     },
     "pi": {
       "label": "Pi coding agent",

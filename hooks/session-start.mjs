@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // Keelson SessionStart hook.
-// Tracks session-local work focus under .keelson/.runtime/ and prints a compact project snapshot.
-// Self-contained: no dependency on the keelson CLI being installed.
+// Tracks session-local work focus in Keelson's local runtime and prints a compact project snapshot.
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { runtimeDir } from '../src/lib/runtime-path.js';
 
 const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const k = path.join(root, '.keelson');
@@ -35,7 +35,7 @@ const hostSession = input.session_id || input.sessionId || null;
 // Never persist the host's raw session id. The exported identity is already opaque.
 const envIdentity = hostSession ? hash(`claude:${hostSession}`, 32) : (process.env.KEELSON_SESSION_ID || null);
 const sessionKey = envIdentity ? hash(envIdentity, 24) : null;
-const sessionsDir = path.join(k, '.runtime', 'sessions');
+const sessionsDir = path.join(runtimeDir(root), 'sessions');
 const sessionPath = sessionKey ? path.join(sessionsDir, `${sessionKey}.json`) : null;
 
 if (envIdentity && process.env.CLAUDE_ENV_FILE) {
