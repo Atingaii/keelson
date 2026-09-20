@@ -79,7 +79,8 @@ export function derivedWorkStatus(change, fingerprint) {
   if (['blocked', 'integrated', 'cancelled'].includes(explicit)) return explicit;
 
   const verification = verificationStatus(change, fingerprint);
-  const tasksComplete = change.progress.total === 0 || change.progress.done === change.progress.total;
+  // tasks.md is an execution plan, not lifecycle authority. The implementation may
+  // legitimately diverge from the plan while still satisfying the accepted outcome.
   const acceptanceComplete = change.acceptance.length
     ? change.acceptanceProgress.done === change.acceptanceProgress.total
     : change.tier === 'quick';
@@ -87,7 +88,6 @@ export function derivedWorkStatus(change, fingerprint) {
   const rolloutReady = !change.breaking || change.hasRollout;
 
   if (
-    tasksComplete &&
     acceptanceComplete &&
     contractComplete &&
     change.open.length === 0 &&

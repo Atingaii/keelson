@@ -56,7 +56,6 @@ export function appendDecisions(specText, capability, lines) {
 /** Everything that stops a landing. Pure; used by `land` and `doctor`. */
 export function landingBlockers(c, fingerprint, { confirmAssumptions = false, acceptDrift = false, specsDir } = {}) {
   const b = [];
-  if (c.progress.total && c.progress.done < c.progress.total) b.push(`${c.progress.total - c.progress.done} task(s) unchecked`);
   if (c.acceptance.length && c.acceptanceProgress.done < c.acceptance.length) b.push(`${c.acceptance.length - c.acceptanceProgress.done} acceptance item(s) unchecked`);
   if (c.tier === 'spec' && !c.acceptance.length) b.push('spec tier without an "## Acceptance" list');
   if (c.open.length) b.push(`${c.open.length} open question(s): ${c.open.map((o) => o.text).join('; ')}`);
@@ -95,6 +94,8 @@ export async function land({ flags, positional }, cwd = process.cwd()) {
   const blockers = landingBlockers(c, fp, { confirmAssumptions: Boolean(flags.confirmAssumptions), acceptDrift: Boolean(flags.acceptDrift), specsDir: p.specs });
   if (blockers.length && !flags.force) throw new Error(`cannot land "${name}":\n  - ${blockers.join('\n  - ')}\nFix them, or pass --force if the user explicitly asked.`);
   if (blockers.length) warn(`landing with --force despite:\n  - ${blockers.join('\n  - ')}`);
+  const uncheckedPlan = c.progress.total ? c.progress.total - c.progress.done : 0;
+  if (uncheckedPlan > 0) warn(`${uncheckedPlan} task(s) remain unchecked; tasks are planning notes, not landing gates. Reconcile or remove stale plan items if they still matter.`);
 
   heading(`Landing ${name} (${c.tier})`);
   const dry = Boolean(flags.dryRun);

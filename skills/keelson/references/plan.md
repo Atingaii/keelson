@@ -63,6 +63,8 @@ A spec is a behaviour contract: observable behaviour, inputs, outputs, error con
 ## tasks.md and slices
 <!-- keelson: id=plan.tasks | without: work is executed from memory; progress, slices, and effort routing are invisible across sessions | sunset: never -->
 
+`tasks.md` is a **mutable execution plan**, not a second acceptance contract. Its checkboxes communicate progress across sessions and help route effort, but `ready` and `land` are decided by acceptance, blockers/assumptions, rollout/compatibility, and fresh verification. If implementation takes a better path, update or delete stale tasks instead of keeping the lifecycle open to satisfy an obsolete plan.
+
 Group tasks under `## Slice: <name>` with a `Delivers:` line stating what someone can observe when the slice is done. A quick change usually has one slice and can omit the heading. Each task carries an effort tier and, where possible, a verification command:
 
 ```markdown

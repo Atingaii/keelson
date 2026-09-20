@@ -63,6 +63,8 @@ spec 是行为契约：可观察的行为、输入、输出、错误条件、外
 ## tasks.md 与切片
 <!-- keelson: id=plan.tasks | without: 工作凭记忆执行；进度、切片和 effort 路由在会话之间不可见 | sunset: never -->
 
+`tasks.md` 是**可变的执行计划**，不是第二份验收契约。复选框用来跨会话传递进度并辅助 effort 路由，但 `ready` 与 `land` 只由 acceptance、阻塞问题/假设、rollout/兼容性和新鲜 verification 决定。如果实现走出更好的路径，应更新或删除过时任务，而不是为了满足旧计划一直让生命周期保持未完成。
+
 把任务分组放在 `## Slice: <name>` 下，配一行 `Delivers:` 说明切片完成后别人能观察到什么。quick 变更通常只有一个切片，可以省略标题。每个任务带一个 effort 层级，尽可能带一条验证命令：
 
 ```markdown

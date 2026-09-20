@@ -429,7 +429,8 @@ test('change lifecycle: new → gates → check --record → land folds specs an
   // every gate fires
   const refused = run(dir, ['land'], { env, allowFail: true });
   assert.equal(refused.code, 1);
-  for (const re of [/task\(s\) unchecked/, /acceptance item\(s\) unchecked/, /open question/, /verification not-run/, /assumed decision/]) assert.match(refused.stderr, re);
+  for (const re of [/acceptance item\(s\) unchecked/, /open question/, /verification not-run/, /assumed decision/]) assert.match(refused.stderr, re);
+  assert.doesNotMatch(refused.stderr, /task\(s\) unchecked/);
   // finish the work
   write(dir, '.keelson/changes/add-pagination/tasks.md', '# Tasks\n\n## Slice: Paging\nDelivers: pages work\n- [x] 1. Do it (effort: light) — verify: `echo ok`\n');
   let cm = read(dir, '.keelson/changes/add-pagination/change.md').replace('- [ ] default', '- [x] default').replace(/## Open questions\n- [^\n]+\n/, '## Open questions\n- none\n');
@@ -554,6 +555,9 @@ test('sessions focus independent work items; ready is derived without a user fin
   for (const name of ['alpha', 'beta']) {
     write(dir, `.keelson/changes/${name}/change.md`, read(dir, `.keelson/changes/${name}/change.md`).replace('- [ ] … — check: `…`', '- [x] works — check: `npm test`'));
   }
+  // Execution plans are advisory. A stale/alternative task must not become a second
+  // human-maintained completion signal once the accepted outcome is verified.
+  write(dir, '.keelson/changes/alpha/tasks.md', '- [ ] optional cleanup (effort: light) — verify: `true`\n');
 
   const alphaCheck = run(dir, ['check', '--record', 'alpha verified', '--quiet'], { env: envA });
   assert.match(alphaCheck.stdout, /alpha: ready → run `keelson land alpha`/);
@@ -564,8 +568,10 @@ test('sessions focus independent work items; ready is derived without a user fin
   assert.equal(statusA.focus, 'alpha');
   assert.equal(statusA.changes.find((c) => c.name === 'alpha').work, 'ready');
 
-  // Landing is a lifecycle transition, not something that waits for the user to say "done".
-  run(dir, ['land'], { env: envA });
+  // Landing is a lifecycle transition, not something that waits for the user to say "done",
+  // and it does not wait for a stale planning checkbox either.
+  const landedAlpha = run(dir, ['land'], { env: envA });
+  assert.match(landedAlpha.stdout, /tasks are planning notes, not landing gates/);
   assert.ok(!exists(dir, '.keelson/changes/alpha'));
   assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: envA }).stdout).focus, null);
 
