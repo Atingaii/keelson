@@ -181,7 +181,7 @@ The system SHALL ...
 - orders: offset pagination over cursor; cursor rejected because the table needs page jumps
 ```
 
-A capability remains one **logical** contract even when it grows beyond one readable file. When the merged contract crosses the configured spec budget, landing automatically stores it as a bounded `spec.md` index plus one file per current requirement under `requirements/`, with optional `decisions.md`. The index remains constant-size; future base hashes and delta merges operate on the reconstructed logical contract, so sharding is transparent to changes.
+A capability remains one **logical** contract even when it grows beyond one readable file. When the merged contract crosses the configured spec budget, landing automatically stores it as a bounded `spec.md` index plus one file per current requirement under `requirements/` and, when needed, small capability-local records under `decisions/`. The index remains constant-size; future base hashes and delta merges operate on the reconstructed logical contract, so sharding is transparent to changes.
 
 A delta spec in a change carries a `base:` stamp (a hash of the main spec when the delta was created, or `new`) and three sections:
 
