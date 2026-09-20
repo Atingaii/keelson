@@ -1,5 +1,6 @@
 import path from 'node:path';
 import crypto from 'node:crypto';
+import fs from 'node:fs';
 import { requireProjectRoot, projectPaths, USER_HOME } from '../lib/paths.js';
 import { exists, isDir, copyDir, rmrf, readJson, writeJson, mkdirp, walk, read } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
@@ -40,6 +41,9 @@ export async function ablate({ flags }, cwd = process.cwd()) {
     return 0;
   }
   mkdirp(stash);
+  // Project notes and host configuration can contain sensitive data. Restrict
+  // the recovery directory before copying, including a reused empty directory.
+  if (process.platform !== 'win32') fs.chmodSync(stash, 0o700);
   const manifest = { root, created: new Date().toISOString(), files: [] };
   for (const s of [...new Set(surfaces)]) {
     const src = path.join(root, s);

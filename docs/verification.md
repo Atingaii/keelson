@@ -47,6 +47,8 @@ Copied records are not automatically trusted for local completion. Run the check
 
 Logs can contain secrets printed by project commands. Review them before sharing. Do not silently redact a signed log: that changes its digest. Preserve restricted originals or create a fresh, deliberately sanitized check and record.
 
+`ablate` temporarily copies project knowledge and host configuration into the user's recovery stash. On POSIX, its project-specific directory is restricted to mode `0700` before copying; this does not establish a Windows ACL boundary. `restore` checks that the saved contents and affected project paths have not changed before restoring them.
+
 ## Landing, overrides, and recovery
 
 Landing checks acceptance, decisions, active dependencies, contract drift and evidence. It refuses while checks are running. It snapshots the files it will change under the private runtime, then folds contracts and archives the complete evidence bundle. On an ordinary write failure it restores those files. After an interrupted process, first resolve any abandoned lock as described below; the next landing restores the transaction before refusing and asking for review and re-verification. This is recoverability, not a distributed transaction or a guarantee against storage-device failure.

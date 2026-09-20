@@ -46,3 +46,6 @@ Original-name aliases now refuse uncertain legacy suffixes, including mixtures w
 
 ### Ruling: benchmark code freeze and migration work
 The clean implementation at this attestation fix is frozen for fresh-install Flask comparisons. The previous integrated test run passed all tests except this repository's old installation migration. That migration and user-file preservation remain release gates, but do not block measuring the already-covered fresh-install path. The report must identify the exact measured commit and separately disclose later migration-only changes; if a later change affects the measured path, assess and rerun affected experiments explicitly.
+
+### Ruling: close existing privacy and evaluation gaps
+The draft's private-ablation requirement was still uncovered: reused empty recovery directories could remain accessible to other POSIX users. Restrict them to `0700` before copying and preserve round-trip contents. This does not change the frozen benchmark's fresh-install/code-edit path. A separate frozen D-17 supplemental test checks requirements absent from the original hidden test, with the same patch-replay test for every method and no rewriting of original scores.
