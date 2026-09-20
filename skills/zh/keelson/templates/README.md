@@ -31,7 +31,7 @@ Agent 从 `workflow.md` → `skill/SKILL.md` 开始。其他内容都按需自�
 | `GLOSSARY.md` | 共享术语开始重要或出现歧义 |
 | `specs/<capability>/spec.md` | 某能力的可观察行为值得成为契约；契约变大后它自动保持为小型索引 |
 | `specs/<capability>/requirements/*.md` | 某个 capability 契约超出单文件可读范围时自动出现 |
-| `specs/<capability>/decisions.md` | capability 局部的长期决策需要独立有界文件时自动出现 |
+| `specs/<capability>/decisions/*.md` | capability 局部长期决策增长时自动出现；每个长期决策一个小文件 |
 | `rules/index.md` + `rules/*.md` | 稳定工程不变量适用于某路径，并且不适合直接变成 check |
 | `changes/<name>/change.md` | 非平凡工作需要可评审的边界 |
 | `changes/<name>/tasks.md` | 工作需要明确的多步骤 / 多切片计划 |
