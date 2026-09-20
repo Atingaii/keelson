@@ -243,9 +243,9 @@ keelson doctor [--json]
 | `stale-generated` | `docs/generated/` 下的某个文件比源码树旧一天以上 |
 
 ```text
-knowledge health: findings are suggestions for small compactions, never automatic rewrites
-! budget: INTENT.md is 153 lines (budget 120) → compact: rewrite the current truth, split by capability or scope, delete history that git already keeps, move automatable rules into checks
-! narrative: .keelson/specs/orders/spec.md reads like history in places → current truth is present tense; reasons go to Decisions, the sequence of changes stays in git
+knowledge health: Keelson / Agent 内部维护诊断
+! budget: INTENT.md is 153 lines (budget 120) → RECONCILE 内部重写当前真相
+! narrative: .keelson/specs/orders reads like history in places → RECONCILE 内部保留现在时当前真相
 ```
 
 ## `keelson ablate` / `keelson restore`
