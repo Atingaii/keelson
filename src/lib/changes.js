@@ -1,6 +1,8 @@
 import path from 'node:path';
 import { listDirs, readOr, exists, walk } from './fs.js';
 import { parseFrontmatter, parseTasks, parseSlices, parseLedger, parseAcceptance, parseOpenQuestions, parseDecisions, parseHandoff, hasSection, WORK_STATUSES } from './markdown.js';
+import { evaluateLifecycle } from './lifecycle.js';
+export { verificationStatus } from './lifecycle.js';
 
 export const TIERS = ['quick', 'spec'];
 
@@ -74,45 +76,8 @@ export function loadChange(changesDir, name) {
   };
 }
 
-export function derivedWorkStatus(change, fingerprint) {
-  const explicit = change.storedWork;
-  if (['blocked', 'integrated', 'cancelled'].includes(explicit)) return explicit;
-
-  const verification = verificationStatus(change, fingerprint);
-  // tasks.md is an execution plan, not lifecycle authority. The implementation may
-  // legitimately diverge from the plan while still satisfying the accepted outcome.
-  const acceptanceComplete = change.acceptance.length
-    ? change.acceptanceProgress.done === change.acceptanceProgress.total
-    : change.tier === 'quick';
-  const contractComplete = change.tier === 'quick' || change.acceptance.length > 0;
-  const rolloutReady = !change.breaking || change.hasRollout;
-
-  if (
-    acceptanceComplete &&
-    contractComplete &&
-    change.open.length === 0 &&
-    change.assumed.length === 0 &&
-    rolloutReady &&
-    verification.state === 'passed'
-  ) return 'ready';
-
-  if (explicit === 'clarifying' && change.progress.done === 0 && verification.state === 'not-run') return 'clarifying';
-  return 'in-progress';
-}
-
-/** Verification status for a change given the current worktree fingerprint. */
-export function verificationStatus(change, fingerprint) {
-  const v = change.lastVerify;
-  if (!v) return { state: 'not-run', detail: 'no Verify entry' };
-  if (v.exit === null) return { state: 'partial', detail: 'Verify entry without exit code' };
-  if (v.exit !== 0) return { state: 'failed', detail: `exit ${v.exit}` };
-  if (v.tree && fingerprint && v.tree !== fingerprint) return { state: 'stale', detail: `verified at tree ${v.tree}, worktree is ${fingerprint}` };
-  if (!v.tree) return { state: 'passed', detail: 'no tree recorded; staleness unknown' };
-  return { state: 'passed', detail: `tree ${v.tree}` };
-}
-
-export function loadAllChanges(changesDir) {
-  return listChanges(changesDir).map((n) => loadChange(changesDir, n)).filter(Boolean);
+export function derivedWorkStatus(change, fingerprint, options = {}) {
+  return evaluateLifecycle(change, fingerprint, options).work;
 }
 
 /** Pairs of active changes that touch the same capability or the same declared paths. */
