@@ -13,6 +13,22 @@ export function capabilityDir(specsDir, capability) {
   return path.join(specsDir, capability);
 }
 
+export function capabilityStorageOptions(specsDir, capability) {
+  const dir = capabilityDir(specsDir, capability);
+  const main = readOr(path.join(dir, 'spec.md'), '');
+  const { data } = parseFrontmatter(main);
+  if (data.layout === 'sharded') {
+    return {
+      requirementsDir: data.requirements_dir || 'requirements',
+      decisionsFile: data.decisions_file || 'decisions.md',
+    };
+  }
+  return {
+    requirementsDir: exists(path.join(dir, 'requirements')) ? 'keelson-requirements' : 'requirements',
+    decisionsFile: exists(path.join(dir, 'decisions.md')) ? 'keelson-decisions.md' : 'decisions.md',
+  };
+}
+
 export function readCapabilitySpec(specsDir, capability) {
   const dir = capabilityDir(specsDir, capability);
   const mainPath = path.join(dir, 'spec.md');
@@ -24,12 +40,12 @@ export function readCapabilitySpec(specsDir, capability) {
 
   const index = parseSpec(main);
   const requirements = [];
-  const reqDir = path.join(dir, 'requirements');
+  const reqDir = path.join(dir, data.requirements_dir || 'requirements');
   for (const rel of walk(reqDir)) {
     if (!rel.endsWith('.md')) continue;
     requirements.push(...parseSpec(read(path.join(reqDir, rel))).requirements);
   }
-  const decisionsPath = path.join(dir, 'decisions.md');
+  const decisionsPath = path.join(dir, data.decisions_file || 'decisions.md');
   const decisions = exists(decisionsPath) ? parseSpec(read(decisionsPath)).decisions : [];
   return renderSpec({
     name: capability,
@@ -39,24 +55,26 @@ export function readCapabilitySpec(specsDir, capability) {
   });
 }
 
-function uniqueRequirementFiles(requirements) {
+function uniqueRequirementFiles(requirements, requirementsDir) {
   const used = new Set();
   return requirements.map((r, i) => {
     let base = slugify(r.name);
     if (used.has(base)) base = `${base}-${i + 1}`;
     used.add(base);
     return {
-      rel: `requirements/${base}.md`,
+      rel: `${requirementsDir}/${base}.md`,
       name: r.name,
       text: `# ${r.name}\n\n## Requirement: ${r.name}\n\n${r.body.trim()}\n`,
     };
   });
 }
 
-function renderIndex(capability, spec, reqFiles, hasDecisions) {
+function renderIndex(capability, spec, reqFiles, { requirementsDir, decisionsFile, hasDecisions }) {
   const parts = [
     '---',
     'layout: sharded',
+    `requirements_dir: ${requirementsDir}`,
+    `decisions_file: ${decisionsFile}`,
     '---',
     `# ${capability}`,
     '',
@@ -65,9 +83,9 @@ function renderIndex(capability, spec, reqFiles, hasDecisions) {
   parts.push(
     '## Files',
     '',
-    `- \`requirements/\` — ${reqFiles.length} current requirement file(s); read only those relevant to the current change`,
+    `- \`${requirementsDir}/\` — ${reqFiles.length} current requirement file(s); read only those relevant to the current change`,
   );
-  if (hasDecisions) parts.push('- `decisions.md` — capability-local durable decisions');
+  if (hasDecisions) parts.push(`- \`${decisionsFile}\` — capability-local durable decisions`);
   parts.push('', 'This bounded index is maintained automatically by Keelson.', '');
   return parts.join('\n');
 }
@@ -76,7 +94,10 @@ function renderIndex(capability, spec, reqFiles, hasDecisions) {
  * Choose a bounded physical representation for one logical capability contract.
  * Total capability knowledge may grow; individual frequently-read files stay bounded.
  */
-export function planCapabilityStorage(capability, logicalText, budget = 0) {
+export function planCapabilityStorage(capability, logicalText, budget = 0, {
+  requirementsDir = 'requirements',
+  decisionsFile = 'decisions.md',
+} = {}) {
   const spec = parseSpec(logicalText);
   const canonical = renderSpec({
     name: capability,
@@ -94,15 +115,15 @@ export function planCapabilityStorage(capability, logicalText, budget = 0) {
     };
   }
 
-  const reqFiles = uniqueRequirementFiles(spec.requirements);
+  const reqFiles = uniqueRequirementFiles(spec.requirements, requirementsDir);
   const decisionsText = spec.decisions.length
     ? `# Decisions — ${capability}\n\n## Decisions\n\n${spec.decisions.map((d) => `- ${d}`).join('\n')}\n`
     : null;
-  const indexText = renderIndex(capability, spec, reqFiles, Boolean(decisionsText));
+  const indexText = renderIndex(capability, spec, reqFiles, { requirementsDir, decisionsFile, hasDecisions: Boolean(decisionsText) });
   const files = [
     { rel: 'spec.md', text: indexText },
     ...reqFiles.map(({ rel, text }) => ({ rel, text })),
-    ...(decisionsText ? [{ rel: 'decisions.md', text: decisionsText }] : []),
+    ...(decisionsText ? [{ rel: decisionsFile, text: decisionsText }] : []),
   ];
   const hardLimit = soft * 2;
   const hardOver = files
@@ -115,29 +136,40 @@ export function planCapabilityStorage(capability, logicalText, budget = 0) {
     files,
     hardLimit,
     hardOver,
+    requirementsDir,
+    decisionsFile,
   };
 }
 
 export function writeCapabilityStorage(specsDir, capability, plan) {
   const dir = capabilityDir(specsDir, capability);
-  // requirements/ and decisions.md are Keelson-managed shards only when spec.md
-  // carries layout: sharded. Rebuilding them atomically from logical truth avoids
-  // stale fragments surviving a compaction.
-  rmrf(path.join(dir, 'requirements'));
-  rmrf(path.join(dir, 'decisions.md'));
+  const currentMain = readOr(path.join(dir, 'spec.md'), '');
+  const { data } = parseFrontmatter(currentMain);
+  if (data.layout === 'sharded') {
+    rmrf(path.join(dir, data.requirements_dir || 'requirements'));
+    rmrf(path.join(dir, data.decisions_file || 'decisions.md'));
+  }
+  if (plan.mode === 'sharded') {
+    rmrf(path.join(dir, plan.requirementsDir));
+    rmrf(path.join(dir, plan.decisionsFile));
+  }
   for (const file of plan.files) write(path.join(dir, file.rel), file.text);
 }
 
 export function capabilityPhysicalDocs(specsDir, capability) {
   const dir = capabilityDir(specsDir, capability);
   const out = [];
-  for (const rel of ['spec.md', 'decisions.md']) {
-    const file = path.join(dir, rel);
-    if (exists(file)) out.push({ rel, file });
-  }
-  const reqDir = path.join(dir, 'requirements');
+  const main = readOr(path.join(dir, 'spec.md'), '');
+  if (main) out.push({ rel: 'spec.md', file: path.join(dir, 'spec.md') });
+  const { data } = parseFrontmatter(main);
+  if (data.layout !== 'sharded') return out;
+  const decisionsRel = data.decisions_file || 'decisions.md';
+  const decisions = path.join(dir, decisionsRel);
+  if (exists(decisions)) out.push({ rel: decisionsRel, file: decisions });
+  const requirementsRel = data.requirements_dir || 'requirements';
+  const reqDir = path.join(dir, requirementsRel);
   for (const rel of walk(reqDir)) {
-    if (rel.endsWith('.md')) out.push({ rel: `requirements/${rel}`, file: path.join(reqDir, rel) });
+    if (rel.endsWith('.md')) out.push({ rel: `${requirementsRel}/${rel}`, file: path.join(reqDir, rel) });
   }
   return out;
 }
