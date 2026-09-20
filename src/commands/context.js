@@ -44,6 +44,7 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
     knowledge: {
       critical: knowledgeFindings.filter((h) => h.level === 'error').length,
       overBudget: knowledgeFindings.filter((h) => h.level === 'warn').length,
+      maintenance: knowledgeFindings.map((h) => ({ level: h.level, kind: h.kind, text: h.text, fix: h.fix })),
     },
     changes: orderedChanges.map((c) => {
       const lifecycle = evaluateLifecycle(c, fp, { activeNames });
@@ -62,7 +63,12 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
   if (data.glossary) out.push('## GLOSSARY.md', '', data.glossary, '');
   if (data.guide) out.push('Guided mode is on: the owner is learning; ask with scenarios, recommend with trade-offs, explain terms.', '');
   out.push('## NOW.md', '', data.now || '(empty)', '');
-  if (data.knowledge.critical || data.knowledge.overBudget) out.push(`Knowledge pressure: ${data.knowledge.critical} hard-limit, ${data.knowledge.overBudget} over-budget. Run \`keelson doctor\` and compact before adding more durable prose.`, '');
+  if (data.knowledge.maintenance.length) {
+    out.push('## Internal knowledge maintenance', '');
+    out.push('Handle these automatically during RECONCILE; do not ask the owner to run maintenance or report budget mechanics unless a semantic product decision is required.');
+    for (const item of data.knowledge.maintenance.slice(0, 8)) out.push(`- ${item.text} → ${item.fix}`);
+    out.push('');
+  }
   if (refs.length) out.push('## Existing project material (read, do not duplicate)', '', ...refs.map(([k, v]) => `- ${k}: ${v}`), '');
   out.push(`## Active changes${data.focus ? ` (session focus: ${data.focus})` : ''}`, '');
   if (!data.changes.length) out.push('none');
