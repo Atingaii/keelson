@@ -1,5 +1,6 @@
 import path from 'node:path';
 import os from 'node:os';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { exists } from './fs.js';
 import { loadConfig } from './config.js';
@@ -33,9 +34,23 @@ export function requireProjectRoot(start) {
   return root;
 }
 
+/** Resolve writable project data without following links out of the project. */
+export function resolveWithin(root, relative) {
+  if (typeof relative !== 'string' || !relative || path.isAbsolute(relative)) throw new Error('project data path must be relative');
+  const absolute = path.resolve(root, relative);
+  const rel = path.relative(root, absolute);
+  if (!rel || rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) throw new Error(`project data path escapes its root: ${relative}`);
+  let current = root;
+  for (const part of rel.split(path.sep)) {
+    current = path.join(current, part);
+    if (exists(current) && fs.lstatSync(current).isSymbolicLink()) throw new Error(`project data path must not be a symlink: ${current}`);
+  }
+  return absolute;
+}
+
 /** Resolve every path Keelson uses. `paths.specs` in config.yaml may relocate the contracts. */
 export const projectPaths = (root, cfg = null) => {
-  const k = path.join(root, KEELSON_DIR);
+  const k = resolveWithin(root, KEELSON_DIR);
   const config = path.join(k, 'config.yaml');
   const c = cfg ?? (exists(config) ? loadConfig(config) : null);
   const specsRel = c?.paths?.specs ?? '.keelson/specs';
@@ -50,13 +65,13 @@ export const projectPaths = (root, cfg = null) => {
     glossary: path.join(k, 'GLOSSARY.md'),
     workflow: path.join(k, 'workflow.md'),
     skill: path.join(k, 'skill'),
-    specs: path.resolve(root, specsRel),
+    specs: resolveWithin(root, specsRel),
     specsRel,
-    rules: path.join(k, 'rules'),
-    rulesIndex: path.join(k, 'rules', 'index.md'),
-    changes: path.join(k, 'changes'),
-    archive: path.join(k, 'changes', 'archive'),
-    hooks: path.join(k, 'hooks'),
+    rules: resolveWithin(root, '.keelson/rules'),
+    rulesIndex: resolveWithin(root, '.keelson/rules/index.md'),
+    changes: resolveWithin(root, '.keelson/changes'),
+    archive: resolveWithin(root, '.keelson/changes/archive'),
+    hooks: resolveWithin(root, '.keelson/hooks'),
     runtime: runtimeDir(root),
     sessions: path.join(runtimeDir(root), 'sessions'),
     evidence: path.join(runtimeDir(root), 'evidence'),

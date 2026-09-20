@@ -5,7 +5,7 @@ description: 面向含 .keelson/ 目录项目的工程控制层。用于探索�
 
 # Keelson
 
-项目本地执行内核是 `.keelson/workflow.md`。Keelson 约束的是**状态转换与证据**，不是实现口味。用户指令和项目指令优先。
+项目本地执行内核是 `keelson guide workflow`。Keelson 约束的是**状态转换与证据**，不是实现口味。用户指令和项目指令优先。
 
 ## 判断对话意图，不把生命周期当成用户意图
 
@@ -35,8 +35,10 @@ description: 面向含 .keelson/ 目录项目的工程控制层。用于探索�
 - 始终区分**代码现实、已确认真相、计划变更**；未决问题只阻塞依赖它的切片。
 - 宣称完成必须有当前工作树上的新鲜 `keelson check --record` 证据；不得为了通过检查而削弱验收。
 - change 一旦成为 `ready`，就应自动 land，不等待用户说特殊结束语；若仍缺所有者决策，只停在那个决策上。
-- `handoff.md` 只用于真正跨人/跨机器或明确所有权转移；普通跨会话接续由长期 change 工件 + `.keelson/.runtime/sessions/` 完成。
+- `handoff.md` 只用于真正跨人/跨机器或明确所有权转移；普通跨会话接续由长期 change 工件 + Git 私有目录中的会话状态 完成。
 - 重复失败提升为最窄的长期控制：spec → 作用域 rule → 可执行 fitness check；随后删除冗余 prose。
 - 只使用 `light | standard | deep`，绝不持久化带日期模型 ID。
 
 用户通常只需要 `init`、`status`、`doctor`、`update`、`uninstall`；其余由 Agent 使用。
+
+用 `keelson guide <name>` 按需读取下表引用（省略 `.md`）。首次执行配置检查先审阅命令，再用 `--trust` 明确信任；已有用户授权不重复确认。

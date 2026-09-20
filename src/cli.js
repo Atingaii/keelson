@@ -5,9 +5,13 @@ const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
 
 const COMMANDS = {
-  init: ['init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided] [--lang en|zh] [--no-hooks] [--dry-run]', 'Set up the minimal .keelson/ control plane and host discovery. Project artifacts grow only when the work needs them', () => import('./commands/init.js').then((m) => m.init)],
+  ask: ['ask <add|frontier|list|settle|assume|reject|reopen> [id] [--change name] [--json]', 'Persist decisions and show up to three ready owner questions', () => import('./commands/ask.js').then((m) => m.ask)],
+  guide: ['guide [reference]', 'Read the installed workflow or one reference on demand', () => import('./commands/guide.js').then((m) => m.guide)],
+  hook: ['hook <event>', 'Run an installed host adapter', () => import('./commands/hook.js').then((m) => m.hook)],
+  attest: ['attest [change] [--json]', 'Export structured evidence and its local trust status', () => import('./commands/attest.js').then((m) => m.attest)],
+  init: ['init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided] [--lang en|zh] [--no-hooks] [--vendor] [--dry-run]', 'Set up the minimal .keelson/ control plane and host discovery. Project artifacts grow only when the work needs them', () => import('./commands/init.js').then((m) => m.init)],
   platforms: ['platforms [--json]', 'List supported coding tools, their file locations, and which are installed or configured', () => import('./commands/platforms.js').then((m) => m.platforms)],
-  update: ['update [--dry-run]', 'Refresh the canonical .keelson/ runtime, discovery shims, and hooks after upgrading; migrates config.yaml', () => import('./commands/init.js').then((m) => m.init)],
+  update: ['update [--vendor] [--dry-run]', 'Refresh owned host shims and configuration; --vendor opts into copied guidance', () => import('./commands/init.js').then((m) => m.init)],
   context: ['context [--paths a/,b/**] [--json]', 'Print INTENT, ROADMAP, NOW, active changes, existing references, and the rules matching the given paths', () => import('./commands/context.js').then((m) => m.context)],
   impact: ['impact <file> [file...] [--json]', 'Mechanical impact hints: importers, specs and rules that may be affected, active changes that overlap', () => import('./commands/impact.js').then((m) => m.impact)],
   focus: ['focus [change] [--auto|--clear] [--json]', 'Bind this AI session to one active change without changing the change lifecycle', () => import('./commands/focus.js').then((m) => m.focus)],
@@ -15,12 +19,12 @@ const COMMANDS = {
   status: ['status [--json]', 'Work, verification, and release status per change; slices, open questions, conflicts, handoffs', () => import('./commands/status.js').then((m) => m.status)],
   handoff: ['handoff [name] [--by who]', 'Create or re-stamp handoff.md for a change (at, updated, by)', () => import('./commands/handoff.js').then((m) => m.handoff)],
   validate: ['validate [--json]', 'Check .keelson/ structure, specs, changes, ledgers; non-zero on errors', () => import('./commands/validate.js').then((m) => m.validate)],
-  check: ['check [cmd...] [--record [claim]] [--change name] [--quiet] [--json]', 'Run the project checks, save evidence, print or record a Verify entry with the worktree fingerprint', () => import('./commands/check.js').then((m) => m.check)],
-  land: ['land [name] [--now "<text>"] [--confirm-assumptions] [--accept-drift] [--keep] [--force] [--dry-run]', 'Merge delta specs, fold decisions, remove or archive the change; refuses on stale or missing evidence', () => import('./commands/land.js').then((m) => m.land)],
+  check: ['check [cmd...] [--record [claim]] [--change name] [--trust] [--timeout ms] [--quiet] [--json]', 'Run the project checks, save evidence, print or record a Verify entry with the worktree fingerprint', () => import('./commands/check.js').then((m) => m.check)],
+  land: ['land [name] [--now "<text>"] [--confirm-assumptions] [--accept-drift] [--keep] [--force --reason "<why>"] [--dry-run]', 'Merge delta specs, fold decisions, remove or archive the change; refuses on stale or missing evidence', () => import('./commands/land.js').then((m) => m.land)],
   cancel: ['cancel <name> [--reason "<why>"]', 'Archive a change as cancelled without merging anything', () => import('./commands/land.js').then((m) => m.cancel)],
   retro: ['retro [--json]', 'Metrics from ledgers plus suggestions to prune guidance or add rules', () => import('./commands/retro.js').then((m) => m.retro)],
   models: ['models [--detect] [--refresh] [--resolve <tier>] [rank <alias> <tier>] [--platform <id>]', 'Resolve effort tiers to model aliases for this platform', () => import('./commands/models.js').then((m) => m.models)],
-  doctor: ['doctor [--json]', 'Diagnose the install: versions, hooks, config migration, validation, stale evidence, conflicts', () => import('./commands/doctor.js').then((m) => m.doctor)],
+  doctor: ['doctor [--session] [--json]', 'Diagnose the install: versions, hooks, config migration, validation, stale evidence, conflicts', () => import('./commands/doctor.js').then((m) => m.doctor)],
   ablate: ['ablate [--dry-run]', 'Temporarily remove every Keelson surface for an A/B comparison', () => import('./commands/ablate.js').then((m) => m.ablate)],
   restore: ['restore [--force] [--dry-run]', 'Restore an ablated project byte-for-byte', () => import('./commands/ablate.js').then((m) => m.restore)],
   uninstall: ['uninstall [--purge]', 'Remove generated surfaces; keep .keelson/ unless --purge', () => import('./commands/uninstall.js').then((m) => m.uninstall)],
@@ -28,13 +32,13 @@ const COMMANDS = {
 
 const COMMAND_GROUPS = [
   ['Your commands', ['init', 'status', 'doctor', 'update', 'platforms', 'uninstall']],
-  ['Agent workflow', ['context', 'impact', 'focus', 'new', 'check', 'handoff', 'validate', 'land', 'cancel']],
-  ['Maintenance / advanced', ['retro', 'models', 'ablate', 'restore']],
+  ['Agent workflow', ['ask', 'context', 'impact', 'focus', 'new', 'check', 'handoff', 'validate', 'land', 'cancel']],
+  ['Maintenance / advanced', ['guide', 'attest', 'retro', 'models', 'ablate', 'restore']],
 ];
 
 export function help() {
   const lines = [
-    `keelson ${version} — an engineering control plane for coding agents`,
+    `keelson ${version} — verifiable checks and durable decisions for coding agents`,
     '',
     'Usage: keelson <command> [options]',
     'Normal use: run `keelson init` once, then talk to your coding agent as usual.',

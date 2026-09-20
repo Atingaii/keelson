@@ -35,19 +35,23 @@ export function recentCommits(root, n = 5) {
  */
 export function worktreeFingerprint(root) {
   if (isGitRepo(root)) {
-    const idx = path.join(os.tmpdir(), `keelson-index-${process.pid}-${Date.now()}`);
+    const idx = path.join(os.tmpdir(), `keelson-index-${crypto.randomUUID()}`);
     try {
       const env = { GIT_INDEX_FILE: idx };
-      git(root, ['add', '-A', '--', '.', ':(exclude).keelson'], { env });
-      const tree = git(root, ['write-tree'], { env });
-      return tree ? tree.slice(0, 10) : null;
+      git(root, ['add', '-A', '--', '.', ':(exclude).keelson'], { env, allowFail: false });
+      return git(root, ['write-tree'], { env, allowFail: false });
     } finally {
       fs.rmSync(idx, { force: true });
     }
   }
-  const h = crypto.createHash('sha1');
-  for (const f of walk(root, { ignore: ['node_modules', '.git', '.keelson'] })) h.update(f).update('\0').update(fs.readFileSync(path.join(root, f))).update('\0');
-  return h.digest('hex').slice(0, 10);
+  const h = crypto.createHash('sha256');
+  for (const f of walk(root, { ignore: ['node_modules', '.git', '.keelson'] })) {
+    const full = path.join(root, f);
+    const stat = fs.lstatSync(full);
+    h.update(f).update('\0').update(String(stat.mode)).update('\0');
+    h.update(stat.isSymbolicLink() ? fs.readlinkSync(full) : fs.readFileSync(full)).update('\0');
+  }
+  return h.digest('hex');
 }
 
 export const lastTag = (root) => git(root, ['describe', '--tags', '--abbrev=0']);

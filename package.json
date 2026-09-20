@@ -1,7 +1,7 @@
 {
-  "name": "keelson",
-  "version": "0.3.0",
-  "description": "A project-local engineering control plane for coding agents: durable work state, session-aware focus, progressive specs/rules, and revision-bound verification without forcing users to operate another workflow.",
+  "name": "@atingaii/keelson",
+  "version": "0.4.0",
+  "description": "Local, verifiable check records and durable decisions for AI-assisted code changes.",
   "type": "module",
   "bin": {
     "keelson": "bin/keelson.js"
@@ -17,8 +17,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node --test tests/cli.test.js tests/glob.test.js tests/land.test.js tests/markdown.test.js tests/models.test.js tests/repo.test.js",
-    "lint": "node --check bin/keelson.js && for f in src/**/*.js src/*.js hooks/*.mjs; do node --check \"$f\" || exit 1; done",
+    "test": "node --test",
+    "lint": "node scripts/check-syntax.js",
     "validate": "node bin/keelson.js validate",
     "prepublishOnly": "npm test"
   },

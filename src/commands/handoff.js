@@ -35,7 +35,7 @@ export async function handoff({ flags, positional }, cwd = process.cwd()) {
     write(file, front + tpl);
     ok(`created ${path.relative(root, file)}`);
   }
-  info('handoff is for real ownership/machine transfer; ordinary session continuation uses .keelson/.runtime/sessions and the durable change artifacts');
+  info('handoff is for real ownership/machine transfer; ordinary session continuation uses private per-machine session state and the durable change artifacts');
   if (flags.json) console.log(JSON.stringify({ name, file }));
   return 0;
 }

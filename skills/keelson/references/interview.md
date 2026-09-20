@@ -26,7 +26,7 @@ A blindspot does **not** automatically become a question. Route it to an existin
 ## One decision, recognition over recall
 <!-- keelson: id=interview.one-at-a-time | without: a wall of questions overloads the owner, while open-ended jargon questions force beginners to invent architecture preferences | sunset: never -->
 
-Ask one blocking decision at a time. Prefer a concrete scenario and recognition over recall:
+Read `keelson ask list --json` before asking. Never repeat a settled answer without new evidence and `ask reopen <id> --reason`. Ask at most three independent, ready user-owned decisions in one round; dependent choices wait for their prerequisite. Use `ask add`, `settle`, `assume`, and `frontier` to persist ownership, answer and basis. Irreversible decisions require settlement, not assumptions. Prefer a concrete scenario and recognition over recall:
 
 - describe the situation in the owner’s language;
 - give 2–4 **materially different outcomes**; when useful, attach one concise **Engineering:** consequence to each option instead of making the owner infer the implementation;

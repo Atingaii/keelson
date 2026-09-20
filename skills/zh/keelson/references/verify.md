@@ -5,7 +5,7 @@ Ready/完成是由长期 gate 与证据支撑的状态，而证据有两个会�
 ## 记录有效性：`keelson check --record`
 <!-- keelson: id=verify.fresh | without: "应该能过"和"看起来对"取代了运行命令；最后一次改动之前的证据被当成当前的 | sunset: never -->
 
-在说"完成、修好、通过、做完"之前：运行 `keelson check --record "<claim>"`。它运行项目配置的检查命令，把完整输出保存到 `.keelson/.runtime/evidence/`，并向 ledger 追加一条 `Verify:`，写明每条命令、退出码，以及它所运行的工作树指纹：
+在说"完成、修好、通过、做完"之前：运行 `keelson check --record "<claim>"`。它运行项目配置的检查命令，把完整输出保存到 变更目录下的 `evidence/`，并向 ledger 追加一条 `Verify:`，写明每条命令、退出码，以及它所运行的工作树指纹：
 
 ```markdown
 ### Verify: pagination end-to-end
@@ -62,3 +62,5 @@ Open: none. `keelson land add-pagination` succeeded; durable behavior/decisions 
 ## 这些词意味着你还没验证
 "应该"、"大概"、"看起来"、"我相信它能用"。要对状态写下这些词时，改成去运行命令。
 <!-- /guided -->
+
+结构化证据以签名 `ledger.jsonl` 为准；手写 `Verify:` 不授权归档。首次检查先审阅命令并使用 `--trust`。验收、决策和契约变化同样使证据失效；本机签名不隔离同权限进程。

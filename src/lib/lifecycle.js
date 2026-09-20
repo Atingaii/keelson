@@ -6,15 +6,13 @@
  */
 
 export function verificationStatus(change, fingerprint) {
-  const v = change.lastVerify;
-  if (!v) return { state: 'not-run', detail: 'no Verify entry' };
-  if (v.exit === null) return { state: 'partial', detail: 'Verify entry without exit code' };
-  if (v.exit !== 0) return { state: 'failed', detail: `exit ${v.exit}` };
-  if (v.tree && fingerprint && v.tree !== fingerprint) {
+  const v = change.evidence;
+  if (!v) return { state: 'not-run', detail: 'no structured evidence; run `keelson check --record`' };
+  if (v.state !== 'passed') return { state: v.state, detail: v.detail };
+  if (!fingerprint || v.tree !== fingerprint) {
     return { state: 'stale', detail: `verified at tree ${v.tree}, worktree is ${fingerprint}` };
   }
-  if (!v.tree) return { state: 'passed', detail: 'no tree recorded; staleness unknown' };
-  return { state: 'passed', detail: `tree ${v.tree}` };
+  return { state: 'passed', detail: v.detail };
 }
 
 const gate = (code, pass, detail) => ({ code, pass, detail });
@@ -40,7 +38,9 @@ export function evaluateLifecycle(change, fingerprint, {
   const contractComplete = change.tier === 'quick' || change.acceptance.length > 0;
   const rolloutReady = !change.breaking || change.hasRollout;
 
+  const pendingDecisions = (change.decisionRecords ?? []).filter((d) => d.state === 'open' || (d.state === 'assumed' && !confirmAssumptions));
   const gates = [
+    gate('decisions', pendingDecisions.length === 0, `${pendingDecisions.length} unresolved decision(s): ${pendingDecisions.map((d) => d.id).join(', ')}; use keelson ask frontier`),
     gate(
       'contract',
       contractComplete,

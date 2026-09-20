@@ -23,9 +23,6 @@ export function validateProject(root) {
   if (!['fold', 'keep'].includes(cfg.land)) errors.push(`config.land must be fold|keep (got ${cfg.land})`);
   if (!exists(p.specs) && p.specsRel !== '.keelson/specs') warnings.push(`paths.specs points at ${p.specsRel}, which does not exist`);
   for (const [k, v] of Object.entries(cfg.refs ?? {})) if (v && !/^https?:\/\//.test(v) && !exists(path.join(root, v))) warnings.push(`refs.${k} points at ${v}, which does not exist`);
-  const gi = readOr(path.join(root, '.gitignore'), '');
-  if (exists(path.join(root, '.git')) && !/^\.keelson\/\.runtime\/?$/m.test(gi)) warnings.push('.gitignore does not exclude .keelson/.runtime/ (session focus and evidence would be committed)');
-
   const idx = parseRulesIndex(readOr(p.rulesIndex));
   for (const e of idx) if (!exists(path.join(p.rules, e.file))) errors.push(`rules/index.md references missing file: ${e.file}`);
   for (const f of walk(p.rules)) if (f !== 'index.md' && f.endsWith('.md') && !idx.some((e) => e.file === f)) warnings.push(`rules/${f} is not listed in rules/index.md (it will never be routed)`);

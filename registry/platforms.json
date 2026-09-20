@@ -1,7 +1,7 @@
 {
   "version": 2,
   "updated": "2026-09-20",
-  "note": "First-class host adapters only. Default initialization installs only the selected host discovery shim and resident block; `--vendor` adds a checked-in guidance copy. `first-class` means the host's instruction/skill discovery paths are verified or documented, init/update/uninstall ownership is deterministic, and the shared adapter contract is covered by tests. Other Agent-Skills/AGENTS.md readers use the explicit portable `agents` target rather than a guessed host-specific directory. Session focus is a separate capability: native means Keelson has a deterministic session-identity source (Claude hooks, Pi session env, or CodeBuddy hooks); degraded means durable work remains correct but ambiguous sessions require explicit focus/change selection.",
+  "note": "Adapters describe generated discovery paths, not a promise of live end-to-end host parity. Codex is exercised by the local model benchmark. Other hosts have adapter contract tests; hooks are supported only where listed. Native session identity sources include CODEX_THREAD_ID, Claude hooks, Pi environment and explicit KEELSON_SESSION_ID. No source means an honest degraded state. Default installation is lightweight; --vendor explicitly copies package guidance.",
   "platforms": {
     "claude": {
       "label": "Claude Code",
@@ -9,7 +9,7 @@
       "instructions": "CLAUDE.md",
       "skillsDir": ".claude/skills",
       "hooks": true,
-      "confidence": "verified",
+      "confidence": "documented",
       "support": "first-class",
       "sessionFocus": "native",
       "sessionAdapter": "claude-hooks"
@@ -22,7 +22,8 @@
       "hooks": false,
       "confidence": "verified",
       "support": "first-class",
-      "sessionFocus": "degraded"
+      "sessionFocus": "native",
+      "sessionAdapter": "codex-thread-env"
     },
     "opencode": {
       "label": "OpenCode",

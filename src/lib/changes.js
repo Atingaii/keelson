@@ -2,6 +2,9 @@ import path from 'node:path';
 import { listDirs, readOr, exists, walk } from './fs.js';
 import { parseFrontmatter, parseTasks, parseSlices, parseLedger, parseAcceptance, parseOpenQuestions, parseDecisions, parseHandoff, hasSection, WORK_STATUSES } from './markdown.js';
 import { evaluateLifecycle } from './lifecycle.js';
+import { readDecisions } from './decisions.js';
+import { inspectEvidence } from './evidence.js';
+import { findProjectRoot, resolveWithin } from './paths.js';
 export { verificationStatus } from './lifecycle.js';
 
 export const TIERS = ['quick', 'spec'];
@@ -13,7 +16,9 @@ export function listChanges(changesDir) {
 const csv = (v) => (v ? String(v).replace(/^\[|\]$/g, '').split(',').map((s) => s.trim()).filter(Boolean) : []);
 
 export function loadChange(changesDir, name) {
-  const dir = path.join(changesDir, name);
+  if (typeof name !== 'string' || !name || name === '.' || name === '..' || /[/\\\0]/.test(name)) throw new Error('invalid change name');
+  const dir = resolveWithin(changesDir, name);
+  for (const file of walk(dir)) resolveWithin(dir, file);
   if (!exists(path.join(dir, 'change.md'))) return null;
   const { data, body } = parseFrontmatter(readOr(path.join(dir, 'change.md')));
   const tasksText = readOr(path.join(dir, 'tasks.md'));
@@ -69,6 +74,8 @@ export function loadChange(changesDir, name) {
     work,
     storedWork: WORK_STATUSES.includes(storedWork) ? storedWork : null,
     lastVerify,
+    decisionRecords: readDecisions(dir).decisions,
+    evidence: inspectEvidence(findProjectRoot(dir) ?? path.resolve(changesDir, '../..'), dir),
     hasDecisions: hasSection(body, 'Decisions'),
     hasRollout: hasSection(body, 'Rollout'),
     // Only a bullet that starts with **BREAKING** counts, so the template's own hint does not.

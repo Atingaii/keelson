@@ -1,6 +1,6 @@
 # Keelson 工作流
 
-项目真相与长期 work item 位于 `.keelson/`；机器本地的会话焦点与验证输出位于 gitignored 的 `.keelson/.runtime/`。**Session 不是 Task**：它只是指向当前对话正在围绕哪个 work item。
+项目真相与长期 work item 位于 `.keelson/`；本机会话、信任与密钥位于 Git 私有运行目录；持久签名记录和日志跟随变更归档。**Session 不是 Task**：它只是指向当前对话正在围绕哪个 work item。
 
 每个非平凡修改请求遵循 **ORIENT → BOUND → BUILD → SENSE → RECONCILE**。
 

@@ -1,6 +1,6 @@
 # Keelson workflow
 
-Project truth and durable work live under `.keelson/`. Machine-local conversation focus and evidence live under gitignored `.keelson/.runtime/`. A **session is not a task**: it only points at the work item this conversation is currently about.
+Project truth and durable work live under `.keelson/`. Machine-local focus, trust and keys live in Git’s private runtime directory; durable signed records and logs stay with each change. A **session is not a task**: it only points at the work item this conversation is currently about.
 
 Every non-trivial modifying request follows **ORIENT → BOUND → BUILD → SENSE → RECONCILE**.
 

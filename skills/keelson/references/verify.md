@@ -5,14 +5,9 @@ Readiness/completion is a lifecycle state backed by evidence, and evidence has t
 ## Record validity: `keelson check --record`
 <!-- keelson: id=verify.fresh | without: "should pass" and "looks right" replace running the command; evidence from before the last edit is presented as current | sunset: never -->
 
-Before saying done, fixed, passing, or complete: run `keelson check --record "<claim>"`. It runs the project's configured commands, saves their full output under `.keelson/.runtime/evidence/`, and appends a `Verify:` entry to the ledger with each command, its exit code, and the fingerprint of the working tree it ran against:
+Before claiming completion, review the configured commands and run `keelson check --trust --record "<claim>"` on first execution. Later identical commands need no new trust flag. The CLI writes signed `ledger.jsonl` envelopes and `evidence/<digest>.log` under the active change. `ledger.md` is a readable summary only; hand-written `Verify:` text cannot authorize landing.
 
-```markdown
-### Verify: pagination end-to-end
-`npm run lint` exit 0; `npm run test` exit 0 · tree 5bcb829dae
-```
-
-`keelson status` compares that fingerprint with the current tree and reports `stale` after any code edit; `keelson land` refuses stale, failed, or missing evidence. If this record closes the final gate, `keelson check --record` reports the change as `ready`; the agent should land immediately rather than wait for a user “done” phrase. A prior run, a partial run, or a subagent's report is not evidence; the diff and a fresh `Verify:` entry are. A single extra command can be checked with `keelson check "<cmd>" --record`.
+The record binds both the full worktree and contracts, including acceptance and decisions. `status` and `land` reject stale, failed, incomplete or untrusted records. A command supplied explicitly is partial unless it exactly covers the configured suite. Complete acceptance before the final check; editing it afterwards invalidates the evidence. If all gates pass, land within the existing authorization. Local signatures do not protect against a process with access to the same user account or prove model attribution.
 
 If a check cannot run (environment missing, service down), say so in the ledger as a `Note:` and in `NOW.md → Blocked / uncertain`. Partial verification is reported as partial; it is never rounded up.
 

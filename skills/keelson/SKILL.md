@@ -5,7 +5,7 @@ description: Engineering control plane for coding work in repositories with a .k
 
 # Keelson
 
-The project-local kernel is `.keelson/workflow.md`. Keelson constrains **state transitions and evidence**, not implementation taste. User and project instructions win.
+Read the installed workflow with `keelson guide workflow`; load each named reference with `keelson guide <name>` (omit `.md`). Keelson constrains **state transitions and evidence**, not implementation taste. User and project instructions win.
 
 ## Classify the conversation, not the lifecycle
 
@@ -26,16 +26,16 @@ Completion is **not** an intent and never depends on the user saying “done”.
 - On Resume, use `keelson focus --auto`; branch match or a sole active change may be suggested. Never silently bind an ambiguous session.
 - If `NOW.md` says “First contact”, infer and confirm `INTENT.md`; do not inventory the whole repository into specs/rules.
 - Non-trivial modifying work starts from current context; shared modules get `keelson impact <files>`.
-- Ask only at the decision frontier. Run the triggered blindspot pass, then use `interview.md`: one owner-owned decision at a time, concrete scenario/options, recommended default, and `not sure` as a valid route. Never ask what repo evidence, an experiment, or agent engineering judgment can settle.
+- Ask only at the decision frontier. Run the triggered blindspot pass, then use `interview.md`: up to three independent ready owner-owned decisions per round, skipping settled answers, concrete scenario/options, recommended default, and `not sure` as a valid route. Never ask what repo evidence, an experiment, or agent engineering judgment can settle.
 - Route non-obvious mechanisms/architecture through `engineer.md`: reduce to facts, outcome, constraints, and invariants; state a falsifiable hypothesis; use the cheapest experiment/ablation that can discriminate; complexity must earn its keep with evidence.
-- Size only the work: trivial = direct edit; quick = lightweight change; spec = acceptance + behavior delta + plan, then approval.
+- Size only the work: trivial = direct edit; quick = lightweight change; spec = acceptance + behavior delta + plan within existing user authorization; clarify only unresolved owner choices.
 - Artifacts are information containers, not ceremony. Do not create empty roadmap/glossary/rule/task/ledger/handoff/spec files.
 - `tasks.md` is an execution plan, not completion authority. Unchecked plan items never override satisfied acceptance + fresh evidence; reconcile or remove stale tasks when the implementation path changes.
 - Knowledge maintenance is internal. During RECONCILE, automatically rewrite/split/dedupe pressured durable docs and let `land` auto-shard large specs; never ask the owner to maintain Keelson unless a product-semantic decision is required.
 - Keep **code reality**, **confirmed truth**, and **planned change** distinct. Open questions block only dependent slices.
-- Fresh `keelson check --record` evidence is required for completion claims. Never weaken acceptance to make a check pass.
+- Fresh structured `keelson check --record` evidence (review commands and use `--trust` on first execution) is required for completion claims. Never weaken acceptance to make a check pass.
 - A `ready` change should be landed without waiting for a special user phrase. If landing still needs an owner decision, stop on that decision only.
-- `handoff.md` is for real transfer across people/machines or deliberate ownership change; ordinary session continuity comes from durable change artifacts plus `.keelson/.runtime/sessions/`.
+- `handoff.md` is for real transfer across people/machines or deliberate ownership change; ordinary session continuity comes from durable change artifacts plus private per-machine session state.
 - Repeated failures graduate to the narrowest durable control: spec → scoped rule → executable fitness check; remove redundant prose afterward.
 - Use `light | standard | deep`; never persist dated model IDs.
 
