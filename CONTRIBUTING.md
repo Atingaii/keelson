@@ -24,6 +24,8 @@ cd ../some-project
 keelson init
 ```
 
+For first publication, scope ownership and user installation, see the [npm release guide](docs/publishing.md) ([简体中文](docs/zh/publishing.md)).
+
 ## Layout
 
 ```text

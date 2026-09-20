@@ -13,6 +13,8 @@ keelson init --codex --lang zh
 
 `npm link` 将当前源码的 CLI 放到命令路径。团队需要可复现安装时，应固定 Git 提交。包名为 `@atingaii/keelson`，此处不代表已发布到 npm。
 
+首次 npm 发布后，用户即可免克隆安装。见 [npm 安装与发布](publishing.md)。
+
 初始化创建精简的项目说明和宿主入口，不修改 `.gitignore`。在项目中启动 Codex，正常提出修改需求；它通过 `keelson guide` 加载指导。
 
 手动体验：

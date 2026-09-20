@@ -6,3 +6,6 @@ Frontend design now has bilingual action briefs and focused guidance for review,
 
 ## Verification boundaries
 Codex session identity has been exercised locally. Other hosts have declared adapter capabilities and fixture coverage; live host behavior must be verified in the host. Design guidance is executed by the coding agent using the project's available browser tools. A printed brief is not a completed visual review.
+
+## Blocked / uncertain
+The first npm release awaits the owner's account registration, confirmed scope, login and release approval. Public package metadata and bilingual instructions are prepared; the actual tarball passed an isolated install/init/guidance smoke check. No full test suite or CI ran for this preparation, and no npm publication or tag push occurred. Continue `npm-release-preparation` after account setup; repack and run the required release checks before publication.

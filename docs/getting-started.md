@@ -13,6 +13,8 @@ keelson init --codex
 
 `npm link` exposes the local checkout's CLI. Use a pinned Git revision for reproducible team installation. The package is named `@atingaii/keelson`; this documentation does not claim it has been published to npm.
 
+After the first npm release, users can install without cloning this repository. See [npm installation and publishing](publishing.md).
+
 Initialization writes small project notes and host discovery shims. It leaves `.gitignore` alone. Start Codex in the project and ask for a real change. The installed skill points it to `keelson guide`, project intent and current change state.
 
 For a manual first change:
