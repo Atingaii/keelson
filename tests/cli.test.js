@@ -25,7 +25,7 @@ const V03_FIXTURE = path.resolve('tests/fixtures/v0.3-runtime');
 const V03_CASES = ['en', 'zh'].flatMap((lang) => ['lean', 'guided'].flatMap((profile) =>
   [false, true].map((guide) => ({ lang, profile, guide }))));
 
-function restoreV03Project(dir, { lang = 'en', profile = 'lean', guide = false, codeBuddyHook = false } = {}) {
+function restoreV03Project(dir, { lang = 'en', profile = 'lean', guide = false, codeBuddyHook = false, checkedInHooks = false } = {}) {
   fs.cpSync(path.join(V03_FIXTURE, '.keelson'), path.join(dir, '.keelson'), { recursive: true });
   fs.cpSync(path.join(V03_FIXTURE, '.agents'), path.join(dir, '.agents'), { recursive: true });
   fs.cpSync(path.join(V03_FIXTURE, '.claude'), path.join(dir, '.claude'), { recursive: true });
@@ -43,6 +43,9 @@ function restoreV03Project(dir, { lang = 'en', profile = 'lean', guide = false, 
     .replace(/^profile:.*$/m, `profile: ${profile}`)
     .replace(/^guide:.*$/m, `guide: ${guide}`);
   write(dir, '.keelson/config.yaml', config);
+  if (!checkedInHooks) {
+    for (const name of ['session-start.mjs', 'prompt-state.mjs']) fs.copyFileSync(path.join(V03_FIXTURE, 'hooks', name), path.join(dir, '.keelson', 'hooks', name));
+  }
   if (codeBuddyHook) fs.copyFileSync(path.join(V03_FIXTURE, 'hooks', 'codebuddy-session.mjs'), path.join(dir, '.keelson', 'hooks', 'codebuddy-session.mjs'));
 }
 
@@ -70,8 +73,22 @@ test('the static v0.3 fixture is byte-for-byte the captured ownership matrix', (
   assert.equal(normalizedHash(read(V03_FIXTURE, '.agents/skills/keelson/SKILL.md')), ownership.discoveryShims.en);
   assert.equal(normalizedHash(read(V03_FIXTURE, 'shims/zh-SKILL.md')), ownership.discoveryShims.zh);
   for (const [name, expected] of Object.entries(ownership.copiedHooks)) {
-    const file = name === 'codebuddy-session.mjs' ? path.join(V03_FIXTURE, 'hooks', name) : path.join(V03_FIXTURE, '.keelson', 'hooks', name);
+    const file = path.join(V03_FIXTURE, 'hooks', name);
     assert.equal(normalizedHash(fs.readFileSync(file, 'utf8')), expected, name);
+  }
+  for (const [name, expected] of Object.entries(ownership.checkedInHooks)) {
+    const file = path.join(V03_FIXTURE, '.keelson', 'hooks', name);
+    assert.equal(normalizedHash(fs.readFileSync(file, 'utf8')), expected, name);
+  }
+});
+
+test('v0.3 generated and checked-in hook snapshots both retire without removing user neighbors', () => {
+  for (const checkedInHooks of [false, true]) {
+    const dir = tmpProject({}); restoreV03Project(dir, { checkedInHooks });
+    write(dir, '.keelson/hooks/owner.mjs', '// user hook\n');
+    run(dir, ['update', '--codex', '--no-hooks'], { env });
+    for (const name of ['session-start.mjs', 'prompt-state.mjs']) assert.ok(!exists(dir, `.keelson/hooks/${name}`), `${checkedInHooks}: ${name}`);
+    assert.equal(read(dir, '.keelson/hooks/owner.mjs'), '// user hook\n');
   }
 });
 

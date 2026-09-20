@@ -332,6 +332,36 @@
         "todo": 0
       },
       "note": "Both link regressions and targeted migration selection pass after root-link lstat protections; selection skips are not passes."
+    },
+    {
+      "file": "freshhooks-negative.tap.log",
+      "sha256": "61675b6ca4b3608a5de7586491f95511fac9dad07ae0b44b2e6cca061b8cd90d",
+      "bytes": 14894,
+      "source_mtime_utc": "2026-09-20T11:51:52.701190+00:00",
+      "tap_counts": {
+        "tests": 62,
+        "pass": 0,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 61,
+        "todo": 0
+      },
+      "note": "Fresh CLI hook regression fails against b2ada9c with baseline-derived new fixture."
+    },
+    {
+      "file": "freshhooks-positive.tap.log",
+      "sha256": "2f90971cc03d299be20beddb35f0935acf6183796ab5e04e7d5600e5b4116dd2",
+      "bytes": 13822,
+      "source_mtime_utc": "2026-09-20T11:52:59.094433+00:00",
+      "tap_counts": {
+        "tests": 62,
+        "pass": 11,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 51,
+        "todo": 0
+      },
+      "note": "Fresh and checked-in hook variants, full language/profile matrix, link preservation and other selected migrations pass (11 executed)."
     }
   ]
 }

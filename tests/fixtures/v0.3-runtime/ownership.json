@@ -1,6 +1,6 @@
 {
   "baseline": "f6ce125",
-  "capture": "The f6ce125 CLI generated en/zh × lean/guided × guide on/off, plus CodeBuddy --hooks, in isolated temporary projects.",
+  "capture": "The f6ce125 CLI generated en/zh × lean/guided × guide on/off. Fresh copied hooks are the exact hooks/ source bytes copied by that CLI. checkedInHooks separately records f6ce125:.keelson/hooks/, an older installed snapshot retained in this repository.",
   "treeDigest": "sha256 of sorted rel\\0normalized-file-sha256\\n",
   "canonicalSkills": {
     "en/lean": "07ac8e2cb1010956fb172b72661a29ec3c6552ce19433fc4b1a31d012d65272b",
@@ -19,8 +19,16 @@
     "zh": "4157f6ca8898e6e94a351d1fa63da580c54574049cc4af549834ee4fcb4a237b"
   },
   "copiedHooks": {
-    "session-start.mjs": "2c425e68f52b1b9c8febeb410916b14b302893bf0b241ea1b9ba4275452ee217",
-    "prompt-state.mjs": "cd7301e7efa00368a437d8a3e084844df1cd611969ae2465c82d8ac8f6707131",
+    "session-start.mjs": "2b2f3523abaf14671764a0f1967ad649881013cc8cc3cb70b51e91b4b5d9dee7",
+    "prompt-state.mjs": "10cf6cb9781c58330160602d85dcd2d417bc11c1e99223a7e55477a2529448a7",
     "codebuddy-session.mjs": "cbdcbac42ab752387721c3b53f9fae50a22e04d2e04dbb612dba45d90efc25a8"
+  },
+  "checkedInHooks": {
+    "session-start.mjs": "2c425e68f52b1b9c8febeb410916b14b302893bf0b241ea1b9ba4275452ee217",
+    "prompt-state.mjs": "cd7301e7efa00368a437d8a3e084844df1cd611969ae2465c82d8ac8f6707131"
+  },
+  "hookSources": {
+    "copiedHooks": "f6ce125:hooks/<name>",
+    "checkedInHooks": "f6ce125:.keelson/hooks/<name>"
   }
 }
