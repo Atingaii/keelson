@@ -29,7 +29,9 @@
 ## 压缩：让被读到的东西保持小
 <!-- keelson: id=reconcile.compact | without: 文档无限增长；常驻集合让每个会话都变贵，过时文本被当作现状读取 | sunset: never -->
 
-`config.yaml → budgets` 给每种文档一个行数预算（INTENT、ROADMAP、NOW、GLOSSARY、spec、rule、change、handoff，以及作为整体的常驻 rules）。超出预算不是错误；它是对该文档做一遍压缩的信号，逐段选择：
+`config.yaml → budgets` 给每种文档一个行数预算（INTENT、ROADMAP、NOW、GLOSSARY、spec、rule、change、handoff，以及作为整体的常驻 rules）。预算是**软压缩阈值**。长期真相文档的硬上限是**配置预算的 2 倍**：超过后 `validate` / `doctor` 会失败，`land` 还会在真正写入前预检将要生成的 spec 与 NOW，避免半落地。活跃 change/handoff 是临时脚手架，因此只警告、不做硬失败。Keelson 不会自动总结并覆盖原文；语义压缩仍由 Agent/评审者完成。
+
+超过软预算后，对该文档做一遍压缩，逐段选择：
 
 - **重写**得更短，现在时。
 - **拆分**：按能力、范围或 bounded context 拆，当需求之间不再共享同一个目的时。
