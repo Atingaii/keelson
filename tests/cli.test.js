@@ -859,11 +859,13 @@ test('init is the only step: first-class platform flags, standards-first surface
   assert.equal(list.length, 8);
   assert.deepEqual(list.map((p) => p.id).sort(), ['claude', 'codex', 'opencode', 'pi', 'gemini', 'kiro', 'codebuddy', 'agents'].sort());
   assert.ok(list.find((p) => p.id === 'kiro').configured);
-  for (const id of ['claude', 'opencode', 'pi', 'codebuddy']) {
-    assert.equal(list.find((p) => p.id === id).sessionFocus, 'native', id);
-    assert.equal(list.find((p) => p.id === id).effectiveSessionFocus, 'native', id);
-  }
+  for (const id of ['claude', 'opencode', 'pi', 'codebuddy']) assert.equal(list.find((p) => p.id === id).sessionFocus, 'native', id);
   for (const id of ['codex', 'gemini', 'kiro']) assert.equal(list.find((p) => p.id === id).sessionFocus, 'degraded', id);
+  assert.equal(list.find((p) => p.id === 'claude').effectiveSessionFocus, 'degraded');
+  assert.equal(list.find((p) => p.id === 'opencode').effectiveSessionFocus, 'degraded');
+  assert.equal(list.find((p) => p.id === 'kiro').effectiveSessionFocus, 'degraded');
+  assert.equal(list.find((p) => p.id === 'pi').effectiveSessionFocus, 'native');
+  assert.equal(list.find((p) => p.id === 'codebuddy').effectiveSessionFocus, 'native');
   run(dir, ['uninstall'], { env });
   assert.ok(!exists(dir, '.kiro/steering/keelson.md'));
   assert.ok(!exists(dir, '.cursor/skills/keelson'));
