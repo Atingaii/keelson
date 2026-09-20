@@ -362,6 +362,24 @@
         "todo": 0
       },
       "note": "Fresh and checked-in hook variants, full language/profile matrix, link preservation and other selected migrations pass (11 executed)."
+    },
+    {
+      "file": "main-full-ownership-599ee44.tap.log",
+      "sha256": "f9e91cf54c542b42635d465085810289724c340ec224a88cf027c9645b0fbb95",
+      "bytes": 24937,
+      "source_mtime_utc": "2026-09-20T11:57:09.696328+00:00",
+      "source_commit": "599ee44",
+      "documentation_commit_during_run": "61a48e0",
+      "command": "npm test",
+      "tap_counts": {
+        "tests": 133,
+        "pass": 133,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "note": "Complete integrated suite after link ownership and fresh/historical hook fixes. Code unchanged during run; ledger/tasks updated in 61a48e0. Linux, zero skips."
     }
   ]
 }

@@ -76,3 +76,7 @@ The earlier fixture represented `f6ce125:.keelson/hooks/`, while a new v0.3 inst
 ### Dispatch: final migration ownership review → deep (gpt-5.6-terra)
 Result: pass
 Read-only review of `599ee44` found no remaining P1/P2 in this scope. It independently matched baseline-generated language/profile/workflow/shim hashes, both exact Claude hook sources and the CodeBuddy hook, and checked directory/file-link plus hidden-neighbor preservation. The static review and syntax/diff checks pass; the root's subsequent integrated suite is recorded separately.
+
+## 2026-09-20 complete ownership regression
+
+`npm test` passes 133/133 with zero skips on Linux after production code 599ee44 (documentation-only 61a48e0 landed during the run). Raw TAP and SHA-256 are archived in `evals/engineering/2026-09-20-local/`. Lint, project validation and package dry run pass; package has 121 files and no `.keelson/` entries. Independent migration review is PASS. Performance and fixed model comparisons remain open; this is not the final release gate.
