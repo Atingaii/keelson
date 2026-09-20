@@ -15,7 +15,7 @@ profile: lean
 default_tier: auto
 confirm:
   quick: proceed
-  spec: wait
+  spec: proceed
 land: fold
 check:
   - npm run lint
@@ -61,7 +61,7 @@ effort:
 | `profile` | `lean` | `lean` ships stance and principles only. `guided` keeps the extra step lists and examples. `keelson init --profile` sets it |
 | `default_tier` | `auto` | Informational. `auto` means the agent sizes each change. Set `quick` or `spec` to state a preference in the file the agent reads |
 | `confirm.quick` | `proceed` | `proceed`: the agent writes back its understanding and starts. `wait`: it waits for approval first |
-| `confirm.spec` | `wait` | Spec changes always wait unless you set `proceed` |
+| `confirm.spec` | `proceed` | `proceed`: after the short write-back, spec-sized work starts unless a real owner decision remains. Set `wait` when your team wants an explicit plan-approval checkpoint |
 | `land` | `fold` | `fold` removes the change directory after merging. `keep` moves it to `changes/archive/` |
 | `check` | detected | What `keelson check` runs, in order, from the project root through the shell. Each entry is a command string, or an object `{name, command, kind}` where `kind` is one of `test`, `lint`, `typecheck`, `build`, `fitness`, `check`. For a plain string the kind is guessed from the command. Detected from `package.json` scripts, `pyproject.toml`, `pytest.ini`, `go.mod`, or `Cargo.toml` on first init |
 | `guide` | `false` | `true` when the owner is learning engineering. Adds a guided-mode line to `.keelson/workflow.md` and a note to `keelson context`; the skill then explains with scenarios and trade-offs and closes spec changes with a short teaching note. `keelson init --guide` sets it |
