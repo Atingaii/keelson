@@ -29,6 +29,7 @@ description: 面向含 .keelson/ 目录项目的工程控制层。用于探索�
 - 只给工作本身定大小：trivial 直接改；quick 轻量 change；spec 先写验收、行为 delta 和计划，再等批准。
 - 工件是信息容器，不是仪式。不要创建空 roadmap/glossary/rule/task/ledger/handoff/spec。
 - `tasks.md` 只是执行计划，不拥有“完成”判定权。只要 acceptance 与新鲜证据已经满足，未勾选的旧计划不能覆盖这个事实；实现路径变化时应重写或删除过时任务。
+- 知识维护属于 Keelson 内部职责。RECONCILE 时自动重写、拆分、去重超压的长期文档，大 spec 由 `land` 自动分片；除非涉及产品语义决策，否则绝不要求用户维护 Keelson。
 - 始终区分**代码现实、已确认真相、计划变更**；未决问题只阻塞依赖它的切片。
 - 宣称完成必须有当前工作树上的新鲜 `keelson check --record` 证据；不得为了通过检查而削弱验收。
 - change 一旦成为 `ready`，就应自动 land，不等待用户说特殊结束语；若仍缺所有者决策，只停在那个决策上。
