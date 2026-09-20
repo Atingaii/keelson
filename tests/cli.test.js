@@ -556,6 +556,28 @@ test('ablate removes every surface and restore brings it back byte-for-byte', ()
   assert.ok(exists(dir, '.keelson/config.yaml'));
 });
 
+test('ablate and restore include native OpenCode and CodeBuddy session adapters', () => {
+  const originalBuddy = { theme: 'mine' };
+  const dir = tmpProject({ '.codebuddy/settings.json': JSON.stringify(originalBuddy, null, 2) + '\n' });
+  run(dir, ['init', '--tools', 'opencode,codebuddy'], { env });
+
+  const pluginBefore = read(dir, '.opencode/plugins/keelson-session.js');
+  const settingsBefore = read(dir, '.codebuddy/settings.json');
+  assert.match(settingsBefore, /codebuddy-session\.mjs/);
+
+  run(dir, ['ablate'], { env });
+  assert.ok(!exists(dir, '.keelson'));
+  assert.ok(!exists(dir, '.opencode/plugins/keelson-session.js'));
+  const during = JSON.parse(read(dir, '.codebuddy/settings.json'));
+  assert.equal(during.theme, 'mine');
+  assert.equal(during.hooks, undefined);
+
+  run(dir, ['restore'], { env });
+  assert.equal(read(dir, '.opencode/plugins/keelson-session.js'), pluginBefore);
+  assert.equal(read(dir, '.codebuddy/settings.json'), settingsBefore);
+  assert.ok(exists(dir, '.keelson/manifest.json'));
+});
+
 test('models resolves tiers and rank writes user overrides', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env });
