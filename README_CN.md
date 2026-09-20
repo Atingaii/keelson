@@ -38,7 +38,7 @@ Agent 创建/绑定一个长期 change，这个会话继续聚焦它。
 
 用户可以一直这样问，不需要说“结束任务”。
 
-当 Acceptance 满足、没有阻塞问题/未确认假设、需要的 rollout 已存在，并且当前代码树上 verification 新鲜，Keelson 机械推导 work state 为 **ready**。Agent 在宣称完成之前自动 land，不等待用户说“做完了”。
+当 Acceptance 满足、没有活动依赖/阻塞问题/未确认假设/未对齐 spec drift、需要的 rollout 已存在，并且当前代码树上 verification 新鲜，Keelson 机械推导 work state 为 **ready**。Agent 在宣称完成之前自动 land，不等待用户说“做完了”。
 
 如果用户直接关掉窗口，长期 change 仍然保持进行中；消失的只是本地 session focus。新会话在候选明确时可用 `keelson focus --auto` 恢复。提交进 Git 的 `handoff.md` 只用于真正跨人/跨机器的所有权转移，不再承担普通聊天续接。
 
@@ -56,17 +56,13 @@ keelson init
 
 之后在项目里打开 Claude Code、Codex、OpenCode、Pi、Gemini CLI、Kiro CLI 或 CodeBuddy CLI，照常对话。
 
-大多数用户真正会运行的只有：
+正常使用真正需要的只有：
 
 ```bash
-keelson init       # 一次
-keelson status     # 可选：查看当前状态
-keelson doctor     # 诊断
-keelson update     # 升级或切换宿主后
-keelson uninstall  # 删除生成的集成表面
+keelson init       # 一次，然后正常和 Agent 对话
 ```
 
-其余 CLI 命令主要给 Coding Agent 使用。
+`status` 只是可选查看，`doctor` 只用于排障，`update` 只在升级/切换宿主时使用，`uninstall` 用于移除。知识整理、spec 分片、runtime 清理以及其余工程命令都由 Keelson/Agent 内部处理。
 
 ## 一条黄金路径
 
@@ -111,7 +107,7 @@ Fresh init 只有：
 ROADMAP.md                   # tracker 没有表达清楚的里程碑/方向
 GLOSSARY.md                  # 重要共享术语
 rules/                       # 稳定作用域不变量
-specs/<capability>/spec.md   # 行为契约
+specs/<capability>/          # 行为契约；小契约单文件，大契约自动分片
 changes/<name>/              # 进行中的长期 work item
 ```
 
@@ -134,7 +130,9 @@ changes/rename-buyer/
 
 只有真正需要计划、证据、行为 delta 或明确所有权交接时，`tasks.md`、`ledger.md`、delta specs、`handoff.md` 才出现。
 
-**空脚手架不是进度；关闭一次对话也不是完成。**
+大型 capability 会在需要时自动变成小型 `spec.md` 索引 + `requirements/*.md` + 可选 `decisions.md`；ADR/rule/spec 的文件数量可以随项目演进增加，但 Agent 每次只按需读取相关文件。旧 session/evidence 会自动回收，用户不需要维护这些目录。
+
+**空脚手架不是进度；关闭一次对话也不是完成；控制面维护也不是用户任务。**
 
 ## 一份 canonical runtime
 
