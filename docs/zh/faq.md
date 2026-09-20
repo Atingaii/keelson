@@ -14,14 +14,14 @@
 **很小的改动会怎样？**
 什么都不发生。trivial 变更（样式、错字、行为不变的单文件修复）不建变更目录、不写回。代理直接做。
 
-**能在代理开工前先批准 quick 变更吗？**
-在 `.keelson/config.yaml` 里设 `confirm.quick: wait`。spec 变更总是等批准，除非你设 `confirm.spec: proceed`。
+**能要求 Agent 开工前先等批准吗？**
+可以。在 `.keelson/config.yaml` 里把 `confirm.quick` 和/或 `confirm.spec` 设为 `wait`。默认两者在短 write-back 后、没有未解决的所有者决定时直接推进；不可逆操作、生产修改、权限扩大、breaking compatibility 仍按原有规则显式确认。
 
 **脚本化运行、没人能批准时会怎样？**
 代理不会停滞。它写下理解和计划，把工作假设标记为 `Decisions` 下的 `(assumed)`，在这些假设下构建和验证，记录证据，落地前停下。`NOW.md` 会说明该变更等待审阅。你把计划和 diff 一起看完，运行 `keelson land <name> --confirm-assumptions`，或 `keelson cancel <name>`。
 
 **`keelson land` 为什么拒绝？**
-它列出每一个原因：任务或验收项未勾选、spec 变更没有验收清单、有未决问题、verification 是 not-run、failed、partial 或 stale、`(assumed)` 决策没有 `--confirm-assumptions`、`**BREAKING**` 项没有 `Rollout` 段，或者 delta 所依据的 spec 此后变了（重读后传 `--accept-drift`）。修掉原因，而不是伸手去拿 `--force`；`--force` 留给你的明确决定，并且会打印它越过了什么。
+它列出每一个真实生命周期原因：验收项未完成、活动依赖、spec 变更没有验收清单、有未决问题、verification 是 not-run、failed、partial 或 stale、`(assumed)` 决策没有 `--confirm-assumptions`、`**BREAKING**` 项没有 `Rollout` 段，或者 delta 所依据的 spec 此后变了（重读后传 `--accept-drift`）。修掉原因，而不是伸手去拿 `--force`；`--force` 留给你的明确决定，并且会打印它越过了什么。
 
 **怎么确认代理的假设？**
 读 `change.md` 里 `Decisions` 下的 `(assumed)` 行。如果它们是对的，带 `--confirm-assumptions` 落地；它们会作为已确认折叠进 spec。如果某条错了，改那一行（或告诉代理），让依赖它的工作在落地前重做。
@@ -48,7 +48,7 @@
 运行 `keelson init --guide`（或在 `config.yaml` 里设 `guide: true`）。代理随后先问场景再问技术，给每个选择配上推荐、原因、备选和取舍，应用一条规则时用一句话解释它，在你决定之后说出对应的工程概念，并在每个 spec 变更收尾时留一段简短的教学说明。文件、门禁和状态与其他任何人相同，所以你做出来的不是一个"新手版"的项目。
 
 **文档一直在长。什么能止住它？**
-Keelson 限制的是**高频读取文件的大小，而不是项目知识总量**。Agent 会在正常 RECONCILE 中自动处理 knowledge-health signal，不把 housekeeping 丢给用户。大型 capability spec 自动变成小型 `spec.md` 索引 + `requirements/*.md` + 可选 `decisions.md`；rules 按 scope 拆分；NOW/INTENT 重写为简洁当前状态；旧 runtime evidence/session 自动回收。ADR/spec/rule 的文件数量可以随着项目演进持续增加，但每次只按需读取相关文件。`keelson doctor` 保留为诊断工具，不是日常维护步骤。
+Keelson 限制的是**高频读取文件的大小，而不是项目知识总量**。Agent 会在正常 RECONCILE 中自动处理 knowledge-health signal，不把 housekeeping 丢给用户。大型 capability spec 自动变成小型 `spec.md` 索引 + `requirements/*.md` + 按需 `decisions/*.md`；rules 按 scope 拆分；NOW/INTENT 重写为简洁当前状态；旧 runtime evidence/session 自动回收。ADR/spec/rule 的文件数量可以随着项目演进持续增加，但每次只按需读取相关文件。`keelson doctor` 保留为诊断工具，不是日常维护步骤。
 
 **它对测试驱动开发有立场吗？**
 没有。`verify` reference 要求与代码匹配且覆盖验收清单的证据。`guided` profile 加了一条说明：delta spec 里有场景时建议先写测试，问题是视觉性的或涉及未知 API 时建议先做原型。`lean` profile 把方法留给代理。
