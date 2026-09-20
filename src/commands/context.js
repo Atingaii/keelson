@@ -63,7 +63,7 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
   out.push('## INTENT.md', '', data.intent || '(empty — fill in .keelson/INTENT.md)', '');
   if (data.roadmap) out.push('## ROADMAP.md', '', data.roadmap, '');
   if (data.glossary) out.push('## GLOSSARY.md', '', data.glossary, '');
-  if (data.guide) out.push('Guided mode is on: the owner is learning; ask with scenarios, recommend with trade-offs, explain terms.', '');
+  if (data.guide) out.push('Guided mode is on: keep normal accessible questioning, and add concise teaching about the engineering ideas and constraint rationale behind settled decisions.', '');
   out.push('## NOW.md', '', data.now || '(empty)', '');
   if (data.knowledge.maintenance.length) {
     out.push('## Internal knowledge maintenance', '');
