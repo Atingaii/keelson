@@ -31,7 +31,7 @@ Agents start from `workflow.md` → `skill/SKILL.md`. Everything else is maintai
 | `GLOSSARY.md` | Shared vocabulary becomes load-bearing or ambiguous |
 | `specs/<capability>/spec.md` | A capability has observable behavior worth treating as a contract; it stays a small index when the contract auto-shards |
 | `specs/<capability>/requirements/*.md` | Automatically appears when one capability contract outgrows a single readable file |
-| `specs/<capability>/decisions.md` | Automatically appears when capability-local durable decisions need their own bounded file |
+| `specs/<capability>/decisions/*.md` | Automatically appears when capability-local durable decisions grow; one small durable decision file per item |
 | `rules/index.md` + `rules/*.md` | A stable engineering invariant applies to a path and is not better expressed as a check |
 | `changes/<name>/change.md` | Non-trivial work needs a reviewable boundary |
 | `changes/<name>/tasks.md` | The work needs an explicit multi-step / multi-slice plan |
