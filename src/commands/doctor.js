@@ -125,7 +125,9 @@ export async function doctor({ flags }, cwd = process.cwd()) {
   }
 
   const health = knowledgeHealth(root, cfg, p);
-  for (const h of health) add(h.level, `${h.kind}: ${h.text} → ${h.fix}`);
+  // Critical budget findings already arrive through validateProject; add the
+  // advisory health findings here without duplicating hard-limit errors.
+  for (const h of health) if (h.level !== 'error') add(h.level, `${h.kind}: ${h.text} → ${h.fix}`);
 
   const det = detectLocal();
   for (const t of cfg.tools ?? []) if (det.tools[t] && !det.tools[t].installed) add('info', `${PLATFORMS[t]?.label ?? t} CLI not found on PATH (fine if you use it through an IDE)`);
