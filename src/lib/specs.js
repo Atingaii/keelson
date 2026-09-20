@@ -2,10 +2,66 @@ import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { exists, read, readOr, write, walk, rmrf } from './fs.js';
-import { parseFrontmatter, parseSpec, renderSpec } from './markdown.js';
+import { markdownHeadings, parseFrontmatter, parseSpec, renderSpec } from './markdown.js';
 import { resolveWithin } from './paths.js';
 
 const lineCount = (text) => String(text ?? '').split('\n').length;
+
+const hasText = (lines) => lines.some((line) => line.trim());
+const requirementTitle = (title) => /^Requirement:\s*(.+)$/i.test(title);
+
+/**
+ * Sharded storage can represent the title, purpose, requirements, and decision
+ * bullets.  Do not use a byte-for-byte comparison with canonical output here:
+ * ordinary specs have harmless choices in blank lines and heading order.  We
+ * instead reject only source material for which the shard index has no owner.
+ */
+function hasUnmanagedSpecContent(capability, spec) {
+  const source = spec.source;
+  const { body } = parseFrontmatter(source);
+  // The shard index owns its own layout frontmatter. Any source frontmatter,
+  // including an otherwise empty block, would be discarded by that index.
+  if (body !== source || spec.name !== capability) return true;
+
+  const lines = body.split('\n');
+  const headings = markdownHeadings(body);
+  const names = headings.filter((heading) => heading.level === 1);
+  if (names.length !== 1 || hasText(lines.slice(0, names[0].line))) return true;
+
+  const h2 = headings.filter((heading) => heading.level === 2);
+  let cursor = names[0].line + 1;
+  let purposeCount = 0;
+  for (const heading of h2) {
+    // Text between structural sections is not parsed into any owned field.
+    if (hasText(lines.slice(cursor, heading.line))) return true;
+    const next = headings.find((candidate) => candidate.line > heading.line && candidate.level <= 2);
+    const end = next ? next.line : lines.length;
+    const content = lines.slice(heading.line + 1, end);
+
+    if (/^Purpose$/i.test(heading.title)) {
+      if (++purposeCount > 1) return true;
+    } else if (requirementTitle(heading.title)) {
+      // A legacy requirement's complete body is written into its own shard.
+    } else if (/^Requirements$/i.test(heading.title)) {
+      const h3 = headings.filter((candidate) => candidate.level === 3
+        && candidate.line > heading.line && candidate.line < end);
+      if (h3.some((candidate) => !requirementTitle(candidate.title))) return true;
+      // Preamble prose under an OpenSpec container is not part of any
+      // requirement and would disappear when the container becomes a folder.
+      if (h3.length && hasText(lines.slice(heading.line + 1, h3[0].line))) return true;
+      if (!h3.length && hasText(content)) return true;
+    } else if (/^Decisions?$/i.test(heading.title)) {
+      // parseSpec owns decision bullets only. Keep comments, prose, headings,
+      // and fenced examples in the original document rather than silently
+      // converting or dropping them.
+      if (content.some((line) => line.trim() && !/^\s*[-*]\s+/.test(line))) return true;
+    } else {
+      return true;
+    }
+    cursor = end;
+  }
+  return hasText(lines.slice(cursor));
+}
 export const slugify = (s) => Array.from(String(s)
   .normalize('NFKD')
   .replace(/\p{Mark}/gu, '')
@@ -179,17 +235,10 @@ export function planCapabilityStorage(capability, logicalText, budget = 0, {
   const spec = parseSpec(logicalText);
   const canonical = renderSpec(spec);
   const soft = Number(budget) || 0;
-  // A shard index has room only for the parsed ownership model.  Keep a
-  // single file whenever parsing and canonical rendering would omit source
-  // material, so a large custom section or frontmatter cannot vanish merely
-  // because a capability crossed its soft size budget.
-  const ownedOnly = renderSpec({
-    name: spec.name,
-    purpose: spec.purpose,
-    requirements: spec.requirements,
-    decisions: spec.decisions,
-  });
-  const mustKeepSingle = spec.source !== ownedOnly;
+  // A shard index has room only for the parsed ownership model. Keep a single
+  // file when source content has no shard owner, but accept harmless canonical
+  // layout differences in otherwise fully-modelled legacy/OpenSpec documents.
+  const mustKeepSingle = hasUnmanagedSpecContent(capability, spec);
   if (!soft || lineCount(canonical) <= soft || mustKeepSingle) {
     return {
       mode: 'single',

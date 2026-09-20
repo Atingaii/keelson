@@ -131,6 +131,29 @@ This text must survive.
   assert.equal(plan.logicalText, source);
 });
 
+test('sharding accepts harmless layout differences in fully managed sections', () => {
+  const source = `# orders
+
+## Requirement: Existing
+old
+### Scenario: existing
+- WHEN old
+- THEN kept
+
+## Purpose
+Orders.
+
+## Decisions
+- orders: keep the bounded representation
+`;
+  const plan = planCapabilityStorage('orders', source, 3);
+  assert.equal(plan.mode, 'sharded');
+  assert.equal(plan.requirementsDir, 'requirements');
+  assert.equal(plan.decisionsDir, 'decisions');
+  assert.ok(plan.files.some((file) => file.rel === 'requirements/existing.md'));
+  assert.ok(plan.files.some((file) => file.rel.startsWith('decisions/')));
+});
+
 test('shard metadata cannot escape or traverse a symlinked capability directory', (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'keelson-shard-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

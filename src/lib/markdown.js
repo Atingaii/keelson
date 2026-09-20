@@ -27,6 +27,12 @@ function headings(text) {
   return out;
 }
 
+/**
+ * Expose the fence-aware structural view for consumers which must decide
+ * whether a Markdown document can be represented by a narrower data model.
+ */
+export const markdownHeadings = (text) => headings(text);
+
 export function parseFrontmatter(text) {
   text = normalizeNewlines(text);
   const m = text.match(/^---\n([\s\S]*?)\n---\n?/);
