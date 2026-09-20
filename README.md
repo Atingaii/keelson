@@ -91,7 +91,12 @@ Keelson does not turn every feature into an architecture interview. The agent re
 When it must ask, it defaults to one concrete decision at a time:
 
 > **You:** Build a shared memory service for several agents.  
-> **Agent:** One choice changes the design: should a memory be private until explicitly shared, or visible to the whole team by default? I recommend private-by-default + explicit sharing because it keeps the permission boundary narrow while still allowing collaboration. If you are not sure, I can use that default.
+> **Agent:** **Decision:** who should see a memory by default?  
+> - **A. Creator only.** **Engineering:** an `owner_id` plus ownership checks is enough; the existing relational database can handle it.  
+> - **B. Private by default, explicitly shareable.** **Engineering:** add a `memory_share`/ACL relation and reuse the current auth middleware; existing Postgres/MySQL is normally sufficient and Redis is not required initially.  
+> - **C. Team-visible by default.** **Engineering:** add workspace/team membership and scope queries by workspace; the same relational database still works, but authorization tests and migration complexity increase.  
+> - **Not sure — use your recommendation.**  
+> **Recommended: B**, because it preserves a narrow permission boundary while still enabling collaboration. **Implementation direction:** reuse the project's current database/auth stack; add new infrastructure only if an observed requirement forces it.
 
 Technical vocabulary comes after the consequence is understood. “Not sure” is a valid answer: Keelson then investigates, uses a reversible default, or makes the trade-off visible with a small prototype. `guide: true` adds teaching explanations; understandable questions are the default for everyone.
 

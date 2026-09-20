@@ -29,7 +29,7 @@ A blindspot does **not** automatically become a question. Route it to an existin
 Ask one blocking decision at a time. Prefer a concrete scenario and recognition over recall:
 
 - describe the situation in the owner’s language;
-- give 2–4 **materially different outcomes**, not technology brands;
+- give 2–4 **materially different outcomes**; when useful, attach one concise **Engineering:** consequence to each option instead of making the owner infer the implementation;
 - recommend one default and give the single most important reason;
 - state one meaningful trade-off when it matters;
 - include **“not sure / use your recommendation”** when legitimate;
@@ -37,7 +37,7 @@ Ask one blocking decision at a time. Prefer a concrete scenario and recognition 
 
 Bad: “Postgres or MongoDB?”
 
-Better: “Can one record contain fields that change shape freely between users, or should every record obey one shared schema? I recommend a shared schema unless flexible per-user shapes are a core feature; it keeps validation and migrations simpler.”
+Better: “Can one record contain fields that change shape freely between users, or should every record obey one shared schema? I recommend a shared schema unless flexible per-user shapes are a core feature; it keeps validation and migrations simpler. **Engineering:** with the project's existing relational database this is a normal typed table; no new datastore is needed.”
 
 Do not make the owner remember earlier context to answer. Briefly restate the fact or constraint that makes this question relevant.
 
@@ -48,14 +48,31 @@ Keep the owner-visible interaction compact. Use this shape when options are usef
 
 **Decision:** <one plain-language question>
 
-- A. <observable outcome>
-- B. <observable outcome>
-- C. <observable outcome, only if genuinely distinct>
+- A. <observable outcome>  
+  **Engineering:** <data model / permission / API / operational consequence if material>
+- B. <observable outcome>  
+  **Engineering:** <material implementation consequence>
+- C. <observable outcome, only if genuinely distinct>  
+  **Engineering:** <material implementation consequence>
 - Not sure — use your recommendation
 
-**Recommended:** <choice>, because <one decisive reason>.
+**Recommended:** <choice>, because <one decisive reason>.  
+**Implementation direction:** <reuse the current stack; name the likely concrete components only when they are supported by the repository or genuinely differ by option>.
 
 Add a one-sentence “Why now” only when the relevance is not obvious. Do not expose the internal lens checklist, scoring, or chain of reasoning. If the owner asks for an explanation, answer it in normal chat before asking again.
+
+## Show enough implementation consequence
+<!-- keelson: id=interview.implementation | without: the owner understands the product choice but cannot tell what it means for the actual system, or technology names are presented without architectural context | sunset: never -->
+
+Before naming a technology, inspect the repository's actual stack. The question card should make the engineering consequence concrete without turning into technology shopping:
+
+- If the existing stack supports an option, say what changes inside that stack: schema/table, permission model, endpoint/contract, background job, cache, migration, or test surface.
+- If **no new technology is required**, say so explicitly. Do not introduce Redis, Kafka, a new database, a new service, or a framework merely to make the answer look technical.
+- If options genuinely require different architecture, name the likely concrete technology or category and why—for example “existing Postgres + ACL table is enough” versus “team-wide fan-out at this scale would require a queue”.
+- In a greenfield project, state a **likely direction**, not a fake certainty: “relational database such as Postgres”, “object storage”, “queue only if asynchronous fan-out is required”.
+- Prefer implementation consequences the owner can reason about: consistency, migration difficulty, operational cost, failure modes, permissions, and future reversibility.
+
+Technology is explanatory context after the product consequence is clear. It is not a substitute for the decision itself.
 
 ## Dependency order and scope pressure
 <!-- keelson: id=interview.order | without: downstream technology is decided before product boundaries, or the interview expands into speculative future architecture | sunset: never -->

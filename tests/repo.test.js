@@ -137,12 +137,16 @@ test('shaping audits assumptions without turning clarification into ceremony', (
   const zhLenses = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/design-lenses.md'), 'utf8');
   assert.match(enInterview, /not sure/i);
   assert.match(zhInterview, /不确定/);
-  for (const id of ['interview.protocol', 'interview.blindspots', 'interview.one-at-a-time', 'interview.presentation', 'interview.order', 'interview.adaptive', 'interview.uncertain', 'interview.stop']) {
+  for (const id of ['interview.protocol', 'interview.blindspots', 'interview.one-at-a-time', 'interview.presentation', 'interview.implementation', 'interview.order', 'interview.adaptive', 'interview.uncertain', 'interview.stop']) {
     assert.match(enInterview, new RegExp(`id=${id.replace('.', '\\.')}\\b`), id);
     assert.match(zhInterview, new RegExp(`id=${id.replace('.', '\\.')}\\b`), id);
   }
   assert.match(enInterview, /recognition over recall/i);
   assert.match(zhInterview, /优先“识别”而不是“回忆”/);
+  assert.match(enInterview, /Implementation direction:/);
+  assert.match(zhInterview, /建议实现：/);
+  assert.match(enInterview, /no new technology is required/i);
+  assert.match(zhInterview, /不需要新增技术时明确说不需要/);
   assert.match(enInterview, /If you cannot name a material consequence.*do not ask/is);
   assert.match(zhInterview, /如果说不清实质后果.*不要问/s);
   for (const term of ['Security', 'Concurrency', 'accessibility', 'AI']) assert.match(enLenses, new RegExp(term, 'i'));
