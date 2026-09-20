@@ -38,7 +38,7 @@ The agent creates/binds one durable change and keeps this conversation focused o
 
 You can keep asking questions like this indefinitely. No “finish task” phrase is required.
 
-When acceptance is satisfied and fresh verification matches the current tree, Keelson derives the work state as **ready**. The agent lands it automatically before claiming completion. If you simply close the window first, the durable change remains in progress; only the local session focus disappears.
+When acceptance is satisfied, active dependencies/blockers/assumptions/spec drift are clear, and fresh verification matches the current tree, Keelson derives the work state as **ready**. The agent lands it automatically before claiming completion. If you simply close the window first, the durable change remains in progress; only the local session focus disappears.
 
 A later session can deliberately resume it with `keelson focus --auto` when the candidate is unambiguous. A committed `handoff.md` is reserved for a real ownership/machine transfer, not ordinary chat continuation.
 
@@ -56,17 +56,13 @@ That is the normal setup.
 
 Then open Claude Code, Codex, OpenCode, Pi, Gemini CLI, Kiro CLI, or CodeBuddy CLI in the project and work as usual.
 
-Most users only ever run:
+Normal use requires only:
 
 ```bash
-keelson init       # once
-keelson status     # optional: inspect current state
-keelson doctor     # diagnose
-keelson update     # after upgrading or changing hosts
-keelson uninstall  # remove generated integration surfaces
+keelson init       # once, then talk to your agent normally
 ```
 
-The rest of the CLI exists primarily for the coding agent.
+`status` is optional inspection, `doctor` is for troubleshooting, `update` is for upgrades/host changes, and `uninstall` removes the integration. Knowledge compaction, spec sharding, runtime cleanup, and the remaining engineering commands are internal Keelson/agent work.
 
 ## One golden path
 
@@ -111,7 +107,7 @@ Optional durable knowledge appears only when it carries real information:
 ROADMAP.md                   # milestone/direction if the tracker does not already own it
 GLOSSARY.md                  # load-bearing vocabulary
 rules/                       # durable scoped invariants
-specs/<capability>/spec.md   # behavior contracts
+specs/<capability>/          # behavior contract; monolith when small, auto-sharded when large
 changes/<name>/              # durable work items in flight
 ```
 
@@ -134,7 +130,9 @@ changes/rename-buyer/
 
 `tasks.md`, `ledger.md`, delta specs, and `handoff.md` appear only when they carry a plan, evidence, contract delta, or explicit ownership transfer.
 
-**Empty scaffolding is not progress; a closed conversation is not completion.**
+Large capabilities automatically become a small `spec.md` index + `requirements/*.md` + optional `decisions.md`. ADR/rule/spec file counts may grow with the project, but only relevant files are loaded for current work. Old session/evidence cache entries are pruned automatically.
+
+**Empty scaffolding is not progress; a closed conversation is not completion; control-plane maintenance is not user work.**
 
 ## One canonical runtime
 
