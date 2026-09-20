@@ -11,6 +11,17 @@ the context-popped signal, exception-group leaves and restoration of a nested
 outer context. It runs under the same pinned Python 3.11 environment. Older
 Python fallback behavior is not measured by this audit.
 
+This is a stronger post-freeze robustness probe, not a replacement score for
+the original prompt. In particular, it includes a failing `appcontext_popped`
+receiver and checks a specific flattened error order. The original prompt did
+not name that receiver or prescribe that order. Flask documents
+[`appcontext_popped`](https://flask.palletsprojects.com/en/stable/api/#flask.appcontext_popped)
+separately from the two teardown signals. Preserve this probe and all its
+outcomes, but describe a failure at that extra boundary precisely rather than
+claiming every assertion was an explicit original acceptance condition. This
+scope clarification followed inspection of bare repetition 2, whose popped
+receiver exception replaced its previously collected errors.
+
 First require the unchanged baseline to fail and the pinned upstream fix to
 pass. Then replay every method's three saved teardown patches against the
 same baseline and locked dependencies. Save raw outputs separately from the
