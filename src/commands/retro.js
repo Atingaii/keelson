@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { readOr, walk, listDirs, read, exists } from '../lib/fs.js';
+import { skillSource } from '../platforms/index.js';
 import { parseLedger, ROOT_CAUSES } from '../lib/markdown.js';
 import { loadAllChanges } from '../lib/changes.js';
 import { historicalLedgers } from '../lib/git.js';
@@ -45,14 +46,16 @@ export function computeMetrics(ledgers) {
   };
 }
 
-/** Parse guidance annotations from the single canonical project-local skill. */
+/** Parse guidance annotations from a vendored skill or the package guidance. */
 export function collectGuidance(root) {
   const out = [];
-  const dir = path.join(root, '.keelson', 'skill', 'references');
+  const vendored = path.join(root, '.keelson', 'skill', 'references');
+  const dir = exists(vendored) ? vendored : path.join(skillSource('en'), 'references');
+  const relBase = exists(vendored) ? '.keelson/skill/references' : 'package:skills/keelson/references';
   for (const f of walk(dir)) {
     const txt = read(path.join(dir, f));
     for (const m of txt.matchAll(/<!--\s*keelson:\s*id=([\w.-]+)\s*\|\s*without:\s*([^|]*?)\s*\|\s*sunset:\s*(.*?)\s*-->/g)) {
-      out.push({ id: m[1], without: m[2].trim(), sunset: m[3].trim(), file: `.keelson/skill/references/${f}` });
+      out.push({ id: m[1], without: m[2].trim(), sunset: m[3].trim(), file: `${relBase}/${f}` });
     }
   }
   return out;
@@ -99,7 +102,7 @@ export async function retro({ flags }, cwd = process.cwd()) {
   console.log(`  verify entries ${metrics.verifies.total}, failed ${metrics.verifies.failed}`);
   console.log('');
   heading('Guidance with sunset conditions');
-  if (!guidance.length) console.log(dim('  none found (run `keelson update` to restore .keelson/skill/)'));
+  if (!guidance.length) console.log(dim('  none found in package guidance'));
   for (const g of guidance) console.log(`  ${g.id.padEnd(26)} ${dim(g.sunset)}`);
   console.log('');
   heading('Suggestions');

@@ -15,4 +15,4 @@
 - 重复 failure class 升级为作用域 rule 或可执行 fitness check；自动化接管后删掉冗余 prose。
 - First contact 根据仓库证据推导 `INTENT.md`；只有未决项目边界会实质影响当前工作时才询问所有者。specs/rules 只有真实工作暴露长期真相时才增长。
 
-canonical 路由器是 `.keelson/skill/SKILL.md`。它判断对话意图；生命周期转换来自 work state，而不是用户措辞。
+包内路由器是 `keelson guide`。它判断对话意图；生命周期转换来自 work state，而不是用户措辞。项目仅在使用 `keelson init --vendor` 时才会保存副本。

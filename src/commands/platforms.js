@@ -10,7 +10,7 @@ export async function platforms({ flags }, cwd = process.cwd()) {
   const root = findProjectRoot(cwd);
   const cfg = root ? loadConfig(projectPaths(root).config) : null;
   const det = detectLocal().tools;
-  const portableConfigured = Boolean(root && exists(path.join(root, '.keelson', 'workflow.md')) && exists(path.join(root, '.keelson', 'skill', 'SKILL.md')) && exists(path.join(root, 'AGENTS.md')) && exists(path.join(root, '.agents', 'skills', 'keelson', 'SKILL.md')));
+  const portableConfigured = Boolean(root && cfg?.tools?.includes('agents') && exists(path.join(root, 'AGENTS.md')) && exists(path.join(root, '.agents', 'skills', 'keelson', 'SKILL.md')));
   const rows = PLATFORM_IDS.map((id) => {
     const p = PLATFORMS[id];
     const configured = id === 'agents' ? portableConfigured : cfg?.tools?.includes(id) ?? false;
@@ -34,6 +34,6 @@ export async function platforms({ flags }, cwd = process.cwd()) {
     console.log(`  --${r.id.padEnd(12)} ${r.label.padEnd(w)}  ${r.instructions.padEnd(16)} ${r.skillDiscovery.padEnd(20)} ${(r.support ?? '').padEnd(11)} ${(r.effectiveSessionFocus ?? r.sessionFocus ?? 'degraded').padEnd(9)} ${r.hooks ? 'hooks ' : '      '} ${dim(r.confidence)}${marks ? dim(`  [${marks}]`) : ''}`);
   }
   console.log('');
-  console.log(dim('canonical runtime: .keelson/workflow.md + .keelson/skill/ · portable discovery: AGENTS.md + .agents/skills/'));
+  console.log(dim('guidance stays in the installed package by default; use `keelson guide` or opt in to `keelson init --vendor` for a project copy'));
   return 0;
 }

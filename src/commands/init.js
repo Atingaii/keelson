@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { projectPaths, findProjectRoot } from '../lib/paths.js';
 import { exists, write, read, mkdirp, readOr } from '../lib/fs.js';
 import { loadConfig, saveConfig, DEFAULT_CONFIG, CONFIG_VERSION } from '../lib/config.js';
-import { PLATFORMS, PLATFORM_IDS, RETIRED_PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, installSessionAdapter, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile, plannedManagedRemovals, plannedSessionAdapterFiles, reconcileManagedTargets, writeManagedState } from '../platforms/index.js';
+import { PLATFORMS, PLATFORM_IDS, RETIRED_PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, installSessionAdapter, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile, plannedManagedRemovals, plannedSessionAdapterFiles, readManagedState, reconcileManagedTargets, removeCanonicalRuntime, removeLegacyCopiedHooks, writeManagedState } from '../platforms/index.js';
 import { list } from '../lib/args.js';
 import { ok, info, warn, heading, dim } from '../lib/out.js';
 import { detectAndCache, detectLocal } from '../lib/models.js';
@@ -155,6 +155,7 @@ export async function init({ flags }, cwd = process.cwd()) {
   }
   const p0 = projectPaths(root, cfg);
   mkdirp(p0.keelson);
+  const priorManaged = readManagedState(root);
   if (fresh) {
     const det = detectRefs(root);
     cfg.refs = { ...cfg.refs, ...Object.fromEntries(Object.entries(det.refs).filter(([, v]) => v)) };
@@ -181,9 +182,23 @@ export async function init({ flags }, cwd = process.cwd()) {
 
   for (const rel of reconcileManagedTargets(root, targets)) ok(`removed stale managed surface → ${rel}`);
 
+  // v0.3 had no vendor bit and always copied guidance and executable hooks.  Its
+  // manifest is the ownership proof; every removal below still verifies content.
+  if (priorManaged && priorManaged.vendor === undefined) {
+    const legacy = removeCanonicalRuntime(root, {
+      lang: cfg.lang,
+      profile: cfg.profile,
+      version: priorManaged.packageVersion,
+      guide: cfg.guide,
+    });
+    const hooks = removeLegacyCopiedHooks(root);
+    for (const rel of [...legacy.removed, ...hooks.removed]) ok(`removed legacy copied runtime → ${rel}`);
+    for (const rel of [...legacy.preserved, ...hooks.preserved]) warn(`kept ${rel}: it differs from the v0.3 Keelson output`);
+  }
+
   if (cfg.vendor) {
-    const workflowPath = installWorkflow(root, { lang: cfg.lang, guide: cfg.guide });
-    const canonicalSkillPath = installCanonicalSkill(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION });
+    const workflowPath = installWorkflow(root, { lang: cfg.lang, guide: cfg.guide, force: flags.force });
+    const canonicalSkillPath = installCanonicalSkill(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION, force: flags.force });
     ok(`vendored guidance → ${workflowPath}; ${canonicalSkillPath}`);
   } else info('guidance stays in the installed package; agents load it with `keelson guide`');
 
@@ -192,7 +207,7 @@ export async function init({ flags }, cwd = process.cwd()) {
     const discoveryKey = `${t.instructions}|${t.skillsDir}|${t.rulesFile ?? ''}`;
     if (!discoveryInstalled.has(discoveryKey)) {
       discoveryInstalled.add(discoveryKey);
-      const skillPath = installSkill(root, t, { lang: cfg.lang, version: PKG_VERSION });
+      const skillPath = installSkill(root, t, { lang: cfg.lang, version: PKG_VERSION, force: flags.force });
       const files = installInstructions(root, t, { lang: cfg.lang });
       ok(`${t.label}: discovery shim → ${skillPath}; instructions → ${files.join(', ')}${t.confidence === 'convention' ? dim(' (path by convention; run `keelson doctor` after your first session)') : ''}`);
     } else {

@@ -98,30 +98,31 @@ test('documentation home and complete user-flow guide exist in both languages', 
   assert.match(fs.readFileSync(path.join(ROOT, 'docs', 'zh', 'user-flow.md'), 'utf8'), /对话生命周期不等于工作生命周期/);
 });
 
-test('resident instructions are discovery-only shims into .keelson', () => {
+test('resident instructions route to package guidance without a project runtime path', () => {
   for (const lang of ['skills/keelson', 'skills/zh/keelson']) {
     const block = fs.readFileSync(path.join(ROOT, lang, 'templates', 'resident-block.md'), 'utf8');
     assert.ok(block.split('\n').length <= 10, `${lang}/templates/resident-block.md ≤ 10 lines`);
-    assert.match(block, /\.keelson\/workflow\.md/);
-    assert.match(block, /\.keelson\/skill\/SKILL\.md/);
-    assert.doesNotMatch(block, /keelson context --paths/);
+    assert.match(block, /keelson guide/);
+    assert.doesNotMatch(block, /\.keelson\/(?:workflow|skill)/);
   }
 });
 
-test('repository dogfood runtime exactly matches the generated lean canonical runtime and only shims outside', () => {
-  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
-  const rendered = renderSkillFiles('en', 'lean', pkg.version);
-  assert.deepEqual(walk(path.join(ROOT, '.keelson', 'skill')), rendered.map((f) => f.rel).sort());
-  for (const f of rendered) {
-    assert.equal(fs.readFileSync(path.join(ROOT, '.keelson', 'skill', f.rel), 'utf8').replace(/\r\n?/g, '\n'), f.content, `.keelson/skill/${f.rel}`);
+test('repository dogfood uses the configured lightweight discovery shim', () => {
+  const config = fs.readFileSync(path.join(ROOT, '.keelson', 'config.yaml'), 'utf8');
+  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, '.keelson', 'manifest.json'), 'utf8'));
+  assert.equal(manifest.vendor ?? false, false);
+  assert.ok(!fs.existsSync(path.join(ROOT, '.keelson', 'skill')));
+  assert.ok(!fs.existsSync(path.join(ROOT, '.keelson', 'workflow.md')));
+  const tools = [...config.matchAll(/^  - (\w+)$/gm)].map((match) => match[1]);
+  const registry = JSON.parse(fs.readFileSync(path.join(ROOT, 'registry', 'platforms.json'), 'utf8'));
+  for (const tool of tools) {
+    const platform = registry.platforms[tool];
+    assert.ok(platform, `configured platform ${tool}`);
+    const shim = path.join(ROOT, platform.skillsDir, 'keelson');
+    assert.deepEqual(walk(shim), ['SKILL.md']);
+    assert.match(fs.readFileSync(path.join(shim, 'SKILL.md'), 'utf8'), /keelson guide/);
+    assert.match(fs.readFileSync(path.join(ROOT, platform.instructions), 'utf8'), /keelson guide/);
   }
-  assert.equal(fs.readFileSync(path.join(ROOT, '.keelson', 'workflow.md'), 'utf8').replace(/\r\n?/g, '\n'), workflowContent('en', false));
-  for (const shim of ['.claude/skills/keelson', '.agents/skills/keelson']) {
-    assert.deepEqual(walk(path.join(ROOT, shim)), ['SKILL.md']);
-    assert.match(fs.readFileSync(path.join(ROOT, shim, 'SKILL.md'), 'utf8'), /\.keelson\/skill\/SKILL\.md/);
-  }
-  assert.match(fs.readFileSync(path.join(ROOT, 'CLAUDE.md'), 'utf8'), /\.keelson\/workflow\.md/);
-  assert.match(fs.readFileSync(path.join(ROOT, 'AGENTS.md'), 'utf8'), /\.keelson\/workflow\.md/);
 });
 
 test('shaping audits assumptions without turning clarification into ceremony', () => {
@@ -223,9 +224,9 @@ test('platform registry exposes exactly seven first-class hosts plus the portabl
     assert.equal(reg.platforms[id].rulesFile, undefined, `${id}: no duplicate host rule file`);
     assert.ok(['native', 'degraded'].includes(reg.platforms[id].sessionFocus), `${id}: sessionFocus capability is explicit`);
   }
-  for (const id of ['claude', 'opencode', 'pi', 'codebuddy']) assert.equal(reg.platforms[id].sessionFocus, 'native', id);
-  for (const id of ['codex', 'gemini', 'kiro']) assert.equal(reg.platforms[id].sessionFocus, 'degraded', id);
-  assert.equal(reg.platforms.opencode.sessionAdapter, 'opencode-plugin');
+  for (const id of ['claude', 'codex', 'pi', 'codebuddy']) assert.equal(reg.platforms[id].sessionFocus, 'native', id);
+  for (const id of ['opencode', 'gemini', 'kiro']) assert.equal(reg.platforms[id].sessionFocus, 'degraded', id);
+  assert.equal(reg.platforms.opencode.sessionAdapter, undefined);
   assert.equal(reg.platforms.pi.sessionAdapter, 'pi-env');
   assert.equal(reg.platforms.codebuddy.sessionAdapter, 'codebuddy-hooks');
   assert.equal(reg.platforms.agents.support, 'portable');

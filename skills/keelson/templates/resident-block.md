@@ -1,7 +1,7 @@
 <!-- keelson:start -->
 ## Keelson
 
-This project is managed by Keelson. The canonical workflow and engineering guidance live under `.keelson/`.
-Before non-trivial work, read `.keelson/workflow.md`. Task-specific guidance is routed from `.keelson/skill/SKILL.md`.
+This project is managed by Keelson. Before non-trivial work, run `keelson guide` and follow it.
+For a routed topic, run `keelson guide <reference>`. Use `keelson init --vendor` only when the project needs a checked-in guidance copy.
 Files outside `.keelson/` are discovery adapters only; do not duplicate Keelson guidance here.
 <!-- keelson:end -->

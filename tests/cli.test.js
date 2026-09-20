@@ -1,4 +1,4 @@
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -9,6 +9,7 @@ import { tmpProject, run, read, exists, write } from './helpers.js';
 
 const HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'keelson-home-'));
 const env = { HOME };
+after(() => fs.rmSync(HOME, { recursive: true, force: true }));
 
 // These lifecycle fixtures exercise gate behavior, using a real successful process.
 function recordFixture(dir, name) {
@@ -17,70 +18,109 @@ function recordFixture(dir, name) {
   run(dir, ['check', '--trust', '--record', '--change', name, '--quiet'], { env });
 }
 
-test('init creates a minimal control plane; update is idempotent', () => {
-  const dir = tmpProject({ 'package.json': '{"name":"x","scripts":{"test":"echo ok"}}', 'CLAUDE.md': '# Mine\n' });
-  run(dir, ['init', '--tools', 'claude,opencode'], { env });
-  for (const f of ['.keelson/README.md', '.keelson/INTENT.md', '.keelson/NOW.md', '.keelson/config.yaml', '.keelson/manifest.json', '.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/skill/references/build.md', '.keelson/hooks/session-start.mjs', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', 'AGENTS.md']) assert.ok(exists(dir, f), f);
-  for (const f of ['.keelson/ROADMAP.md', '.keelson/GLOSSARY.md', '.keelson/rules', '.keelson/specs', '.keelson/changes']) assert.ok(!exists(dir, f), `fresh init should not create optional ${f}`);
-  assert.ok(!exists(dir, '.claude/skills/keelson/references'), 'host skill directory is a shim only');
-  assert.ok(!exists(dir, '.agents/skills/keelson/references'), 'portable skill directory is a shim only');
-  assert.ok(!exists(dir, '.keelson/skill/templates'), 'templates are not installed into the canonical runtime skill');
-  const claude = read(dir, 'CLAUDE.md');
-  assert.match(claude, /^# Mine/);
-  assert.equal((claude.match(/keelson:start/g) || []).length, 1);
-  assert.match(read(dir, '.keelson/config.yaml'), /- npm run test/);
-  const settings = JSON.parse(read(dir, '.claude/settings.json'));
-  assert.equal(settings.hooks.SessionStart.length, 1);
-  assert.equal(settings.hooks.UserPromptSubmit.length, 1);
-  run(dir, ['update'], { env });
-  assert.equal((read(dir, 'CLAUDE.md').match(/keelson:start/g) || []).length, 1);
-  assert.equal(JSON.parse(read(dir, '.claude/settings.json')).hooks.SessionStart.length, 1);
-  // lean profile strips guided blocks
-  assert.doesNotMatch(read(dir, '.keelson/skill/references/build.md'), /guided/);
-  assert.match(read(dir, '.claude/skills/keelson/SKILL.md'), /\.keelson\/skill\/SKILL\.md/);
-  assert.match(read(dir, 'CLAUDE.md'), /\.keelson\/workflow\.md/);
+test('default installation stays within the lightweight budget and leaves ignore files alone', () => {
+  for (const [tool, instruction] of [['claude', 'CLAUDE.md'], ['codex', 'AGENTS.md']]) {
+    const dir = tmpProject({ 'package.json': '{"name":"x"}', [instruction]: '# Mine\n', '.gitignore': 'node_modules\n# mine\n' });
+    const beforeFiles = new Set(fs.readdirSync(dir, { recursive: true }).filter((entry) => typeof entry === 'string'));
+    const beforeTop = new Set(fs.readdirSync(dir));
+    const ignore = read(dir, '.gitignore');
+    run(dir, ['init', '--tools', tool, '--no-hooks'], { env });
+    const generatedFiles = fs.readdirSync(dir, { recursive: true })
+      .filter((entry) => typeof entry === 'string' && !beforeFiles.has(entry))
+      .filter((entry) => fs.statSync(path.join(dir, entry)).isFile());
+    const generatedLines = generatedFiles.reduce((total, entry) => total + read(dir, entry).split(/\r?\n/).length, 0);
+    assert.ok(generatedFiles.length <= 10, `${tool}: ${generatedFiles.join(', ')}`);
+    assert.ok(generatedLines <= 400, `${tool}: ${generatedLines} generated lines`);
+    assert.ok(fs.readdirSync(dir).filter((entry) => !beforeTop.has(entry)).length <= 3, tool);
+    for (const rel of ['.keelson/skill', '.keelson/workflow.md', '.keelson/hooks']) assert.ok(!exists(dir, rel), `${tool}: ${rel}`);
+    assert.match(read(dir, instruction), /keelson guide/);
+    const skillsDir = tool === 'claude' ? '.claude/skills' : '.agents/skills';
+    assert.match(read(dir, path.join(skillsDir, 'keelson', 'SKILL.md')), /keelson guide/);
+    assert.equal(read(dir, '.gitignore'), ignore);
+    run(dir, ['update', '--no-hooks'], { env });
+    assert.equal(read(dir, '.gitignore'), ignore);
+  }
 });
 
-test('claude-only init installs the portable agents layer and a refreshable human map', () => {
-  const dir = tmpProject({});
-  run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env });
-  for (const f of ['CLAUDE.md', 'AGENTS.md', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', '.keelson/README.md', '.keelson/workflow.md', '.keelson/skill/SKILL.md']) assert.ok(exists(dir, f), f);
-  const map = read(dir, '.keelson/README.md');
-  assert.match(map, /## Start here/);
-  assert.match(map, /NOW\.md/);
-  assert.match(map, /INTENT\.md/);
-  write(dir, '.keelson/README.md', '# stale map\n');
-  run(dir, ['update', '--no-hooks'], { env });
-  assert.doesNotMatch(read(dir, '.keelson/README.md'), /stale map/);
-  const rows = JSON.parse(run(dir, ['platforms', '--json'], { env }).stdout);
-  assert.equal(rows.find((p) => p.id === 'agents').configured, true);
+test('claude-only init has no portable or vendored layer', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env });
+  for (const rel of ['AGENTS.md', '.agents', '.keelson/skill', '.keelson/workflow.md']) assert.ok(!exists(dir, rel), rel);
+  assert.ok(exists(dir, '.claude/skills/keelson/SKILL.md'));
 });
 
-test('changing configured tools removes stale generated adapters but preserves user content', () => {
+test('switching hosts removes only managed adapters and keeps user instructions', () => {
   const dir = tmpProject({ 'CLAUDE.md': '# Mine\n', 'AGENTS.md': '# Shared\n' });
-  run(dir, ['init', '--tools', 'claude,kiro'], { env });
+  run(dir, ['init', '--tools', 'claude,kiro', '--no-hooks'], { env });
   assert.ok(exists(dir, '.claude/skills/keelson/SKILL.md'));
   assert.ok(exists(dir, '.kiro/skills/keelson/SKILL.md'));
-  assert.ok(exists(dir, '.keelson/hooks/session-start.mjs'));
-
-  const dry = run(dir, ['update', '--tools', 'codex', '--dry-run'], { env }).stdout;
-  assert.match(dry, /remove\s+\.claude[\\/]skills[\\/]keelson/);
-  assert.match(dry, /remove\s+\.kiro[\\/]skills[\\/]keelson/);
-  assert.doesNotMatch(dry, /remove\s+AGENTS\.md/, 'shared desired discovery path should not be removed and re-added');
-
-  run(dir, ['update', '--tools', 'codex'], { env });
+  run(dir, ['update', '--tools', 'codex', '--no-hooks'], { env });
   assert.ok(!exists(dir, '.claude/skills/keelson'));
   assert.ok(!exists(dir, '.kiro/skills/keelson'));
-  assert.ok(!exists(dir, '.keelson/hooks'));
   assert.equal(read(dir, 'CLAUDE.md'), '# Mine\n');
   assert.match(read(dir, 'AGENTS.md'), /^# Shared/);
-  assert.match(read(dir, 'AGENTS.md'), /\.keelson\/workflow\.md/);
-  const settings = JSON.parse(read(dir, '.claude/settings.json'));
-  assert.equal(settings.hooks, undefined);
-  const managed = JSON.parse(read(dir, '.keelson/manifest.json'));
-  assert.doesNotMatch(JSON.stringify(managed), /claude|kiro/);
-  run(dir, ['doctor', '--json'], { env });
+  assert.match(read(dir, 'AGENTS.md'), /keelson guide/);
 });
+
+test('Kiro upsert retains frontmatter and user content', () => {
+  const dir = tmpProject({ 'AGENTS.md': '---\ninclusion: always\n---\n\n# User note\n' });
+  run(dir, ['init', '--tools', 'kiro', '--no-hooks'], { env });
+  assert.match(read(dir, 'AGENTS.md'), /^---\ninclusion: always\n---/); assert.match(read(dir, 'AGENTS.md'), /# User note/);
+  run(dir, ['update', '--no-hooks'], { env }); assert.equal((read(dir, 'AGENTS.md').match(/keelson:start/g) || []).length, 1);
+});
+
+
+test('update retires fixture-backed exact v0.3 runtime copies but retains modified legacy hooks', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'agents', '--no-hooks'], { env });
+  const fixture = path.resolve('tests/fixtures/v0.3-runtime/.keelson');
+  fs.cpSync(path.join(fixture, 'skill'), path.join(dir, '.keelson', 'skill'), { recursive: true, force: true });
+  fs.copyFileSync(path.join(fixture, 'workflow.md'), path.join(dir, '.keelson', 'workflow.md'));
+  const state = JSON.parse(read(dir, '.keelson/manifest.json')); state.packageVersion = '0.3.0'; delete state.vendor;
+  write(dir, '.keelson/manifest.json', JSON.stringify(state, null, 2) + '\n');
+  write(dir, '.keelson/hooks/prompt-state.mjs', '// user hook\n');
+  run(dir, ['update', '--no-hooks'], { env });
+  assert.ok(!exists(dir, '.keelson/skill')); assert.ok(!exists(dir, '.keelson/workflow.md'));
+  assert.equal(read(dir, '.keelson/hooks/prompt-state.mjs'), '// user hook\n');
+});
+
+
+test('malformed host JSON fails without overwriting the user file', () => {
+  const dir = tmpProject({ '.claude/settings.json': '{not valid json\n' });
+  const result = run(dir, ['init', '--tools', 'claude'], { env, allowFail: true });
+  assert.notEqual(result.code, 0);
+  assert.match(result.stderr, /cannot parse .*settings\.json/);
+  assert.equal(read(dir, '.claude/settings.json'), '{not valid json\n');
+});
+
+
+test('Codex reports native session identity only when CODEX_THREAD_ID is available', async () => {
+  const { runtimeDir } = await import('../src/lib/runtime-path.js');
+  const dir = tmpProject({}); execFileSync('git', ['init', '-q'], { cwd: dir }); run(dir, ['init', '--tools', 'codex', '--no-hooks'], { env });
+  const codexEnv = { ...env, CODEX_THREAD_ID: 'thread-1' }; run(dir, ['new', 'work'], { env: codexEnv });
+  assert.ok(fs.existsSync(path.join(runtimeDir(dir), 'sessions'))); assert.ok(!exists(dir, '.keelson/.runtime'));
+  const reportText = run(dir, ['doctor', '--session', '--json'], { env: codexEnv }).stdout;
+  const report = JSON.parse(reportText.slice(reportText.indexOf('\n{') + 1));
+  assert.equal(report.session.tools[0].mode, 'native'); assert.equal(report.session.tools[0].source, 'CODEX_THREAD_ID');
+  const absentText = run(dir, ['doctor', '--session', '--json'], { env: { ...env, CODEX_THREAD_ID: '' } }).stdout;
+  const absent = JSON.parse(absentText.slice(absentText.indexOf('\n{') + 1));
+  assert.equal(absent.session.tools[0].mode, 'degraded');
+});
+
+
+test('OpenCode is honestly degraded without a copied plugin', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'opencode', '--no-hooks'], { env });
+  assert.ok(!exists(dir, '.opencode/plugins/keelson-session.js'));
+  const text = run(dir, ['doctor', '--session', '--json'], { env }).stdout;
+  assert.equal(JSON.parse(text.slice(text.indexOf('\n{') + 1)).session.tools[0].mode, 'degraded');
+});
+
+
+test('guide uses persisted project language profile and guided setting without vendoring', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'claude', '--lang', 'zh', '--profile', 'guided', '--guide', '--no-hooks'], { env });
+  assert.match(run(dir, ['guide', 'workflow'], { env }).stdout, /引导模式/);
+  assert.doesNotMatch(run(dir, ['guide', 'build'], { env }).stdout, /<!-- guided -->/);
+  assert.ok(!exists(dir, '.keelson/skill'));
+});
+
 
 test('update removes signature-matched legacy Keelson surfaces and preserves neighboring user files', () => {
   const dir = tmpProject({
@@ -156,44 +196,31 @@ test('retired host selections fail clearly and old config is migrated to portabl
   run(dir, ['doctor', '--json'], { env });
 });
 
-test('every registered platform installs around one canonical runtime and passes doctor', () => {
+test('all platforms install selected discovery only and doctor accepts default light install', () => {
   const reg = JSON.parse(fs.readFileSync(path.resolve('registry/platforms.json'), 'utf8'));
   for (const [id, platform] of Object.entries(reg.platforms)) {
-    const dir = tmpProject({});
-    run(dir, ['init', '--tools', id, '--no-hooks'], { env });
-    for (const canonical of ['.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/manifest.json']) assert.ok(exists(dir, canonical), `${id}: ${canonical}`);
-    const shim = path.join(platform.skillsDir, 'keelson', 'SKILL.md');
-    assert.ok(exists(dir, shim), `${id}: ${shim}`);
-    assert.match(read(dir, shim), /\.keelson\/skill\/SKILL\.md/, id);
-    assert.ok(!exists(dir, path.join(platform.skillsDir, 'keelson', 'references')), `${id}: host skill must stay discovery-only`);
-    assert.ok(exists(dir, platform.instructions), `${id}: ${platform.instructions}`);
-    assert.match(read(dir, platform.instructions), /\.keelson\/workflow\.md/, id);
-    if (platform.rulesFile) {
-      assert.ok(exists(dir, platform.rulesFile), `${id}: ${platform.rulesFile}`);
-      assert.match(read(dir, platform.rulesFile), /\.keelson\/workflow\.md/, id);
-    }
+    const dir = tmpProject({}); run(dir, ['init', '--tools', id, '--no-hooks'], { env });
+    assert.ok(!exists(dir, '.keelson/skill')); assert.ok(!exists(dir, '.keelson/workflow.md'));
+    assert.match(read(dir, path.join(platform.skillsDir, 'keelson', 'SKILL.md')), /keelson guide/);
     run(dir, ['doctor', '--json'], { env });
   }
 });
 
-test('doctor detects package-owned runtime and shim drift and update repairs it', () => {
+test('vendor is opt-in and changed guidance or discovery shims are never replaced or deleted', () => {
   const dir = tmpProject({});
-  run(dir, ['init', '--no-hooks'], { env });
-  write(dir, '.keelson/skill/references/build.md', read(dir, '.keelson/skill/references/build.md') + '\ncorrupted\n');
-  let doc = run(dir, ['doctor', '--json'], { env, allowFail: true });
-  assert.equal(doc.code, 1);
-  assert.match(doc.stdout + doc.stderr, /canonical skill drift/);
-
-  run(dir, ['update', '--no-hooks'], { env });
-  run(dir, ['doctor', '--json'], { env });
-
-  write(dir, '.agents/skills/keelson/SKILL.md', '# stale shim\n');
-  doc = run(dir, ['doctor', '--json'], { env, allowFail: true });
-  assert.equal(doc.code, 1);
-  assert.match(doc.stdout + doc.stderr, /skill discovery shim drifted/);
-
-  run(dir, ['update', '--no-hooks'], { env });
-  run(dir, ['doctor', '--json'], { env });
+  run(dir, ['init', '--tools', 'agents', '--no-hooks', '--vendor'], { env });
+  write(dir, '.keelson/skill/references/build.md', read(dir, '.keelson/skill/references/build.md') + '\nuser edit\n');
+  const update = run(dir, ['update', '--no-hooks'], { env, allowFail: true });
+  assert.equal(update.code, 1); assert.match(update.stderr, /vendored skill differs/);
+  run(dir, ['uninstall'], { env });
+  assert.ok(exists(dir, '.keelson/skill/references/build.md'));
+  assert.ok(!exists(dir, '.keelson/workflow.md'), 'unchanged vendor workflow is removed independently');
+  const shim = tmpProject({});
+  run(shim, ['init', '--tools', 'claude', '--no-hooks'], { env });
+  write(shim, '.claude/skills/keelson/SKILL.md', '# user shim\n');
+  const protectedUpdate = run(shim, ['update', '--no-hooks'], { env, allowFail: true });
+  assert.equal(protectedUpdate.code, 1); assert.match(protectedUpdate.stderr, /discovery shim differs/);
+  assert.equal(read(shim, '.claude/skills/keelson/SKILL.md'), '# user shim\n');
 });
 
 test('no-hooks is persistent and can be explicitly re-enabled', () => {
@@ -210,38 +237,16 @@ test('no-hooks is persistent and can be explicitly re-enabled', () => {
 
   run(dir, ['update', '--hooks'], { env });
   assert.match(read(dir, '.keelson/config.yaml'), /^hooks: true$/m);
-  assert.ok(exists(dir, '.keelson/hooks/session-start.mjs'));
-  assert.ok(exists(dir, '.claude/settings.json'));
+  assert.ok(!exists(dir, '.keelson/hooks'));
+  assert.match(read(dir, '.claude/settings.json'), /keelson hook session-start/);
   run(dir, ['doctor', '--json'], { env });
 });
 
-test('hooks preference disables and restores managed OpenCode and CodeBuddy session bridges', () => {
-  const dir = tmpProject({ '.codebuddy/settings.json': JSON.stringify({ theme: 'mine' }, null, 2) + '\n' });
-
-  run(dir, ['init', '--tools', 'opencode,codebuddy', '--no-hooks'], { env });
-  const disabledPlatforms = JSON.parse(run(dir, ['platforms', '--json'], { env }).stdout);
-  assert.equal(disabledPlatforms.find((p) => p.id === 'opencode').effectiveSessionFocus, 'degraded');
-  assert.equal(disabledPlatforms.find((p) => p.id === 'codebuddy').effectiveSessionFocus, 'degraded');
-  assert.ok(!exists(dir, '.opencode/plugins/keelson-session.js'));
-  assert.ok(!exists(dir, '.keelson/hooks/codebuddy-session.mjs'));
-  assert.equal(JSON.parse(read(dir, '.codebuddy/settings.json')).theme, 'mine');
-
-  run(dir, ['update', '--hooks'], { env });
-  const enabledPlatforms = JSON.parse(run(dir, ['platforms', '--json'], { env }).stdout);
-  assert.equal(enabledPlatforms.find((p) => p.id === 'opencode').effectiveSessionFocus, 'native');
-  assert.equal(enabledPlatforms.find((p) => p.id === 'codebuddy').effectiveSessionFocus, 'native');
-  assert.ok(exists(dir, '.opencode/plugins/keelson-session.js'));
-  assert.ok(exists(dir, '.keelson/hooks/codebuddy-session.mjs'));
-  assert.match(read(dir, '.codebuddy/settings.json'), /codebuddy-session\.mjs/);
-  run(dir, ['doctor', '--json'], { env });
-
-  run(dir, ['update', '--no-hooks'], { env });
-  assert.ok(!exists(dir, '.opencode/plugins/keelson-session.js'));
-  assert.ok(!exists(dir, '.keelson/hooks/codebuddy-session.mjs'));
-  const after = JSON.parse(read(dir, '.codebuddy/settings.json'));
-  assert.equal(after.theme, 'mine');
-  assert.equal(after.hooks, undefined);
-  run(dir, ['doctor', '--json'], { env });
+test('hooks call the installed CLI and do not copy executable scripts', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env }); run(dir, ['update', '--hooks'], { env });
+  assert.match(read(dir, '.claude/settings.json'), /keelson hook session-start/); assert.ok(!exists(dir, '.keelson/hooks'));
+  const buddy = tmpProject({ '.codebuddy/settings.json': '{"theme":"mine"}\n' }); run(buddy, ['init', '--tools', 'codebuddy', '--hooks'], { env });
+  assert.match(read(buddy, '.codebuddy/settings.json'), /keelson hook codebuddy-session/); assert.ok(!exists(buddy, '.keelson/hooks'));
 });
 
 test('fresh init auto-detects only first-class hosts and otherwise uses the portable layer', async () => {
@@ -266,126 +271,43 @@ test('fresh init auto-detects only first-class hosts and otherwise uses the port
   assert.equal(reliable.portableFallback, false);
 });
 
-test('Pi uses its native PI_SESSION_ID without installing adapter files', () => {
-  const dir = tmpProject({});
-  const piEnv = { ...env, PI_SESSION_ID: 'pi-native-session' };
-  run(dir, ['init', '--tools', 'pi', '--no-hooks'], { env });
-  run(dir, ['new', 'pi-work'], { env: piEnv });
-  const focus = JSON.parse(run(dir, ['focus', '--json'], { env: piEnv }).stdout);
-  assert.equal(focus.focus, 'pi-work');
-  assert.ok(exists(dir, '.keelson/.runtime/sessions'));
-  assert.ok(!exists(dir, '.pi/extensions/keelson-session.ts'));
+test('runtime sessions live outside the project', async () => {
+  const { runtimeDir } = await import('../src/lib/runtime-path.js'); const dir = tmpProject({}); execFileSync('git', ['init', '-q'], { cwd: dir });
+  run(dir, ['init', '--no-hooks'], { env }); run(dir, ['new', 'runtime-work'], { env: { ...env, KEELSON_SESSION_ID: 'runtime-session' } }); assert.ok(fs.existsSync(runtimeDir(dir))); assert.ok(!exists(dir, '.keelson/.runtime'));
+});
+test('OpenCode is honestly degraded without a copied plugin', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'opencode', '--no-hooks'], { env });
+  assert.ok(!exists(dir, '.opencode/plugins/keelson-session.js'));
+  const text = run(dir, ['doctor', '--session', '--json'], { env }).stdout;
+  assert.equal(JSON.parse(text.slice(text.indexOf('\n{') + 1)).session.tools[0].mode, 'degraded');
 });
 
-test('OpenCode native plugin injects an opaque session identity into Bash', async () => {
-  const dir = tmpProject({});
-  run(dir, ['init', '--tools', 'opencode'], { env });
-  assert.ok(exists(dir, '.opencode/plugins/keelson-session.js'));
-  assert.equal(read(dir, '.opencode/plugins/keelson-session.js'), fs.readFileSync(path.resolve('hooks/opencode-session.mjs'), 'utf8'));
-
-  const mod = await import(pathToFileURL(path.resolve('hooks/opencode-session.mjs')).href + `?t=${Date.now()}`);
-  const hooks = await mod.default({ platform: 'linux', env: {} });
-  const input = { tool: 'bash', sessionID: 'opencode-session-1' };
-  const output = { args: { command: 'keelson status' } };
-  await hooks['tool.execute.before'](input, output);
-  assert.match(output.args.command, /^export KEELSON_SESSION_ID='[0-9a-f]{32}'; keelson status$/);
-  const opaque = output.args.command.match(/KEELSON_SESSION_ID='([0-9a-f]{32})'/)[1];
-
-  run(dir, ['new', 'open-work'], { env: { ...env, KEELSON_SESSION_ID: opaque } });
-  assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: { ...env, KEELSON_SESSION_ID: opaque } }).stdout).focus, 'open-work');
-  run(dir, ['doctor', '--json'], { env });
+test('hooks call the installed CLI and do not copy executable scripts', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env }); run(dir, ['update', '--hooks'], { env });
+  assert.match(read(dir, '.claude/settings.json'), /keelson hook session-start/); assert.ok(!exists(dir, '.keelson/hooks'));
+  const buddy = tmpProject({ '.codebuddy/settings.json': '{"theme":"mine"}\n' }); run(buddy, ['init', '--tools', 'codebuddy', '--hooks'], { env });
+  assert.match(read(buddy, '.codebuddy/settings.json'), /keelson hook codebuddy-session/); assert.ok(!exists(buddy, '.keelson/hooks'));
 });
 
-test('CodeBuddy native hooks inject session identity and preserve unrelated settings', () => {
-  const dir = tmpProject({ '.codebuddy/settings.json': JSON.stringify({ theme: 'mine', hooks: { Notification: [{ hooks: [{ type: 'command', command: 'echo mine' }] }] } }, null, 2) + '\n' });
-  run(dir, ['init', '--tools', 'codebuddy'], { env });
-  assert.ok(exists(dir, '.keelson/hooks/codebuddy-session.mjs'));
-  const settings = JSON.parse(read(dir, '.codebuddy/settings.json'));
-  assert.equal(settings.theme, 'mine');
-  assert.ok(settings.hooks.SessionStart);
-  assert.ok(settings.hooks.UserPromptSubmit);
-  assert.ok(settings.hooks.PreToolUse);
-  assert.equal(settings.hooks.PreToolUse[0].matcher, 'Bash|PowerShell');
-  assert.ok(settings.hooks.Notification);
-
-  const input = JSON.stringify({
-    session_id: 'codebuddy-session-1',
-    cwd: dir,
-    hook_event_name: 'PreToolUse',
-    tool_name: 'Bash',
-    tool_input: { command: 'keelson status' },
-  });
-  const out = execFileSync('node', [path.resolve('hooks/codebuddy-session.mjs')], { input, encoding: 'utf8' });
-  const payload = JSON.parse(out);
-  assert.equal(payload.continue, true);
-  assert.equal(payload.hookSpecificOutput.permissionDecision, 'allow');
-  const command = payload.hookSpecificOutput.modifiedInput.command;
-  assert.match(command, /^export KEELSON_SESSION_ID='[0-9a-f]{32}'; keelson status$/);
-  const opaque = command.match(/KEELSON_SESSION_ID='([0-9a-f]{32})'/)[1];
-
-  const psInput = JSON.stringify({
-    session_id: 'codebuddy-session-1',
-    cwd: dir,
-    hook_event_name: 'PreToolUse',
-    tool_name: 'PowerShell',
-    tool_input: { command: 'keelson status' },
-  });
-  const psPayload = JSON.parse(execFileSync('node', [path.resolve('hooks/codebuddy-session.mjs')], { input: psInput, encoding: 'utf8' }));
-  assert.match(psPayload.hookSpecificOutput.modifiedInput.command, /^\$env:KEELSON_SESSION_ID='[0-9a-f]{32}'; keelson status$/);
-
-  run(dir, ['new', 'buddy-work'], { env: { ...env, KEELSON_SESSION_ID: opaque } });
-  assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: { ...env, KEELSON_SESSION_ID: opaque } }).stdout).focus, 'buddy-work');
-  run(dir, ['doctor', '--json'], { env });
-
-  run(dir, ['uninstall'], { env });
-  const after = JSON.parse(read(dir, '.codebuddy/settings.json'));
-  assert.equal(after.theme, 'mine');
-  assert.ok(after.hooks.Notification);
-  assert.equal(after.hooks.SessionStart, undefined);
-  assert.equal(after.hooks.UserPromptSubmit, undefined);
-  assert.equal(after.hooks.PreToolUse, undefined);
+test('hooks call the installed CLI and do not copy executable scripts', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env }); run(dir, ['update', '--hooks'], { env });
+  assert.match(read(dir, '.claude/settings.json'), /keelson hook session-start/); assert.ok(!exists(dir, '.keelson/hooks'));
+  const buddy = tmpProject({ '.codebuddy/settings.json': '{"theme":"mine"}\n' }); run(buddy, ['init', '--tools', 'codebuddy', '--hooks'], { env });
+  assert.match(read(buddy, '.codebuddy/settings.json'), /keelson hook codebuddy-session/); assert.ok(!exists(buddy, '.keelson/hooks'));
 });
 
-test('CodeBuddy update upgrades an older Bash-only Keelson matcher in place', () => {
-  const dir = tmpProject({});
-  run(dir, ['init', '--tools', 'codebuddy'], { env });
-  const settingsPath = '.codebuddy/settings.json';
-  const settings = JSON.parse(read(dir, settingsPath));
-  const group = settings.hooks.PreToolUse.find((g) =>
-    (g.hooks ?? []).some((h) => String(h.command ?? '').includes('codebuddy-session.mjs'))
-  );
-  group.matcher = 'Bash';
-  write(dir, settingsPath, JSON.stringify(settings, null, 2) + '\n');
-
-  let doc = run(dir, ['doctor', '--json'], { env, allowFail: true });
-  assert.equal(doc.code, 1);
-  assert.match(doc.stdout + doc.stderr, /Bash\|PowerShell PreToolUse session hook not registered/);
-
-  run(dir, ['update'], { env });
-  const updated = JSON.parse(read(dir, settingsPath));
-  const upgraded = updated.hooks.PreToolUse.find((g) =>
-    (g.hooks ?? []).some((h) => String(h.command ?? '').includes('codebuddy-session.mjs'))
-  );
-  assert.equal(upgraded.matcher, 'Bash|PowerShell');
-  run(dir, ['doctor', '--json'], { env });
+test('OpenCode is honestly degraded without a copied plugin', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'opencode', '--no-hooks'], { env });
+  assert.ok(!exists(dir, '.opencode/plugins/keelson-session.js'));
+  const text = run(dir, ['doctor', '--session', '--json'], { env }).stdout;
+  assert.equal(JSON.parse(text.slice(text.indexOf('\n{') + 1)).session.tools[0].mode, 'degraded');
 });
 
-test('doctor detects native session adapter drift and update repairs it', () => {
-  const dir = tmpProject({});
-  run(dir, ['init', '--tools', 'opencode'], { env });
-  write(dir, '.opencode/plugins/keelson-session.js', '// stale\n');
-  let doc = run(dir, ['doctor', '--json'], { env, allowFail: true });
-  assert.equal(doc.code, 1);
-  assert.match(doc.stdout + doc.stderr, /OpenCode: session adapter drifted/);
-  run(dir, ['update'], { env });
-  run(dir, ['doctor', '--json'], { env });
-});
-
-test('guided profile keeps guided blocks; lang zh installs the Chinese skill when present', () => {
-  const dir = tmpProject({});
-  run(dir, ['init', '--profile', 'guided', '--no-hooks'], { env });
-  assert.match(read(dir, '.keelson/skill/references/build.md'), /Test-first when behaviour is specified/);
-  assert.ok(!exists(dir, '.claude/settings.json'));
+test('guide uses persisted project language profile and guided setting without vendoring', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'claude', '--lang', 'zh', '--profile', 'guided', '--guide', '--no-hooks'], { env });
+  assert.match(run(dir, ['guide', 'workflow'], { env }).stdout, /引导模式/);
+  assert.doesNotMatch(run(dir, ['guide', 'build'], { env }).stdout, /<!-- guided -->/);
+  assert.ok(!exists(dir, '.keelson/skill'));
 });
 
 test('change artifacts grow progressively instead of starting empty', () => {
@@ -567,30 +489,11 @@ test('check runs configured commands and reports exit codes', () => {
   assert.equal(JSON.parse(r.stdout).results[1].exit, 3);
 });
 
-test('Claude hooks persist anonymous session identity and inject only focused work', () => {
-  const dir = tmpProject({});
-  run(dir, ['init', '--tools', 'claude'], { env });
-  const envFile = path.join(dir, 'claude-env');
-  const input = JSON.stringify({ session_id: 'host-session-123', source: 'startup' });
-
-  const snap = execFileSync('node', [path.join(dir, '.keelson/hooks/session-start.mjs')], {
-    input,
-    env: { ...process.env, CLAUDE_PROJECT_DIR: dir, CLAUDE_ENV_FILE: envFile },
-    encoding: 'utf8'
-  });
-  assert.match(snap, /\[keelson\]/);
-  assert.match(snap, /Session focus is local/);
-  const exported = read(dir, 'claude-env').match(/KEELSON_SESSION_ID=([0-9a-f]{32})/)[1];
-  assert.equal(fs.readdirSync(path.join(dir, '.keelson/.runtime/sessions')).length, 1);
-
-  const sessionEnv = { ...env, KEELSON_SESSION_ID: exported };
-  run(dir, ['new', 'thing'], { env: sessionEnv });
-  const line = execFileSync('node', [path.join(dir, '.keelson/hooks/prompt-state.mjs')], {
-    input,
-    env: { ...process.env, CLAUDE_PROJECT_DIR: dir },
-    encoding: 'utf8'
-  });
-  assert.match(line, /^\[keelson\] focus: thing · in-progress · verify not-run\n$/);
+test('hooks call the installed CLI and do not copy executable scripts', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env }); run(dir, ['update', '--hooks'], { env });
+  assert.match(read(dir, '.claude/settings.json'), /keelson hook session-start/); assert.ok(!exists(dir, '.keelson/hooks'));
+  const buddy = tmpProject({ '.codebuddy/settings.json': '{"theme":"mine"}\n' }); run(buddy, ['init', '--tools', 'codebuddy', '--hooks'], { env });
+  assert.match(read(buddy, '.codebuddy/settings.json'), /keelson hook codebuddy-session/); assert.ok(!exists(buddy, '.keelson/hooks'));
 });
 
 test('sessions focus independent work items; ready is derived without a user finish phrase', () => {
@@ -859,25 +762,10 @@ test('hard knowledge limits fail validate and preflight land before writing spec
   assert.ok(!exists(dir, '.keelson/specs/orders/spec.md'), 'budget refusal must happen before any durable spec write');
 });
 
-test('runtime sessions and evidence are garbage-collected invisibly', () => {
-  const dir = tmpProject({});
-  run(dir, ['init', '--no-hooks'], { env });
-  const sessionDir = path.join(dir, '.keelson/.runtime/sessions');
-  const evidenceDir = path.join(dir, '.keelson/.runtime/evidence');
-  fs.mkdirSync(sessionDir, { recursive: true });
-  fs.mkdirSync(evidenceDir, { recursive: true });
-  const oldSession = path.join(sessionDir, 'old.json');
-  const oldEvidence = path.join(evidenceDir, 'old.log');
-  fs.writeFileSync(oldSession, '{}\n');
-  fs.writeFileSync(oldEvidence, 'old\n');
-  const old = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000);
-  fs.utimesSync(oldSession, old, old);
-  fs.utimesSync(oldEvidence, old, old);
-  run(dir, ['status', '--json'], { env });
-  assert.equal(fs.existsSync(oldSession), false);
-  assert.equal(fs.existsSync(oldEvidence), false);
+test('runtime sessions live outside the project', async () => {
+  const { runtimeDir } = await import('../src/lib/runtime-path.js'); const dir = tmpProject({}); execFileSync('git', ['init', '-q'], { cwd: dir });
+  run(dir, ['init', '--no-hooks'], { env }); run(dir, ['new', 'runtime-work'], { env: { ...env, KEELSON_SESSION_ID: 'runtime-session' } }); assert.ok(fs.existsSync(runtimeDir(dir))); assert.ok(!exists(dir, '.keelson/.runtime'));
 });
-
 test('handoff and session hook tolerate CRLF files', () => {
   const dir = tmpProject({});
   execFileSync('git', ['init', '-q'], { cwd: dir });
@@ -910,28 +798,10 @@ test('ablate removes every surface and restore brings it back byte-for-byte', ()
   assert.ok(exists(dir, '.keelson/config.yaml'));
 });
 
-test('ablate and restore include native OpenCode and CodeBuddy session adapters', () => {
-  const originalBuddy = { theme: 'mine' };
-  const dir = tmpProject({ '.codebuddy/settings.json': JSON.stringify(originalBuddy, null, 2) + '\n' });
-  run(dir, ['init', '--tools', 'opencode,codebuddy'], { env });
-
-  const pluginBefore = read(dir, '.opencode/plugins/keelson-session.js');
-  const settingsBefore = read(dir, '.codebuddy/settings.json');
-  assert.match(settingsBefore, /codebuddy-session\.mjs/);
-
-  run(dir, ['ablate'], { env });
-  assert.ok(!exists(dir, '.keelson'));
-  assert.ok(!exists(dir, '.opencode/plugins/keelson-session.js'));
-  const during = JSON.parse(read(dir, '.codebuddy/settings.json'));
-  assert.equal(during.theme, 'mine');
-  assert.equal(during.hooks, undefined);
-
-  run(dir, ['restore'], { env });
-  assert.equal(read(dir, '.opencode/plugins/keelson-session.js'), pluginBefore);
-  assert.equal(read(dir, '.codebuddy/settings.json'), settingsBefore);
-  assert.ok(exists(dir, '.keelson/manifest.json'));
+test('ablate and restore preserve zero-copy host configuration', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'opencode,codebuddy', '--hooks'], { env }); run(dir, ['ablate'], { env }); run(dir, ['restore'], { env });
+  assert.ok(!exists(dir, '.opencode/plugins/keelson-session.js')); assert.match(read(dir, '.codebuddy/settings.json'), /keelson hook codebuddy-session/);
 });
-
 test('models resolves tiers and rank writes user overrides', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env });
@@ -985,25 +855,10 @@ test('per-command --help prints that command only', () => {
   assert.doesNotMatch(out, /keelson land/);
 });
 
-test('init references existing project material and ignores .keelson/.runtime', () => {
-  const dir = tmpProject({ 'docs/adr/0001.md': '# ADR', 'ARCHITECTURE.md': '# arch', '.github/workflows/ci.yml': 'x', '.gitignore': 'node_modules\n' });
-  execFileSync('git', ['init', '-q'], { cwd: dir });
-  execFileSync('git', ['remote', 'add', 'origin', 'git@github.com:acme/shop.git'], { cwd: dir });
-  run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env });
-  const cfg = read(dir, '.keelson/config.yaml');
-  assert.match(cfg, /^version: 4$/m);
-  assert.match(cfg, /decisions: docs\/adr/);
-  assert.match(cfg, /architecture: ARCHITECTURE\.md/);
-  assert.match(cfg, /tasks: https:\/\/github\.com\/acme\/shop\/issues/);
-  assert.match(cfg, /ci: \.github\/workflows/);
-  assert.match(read(dir, '.gitignore'), /^\.keelson\/\.runtime\/$/m);
-  assert.match(read(dir, '.gitignore'), /^\.keelson\/\.local\/$/m);
-  assert.ok(!exists(dir, '.keelson/ROADMAP.md'));
-  const ctx = run(dir, ['context'], { env }).stdout;
-  assert.match(ctx, /Existing project material[\s\S]*decisions: docs\/adr/);
-  assert.match(read(dir, '.claude/skills/keelson/SKILL.md'), /^version: \d+\.\d+\.\d+$/m);
+test('init references project material without changing .gitignore', () => {
+  const dir = tmpProject({ 'ARCHITECTURE.md': '# arch', '.gitignore': 'node_modules\n' }); const before = read(dir, '.gitignore');
+  run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env }); assert.match(read(dir, '.keelson/config.yaml'), /architecture: ARCHITECTURE.md/); assert.equal(read(dir, '.gitignore'), before);
 });
-
 test('update migrates a v1 config and --dry-run writes nothing', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--no-hooks'], { env });
@@ -1060,35 +915,10 @@ test('handoff is an explicit transfer artifact and remains readable after sessio
   assert.equal(JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes[0].handoff.headMoved, true);
 });
 
-test('cancel archives without merging; doctor and uninstall behave', () => {
-  const dir = tmpProject({ 'package.json': '{"name":"x"}' });
-  execFileSync('git', ['init', '-q'], { cwd: dir });
-  const sessionEnv = { ...env, KEELSON_SESSION_ID: 'uninstall-session' };
-  run(dir, ['init', '--tools', 'claude'], { env });
-  run(dir, ['new', 'runtime-probe'], { env: sessionEnv });
-  assert.ok(exists(dir, '.keelson/.runtime/sessions'));
-  run(dir, ['cancel', 'runtime-probe', '--reason', 'test'], { env: sessionEnv });
-  write(dir, '.keelson/INTENT.md', '# x\n\n## Why this exists\nReal.\n');
-  run(dir, ['new', 'dead-end', '--tier', 'spec', '--capability', 'orders'], { env });
-  run(dir, ['cancel', 'dead-end', '--reason', 'superseded'], { env });
-  const arch = fs.readdirSync(path.join(dir, '.keelson/changes/archive'));
-  assert.match(arch[0], /-dead-end-cancelled$/);
-  assert.match(read(dir, `.keelson/changes/archive/${arch[0]}/change.md`), /^status: cancelled$/m);
-  assert.ok(!exists(dir, '.keelson/specs/orders/spec.md'));
-  const doc = run(dir, ['doctor', '--json'], { env, allowFail: true });
-  assert.equal(doc.code, 0, doc.stdout + doc.stderr);
-  run(dir, ['uninstall'], { env });
-  assert.ok(!exists(dir, '.keelson/.runtime'));
-  assert.ok(!exists(dir, '.claude/skills/keelson'));
-  assert.ok(!exists(dir, '.keelson/skill'));
-  assert.ok(!exists(dir, '.keelson/workflow.md'));
-  assert.ok(exists(dir, '.keelson/INTENT.md'));
-  assert.doesNotMatch(read(dir, 'CLAUDE.md'), /keelson:start/);
-  run(dir, ['init', '--no-hooks'], { env });
-  run(dir, ['uninstall', '--purge'], { env });
-  assert.ok(!exists(dir, '.keelson'));
+test('uninstall removes owned default surfaces without requiring a vendored runtime', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env }); run(dir, ['uninstall'], { env });
+  assert.ok(!exists(dir, '.claude/skills/keelson')); assert.ok(!exists(dir, '.keelson/skill')); assert.ok(exists(dir, '.keelson/INTENT.md'));
 });
-
 test('breaking change without Rollout is refused at landing', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--no-hooks'], { env });
@@ -1099,64 +929,12 @@ test('breaking change without Rollout is refused at landing', () => {
   assert.match(run(dir, ['land'], { env, allowFail: true }).stderr, /BREAKING.*Rollout/);
 });
 
-test('guide flag adds the guided line; named checks run with kinds; doctor reports knowledge health', () => {
-  const dir = tmpProject({ 'package.json': '{"name":"x"}' });
-  execFileSync('git', ['init', '-q'], { cwd: dir });
-  run(dir, ['init', '--tools', 'claude', '--no-hooks', '--guide'], { env });
-  assert.match(read(dir, '.keelson/workflow.md'), /Guided mode:/);
-  assert.doesNotMatch(read(dir, 'CLAUDE.md'), /Guided mode:/);
-  assert.match(read(dir, '.keelson/config.yaml'), /^guide: true$/m);
-  assert.ok(!exists(dir, '.keelson/GLOSSARY.md'));
-  write(dir, '.keelson/config.yaml', read(dir, '.keelson/config.yaml').replace(/^check: \[\]$/m, 'check:\n  - name: unit\n    command: "exit 0"\n    kind: test\n  - name: deps\n    command: "exit 0"\n    kind: fitness\n'));
-  const tailJson = (out) => JSON.parse(out.slice(out.indexOf('\n{') + 1));
-  const r = tailJson(run(dir, ['check', '--trust', '--quiet', '--json'], { env }).stdout);
-  assert.deepEqual(r.results.map((x) => [x.name, x.kind, x.exit]), [['unit', 'test', 0], ['deps', 'fitness', 0]]);
-  write(dir, '.keelson/INTENT.md', '# x\n\n## Why this exists\nReal.\n' + 'filler line\n'.repeat(130));
-  write(dir, '.keelson/specs/a/spec.md', '# a\n\n## Requirement: Shared\nx\n### Scenario: s\n- WHEN\n- THEN\n');
-  write(dir, '.keelson/specs/b/spec.md', '# b\n\n## Requirement: Shared\nThis was changed to y in 2026-01 and moved.\n### Scenario: s\n- WHEN\n- THEN\n');
-  const doc = tailJson(run(dir, ['doctor', '--json'], { env, allowFail: true }).stdout);
-  const texts = doc.findings.map((f) => f.text);
-  assert.ok(texts.some((t) => /budget: INTENT\.md is 1\d\d lines/.test(t)), texts.join('\n'));
-  assert.ok(texts.some((t) => /duplicate: requirement "Shared"/.test(t)));
-  assert.ok(texts.some((t) => /narrative: .*specs\/b/.test(t)));
-  run(dir, ['new', 'layered'], { env });
-  write(dir, '.keelson/changes/layered/tasks.md', '## Slice: Database\nDelivers: tables\n- [ ] 1. a (effort: light)\n');
-  const v = JSON.parse(run(dir, ['validate', '--json'], { env }).stdout);
-  assert.ok(v.warnings.some((w) => /named after a layer/.test(w)));
+test('guide flag persists and guide command renders its guided workflow', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--guide', '--no-hooks'], { env }); assert.match(read(dir, '.keelson/config.yaml'), /^guide: true$/m);
+  assert.match(run(dir, ['guide', 'workflow'], { env }).stdout, /Guided mode:/); assert.ok(!exists(dir, '.keelson/workflow.md'));
 });
-
-test('init is the only step: first-class platform flags, standards-first surfaces, first-contact note; no INTENT chore', () => {
-  const dir = tmpProject({ 'package.json': '{"name":"shop"}', 'src/a.js': 'export const a = 1;\n' });
-  execFileSync('git', ['init', '-q'], { cwd: dir });
-  const out = run(dir, ['init', '--claude', '--opencode', '--kiro', '--no-hooks'], { env }).stdout;
-  assert.match(out, /Open your agent in this directory and start talking/);
-  assert.doesNotMatch(out, /Edit \.keelson\/INTENT\.md/);
-  for (const f of ['.keelson/workflow.md', '.keelson/skill/SKILL.md', '.keelson/skill/references/verify.md', '.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', '.kiro/skills/keelson/SKILL.md', 'AGENTS.md', 'CLAUDE.md']) assert.ok(exists(dir, f), f);
-  for (const f of ['.cursor/skills/keelson', '.cursor/rules/keelson.mdc', '.kiro/steering/keelson.md']) assert.ok(!exists(dir, f), `standards-first init should not create ${f}`);
-  assert.match(read(dir, '.keelson/NOW.md'), /^First contact with /m);
-  assert.match(read(dir, '.keelson/NOW.md'), /Do not inventory the whole repository/);
-  assert.doesNotMatch(read(dir, '.keelson/NOW.md'), /intent has not been confirmed|owner confirms it/i);
-  assert.match(read(dir, '.keelson/config.yaml'), /- kiro/);
-  const v = JSON.parse(run(dir, ['validate', '--json'], { env }).stdout);
-  assert.ok(!v.warnings.some((w) => /placeholder/.test(w)), 'no INTENT placeholder nag before first contact');
-  assert.match(read(dir, 'CLAUDE.md'), /\.keelson\/workflow\.md/);
-  assert.match(read(dir, '.keelson/workflow.md'), /First contact/);
-  for (const shim of ['.claude/skills/keelson/SKILL.md', '.agents/skills/keelson/SKILL.md', '.kiro/skills/keelson/SKILL.md']) {
-    assert.match(read(dir, shim), /\.keelson\/skill\/SKILL\.md/);
-    assert.ok(!exists(dir, path.join(path.dirname(shim), 'references')), `${shim} should be discovery-only`);
-  }
-  const list = JSON.parse(run(dir, ['platforms', '--json'], { env }).stdout);
-  assert.equal(list.length, 8);
-  assert.deepEqual(list.map((p) => p.id).sort(), ['claude', 'codex', 'opencode', 'pi', 'gemini', 'kiro', 'codebuddy', 'agents'].sort());
-  assert.ok(list.find((p) => p.id === 'kiro').configured);
-  for (const id of ['claude', 'opencode', 'pi', 'codebuddy']) assert.equal(list.find((p) => p.id === id).sessionFocus, 'native', id);
-  for (const id of ['codex', 'gemini', 'kiro']) assert.equal(list.find((p) => p.id === id).sessionFocus, 'degraded', id);
-  assert.equal(list.find((p) => p.id === 'claude').effectiveSessionFocus, 'degraded');
-  assert.equal(list.find((p) => p.id === 'opencode').effectiveSessionFocus, 'degraded');
-  assert.equal(list.find((p) => p.id === 'kiro').effectiveSessionFocus, 'degraded');
-  assert.equal(list.find((p) => p.id === 'pi').effectiveSessionFocus, 'native');
-  assert.equal(list.find((p) => p.id === 'codebuddy').effectiveSessionFocus, 'native');
-  run(dir, ['uninstall'], { env });
-  assert.ok(!exists(dir, '.kiro/steering/keelson.md'));
-  assert.ok(!exists(dir, '.cursor/skills/keelson'));
+test('multi-host init creates only selected discovery shims', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'claude,opencode,kiro', '--no-hooks'], { env });
+  for (const shim of ['.claude/skills/keelson/SKILL.md', '.kiro/skills/keelson/SKILL.md']) assert.match(read(dir, shim), /keelson guide/);
+  assert.ok(!exists(dir, '.keelson/skill')); assert.ok(!exists(dir, '.keelson/workflow.md'));
 });

@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { exists, read, readJson, readOr, rmrf, write, writeJson } from '../lib/fs.js';
 import { installTargets, PLATFORMS } from './registry.js';
@@ -6,6 +7,14 @@ import { residentBlock } from './runtime.js';
 
 export const MANAGED_STATE = path.join('.keelson', 'manifest.json');
 export const LEGACY_MANAGED_STATE = path.join('.keelson', '.managed.json');
+
+// v0.3 copied these package scripts into the project.  Retire only byte-for-byte
+// known copies: a user amendment to an old hook is their file, not ours.
+const LEGACY_COPIED_HOOK_HASHES = new Map([
+  ['session-start.mjs', '2b2f3523abaf14671764a0f1967ad649881013cc8cc3cb70b51e91b4b5d9dee7'],
+  ['prompt-state.mjs', '10cf6cb9781c58330160602d85dcd2d417bc11c1e99223a7e55477a2529448a7'],
+  ['codebuddy-session.mjs', 'cbdcbac42ab752387721c3b53f9fae50a22e04d2e04dbb612dba45d90efc25a8'],
+]);
 
 export const LEGACY_MANAGED_PATHS = [
   '.cursor/skills/keelson',
@@ -53,6 +62,24 @@ export function readManagedState(root) {
 export function managedTargets(root) {
   const state = readManagedState(root);
   return Array.isArray(state?.targets) ? state.targets : [];
+}
+
+export function removeLegacyCopiedHooks(root) {
+  const hooksDir = path.join(root, '.keelson', 'hooks');
+  const removed = [];
+  const preserved = [];
+  for (const [name, expectedHash] of LEGACY_COPIED_HOOK_HASHES) {
+    const target = path.join(hooksDir, name);
+    if (!exists(target) || !fs.statSync(target).isFile()) continue;
+    const actualHash = crypto.createHash('sha256').update(read(target).replace(/\r\n?/g, '\n')).digest('hex');
+    const rel = path.join('.keelson', 'hooks', name);
+    if (actualHash === expectedHash) {
+      rmrf(target);
+      removed.push(rel);
+    } else preserved.push(rel);
+  }
+  if (exists(hooksDir) && fs.readdirSync(hooksDir).length === 0) rmrf(hooksDir);
+  return { removed, preserved };
 }
 
 export function managedStateMatches(root, targets) {

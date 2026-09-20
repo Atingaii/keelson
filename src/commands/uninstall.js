@@ -13,7 +13,11 @@ export async function uninstall({ flags }, cwd = process.cwd()) {
   heading(`Uninstall Keelson surfaces from ${root}`);
   const removed = removeSurfaces(root, cfg.tools ?? [], cfg);
   for (const r of removed) ok(`removed ${r}`);
-  if (managed?.vendor === true) for (const r of removeCanonicalRuntime(root)) ok(`removed ${r}`);
+  if (managed?.vendor === true) {
+    const canonical = removeCanonicalRuntime(root, { lang: cfg.lang, profile: cfg.profile, version: managed.packageVersion, guide: cfg.guide });
+    for (const r of canonical.removed) ok(`removed ${r}`);
+    for (const r of canonical.preserved) warn(`kept ${r}: it differs from the vendored Keelson output`);
+  }
   if (exists(p.runtime)) {
     rmrf(p.runtime);
     ok('removed Keelson local runtime');

@@ -1,6 +1,6 @@
 # Keelson workflow
 
-Project truth and durable work live under `.keelson/`. Machine-local focus, trust and keys live in Git’s private runtime directory; durable signed records and logs stay with each change. A **session is not a task**: it only points at the work item this conversation is currently about.
+Project truth and durable work live under `.keelson/`. Machine-local conversation focus and evidence live under gitignored `.keelson/.runtime/`. A **session is not a task**: it only points at the work item this conversation is currently about.
 
 Every non-trivial modifying request follows **ORIENT → BOUND → BUILD → SENSE → RECONCILE**.
 
@@ -15,4 +15,4 @@ Every non-trivial modifying request follows **ORIENT → BOUND → BUILD → SEN
 - Repeated failure classes become scoped rules or executable fitness checks; shrink prose after automation carries the invariant.
 - First contact derives `INTENT.md` from repository evidence; ask the owner only if an unresolved project boundary is load-bearing for current work. Specs/rules grow only when real work exposes durable truth.
 
-The package router is `keelson guide`. It classifies conversation intent; lifecycle transitions are derived from work state, not user phrasing. A project may vendor it only with `keelson init --vendor`.
+The canonical router is `.keelson/skill/SKILL.md`. It classifies conversation intent; lifecycle transitions are derived from work state, not user phrasing.
