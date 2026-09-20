@@ -77,9 +77,9 @@ Keelson SHALL model an AI conversation/session as an ephemeral machine-local poi
 - THEN Keelson SHALL NOT persist a shared/global focus and SHALL require explicit disambiguation
 
 ### Scenario: Mechanical readiness
-- GIVEN the active change has complete required tasks/acceptance, no blocking open questions or assumptions, required rollout, and fresh passing verification on the current tree
+- GIVEN the active change has satisfied acceptance, no active dependencies, no blocking open questions or assumptions, no unreconciled contract drift, required rollout, and fresh passing verification on the current tree
 - WHEN status is evaluated
-- THEN its derived work state is `ready` without requiring the owner to say that the task is finished
+- THEN its derived work state is `ready` without requiring the owner to say that the task is finished or every historical task checkbox to remain relevant
 
 ### Scenario: Land clears focus
 - WHEN a change lands or is cancelled
@@ -98,6 +98,29 @@ Every non-trivial change SHALL start with `changes/<name>/change.md`. Additional
 ### Scenario: Handoff
 - WHEN `keelson handoff <name>` runs for an explicit ownership/machine transfer
 - THEN `handoff.md` exists with `at`, `updated`, and `by` in its frontmatter; ordinary session resume does not require this artifact
+
+## Requirement: Bounded self-maintaining knowledge
+Keelson SHALL allow total project knowledge to grow with the project while keeping frequently-read physical documents bounded. Knowledge maintenance SHALL be internal to Keelson/Agent workflow and SHALL NOT require the owner to run housekeeping commands. A capability spec SHALL remain one logical contract even when its physical representation is automatically sharded.
+
+### Scenario: Large capability contract
+- GIVEN a capability's logical contract exceeds the configured spec budget
+- WHEN a change lands
+- THEN Keelson automatically stores a bounded `spec.md` index plus requirement shards and optional capability decisions, while future base hashes, drift checks, validation, and delta merges operate on the reconstructed logical contract
+
+### Scenario: Existing project material is never overwritten by sharding
+- GIVEN the capability directory already contains an unmanaged `requirements/` or `decisions.md`
+- WHEN Keelson needs managed shards
+- THEN it chooses a collision-free managed path, records that path in the bounded index, and preserves the pre-existing files byte-for-byte
+
+### Scenario: Invisible runtime maintenance
+- GIVEN stale local session pointers or old verification-output files exist
+- WHEN normal Keelson commands run
+- THEN obsolete runtime cache entries are garbage-collected without changing durable work state or asking the owner to maintain them
+
+### Scenario: Singleton current-state documents
+- GIVEN NOW, INTENT, or an always-on rule becomes difficult to keep within its configured reading budget
+- WHEN the Agent reconciles project knowledge
+- THEN it rewrites, deduplicates, scopes, or automates the content as internal maintenance; only a change to product semantics, authorization, or compatibility is escalated to the owner
 
 ## Requirement: Existing material is referenced, not copied
 `keelson init` SHALL detect existing architecture documents, decision records, CI configuration, and a GitHub issue tracker, record them under `config.yaml → refs`, and print them in `keelson context`.
@@ -123,5 +146,7 @@ The agent SHALL be able to find every rule that applies to a path from `rules/in
 - project-layout: continuation state that another machine needs (handoff.md, NOW.md) is committed; check output and session focus stay in `.keelson/.runtime/`; gitignoring everything was rejected because a team cannot resume from files that never leave one laptop
 - project-layout: decisions carry a state (confirmed or assumed) inside change.md rather than in a separate approvals file; a separate file was rejected because approval and decision would drift apart
 - project-layout: changes fold into specs and git history by default; a permanent archive directory was rejected because it duplicates what git already keeps and grows without bound
+- project-layout: task checkboxes are mutable execution-plan state, not lifecycle authority; requiring every historical task to remain checked was rejected because implementation paths legitimately change while acceptance and evidence remain authoritative
+- project-layout: total durable knowledge may grow, but frequently-read physical files stay bounded through automatic sharding, scoping, rewriting, and runtime garbage collection; asking the owner to perform periodic housekeeping was rejected because control-plane maintenance is Keelson's responsibility
 - project-layout: decisions live inside the affected spec rather than in a separate decision log, so the reason for a behaviour sits next to the behaviour
 - project-layout: `.keelson/workflow.md` + `.keelson/skill/` are the sole runtime authority; root/platform files are discovery shims only. Full copies in host directories and symlink-based sharing were rejected because copies drift and symlinks are brittle across Windows/tooling.
