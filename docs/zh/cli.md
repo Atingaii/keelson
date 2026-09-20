@@ -183,7 +183,7 @@ keelson land [name] [--now "<text>"] [--confirm-assumptions] [--accept-drift]
              [--keep] [--force] [--dry-run]
 ```
 
-以下情况下拒绝并列出每一个原因：任务或验收项未勾选、spec 变更没有验收清单、还有未决问题、verification 不是 `passed`、存在 `(assumed)` 决策而没有 `--confirm-assumptions`、`**BREAKING**` 项没有 `## Rollout`、某个 delta 的 `base:` 与主 spec 不再匹配而没有 `--accept-drift`。然后把每个 delta 合并进 `<paths.specs>/<capability>/spec.md`，追加 `Decisions` 行，删除变更目录（或在 `--keep` 或 `land: keep` 时以 `integrated` 归档）。`--now` 重写 `NOW.md`。`--dry-run` 预览。`--force` 越过门禁并打印越过了什么。
+以下情况下拒绝并列出每一个真实生命周期原因：Acceptance 未完成、仍有活动依赖、spec 级变更没有 Acceptance 契约、有阻塞问题或未对齐 contract drift、verification 不是 `passed`、存在 `(assumed)` 决策而没有 `--confirm-assumptions`、或 `**BREAKING**` 变更没有 `## Rollout`。`tasks.md` 复选框只表示计划进度，不是 blocker。Land 会先投影全部长期写入；大型 capability 会自动变成有界 `spec.md` 索引 + `requirements/*.md` + 按需 `decisions/*.md`，随后 change 才 fold/archive。`--now` 重写 `NOW.md`；`--dry-run` 预览；`--force` 只用于所有者明确要求的覆盖。
 
 ```text
 $ keelson land add-pagination
@@ -231,7 +231,7 @@ keelson doctor [--json]
 
 ### 知识健康
 
-关于项目文档的发现，以警告或信息报告并附建议的修复，从不自动应用：
+`keelson doctor` 本身只读：它报告文档健康信号和建议修复。正常 Agent 工作里，同一批信号会在 RECONCILE 中被内部消费；确定性的结构维护可以自动发生，语义改写会重新验证，只有真正属于所有者的语义决定才浮到用户面前：
 
 | 类型 | 报告时机 |
 |---|---|
