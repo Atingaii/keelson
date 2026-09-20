@@ -85,8 +85,8 @@ test('documentation home and complete user-flow guide exist in both languages', 
     assert.ok(fs.existsSync(path.join(ROOT, 'docs', file)), `docs/${file}`);
     assert.ok(fs.existsSync(path.join(ROOT, 'docs', 'zh', file)), `docs/zh/${file}`);
   }
-  assert.match(fs.readFileSync(path.join(ROOT, 'docs', 'user-flow.md'), 'utf8'), /init once, talk normally/i);
-  assert.match(fs.readFileSync(path.join(ROOT, 'docs', 'zh', 'user-flow.md'), 'utf8'), /init 一次，正常对话/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'docs', 'user-flow.md'), 'utf8'), /Conversation lifecycle is not work lifecycle/i);
+  assert.match(fs.readFileSync(path.join(ROOT, 'docs', 'zh', 'user-flow.md'), 'utf8'), /对话生命周期不等于工作生命周期/);
 });
 
 test('resident instructions are discovery-only shims into .keelson', () => {
