@@ -66,7 +66,7 @@ effort:
 | `confirm.spec` | `proceed` | `proceed`：短 write-back 后，只要没有真实的所有者决定未解决就直接推进。团队需要显式 plan 审批点时设为 `wait` |
 | `land` | `fold` | `fold` 在合并后删除变更目录。`keep` 把它移到 `changes/archive/` |
 | `check` | 自动探测 | `keelson check` 按顺序从项目根目录通过 shell 运行的内容。每个条目是一个命令字符串，或对象 `{name, command, kind}`，其中 `kind` 取 `test`、`lint`、`typecheck`、`build`、`fitness`、`check` 之一。对纯字符串，kind 从命令猜测。首次 init 时从 `package.json` 脚本、`pyproject.toml`、`pytest.ini`、`go.mod` 或 `Cargo.toml` 探测 |
-| `guide` | `false` | 所有者正在学习工程时设为 `true`。往 `.keelson/workflow.md` 加一行引导模式说明，往 `keelson context` 加一条提示；技能随后用场景和取舍解释，并在 spec 变更收尾时附一段简短的教学说明。`keelson init --guide` 设置它 |
+| `guide` | `false` | 可选教学模式。默认提问本来就使用场景和易懂语言；设为 `true` 后额外解释已落定决定背后的工程概念、约束理由，并在 spec 变更收尾时附一段简短教学说明。`keelson init --guide` 设置它 |
 | `hooks` | `true` | 是否安装由 Keelson 管理的 lifecycle/session hook 或 plugin。当前控制 Claude、OpenCode、CodeBuddy bridge；Pi 的 `PI_SESSION_ID` 由宿主内置，所以仍保持 native。`--no-hooks` 持久写成 `false`；`--hooks` 重新开启 |
 | `budgets` | 见下文 | 每种文档的软行数预算。Keelson 把压力作为内部信号交给 Agent：大型 spec 自动分片，单例/rule 在 RECONCILE 中自动整理，长期文档只有到 2× 预算才硬失败 |
 | `context` | `""` | 打印在 `keelson context` 输出顶部的自由文本。用于放不进 INTENT.md 的事实，比如技术栈概要 |
