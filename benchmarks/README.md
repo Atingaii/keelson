@@ -74,6 +74,14 @@ node benchmarks/audit-results.mjs evals/results/<root>
 
 `behavior-audit.json` 把 harness 机械结果、实际命令退出/输出、终稿中可解析的测试数字、事件捕获完整性、终稿是否为收尾性陈述分开。它是启发式索引，尤其 shell/heredoc 和自然语言数字需人工复核；不能由 harness 通过反推模型曾执行某一命令，也不能由缺失事件推定虚构。
 
+需要重算中位数、token 覆盖率和 setup footprint 时，向汇总器传入**仅纳入比较**的根目录；它会将缺失值保留为未观察到，而不会替换为零：
+
+```bash
+node benchmarks/summarize-results.mjs evals/results/<summary>.json \
+  evals/results/<eligible-root-1> \
+  evals/results/<eligible-root-2>
+```
+
 ## 结果目录分层
 
 报告应明确分别列出：

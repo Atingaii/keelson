@@ -1,0 +1,15 @@
+[
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/change.md",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/5af4fe56019011ce71b932b6c093a9d51a05f07d5a9a1e7da4fb35a0a42cfc84.log",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/a5291430b060745e40bd8fc1b5d760036b6fcd2fd0c3a7d7a8b5633511de8abf.log",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/c5e2b03d9e44f412faa1e95897c6e2fb6291d18a1e8ea95d73f53ce6f3392382.log",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/f96cccc3f0446fbfbfa77da09894e25a4181ac9d925a7d7f02e7e691aab1f8d8.log",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/keys/8537aef9c51a1e351de7f9113f3b06505c3e922cc7bead18120f7a1f8f3dcb7c.pem",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/public-key.pem",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/landed.json",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/ledger.jsonl",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/ledger.md",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/specs/teardown-lifecycle/spec.md",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/tasks.md",
+  ".keelson/specs/teardown-lifecycle/spec.md"
+]

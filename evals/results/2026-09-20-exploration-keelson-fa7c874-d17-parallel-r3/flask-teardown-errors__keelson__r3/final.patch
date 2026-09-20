@@ -1,0 +1,497 @@
+diff --git a/src/flask/app.py b/src/flask/app.py
+index 9a6fdd4..4661b45 100644
+--- a/src/flask/app.py
++++ b/src/flask/app.py
+@@ -1433,12 +1433,13 @@ class Flask(App):
+         .. versionchanged:: 0.9
+             Added the ``exc`` argument.
+         """
+-        for name in chain(ctx.request.blueprints, (None,)):
+-            if name in self.teardown_request_funcs:
+-                for func in reversed(self.teardown_request_funcs[name]):
+-                    self.ensure_sync(func)(exc)
+-
+-        request_tearing_down.send(self, _async_wrapper=self.ensure_sync, exc=exc)
++        funcs = (
++            func
++            for name in chain(ctx.request.blueprints, (None,))
++            if name in self.teardown_request_funcs
++            for func in reversed(self.teardown_request_funcs[name])
++        )
++        self._call_teardown_functions(funcs, exc, request_tearing_down)
+ 
+     def do_teardown_appcontext(
+         self, ctx: AppContext, exc: BaseException | None = None
+@@ -1454,10 +1455,42 @@ class Flask(App):
+ 
+         .. versionadded:: 0.9
+         """
+-        for func in reversed(self.teardown_appcontext_funcs):
+-            self.ensure_sync(func)(exc)
++        self._call_teardown_functions(
++            reversed(self.teardown_appcontext_funcs), exc, appcontext_tearing_down
++        )
++
++    def _call_teardown_functions(
++        self,
++        funcs: cabc.Iterable[ft.TeardownCallable],
++        exc: BaseException | None,
++        signal: t.Any,
++    ) -> None:
++        """Run teardown callbacks and their signal, collecting any errors."""
++        errors = []
++
++        for func in funcs:
++            try:
++                self.ensure_sync(func)(exc)
++            except BaseException as e:
++                errors.append(e)
++
++        try:
++            signal.send(self, _async_wrapper=self.ensure_sync, exc=exc)
++        except BaseException as e:
++            errors.append(e)
++
++        self._raise_teardown_errors(errors)
++
++    @staticmethod
++    def _raise_teardown_errors(errors: list[BaseException]) -> None:
++        if errors:
++            if sys.version_info >= (3, 11):
++                if len(errors) == 1 and isinstance(errors[0], BaseExceptionGroup):
++                    raise errors[0]
++
++                raise BaseExceptionGroup("teardown errors", errors)
+ 
+-        appcontext_tearing_down.send(self, _async_wrapper=self.ensure_sync, exc=exc)
++            raise errors[0]
+ 
+     def app_context(self) -> AppContext:
+         """Create an :class:`.AppContext`. When the context is pushed,
+diff --git a/src/flask/ctx.py b/src/flask/ctx.py
+index 8876efd..b7f2638 100644
+--- a/src/flask/ctx.py
++++ b/src/flask/ctx.py
+@@ -482,15 +482,34 @@ class AppContext:
+         if self._push_count > 0:
+             return
+ 
+-        try:
+-            if self._request is not None:
++        errors: list[BaseException] = []
++
++        if self._request is not None:
++            try:
+                 self.app.do_teardown_request(self, exc)
++            except BaseException as e:
++                errors.append(e)
++
++            try:
+                 self._request.close()
+-        finally:
++            except BaseException as e:
++                errors.append(e)
++
++        try:
+             self.app.do_teardown_appcontext(self, exc)
++        except BaseException as e:
++            errors.append(e)
++
++        try:
+             _cv_app.reset(self._cv_token)
++        finally:
+             self._cv_token = None
+-            appcontext_popped.send(self.app, _async_wrapper=self.app.ensure_sync)
++            try:
++                appcontext_popped.send(self.app, _async_wrapper=self.app.ensure_sync)
++            except BaseException as e:
++                errors.append(e)
++
++        self.app._raise_teardown_errors(errors)
+ 
+     def __enter__(self) -> te.Self:
+         self.push()
+diff --git a/tests/test_appctx.py b/tests/test_appctx.py
+index a537b05..6f4f0c5 100644
+--- a/tests/test_appctx.py
++++ b/tests/test_appctx.py
+@@ -1,3 +1,5 @@
++import sys
++
+ import pytest
+ 
+ import flask
+@@ -53,6 +55,108 @@ def test_app_tearing_down(app):
+     assert cleanup_stuff == [None]
+ 
+ 
++def test_teardown_errors_do_not_stop_cleanup_or_context_reset(app):
++    called = []
++    first_error = RuntimeError("first")
++    second_error = LookupError("second")
++
++    @app.teardown_appcontext
++    def first(exc):
++        called.append("first")
++        raise first_error
++
++    @app.teardown_appcontext
++    def second(exc):
++        called.append("second")
++        raise second_error
++
++    def tearing_down(sender, exc):
++        called.append("signal")
++
++    flask.appcontext_tearing_down.connect(tearing_down, app)
++    ctx = app.app_context()
++    ctx.push()
++
++    try:
++        if sys.version_info >= (3, 11):
++            with pytest.raises(BaseExceptionGroup) as info:
++                ctx.pop()
++
++            assert info.value.exceptions == (second_error, first_error)
++        else:
++            with pytest.raises(LookupError, match="second"):
++                ctx.pop()
++    finally:
++        flask.appcontext_tearing_down.disconnect(tearing_down, app)
++
++    assert called == ["second", "first", "signal"]
++    assert not flask.current_app
++
++
++def test_request_teardown_errors_do_not_stop_app_teardown(app):
++    called = []
++    request_error = RuntimeError("request teardown failed")
++    app_error = LookupError("app teardown failed")
++
++    @app.teardown_request
++    def later_teardown(exc):
++        called.append("later request callback")
++
++    @app.teardown_request
++    def failing_teardown(exc):
++        called.append("request callback")
++        raise request_error
++
++    @app.teardown_appcontext
++    def app_teardown(exc):
++        called.append("app callback")
++        raise app_error
++
++    def request_tearing_down(sender, exc):
++        called.append("request signal")
++
++    def app_tearing_down(sender, exc):
++        called.append("app signal")
++
++    flask.request_tearing_down.connect(request_tearing_down, app)
++    flask.appcontext_tearing_down.connect(app_tearing_down, app)
++    ctx = app.test_request_context()
++    ctx.push()
++
++    try:
++        if sys.version_info >= (3, 11):
++            with pytest.raises(BaseExceptionGroup) as info:
++                ctx.pop()
++
++            def get_exceptions(error):
++                if isinstance(error, BaseExceptionGroup):
++                    return [
++                        nested
++                        for exception in error.exceptions
++                        for nested in get_exceptions(exception)
++                    ]
++
++                return [error]
++
++            assert get_exceptions(info.value) == [request_error, app_error]
++        else:
++            with pytest.raises(RuntimeError, match="request teardown failed"):
++                ctx.pop()
++    finally:
++        flask.request_tearing_down.disconnect(request_tearing_down, app)
++        flask.appcontext_tearing_down.disconnect(app_tearing_down, app)
++
++    assert called == [
++        "request callback",
++        "later request callback",
++        "request signal",
++        "app callback",
++        "app signal",
++    ]
++    assert not flask.current_app
++    assert not flask.request
++
++
+ def test_app_tearing_down_with_previous_exception(app):
+     cleanup_stuff = []
+ 
+diff --git a/.keelson/changes/archive/2026-09-20-teardown-error-collection/change.md b/.keelson/changes/archive/2026-09-20-teardown-error-collection/change.md
+new file mode 100644
+index 0000000..aa47162
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-teardown-error-collection/change.md
+@@ -0,0 +1,52 @@
++---
++tier: spec
++created: 2026-09-20
++status: active
++owner: node
++branch: HEAD
++touches: [src/flask/app.py, src/flask/ctx.py, tests/test_appctx.py, tests/test_reqctx.py]
++---
++
++# teardown-error-collection
++
++## Why
++An exception from a teardown callback currently prevents later teardown work,
++and an application teardown error can leave the context-local state active.
++
++## What
++- Continue through every registered request and application-context teardown
++  callback and their tearing-down signals after callback failures.
++- Raise teardown failures only after cleanup and context restoration finish.
++- Preserve all collected failures as an exception group when the Python runtime
++  supports exception groups; otherwise preserve the first failure.
++- Non-goal: change callback order, their ``exc`` argument, or signal receiver
++  ordering.
++
++## How
++Use one Flask helper to run an ordered teardown sequence while collecting
++exceptions, and use it from both public teardown methods. AppContext.pop keeps
++request cleanup, application cleanup, token reset, and the popped signal in a
++completion path before re-raising collected failures.
++
++## Impact
++- Request contexts and application contexts both enter through AppContext.pop;
++  test clients, CLI contexts, and manual ``with`` blocks therefore share this
++  path.
++- Blueprint teardown functions are included by do_teardown_request's existing
++  blueprint-to-application ordering. No data, permission, or external service
++  boundary is involved.
++- Flask subclasses can override the public teardown methods, so the context
++  continues to invoke those methods without a new internal calling convention.
++
++## Acceptance
++- [x] All request and app-context callbacks continue after failures, and both tearing-down signals run — test: `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q`
++- [x] Multiple teardown callback errors retain their identities in an exception group on supported Python versions — test: `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q`
++- [x] An error leaving teardown has already restored the context-local state — test: `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q`
++
++## Open questions
++None.
++
++## Decisions
++- teardown-lifecycle: D-17 requires cleanup continuation and deferred teardown
++  error propagation; Python exception groups carry multiple failures where
++  available.
+diff --git a/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/5af4fe56019011ce71b932b6c093a9d51a05f07d5a9a1e7da4fb35a0a42cfc84.log b/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/5af4fe56019011ce71b932b6c093a9d51a05f07d5a9a1e7da4fb35a0a42cfc84.log
+new file mode 100644
+index 0000000..7da6d0a
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/5af4fe56019011ce71b932b6c093a9d51a05f07d5a9a1e7da4fb35a0a42cfc84.log
+@@ -0,0 +1,5 @@
++$ PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q
++exit 0
++
++................                                                         [100%]
++16 passed in 0.05s
+diff --git a/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/a5291430b060745e40bd8fc1b5d760036b6fcd2fd0c3a7d7a8b5633511de8abf.log b/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/a5291430b060745e40bd8fc1b5d760036b6fcd2fd0c3a7d7a8b5633511de8abf.log
+new file mode 100644
+index 0000000..fef305b
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/a5291430b060745e40bd8fc1b5d760036b6fcd2fd0c3a7d7a8b5633511de8abf.log
+@@ -0,0 +1,4 @@
++$ pytest -q
++exit 127
++
++/bin/sh: 1: pytest: not found
+diff --git a/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/c5e2b03d9e44f412faa1e95897c6e2fb6291d18a1e8ea95d73f53ce6f3392382.log b/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/c5e2b03d9e44f412faa1e95897c6e2fb6291d18a1e8ea95d73f53ce6f3392382.log
+new file mode 100644
+index 0000000..7d8c297
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/c5e2b03d9e44f412faa1e95897c6e2fb6291d18a1e8ea95d73f53ce6f3392382.log
+@@ -0,0 +1,5 @@
++$ PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q
++exit 0
++
++................                                                         [100%]
++16 passed in 0.09s
+diff --git a/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/f96cccc3f0446fbfbfa77da09894e25a4181ac9d925a7d7f02e7e691aab1f8d8.log b/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/f96cccc3f0446fbfbfa77da09894e25a4181ac9d925a7d7f02e7e691aab1f8d8.log
+new file mode 100644
+index 0000000..1f85ac8
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/f96cccc3f0446fbfbfa77da09894e25a4181ac9d925a7d7f02e7e691aab1f8d8.log
+@@ -0,0 +1,5 @@
++$ PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q
++exit 0
++
++................                                                         [100%]
++16 passed in 0.06s
+diff --git a/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/keys/8537aef9c51a1e351de7f9113f3b06505c3e922cc7bead18120f7a1f8f3dcb7c.pem b/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/keys/8537aef9c51a1e351de7f9113f3b06505c3e922cc7bead18120f7a1f8f3dcb7c.pem
+new file mode 100644
+index 0000000..4c25c55
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/keys/8537aef9c51a1e351de7f9113f3b06505c3e922cc7bead18120f7a1f8f3dcb7c.pem
+@@ -0,0 +1,3 @@
++-----BEGIN PUBLIC KEY-----
++MCowBQYDK2VwAyEAdFynf4PZUmdpPIgG4oxnv/A7P29GJyFwS9J1mEjClUg=
++-----END PUBLIC KEY-----
+diff --git a/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/public-key.pem b/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/public-key.pem
+new file mode 100644
+index 0000000..4c25c55
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/public-key.pem
+@@ -0,0 +1,3 @@
++-----BEGIN PUBLIC KEY-----
++MCowBQYDK2VwAyEAdFynf4PZUmdpPIgG4oxnv/A7P29GJyFwS9J1mEjClUg=
++-----END PUBLIC KEY-----
+diff --git a/.keelson/changes/archive/2026-09-20-teardown-error-collection/landed.json b/.keelson/changes/archive/2026-09-20-teardown-error-collection/landed.json
+new file mode 100644
+index 0000000..aca48bc
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-teardown-error-collection/landed.json
+@@ -0,0 +1 @@
++{"status":"integrated","change":"teardown-error-collection","at":"2026-09-20T12:52:13.307Z","forced":false}
+diff --git a/.keelson/changes/archive/2026-09-20-teardown-error-collection/ledger.jsonl b/.keelson/changes/archive/2026-09-20-teardown-error-collection/ledger.jsonl
+new file mode 100644
+index 0000000..286679b
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-teardown-error-collection/ledger.jsonl
+@@ -0,0 +1,5 @@
++{"payloadType":"application/vnd.in-toto+json","payload":"eyJfdHlwZSI6Imh0dHBzOi8vaW4tdG90by5pby9TdGF0ZW1lbnQvdjEiLCJzdWJqZWN0IjpbeyJuYW1lIjoid29ya3RyZWUiLCJkaWdlc3QiOnsiZ2l0VHJlZSI6ImZhYTdlNjhhOTM5NDgyMDkxNTk1YWRlYTZiZWFkMDcwYTRmMzI5YWMifX0seyJuYW1lIjoiY29udHJhY3QiLCJkaWdlc3QiOnsic2hhMjU2IjoiMzBjMDM1M2NiMTYxZmRmODZlYzIxYmZhN2U3NTY0MmVjMzNiZjJmNjJmNWJiYTE3ZjRkNjEwMmFkZWRkMzMyYyJ9fV0sInByZWRpY2F0ZVR5cGUiOiJodHRwczovL2dpdGh1Yi5jb20vQXRpbmdhaWkva2VlbHNvbi92ZXJpZmljYXRpb24vdjEiLCJwcmVkaWNhdGUiOnsiY2xhaW0iOiJELTE3IHRlYXJkb3duIGNsZWFudXAgY29udGludWF0aW9uIGFuZCBlcnJvciBhZ2dyZWdhdGlvbiIsInN0YXJ0ZWRPbiI6IjIwMjYtMDktMjBUMTI6NDY6MjQuMjQ1WiIsImZpbmlzaGVkT24iOiIyMDI2LTA5LTIwVDEyOjQ2OjI0LjI5NVoiLCJ1bmNoYW5nZWQiOnRydWUsImNvbXBsZXRlIjp0cnVlLCJydW5zIjpbeyJjbWQiOiJweXRlc3QgLXEiLCJuYW1lIjoicHl0ZXN0IC1xIiwia2luZCI6InRlc3QiLCJleGl0IjoxMjcsInNpZ25hbCI6bnVsbCwidGltZWRPdXQiOmZhbHNlLCJ0cnVuY2F0ZWQiOmZhbHNlLCJ0ZXJtaW5hdGlvblVuY29uZmlybWVkIjpmYWxzZSwiZHVyYXRpb25NcyI6OCwibG9nRGlnZXN0IjoiYTUyOTE0MzBiMDYwNzQ1ZTQwYmQ4ZmMxYjVkNzYwMDM2YjZmY2QyZmQwYzNhN2Q3YThiNTYzMzUxMWRlOGFiZiJ9XSwicnVubmVyIjp7ImtlZWxzb24iOiIwLjQuMCIsImhvc3QiOiJjb2RleCIsIm1vZGVsIjpudWxsLCJhdHRyaWJ1dGlvbiI6ImNhbGxlci1zdXBwbGllZCJ9fX0=","signatures":[{"keyid":"8537aef9c51a1e351de7f9113f3b06505c3e922cc7bead18120f7a1f8f3dcb7c","sig":"97OtdmVzBQs+nNQ3zGbBcY6LjKLOsBYJdnMvT24WCtmGhgvG0yq59JyKy9ZEaniBvMmeUerzAbVc91fckPsZAg=="}]}
++{"payloadType":"application/vnd.in-toto+json","payload":"eyJfdHlwZSI6Imh0dHBzOi8vaW4tdG90by5pby9TdGF0ZW1lbnQvdjEiLCJzdWJqZWN0IjpbeyJuYW1lIjoid29ya3RyZWUiLCJkaWdlc3QiOnsiZ2l0VHJlZSI6ImZhYTdlNjhhOTM5NDgyMDkxNTk1YWRlYTZiZWFkMDcwYTRmMzI5YWMifX0seyJuYW1lIjoiY29udHJhY3QiLCJkaWdlc3QiOnsic2hhMjU2IjoiNmZlM2EwMGJlNzE0MmY5YWI4MTI1ZmU2NmZmNGYzZGU1NjU0YzNjZGY1Yjg2MDZjYjEzNDYzNDcwNWNmZTlhZCJ9fV0sInByZWRpY2F0ZVR5cGUiOiJodHRwczovL2dpdGh1Yi5jb20vQXRpbmdhaWkva2VlbHNvbi92ZXJpZmljYXRpb24vdjEiLCJwcmVkaWNhdGUiOnsiY2xhaW0iOiJELTE3IHRlYXJkb3duIGNsZWFudXAgY29udGludWF0aW9uIGFuZCBlcnJvciBhZ2dyZWdhdGlvbiIsInN0YXJ0ZWRPbiI6IjIwMjYtMDktMjBUMTI6NDY6NTcuODg0WiIsImZpbmlzaGVkT24iOiIyMDI2LTA5LTIwVDEyOjQ2OjU4LjQ0MloiLCJ1bmNoYW5nZWQiOnRydWUsImNvbXBsZXRlIjp0cnVlLCJydW5zIjpbeyJjbWQiOiJQWVRIT05QQVRIPXNyYzouYmVuY2gtcHlkZXBzIHB5dGhvbjMgLW0gcHl0ZXN0IHRlc3RzL3Rlc3RfYXBwY3R4LnB5IC1xIiwibmFtZSI6IlBZVEhPTlBBVEg9c3JjOi5iZW5jaC1weWRlcHMgcHl0aG9uMyAtbSBweXRlc3QgdGVzdHMvdGVzdF9hcHBjdHgucHkgLXEiLCJraW5kIjoidGVzdCIsImV4aXQiOjAsInNpZ25hbCI6bnVsbCwidGltZWRPdXQiOmZhbHNlLCJ0cnVuY2F0ZWQiOmZhbHNlLCJ0ZXJtaW5hdGlvblVuY29uZmlybWVkIjpmYWxzZSwiZHVyYXRpb25NcyI6NTE2LCJsb2dEaWdlc3QiOiI1YWY0ZmU1NjAxOTAxMWNlNzFiOTMyYjZjMDkzYTlkNTFhMDVmMDdkNWE5YTFlN2RhNGZiMzVhMGE0MmNmYzg0In1dLCJydW5uZXIiOnsia2VlbHNvbiI6IjAuNC4wIiwiaG9zdCI6ImNvZGV4IiwibW9kZWwiOm51bGwsImF0dHJpYnV0aW9uIjoiY2FsbGVyLXN1cHBsaWVkIn19fQ==","signatures":[{"keyid":"8537aef9c51a1e351de7f9113f3b06505c3e922cc7bead18120f7a1f8f3dcb7c","sig":"2n2FqKs04+dhdlIbPxvLqEVs7+D1cFoY9ZvIckvYzxhPPmCfRWtgdTaqSF+pyGoTPD1r9mkyuoZuwjNrEUh2BQ=="}]}
++{"payloadType":"application/vnd.in-toto+json","payload":"eyJfdHlwZSI6Imh0dHBzOi8vaW4tdG90by5pby9TdGF0ZW1lbnQvdjEiLCJzdWJqZWN0IjpbeyJuYW1lIjoid29ya3RyZWUiLCJkaWdlc3QiOnsiZ2l0VHJlZSI6IjcyMTk5M2EyOWM3MDg1ZTMzOWRiZTJhYzAxZmI4MjlmZjVhOTg2YzgifX0seyJuYW1lIjoiY29udHJhY3QiLCJkaWdlc3QiOnsic2hhMjU2IjoiNmZlM2EwMGJlNzE0MmY5YWI4MTI1ZmU2NmZmNGYzZGU1NjU0YzNjZGY1Yjg2MDZjYjEzNDYzNDcwNWNmZTlhZCJ9fV0sInByZWRpY2F0ZVR5cGUiOiJodHRwczovL2dpdGh1Yi5jb20vQXRpbmdhaWkva2VlbHNvbi92ZXJpZmljYXRpb24vdjEiLCJwcmVkaWNhdGUiOnsiY2xhaW0iOiJELTE3IHRlYXJkb3duIGNsZWFudXAgY29udGludWF0aW9uIGFuZCBlcnJvciBhZ2dyZWdhdGlvbiIsInN0YXJ0ZWRPbiI6IjIwMjYtMDktMjBUMTI6NDk6MTIuMTM0WiIsImZpbmlzaGVkT24iOiIyMDI2LTA5LTIwVDEyOjQ5OjEyLjkzMVoiLCJ1bmNoYW5nZWQiOnRydWUsImNvbXBsZXRlIjp0cnVlLCJydW5zIjpbeyJjbWQiOiJQWVRIT05QQVRIPXNyYzouYmVuY2gtcHlkZXBzIHB5dGhvbjMgLW0gcHl0ZXN0IHRlc3RzL3Rlc3RfYXBwY3R4LnB5IC1xIiwibmFtZSI6IlBZVEhPTlBBVEg9c3JjOi5iZW5jaC1weWRlcHMgcHl0aG9uMyAtbSBweXRlc3QgdGVzdHMvdGVzdF9hcHBjdHgucHkgLXEiLCJraW5kIjoidGVzdCIsImV4aXQiOjAsInNpZ25hbCI6bnVsbCwidGltZWRPdXQiOmZhbHNlLCJ0cnVuY2F0ZWQiOmZhbHNlLCJ0ZXJtaW5hdGlvblVuY29uZmlybWVkIjpmYWxzZSwiZHVyYXRpb25NcyI6NzMyLCJsb2dEaWdlc3QiOiJjNWUyYjAzZDllNDRmNDEyZmFhMWU5NTg5N2M2ZTJmYjYyOTFkMThhMWU4ZWE5NWQ3M2Y1M2NlNmYzMzkyMzgyIn1dLCJydW5uZXIiOnsia2VlbHNvbiI6IjAuNC4wIiwiaG9zdCI6ImNvZGV4IiwibW9kZWwiOm51bGwsImF0dHJpYnV0aW9uIjoiY2FsbGVyLXN1cHBsaWVkIn19fQ==","signatures":[{"keyid":"8537aef9c51a1e351de7f9113f3b06505c3e922cc7bead18120f7a1f8f3dcb7c","sig":"gX/lvD+8I2b01ySS/Yr/dv0PfgupltGA56A/jrpThsVmLl55p5X79bBuaUCcFRl8/cXVaBF+/rUyGs8LxTFeDQ=="}]}
++{"payloadType":"application/vnd.in-toto+json","payload":"eyJfdHlwZSI6Imh0dHBzOi8vaW4tdG90by5pby9TdGF0ZW1lbnQvdjEiLCJzdWJqZWN0IjpbeyJuYW1lIjoid29ya3RyZWUiLCJkaWdlc3QiOnsiZ2l0VHJlZSI6Ijg2NmFhNDViOTExMDYzZjBiMjNmMDUzZDg5Zjk2MjY0NGM4YTgyNGIifX0seyJuYW1lIjoiY29udHJhY3QiLCJkaWdlc3QiOnsic2hhMjU2IjoiNmZlM2EwMGJlNzE0MmY5YWI4MTI1ZmU2NmZmNGYzZGU1NjU0YzNjZGY1Yjg2MDZjYjEzNDYzNDcwNWNmZTlhZCJ9fV0sInByZWRpY2F0ZVR5cGUiOiJodHRwczovL2dpdGh1Yi5jb20vQXRpbmdhaWkva2VlbHNvbi92ZXJpZmljYXRpb24vdjEiLCJwcmVkaWNhdGUiOnsiY2xhaW0iOiJELTE3IHRlYXJkb3duIGNsZWFudXAgY29udGludWF0aW9uIGFuZCBlcnJvciBhZ2dyZWdhdGlvbiIsInN0YXJ0ZWRPbiI6IjIwMjYtMDktMjBUMTI6NTE6MDguMzA1WiIsImZpbmlzaGVkT24iOiIyMDI2LTA5LTIwVDEyOjUxOjA4LjgwMloiLCJ1bmNoYW5nZWQiOnRydWUsImNvbXBsZXRlIjp0cnVlLCJydW5zIjpbeyJjbWQiOiJQWVRIT05QQVRIPXNyYzouYmVuY2gtcHlkZXBzIHB5dGhvbjMgLW0gcHl0ZXN0IHRlc3RzL3Rlc3RfYXBwY3R4LnB5IC1xIiwibmFtZSI6IlBZVEhPTlBBVEg9c3JjOi5iZW5jaC1weWRlcHMgcHl0aG9uMyAtbSBweXRlc3QgdGVzdHMvdGVzdF9hcHBjdHgucHkgLXEiLCJraW5kIjoidGVzdCIsImV4aXQiOjAsInNpZ25hbCI6bnVsbCwidGltZWRPdXQiOmZhbHNlLCJ0cnVuY2F0ZWQiOmZhbHNlLCJ0ZXJtaW5hdGlvblVuY29uZmlybWVkIjpmYWxzZSwiZHVyYXRpb25NcyI6NDU0LCJsb2dEaWdlc3QiOiJmOTZjY2NjM2YwNDQ2ZmJmYmZhNzdkYTA5ODk0ZTI1YTQxODFhYzlkOTI1YTdkN2YwMmU3ZTY5MWFhYjFmOGQ4In1dLCJydW5uZXIiOnsia2VlbHNvbiI6IjAuNC4wIiwiaG9zdCI6ImNvZGV4IiwibW9kZWwiOm51bGwsImF0dHJpYnV0aW9uIjoiY2FsbGVyLXN1cHBsaWVkIn19fQ==","signatures":[{"keyid":"8537aef9c51a1e351de7f9113f3b06505c3e922cc7bead18120f7a1f8f3dcb7c","sig":"r0PtrUwMy1Cw6HST5WAd8CNEZzkEiPeiZpcPcxWXr7XtJ2usFeTAMXVDUtIzpfEQkGIXtIphHGU12DRPu1gdDw=="}]}
++{"payloadType":"application/vnd.in-toto+json","payload":"eyJfdHlwZSI6Imh0dHBzOi8vaW4tdG90by5pby9TdGF0ZW1lbnQvdjEiLCJzdWJqZWN0IjpbeyJuYW1lIjoid29ya3RyZWUiLCJkaWdlc3QiOnsiZ2l0VHJlZSI6Ijg2NmFhNDViOTExMDYzZjBiMjNmMDUzZDg5Zjk2MjY0NGM4YTgyNGIifX0seyJuYW1lIjoiY29udHJhY3QiLCJkaWdlc3QiOnsic2hhMjU2IjoiNmZlM2EwMGJlNzE0MmY5YWI4MTI1ZmU2NmZmNGYzZGU1NjU0YzNjZGY1Yjg2MDZjYjEzNDYzNDcwNWNmZTlhZCJ9fV0sInByZWRpY2F0ZVR5cGUiOiJodHRwczovL2dpdGh1Yi5jb20vQXRpbmdhaWkva2VlbHNvbi92ZXJpZmljYXRpb24vdjEiLCJwcmVkaWNhdGUiOnsiY2xhaW0iOiJELTE3IHRlYXJkb3duIGNsZWFudXAgY29udGludWF0aW9uIGFuZCBlcnJvciBhZ2dyZWdhdGlvbiIsInN0YXJ0ZWRPbiI6IjIwMjYtMDktMjBUMTI6NTI6MTIuNDQzWiIsImZpbmlzaGVkT24iOiIyMDI2LTA5LTIwVDEyOjUyOjEyLjkzM1oiLCJ1bmNoYW5nZWQiOnRydWUsImNvbXBsZXRlIjp0cnVlLCJydW5zIjpbeyJjbWQiOiJQWVRIT05QQVRIPXNyYzouYmVuY2gtcHlkZXBzIHB5dGhvbjMgLW0gcHl0ZXN0IHRlc3RzL3Rlc3RfYXBwY3R4LnB5IC1xIiwibmFtZSI6IlBZVEhPTlBBVEg9c3JjOi5iZW5jaC1weWRlcHMgcHl0aG9uMyAtbSBweXRlc3QgdGVzdHMvdGVzdF9hcHBjdHgucHkgLXEiLCJraW5kIjoidGVzdCIsImV4aXQiOjAsInNpZ25hbCI6bnVsbCwidGltZWRPdXQiOmZhbHNlLCJ0cnVuY2F0ZWQiOmZhbHNlLCJ0ZXJtaW5hdGlvblVuY29uZmlybWVkIjpmYWxzZSwiZHVyYXRpb25NcyI6NDQ5LCJsb2dEaWdlc3QiOiI1YWY0ZmU1NjAxOTAxMWNlNzFiOTMyYjZjMDkzYTlkNTFhMDVmMDdkNWE5YTFlN2RhNGZiMzVhMGE0MmNmYzg0In1dLCJydW5uZXIiOnsia2VlbHNvbiI6IjAuNC4wIiwiaG9zdCI6ImNvZGV4IiwibW9kZWwiOm51bGwsImF0dHJpYnV0aW9uIjoiY2FsbGVyLXN1cHBsaWVkIn19fQ==","signatures":[{"keyid":"8537aef9c51a1e351de7f9113f3b06505c3e922cc7bead18120f7a1f8f3dcb7c","sig":"cTGGGwJmHdttN4gTIBP87wkw8+mAIXmN090pkvlCWKctIRqHF33mRx0Z/WIZ6qLRYyLL7wIdgal8H7AOvduFDg=="}]}
+diff --git a/.keelson/changes/archive/2026-09-20-teardown-error-collection/ledger.md b/.keelson/changes/archive/2026-09-20-teardown-error-collection/ledger.md
+new file mode 100644
+index 0000000..7e92785
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-teardown-error-collection/ledger.md
+@@ -0,0 +1,24 @@
++
++### Verify: D-17 teardown cleanup continuation and error aggregation
++`pytest -q` exit 127 · tree faa7e68a939482091595adea6bead070a4f329ac
++
++### Verify: D-17 teardown cleanup continuation and error aggregation
++`PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q` exit 0 · tree faa7e68a939482091595adea6bead070a4f329ac
++
++### Verify: D-17 teardown cleanup continuation and error aggregation
++`PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q` exit 0 · tree 721993a29c7085e339dbe2ac01fb829ff5a986c8
++
++### Verify: D-17 teardown cleanup continuation and error aggregation
++`PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q` exit 0 · tree 866aa45b911063f0b23f053d89f962644c8a824b
++
++### Ruling: exception-group shape
++Fresh review found that a single failure was raw on Python 3.11+. The collector
++now uses an exception group for any collected teardown failure on supported
++runtimes; an existing group is re-raised unchanged at the context boundary.
++
++### Note: fresh-reader review
++Independent re-review found no remaining D-17 defect after the grouping and
++request-context coverage updates.
++
++### Verify: D-17 teardown cleanup continuation and error aggregation
++`PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q` exit 0 · tree 866aa45b911063f0b23f053d89f962644c8a824b
+diff --git a/.keelson/changes/archive/2026-09-20-teardown-error-collection/specs/teardown-lifecycle/spec.md b/.keelson/changes/archive/2026-09-20-teardown-error-collection/specs/teardown-lifecycle/spec.md
+new file mode 100644
+index 0000000..8edb31c
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-teardown-error-collection/specs/teardown-lifecycle/spec.md
+@@ -0,0 +1,35 @@
++---
++base: new
++---
++# teardown-lifecycle — delta
++
++## ADDED Requirements
++### Requirement: Complete teardown despite failures
++Flask SHALL attempt every registered request teardown callback or application
++context teardown callback in its established order, then send the corresponding
++tearing-down signal, even if one or more earlier teardown callbacks fail.
++
++#### Scenario: Multiple application teardown failures
++- WHEN multiple application-context teardown callbacks raise while a context is
++  popped
++- THEN later callbacks and the appcontext-tearing-down signal still run
++- AND Flask raises the collected teardown failures after cleanup completes.
++
++### Requirement: Restore context state before teardown propagation
++Flask SHALL restore the context-local state before an error collected during
++request or application-context teardown leaves context pop.
++
++#### Scenario: Failed request teardown
++- WHEN a request teardown callback raises while a request context is popped
++- THEN application-context teardown still runs
++- AND the request and application context are no longer active when the error
++  is observed by the caller.
++
++### Requirement: Preserve multiple teardown failures
++On Python versions with exception-group support, Flask SHALL raise the
++collected teardown failures in an exception group. On older supported Python
++versions, Flask MAY raise the first collected teardown failure.
++
++## MODIFIED Requirements
++
++## REMOVED Requirements
+diff --git a/.keelson/changes/archive/2026-09-20-teardown-error-collection/tasks.md b/.keelson/changes/archive/2026-09-20-teardown-error-collection/tasks.md
+new file mode 100644
+index 0000000..0aba35a
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-teardown-error-collection/tasks.md
+@@ -0,0 +1,11 @@
++# Tasks
++
++One checkbox per task, each with an effort tier and, where possible, a verification command. This file is a mutable execution plan: checkboxes communicate progress, but they do not determine whether the change is complete or landable. Group into slices when the work has more than one independently deliverable part; each slice states what someone can observe when it is done.
++
++## Slice: Complete teardown
++Delivers: teardown callbacks and signals finish even when callbacks fail, with
++the context state restored before the errors are exposed.
++
++- [x] 1. Characterize callback, signal, and context-reset behavior (effort: deep)
++- [x] 2. Collect teardown errors through request and app-context cleanup (effort: standard) — verify: `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q`
++- [x] 3. Add regression coverage for continuation, aggregation, and state reset (effort: standard) — verify: `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q`
+diff --git a/.keelson/specs/teardown-lifecycle/spec.md b/.keelson/specs/teardown-lifecycle/spec.md
+new file mode 100644
+index 0000000..addc4c5
+--- /dev/null
++++ b/.keelson/specs/teardown-lifecycle/spec.md
+@@ -0,0 +1,34 @@
++# teardown-lifecycle
++
++## Requirement: Complete teardown despite failures
++
++Flask SHALL attempt every registered request teardown callback or application
++context teardown callback in its established order, then send the corresponding
++tearing-down signal, even if one or more earlier teardown callbacks fail.
++
++### Scenario: Multiple application teardown failures
++- WHEN multiple application-context teardown callbacks raise while a context is
++  popped
++- THEN later callbacks and the appcontext-tearing-down signal still run
++- AND Flask raises the collected teardown failures after cleanup completes.
++
++## Requirement: Restore context state before teardown propagation
++
++Flask SHALL restore the context-local state before an error collected during
++request or application-context teardown leaves context pop.
++
++### Scenario: Failed request teardown
++- WHEN a request teardown callback raises while a request context is popped
++- THEN application-context teardown still runs
++- AND the request and application context are no longer active when the error
++  is observed by the caller.
++
++## Requirement: Preserve multiple teardown failures
++
++On Python versions with exception-group support, Flask SHALL raise the
++collected teardown failures in an exception group. On older supported Python
++versions, Flask MAY raise the first collected teardown failure.
++
++## Decisions
++
++- teardown-lifecycle: D-17 requires cleanup continuation and deferred teardown

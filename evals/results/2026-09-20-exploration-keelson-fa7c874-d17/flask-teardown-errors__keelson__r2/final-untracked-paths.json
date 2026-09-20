@@ -1,0 +1,15 @@
+[
+  ".keelson/changes/archive/2026-09-20-teardown-exhaustive-cleanup/change.md",
+  ".keelson/changes/archive/2026-09-20-teardown-exhaustive-cleanup/evidence/09499c2337e3d62b17b2e97e430f43b431984e7b6c8ba4e25e9b8b0a273be530.log",
+  ".keelson/changes/archive/2026-09-20-teardown-exhaustive-cleanup/evidence/3828c8ac98cc5acd42eb380508f010099ea8b735898f8d96b0dcaa66e5c5a0f3.log",
+  ".keelson/changes/archive/2026-09-20-teardown-exhaustive-cleanup/evidence/a5291430b060745e40bd8fc1b5d760036b6fcd2fd0c3a7d7a8b5633511de8abf.log",
+  ".keelson/changes/archive/2026-09-20-teardown-exhaustive-cleanup/evidence/dfdadbd4b05a8337e79571335bcead61c79a9ee75912a07db40422f7f5894781.log",
+  ".keelson/changes/archive/2026-09-20-teardown-exhaustive-cleanup/evidence/keys/78f75d774334a2c92314f4dc85274ed3704903fc6018c08df726f6236d41c439.pem",
+  ".keelson/changes/archive/2026-09-20-teardown-exhaustive-cleanup/evidence/public-key.pem",
+  ".keelson/changes/archive/2026-09-20-teardown-exhaustive-cleanup/landed.json",
+  ".keelson/changes/archive/2026-09-20-teardown-exhaustive-cleanup/ledger.jsonl",
+  ".keelson/changes/archive/2026-09-20-teardown-exhaustive-cleanup/ledger.md",
+  ".keelson/changes/archive/2026-09-20-teardown-exhaustive-cleanup/specs/application-context/spec.md",
+  ".keelson/changes/archive/2026-09-20-teardown-exhaustive-cleanup/tasks.md",
+  ".keelson/specs/application-context/spec.md"
+]

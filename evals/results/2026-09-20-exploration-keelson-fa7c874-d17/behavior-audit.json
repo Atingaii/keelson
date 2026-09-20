@@ -1,0 +1,243 @@
+{
+  "cells": 2,
+  "clarification_marker_cells": 0,
+  "clarification_marker_count": 0,
+  "d17_cells": 2,
+  "d17_reopen_marker_cells": 0,
+  "d17_reopen_marker_count": 0,
+  "verification_command_cells": 2,
+  "final_verification_statement_cells": 2,
+  "final_message_closing_summary_cells": 2,
+  "final_message_nonclosing_or_missing_cells": 0,
+  "cells_with_incomplete_event_capture": 0,
+  "final_test_count_claims_with_no_matching_command_output": 0,
+  "limitation": "Counts are an observable raw-event audit, not a claim about unexpressed agent reasoning. Mechanical harness outcomes, observed test executions, numeric test-count claims, and capture completeness are reported separately.",
+  "rows": [
+    {
+      "task": "flask-teardown-errors",
+      "method": "keelson",
+      "repetition": 1,
+      "raw_event_file": "codex.events.jsonl",
+      "agent_message_count": 11,
+      "final_agent_message": "Implemented D-17 teardown behavior.\n\n- Added shared teardown execution that attempts all callbacks and the corresponding teardown signal, collecting failures.\n- Uses `BaseExceptionGroup` when available; Python 3.10 falls back to the first collected error.\n- `AppContext.pop` now retains request- and app-context teardown failures through remaining cleanup and restores context-local state before raising.\n- Added request and app-context regression coverage for callback order, signal delivery, collected errors, and context reset.\n- Recorded and landed the Keelson capability contract.\n\nVerification run:\n\n- `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q` — 16 passed\n- `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_basic.py tests/test_reqctx.py tests/test_signals.py -q` — 153 passed\n- `python3 -m compileall -q src/flask`\n- `git diff --check`\n- `keelson check --record ...` using the provisioned app-context command\n- `keelson validate`\n\nAlso attempted `python3 -m ruff check src/flask/ctx.py src/flask/app.py tests/test_appctx.py`, but Ruff is not installed in this environment.",
+      "final_message_coverage": "closing-summary-observed",
+      "event_capture": {
+        "turn_completed_observed": true,
+        "started_without_completed": [],
+        "completed_without_started": [
+          {
+            "id": "item_0",
+            "type": "agent_message",
+            "indexes": [
+              2
+            ]
+          },
+          {
+            "id": "item_2",
+            "type": "agent_message",
+            "indexes": [
+              5
+            ]
+          },
+          {
+            "id": "item_4",
+            "type": "agent_message",
+            "indexes": [
+              8
+            ]
+          },
+          {
+            "id": "item_6",
+            "type": "agent_message",
+            "indexes": [
+              11
+            ]
+          },
+          {
+            "id": "item_11",
+            "type": "agent_message",
+            "indexes": [
+              20
+            ]
+          },
+          {
+            "id": "item_12",
+            "type": "agent_message",
+            "indexes": [
+              21
+            ]
+          },
+          {
+            "id": "item_17",
+            "type": "agent_message",
+            "indexes": [
+              30
+            ]
+          },
+          {
+            "id": "item_20",
+            "type": "agent_message",
+            "indexes": [
+              35
+            ]
+          },
+          {
+            "id": "item_23",
+            "type": "agent_message",
+            "indexes": [
+              40
+            ]
+          },
+          {
+            "id": "item_28",
+            "type": "agent_message",
+            "indexes": [
+              49
+            ]
+          },
+          {
+            "id": "item_32",
+            "type": "agent_message",
+            "indexes": [
+              56
+            ]
+          }
+        ],
+        "item_id_gaps": [],
+        "evidence_capture_complete": true
+      },
+      "verification_command_exit_zero_count": 4,
+      "verification_command_passed_counts_observed": [
+        16,
+        153,
+        14,
+        16,
+        153,
+        16,
+        16
+      ],
+      "final_message_claimed_test_counts": [
+        16,
+        153
+      ],
+      "final_message_claimed_test_counts_match_observed_command_output": true,
+      "final_message_mentions_verification": true,
+      "final_claims_verification_pass_observed": true,
+      "harness_regression_pass": true,
+      "harness_acceptance_pass": true,
+      "harness_mechanical_pass": true,
+      "settled_decision": "D-17",
+      "limitation": "This records observable phrases and commands in raw Codex events. Harness public and hidden outcomes, observed model test commands, and model test-count claims are intentionally separate. Command output can establish only the emitted command and its captured result, not unlogged work or causal reasoning. Missing terminal events or item gaps make behavior/token evidence incomplete without altering the independently replayable patch and harness outcome.",
+      "verification_command_count": 6,
+      "clarification_marker_count": 0,
+      "settled_decision_reopen_marker_count": 0
+    },
+    {
+      "task": "flask-teardown-errors",
+      "method": "keelson",
+      "repetition": 2,
+      "raw_event_file": "codex.events.jsonl",
+      "agent_message_count": 9,
+      "final_agent_message": "Implemented D-17.\n\n- Shared teardown runner now executes all teardown callbacks and the tearing-down signal, collecting failures.\n- Python 3.11+ raises a `BaseExceptionGroup`; older Python raises the first error.\n- `AppContext.pop` continues request/app teardown, closes requests, resets context-local state, and sends `appcontext_popped` before errors escape.\n- Added request and app-context regressions covering callback failures, signal failures, ordering, aggregation, and proxy restoration.\n- Recorded and landed the Keelson change/spec workflow.\n\nVerification run:\n\n- `git diff --check`\n- `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q` — 15 passed\n- `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py tests/test_reqctx.py -q` — 30 passed\n- `keelson check --trust --record \"D-17 exhaustive teardown callbacks, signals, error aggregation, and context restoration\"` — passed\n- `keelson validate` — passed\n\n`ruff` and `mypy` were unavailable in the provided environment.",
+      "final_message_coverage": "closing-summary-observed",
+      "event_capture": {
+        "turn_completed_observed": true,
+        "started_without_completed": [],
+        "completed_without_started": [
+          {
+            "id": "item_0",
+            "type": "agent_message",
+            "indexes": [
+              2
+            ]
+          },
+          {
+            "id": "item_2",
+            "type": "agent_message",
+            "indexes": [
+              5
+            ]
+          },
+          {
+            "id": "item_5",
+            "type": "agent_message",
+            "indexes": [
+              10
+            ]
+          },
+          {
+            "id": "item_12",
+            "type": "agent_message",
+            "indexes": [
+              23
+            ]
+          },
+          {
+            "id": "item_18",
+            "type": "agent_message",
+            "indexes": [
+              34
+            ]
+          },
+          {
+            "id": "item_23",
+            "type": "agent_message",
+            "indexes": [
+              43
+            ]
+          },
+          {
+            "id": "item_28",
+            "type": "agent_message",
+            "indexes": [
+              52
+            ]
+          },
+          {
+            "id": "item_33",
+            "type": "agent_message",
+            "indexes": [
+              61
+            ]
+          },
+          {
+            "id": "item_37",
+            "type": "agent_message",
+            "indexes": [
+              68
+            ]
+          }
+        ],
+        "item_id_gaps": [],
+        "evidence_capture_complete": true
+      },
+      "verification_command_exit_zero_count": 5,
+      "verification_command_passed_counts_observed": [
+        30,
+        15,
+        15,
+        30,
+        15,
+        30,
+        30,
+        15,
+        30
+      ],
+      "final_message_claimed_test_counts": [
+        15,
+        30
+      ],
+      "final_message_claimed_test_counts_match_observed_command_output": true,
+      "final_message_mentions_verification": true,
+      "final_claims_verification_pass_observed": true,
+      "harness_regression_pass": true,
+      "harness_acceptance_pass": true,
+      "harness_mechanical_pass": true,
+      "settled_decision": "D-17",
+      "limitation": "This records observable phrases and commands in raw Codex events. Harness public and hidden outcomes, observed model test commands, and model test-count claims are intentionally separate. Command output can establish only the emitted command and its captured result, not unlogged work or causal reasoning. Missing terminal events or item gaps make behavior/token evidence incomplete without altering the independently replayable patch and harness outcome.",
+      "verification_command_count": 6,
+      "clarification_marker_count": 0,
+      "settled_decision_reopen_marker_count": 0
+    }
+  ]
+}

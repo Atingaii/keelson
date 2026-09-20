@@ -21,9 +21,9 @@ bare treatment 明确要求直接完成任务。每个非 bare treatment 都追�
 
 ### Frozen-4：OpenSpec Docker CLI 修正
 
-首批 frozen-3 OpenSpec 九格安装了项目内 skills，但容器未提供 `openspec` CLI；raw 中的 `openspec: command not found` 使这些尝试成为 **environment-invalid**，保留原始证据但不参与比较。Frozen-4 将精确固定的 `@fission-ai/openspec@1.13.1` 及依赖安装到每格独立临时目录，只读挂载为 `/opt/openspec`，并在 Codex 前机械执行 `command -v openspec && openspec --version && openspec --help`；包锁 integrity 必须等于 runner 固定值。修正后的全部九格另存目录，不能与 invalid attempt 混合。
+首批 frozen-3 OpenSpec 九格安装了项目内 skills，但容器未提供 `openspec` CLI；raw 中的 `openspec: command not found` 使这些尝试成为 **environment-invalid**，保留原始证据但不参与比较。Frozen-4 将精确固定的 `@fission-ai/openspec@1.13.1` 及依赖安装到每格独立临时目录，只读挂载为 `/opt/openspec`，并在 Codex 前机械执行 `command -v openspec && openspec --version && openspec --help`；包锁 integrity 必须等于 runner 固定值。Frozen-4 原计划的九格会另存目录，不能与 invalid attempt 混合；它在四格后因 login-shell 路径缺陷停止。
 
-Frozen-4 的 smoke 外层使用 `sh -c`，但 Codex 工具命令实际使用 `/bin/bash -lc`，后者重置了该 `PATH`，故 Frozen-4 的已落盘 OpenSpec 格同样 environment-invalid 并被停止。Frozen-5 额外以只读 wrapper 将固定 CLI 挂载到 `/usr/local/bin/openspec`，用与模型相同的 `/bin/bash -lc` smoke，并在正式矩阵前让 Codex 只执行 `openspec --version` 与 `openspec list --json`；两项 raw command 均 exit 0。只有 Frozen-5 OpenSpec 九格可以参与比较。
+Frozen-4 的 smoke 外层使用 `sh -c`，但 Codex 工具命令实际使用 `/bin/bash -lc`，后者重置了该 `PATH`，故 Frozen-4 已落盘的四格同样 environment-invalid 并被停止；原计划的其余五格未启动。Frozen-5 额外以只读 wrapper 将固定 CLI 挂载到 `/usr/local/bin/openspec`，用与模型相同的 `/bin/bash -lc` smoke，并在正式矩阵前让 Codex 只执行 `openspec --version` 与 `openspec list --json`；两项 raw command 均 exit 0。只有 Frozen-5 OpenSpec 九格可以参与比较。
 
 ### Frozen-5：队列并行记录
 
@@ -58,7 +58,7 @@ node benchmarks/run.mjs --matrix --method superpowers --repetitions 3
 node benchmarks/run.mjs --matrix --method keelson --repetitions 3 --keelson-source /tmp/keelson-bench-keelson-final
 ```
 
-`evals/results/` 中的探索、环境无效和正式尝试均保留，但报告必须明确区分。提交 raw JSONL 前运行 secrets 扫描；第三方来源、许可证和 attribution 见 `benchmarks/licenses/` 与 `NOTICE.md`。
+`evals/results/` 中的探索、环境无效和正式尝试均保留，但报告必须明确区分。提交 raw JSONL 前运行 secrets 扫描；第三方来源、许可证和 attribution 见 [`../benchmarks/licenses/`](../benchmarks/licenses/) 与 [`../benchmarks/NOTICE.md`](../benchmarks/NOTICE.md)。
 
 ## 来源核验（2026-09-20）
 

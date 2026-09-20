@@ -28,15 +28,29 @@
 
 ## 时耗、tokens 与行为证据
 
-以下是每方法九格中位数。`codex_elapsed_ms` 不含 clone/依赖安装；token 缺失保持 `null`，不估算。它们受本机服务与并行负载影响，只作证据索引。
+以下是每方法九格中位数。`codex_elapsed_ms` 不含 clone/依赖安装；token 缺失保持 `null`，不估算。它们受本机服务与并行负载影响，只作证据索引。本表把偶数个已观察 token 的中位数按两个中央值的算术平均计算；先前表误用 upper-middle，故 bare output 从 1,923 校正为 1,843、Trellis output 从 6,232 校正为 6,013，原始 raw 没有变化。
 
-| 方法 | 有 elapsed 的格数 / 9 | Codex 时耗中位数 | 有 output token 的格数 / 9 | output token 中位数 |
-| --- | ---: | ---: | ---: | ---: |
-| bare | 9 | 93,046 ms | 8 | 1,923 |
-| Trellis | 9 | 280,231 ms | 8 | 6,232 |
-| Superpowers | 9 | 148,517 ms | 9 | 3,270 |
-| OpenSpec | 9 | 217,965 ms | 9 | 4,637 |
-| Keelson | 9 | 397,149 ms | 9 | 9,102 |
+| 方法 | elapsed n / 中位数 | input n / 中位数 | cached input n / 中位数 | output n / 中位数 | reasoning output n / 中位数 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| bare | 9 / 93,046 ms | 8 / 159,511 | 8 / 145,536 | 8 / 1,843 | 8 / 676 |
+| Trellis | 9 / 280,231 ms | 8 / 668,953.5 | 8 / 618,112 | 8 / 6,013 | 8 / 2,168.5 |
+| Superpowers | 9 / 148,517 ms | 9 / 316,691 | 9 / 283,904 | 9 / 3,270 | 9 / 1,613 |
+| OpenSpec | 9 / 217,965 ms | 9 / 567,056 | 9 / 527,616 | 9 / 4,637 | 9 / 1,246 |
+| Keelson | 9 / 397,149 ms | 9 / 760,454 | 9 / 705,536 | 9 / 9,102 | 9 / 2,529 |
+
+完整逐格值、缺失值、所纳入根目录和计算规则见可再运行的 [`../benchmarks/summarize-results.mjs`](../benchmarks/summarize-results.mjs) 及其产物 [`results/2026-09-20-formal-frozen-5-summary.json`](results/2026-09-20-formal-frozen-5-summary.json)。脚本只对有限数值取中位数，未观察到的 token 不以零补齐。
+
+## 安装 footprint（独立描述，非得分）
+
+footprint 是 runner 对每格 treatment 在工作树中 provision 的路径、文件、行数和 bytes 的记录；Python 验收依赖和临时 runner 工件已排除。下表为各方法九格中位数；top-level path 是九格并集。它量化安装侵入性，不表示功能、质量或安全总分。
+
+| 方法 | 文件 / 行 / bytes | top-level path |
+| --- | ---: | --- |
+| bare | 0 / 0 / 0 | — |
+| OpenSpec | 10 / 1,359 / 91,661 | `.agents`, `openspec` |
+| Trellis | 105 / 21,573 / 846,072 | `.agents`, `.codex`, `.gitattributes`, `.trellis`, `AGENTS.md` |
+| Superpowers | 75 / 11,116 / 443,125 | `.agents` |
+| Keelson | 7 / 168 / 8,462 | `.agents`, `.keelson`, `AGENTS.md` |
 
 `behavior-audit.json` 是从 `codex.events.jsonl` 提取的复核索引：它分别记录 harness 结果、实际 pytest/`keelson check` 命令的 exit 与输出摘录、终稿可解析测试数字、事件配对和终稿收尾性。它不是完整 shell 语义或自然语言事实判定；最终完成声称须结合 raw 人工审读。正式 bare D-17 r2 与 Trellis IPv6 r2 缺 `turn.completed`，所以源码和 harness 结果仍在表中，但它们的 tokens/终稿行为证据标记为不完整，未被补造。
 
@@ -44,7 +58,7 @@
 
 ## 明确排除的 OpenSpec 尝试
 
-以下九格各自保留 raw，但 **environment-invalid**，不能进入上表：
+以下 **13 格** 各自保留 raw，但 **environment-invalid**，不能进入上表：
 
 - `results/2026-09-20-formal-frozen-3-openspec/`：仅放入 skills，模型容器没有 `openspec` CLI；
 - `results/2026-09-20-formal-frozen-4-openspec-cli/`：外层 smoke 可见 CLI，但模型实际 `/bin/bash -lc` 重置 PATH 后不可用。
@@ -57,10 +71,10 @@ Frozen-5 将精确固定的 `@fission-ai/openspec@1.13.1` 资源只读挂载，�
 
 补充 replay 保留完整 patch precondition、patch SHA、应用/环境/测试阶段和原格结果。当前已落盘的有效结果按各自 `results/2026-09-20-supplemental-d17-*` 目录报告：bare 2/3、Trellis 0/3、Superpowers 2/3、OpenSpec Frozen-5 0/3、Keelson 7b2c303 0/3。Keelson r1 位于 `...-keelson-first/`，r2/r3 位于 `...-keelson-r2-r3-valid/`；另有一个 runner-error 目录未评估 candidate，保持排除。失败中可见的 `popped` 异常遮蔽聚合错误是该新增边界的观察，不等价于原六个 teardown-error 要求全部失败。
 
-冻结 `fa7c874b8b136089e78a69f559d39724f0178f14` 的 Keelson 指导迭代正以三次 fresh D-17 运行在 `results/2026-09-20-exploration-keelson-fa7c874-d17/`。它保持模型、预算和原机械验收，另单列 supplemental；其结果绝不替换 `7b2c303…` 的五方法表。该 SHA 与后续主仓 `5504180` 不同，后者包含迁移与性能等后续变更，不能被记作本次测量版本。
+冻结 `fa7c874b8b136089e78a69f559d39724f0178f14` 的 Keelson 指导迭代已完成三次 fresh D-17：r1/r2 位于 `results/2026-09-20-exploration-keelson-fa7c874-d17/`，r3 位于独立持久会话根 `...-d17-parallel-r3/`；三格都通过原机械验收（3/3），并有完整 token 与事件捕获。因 r3 为缩短尾部而与 r2 并行，时间不与正式矩阵作效率比较。串行队列在 r2 后额外启动过一个无父进程的重复 r3 容器，已停止；其没有 raw events、未评估 candidate，`runner-interrupted.json` 明确标为 `comparison_eligible: false`，有效 r3 只有前述独立根的一个。探索 supplemental 为 2/3：r1 位于 `results/2026-09-20-supplemental-exploration-fa7c874-r1/` 且失败，表现为新增 `popped` 边界的 `ValueError` 覆写聚合错误；r2/r3 位于各自 `...-fa7c874-r2/` 与 `...-fa7c874-r3/` 且通过。不能从这三格推断指导变更的因果效果：r1 是在实现后才读取新增 verify 段，也未补充完整 late-observer 测试。它保持模型、预算和原机械验收，另单列 supplemental；其结果绝不替换 `7b2c303…` 的五方法表。该探索的**测量 SHA** 是 `fa7c874…`；最终提交以交付 main 为准，不能把它替代或归因给此冻结测量版本。
 
 安全/签名/事务、代码漂移、决策重开与安装 footprint 不与上述代码结果合成为总分。Keelson 自身工程回归可以作为其工程证据，各方法记录的 installation footprint 可以量化侵入性；竞品没有对应公开接口或统一 probe 的位置应为 `NA`，不是零分。
 
 ## 可复核性与清理
 
-提交前对 raw 运行 secrets 扫描，只记录命中文件名和数量，不输出值。保留证据所需的结果、固定任务和冻结 package checkout；runner 临时工作树与可丢下载缓存会在审阅后清理。第三方 Flask 源码、竞品技能文本和原始模型工具输出按 `NOTICE.md` 与 `benchmarks/licenses/` 的来源/许可保存，而不视为本项目 MIT 原创内容。
+提交前对 raw 运行 secrets 扫描，只记录命中文件名和数量，不输出值。保留证据所需的结果、固定任务和冻结 package checkout；runner 临时工作树与可丢下载缓存会在审阅后清理。第三方 Flask 源码、竞品技能文本和原始模型工具输出按 [`../benchmarks/NOTICE.md`](../benchmarks/NOTICE.md) 与 [`../benchmarks/licenses/`](../benchmarks/licenses/) 的来源/许可保存，而不视为本项目 MIT 原创内容。
