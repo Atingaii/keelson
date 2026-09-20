@@ -164,7 +164,6 @@ export function planCapabilityStorage(capability, logicalText, budget = 0, {
   const indexText = renderIndex(capability, spec, reqFiles, {
     requirementsDir,
     decisionsDir,
-    decisionsDir,
     decisionsFile,
     decisionCount: decisionFiles.length,
   });
@@ -185,6 +184,7 @@ export function planCapabilityStorage(capability, logicalText, budget = 0, {
     hardLimit,
     hardOver,
     requirementsDir,
+    decisionsDir,
     decisionsFile,
   };
 }
