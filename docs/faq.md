@@ -42,8 +42,8 @@ From git tags. `keelson land` marks integration; `keelson status` prints the las
 **Does it work in a monorepo?**
 Yes. Rules are routed by path glob, so `packages/api/**` and `packages/web/**` can each have their own rule file. Specs are organised by capability name, which can include a path segment such as `api/orders`. `touches` on a change uses the same globs.
 
-**I'm new to engineering. Does it help me learn?**
-Run `keelson init --guide` (or set `guide: true` in `config.yaml`). The agent then asks about scenarios before technology, presents each choice with a recommendation, the reason, the alternatives, and the trade-off, explains a rule in one sentence when it applies it, names the engineering idea after you have decided, and ends each spec change with a short teaching note. The files, gates, and states are the same as for anyone else, so what you build is not a beginner's version of the project.
+**I'm new to engineering. Will the questions make sense?**
+Yes by default. Keelson always asks owner decisions in plain-language scenarios, recommends a grounded default, and treats “not sure” as a valid route; you do not need `--guide` for that. Enable `keelson init --guide` (or `guide: true`) only if you also want short teaching notes that name the engineering idea behind settled decisions and explain why constraints exist. The files, gates, and states stay identical.
 
 **Documents keep growing. What stops them?**
 Keelson bounds **hot files, not total project knowledge**. The Agent handles knowledge-health findings during normal RECONCILE without asking you to do housekeeping. Large capability specs automatically become a small `spec.md` index plus `requirements/*.md` and `decisions/*.md` when needed; rules split by scope; NOW/INTENT are rewritten as concise current-state views; old runtime evidence/session files are garbage-collected. ADR/spec/rule directories may keep growing as the project evolves, but only relevant files are loaded for a task. `keelson doctor` remains available for diagnostics, not routine maintenance.
