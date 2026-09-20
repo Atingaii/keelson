@@ -1,4 +1,5 @@
 import path from 'node:path';
+import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { exists, read, readOr, write, walk, rmrf } from './fs.js';
 import { parseFrontmatter, parseSpec, renderSpec } from './markdown.js';
@@ -19,6 +20,32 @@ export function capabilityDir(specsDir, capability) {
   return path.join(specsDir, capability);
 }
 
+function capabilityStorageRoot(specsDir, capability) {
+  const dir = capabilityDir(specsDir, capability);
+  if (exists(dir) && fs.lstatSync(dir).isSymbolicLink()) throw new Error(`capability storage root must not be a symlink: ${dir}`);
+  return dir;
+}
+
+/** Keep sharding metadata from escaping its capability directory. */
+function storagePath(dir, rel) {
+  if (typeof rel !== 'string' || !rel || path.isAbsolute(rel)) throw new Error('capability storage path must be relative');
+  if (exists(dir) && fs.lstatSync(dir).isSymbolicLink()) throw new Error(`capability storage root must not be a symlink: ${dir}`);
+  const absolute = path.resolve(dir, rel);
+  const relative = path.relative(dir, absolute);
+  if (!relative || relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) throw new Error(`capability storage path escapes its root: ${rel}`);
+  let current = dir;
+  for (const part of relative.split(path.sep)) {
+    current = path.join(current, part);
+    if (exists(current) && fs.lstatSync(current).isSymbolicLink()) throw new Error(`capability storage path must not be a symlink: ${current}`);
+  }
+  return absolute;
+}
+
+const safeStorageRel = (dir, rel) => {
+  storagePath(dir, rel);
+  return rel;
+};
+
 const firstFree = (dir, preferred, fallback) => {
   if (!exists(path.join(dir, preferred))) return preferred;
   if (!exists(path.join(dir, fallback))) return fallback;
@@ -32,16 +59,18 @@ const firstFree = (dir, preferred, fallback) => {
 };
 
 export function capabilityStorageOptions(specsDir, capability) {
-  const dir = capabilityDir(specsDir, capability);
+  const dir = capabilityStorageRoot(specsDir, capability);
   const main = readOr(path.join(dir, 'spec.md'), '');
   const { data } = parseFrontmatter(main);
   if (data.layout === 'sharded') {
     return {
-      requirementsDir: data.requirements_dir || 'requirements',
+      requirementsDir: safeStorageRel(dir, data.requirements_dir || 'requirements'),
       // Older Keelson layouts used one decisions_file. New writes migrate that
       // representation to a directory without touching an unmanaged decisions/
       // neighbor that the project may already own.
-      decisionsDir: data.decisions_dir || firstFree(dir, 'decisions', 'keelson-decisions'),
+      decisionsDir: data.decisions_dir
+        ? safeStorageRel(dir, data.decisions_dir)
+        : firstFree(dir, 'decisions', 'keelson-decisions'),
       decisionsFile: null,
     };
   }
@@ -53,7 +82,7 @@ export function capabilityStorageOptions(specsDir, capability) {
 }
 
 export function readCapabilitySpec(specsDir, capability) {
-  const dir = capabilityDir(specsDir, capability);
+  const dir = capabilityStorageRoot(specsDir, capability);
   const mainPath = path.join(dir, 'spec.md');
   const main = readOr(mainPath, '');
   if (!main) return '';
@@ -63,20 +92,20 @@ export function readCapabilitySpec(specsDir, capability) {
 
   const index = parseSpec(main);
   const requirements = [];
-  const reqDir = path.join(dir, data.requirements_dir || 'requirements');
+  const reqDir = storagePath(dir, data.requirements_dir || 'requirements');
   for (const rel of walk(reqDir)) {
     if (!rel.endsWith('.md')) continue;
-    requirements.push(...parseSpec(read(path.join(reqDir, rel))).requirements);
+    requirements.push(...parseSpec(read(storagePath(reqDir, rel))).requirements);
   }
   const decisions = [];
   if (data.decisions_dir) {
-    const decisionsDir = path.join(dir, data.decisions_dir);
+    const decisionsDir = storagePath(dir, data.decisions_dir);
     for (const rel of walk(decisionsDir)) {
       if (!rel.endsWith('.md')) continue;
-      decisions.push(...parseSpec(read(path.join(decisionsDir, rel))).decisions);
+      decisions.push(...parseSpec(read(storagePath(decisionsDir, rel))).decisions);
     }
   } else {
-    const decisionsPath = path.join(dir, data.decisions_file || 'decisions.md');
+    const decisionsPath = storagePath(dir, data.decisions_file || 'decisions.md');
     if (exists(decisionsPath)) decisions.push(...parseSpec(read(decisionsPath)).decisions);
   }
   return renderSpec({
@@ -147,14 +176,20 @@ export function planCapabilityStorage(capability, logicalText, budget = 0, {
   decisionsFile = null,
 } = {}) {
   const spec = parseSpec(logicalText);
-  const canonical = renderSpec({
-    name: capability,
+  const canonical = renderSpec(spec);
+  const soft = Number(budget) || 0;
+  // A shard index has room only for the parsed ownership model.  Keep a
+  // single file whenever parsing and canonical rendering would omit source
+  // material, so a large custom section or frontmatter cannot vanish merely
+  // because a capability crossed its soft size budget.
+  const ownedOnly = renderSpec({
+    name: spec.name,
     purpose: spec.purpose,
     requirements: spec.requirements,
     decisions: spec.decisions,
   });
-  const soft = Number(budget) || 0;
-  if (!soft || lineCount(canonical) <= soft) {
+  const mustKeepSingle = spec.source !== ownedOnly;
+  if (!soft || lineCount(canonical) <= soft || mustKeepSingle) {
     return {
       mode: 'single',
       logicalText: canonical,
@@ -196,43 +231,43 @@ export function planCapabilityStorage(capability, logicalText, budget = 0, {
 }
 
 export function writeCapabilityStorage(specsDir, capability, plan) {
-  const dir = capabilityDir(specsDir, capability);
+  const dir = capabilityStorageRoot(specsDir, capability);
   const currentMain = readOr(path.join(dir, 'spec.md'), '');
   const { data } = parseFrontmatter(currentMain);
   if (data.layout === 'sharded') {
-    rmrf(path.join(dir, data.requirements_dir || 'requirements'));
-    if (data.decisions_dir) rmrf(path.join(dir, data.decisions_dir));
-    if (data.decisions_file) rmrf(path.join(dir, data.decisions_file));
+    rmrf(storagePath(dir, data.requirements_dir || 'requirements'));
+    if (data.decisions_dir) rmrf(storagePath(dir, data.decisions_dir));
+    if (data.decisions_file) rmrf(storagePath(dir, data.decisions_file));
   }
   if (plan.mode === 'sharded') {
-    rmrf(path.join(dir, plan.requirementsDir));
-    if (plan.decisionsDir) rmrf(path.join(dir, plan.decisionsDir));
-    if (plan.decisionsFile) rmrf(path.join(dir, plan.decisionsFile));
+    rmrf(storagePath(dir, plan.requirementsDir));
+    if (plan.decisionsDir) rmrf(storagePath(dir, plan.decisionsDir));
+    if (plan.decisionsFile) rmrf(storagePath(dir, plan.decisionsFile));
   }
-  for (const file of plan.files) write(path.join(dir, file.rel), file.text);
+  for (const file of plan.files) write(storagePath(dir, file.rel), file.text);
 }
 
 export function capabilityPhysicalDocs(specsDir, capability) {
-  const dir = capabilityDir(specsDir, capability);
+  const dir = capabilityStorageRoot(specsDir, capability);
   const out = [];
   const main = readOr(path.join(dir, 'spec.md'), '');
   if (main) out.push({ rel: 'spec.md', file: path.join(dir, 'spec.md') });
   const { data } = parseFrontmatter(main);
   if (data.layout !== 'sharded') return out;
   if (data.decisions_dir) {
-    const decisionsDir = path.join(dir, data.decisions_dir);
+    const decisionsDir = storagePath(dir, data.decisions_dir);
     for (const rel of walk(decisionsDir)) {
-      if (rel.endsWith('.md')) out.push({ rel: `${data.decisions_dir}/${rel}`, file: path.join(decisionsDir, rel) });
+      if (rel.endsWith('.md')) out.push({ rel: `${data.decisions_dir}/${rel}`, file: storagePath(decisionsDir, rel) });
     }
   } else {
     const decisionsRel = data.decisions_file || 'decisions.md';
-    const decisions = path.join(dir, decisionsRel);
+    const decisions = storagePath(dir, decisionsRel);
     if (exists(decisions)) out.push({ rel: decisionsRel, file: decisions });
   }
   const requirementsRel = data.requirements_dir || 'requirements';
-  const reqDir = path.join(dir, requirementsRel);
+  const reqDir = storagePath(dir, requirementsRel);
   for (const rel of walk(reqDir)) {
-    if (rel.endsWith('.md')) out.push({ rel: `${requirementsRel}/${rel}`, file: path.join(reqDir, rel) });
+    if (rel.endsWith('.md')) out.push({ rel: `${requirementsRel}/${rel}`, file: storagePath(reqDir, rel) });
   }
   return out;
 }

@@ -1,8 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import fc from 'fast-check';
 import { parseTasks, parseSlices, parseAcceptance, parseOpenQuestions, parseDecisions, parseHandoff, parseLedger, parseSpec, parseDelta, renderSpec, parseFrontmatter, sections } from '../src/lib/markdown.js';
-import { slugify } from '../src/lib/specs.js';
+import { slugify, planCapabilityStorage, readCapabilitySpec } from '../src/lib/specs.js';
 
 test('parseTasks reads state, id, effort, verify', () => {
   const t = parseTasks(`# Tasks\n- [ ] 1. Add thing (effort: light) — verify: \`npm test -- a\`\n- [x] 2.1 Other (effort: deep)\n- plain bullet`);
@@ -50,6 +53,100 @@ test('spec parse/render property preserves Unicode, CRLF, unknown sections, and 
   }), { numRuns: 75 });
 });
 
+test('spec updates preserve foreign sections, frontmatter, and fenced Markdown', () => {
+  const source = `---
+owner: 团队
+---
+# checkout
+
+## Context
+
+Keep this paragraph.
+
+\`\`\`md
+## Requirement: fake
+\`\`\`
+
+## Requirements
+
+### Requirement: Pay
+
+Old text.
+
+#### Scenario: works
+- WHEN pay
+- THEN receipt
+
+### Notes
+
+OpenSpec notes.
+
+## Appendix
+
+Keep appendix.
+
+## Decisions
+
+- checkout: existing
+`;
+  const parsed = parseSpec(source);
+  const updated = renderSpec({
+    ...parsed,
+    requirements: [
+      { name: 'Pay', body: 'New text.\n\n### Scenario: works\n- WHEN pay\n- THEN receipt' },
+      { name: 'Refund', body: 'The system SHALL refund.' },
+    ],
+    decisions: [...parsed.decisions, 'checkout: preserve custom Markdown'],
+  });
+  assert.match(updated, /owner: 团队/);
+  assert.match(updated, /## Context\n\nKeep this paragraph\./);
+  assert.match(updated, /```md\n## Requirement: fake\n```/);
+  assert.match(updated, /### Notes\n\nOpenSpec notes\./);
+  assert.match(updated, /## Appendix\n\nKeep appendix\./);
+  assert.deepEqual(parseSpec(updated).requirements.map((r) => r.name), ['Pay', 'Refund']);
+  assert.deepEqual(parseSpec(updated).decisions, ['checkout: existing', 'checkout: preserve custom Markdown']);
+
+  const removed = renderSpec({ ...parsed, requirements: [] });
+  assert.doesNotMatch(removed, /### Requirement: Pay/);
+  assert.match(removed, /### Notes\n\nOpenSpec notes\./);
+  assert.match(removed, /## Appendix\n\nKeep appendix\./);
+});
+
+test('sharding keeps a source with unmanaged Markdown as a single file', () => {
+  const source = `---
+owner: platform
+---
+# checkout
+
+## Requirement: Pay
+
+The system SHALL pay.
+
+## Appendix
+
+This text must survive.
+`;
+  const plan = planCapabilityStorage('checkout', source, 3);
+  assert.equal(plan.mode, 'single');
+  assert.equal(plan.logicalText, source);
+});
+
+test('shard metadata cannot escape or traverse a symlinked capability directory', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'keelson-shard-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const specs = path.join(root, 'specs');
+  const cap = path.join(specs, 'checkout');
+  fs.mkdirSync(cap, { recursive: true });
+  fs.writeFileSync(path.join(cap, 'spec.md'), '---\nlayout: sharded\nrequirements_dir: ../outside\n---\n# checkout\n');
+  assert.throws(() => readCapabilitySpec(specs, 'checkout'), /escapes its root/);
+
+  const outside = path.join(root, 'outside');
+  fs.mkdirSync(outside);
+  fs.rmSync(cap, { recursive: true });
+  fs.symlinkSync(outside, cap);
+  assert.throws(() => readCapabilitySpec(specs, 'checkout'), /root must not be a symlink/);
+});
+
 test('Unicode requirement names produce distinct readable storage slugs', () => {
   assert.equal(slugify('Déploiement 支付 🧪'), 'deploiement-支付');
   assert.equal(slugify('Δοκιμή'), 'δοκιμη');
@@ -68,6 +165,21 @@ test('parseDelta ignores fenced requirements and reports malformed sections', ()
   assert.deepEqual(delta.added.map((r) => r.name), ['Real']);
   assert.match(delta.added[0].body, /^### Scenario: real/m);
   assert.deepEqual(delta.issues, ['unrecognized requirements section "NOTED Requirements"']);
+});
+
+test('parseDelta flags prose-only ADDED and MODIFIED sections but permits empty no-ops', () => {
+  const malformed = parseDelta(`## ADDED Requirements
+Explain the change here.
+
+## MODIFIED Requirements
+### Scenario: misplaced
+- WHEN x
+`);
+  assert.deepEqual(malformed.issues, [
+    'ADDED Requirements has content but no Requirement sections',
+    'MODIFIED Requirements has content but no Requirement sections',
+  ]);
+  assert.deepEqual(parseDelta('## ADDED Requirements\n\n## MODIFIED Requirements\n').issues, []);
 });
 
 test('frontmatter and sections', () => {

@@ -268,6 +268,7 @@ export function parseDelta(text) {
     const key = m[1].toLowerCase();
     if (seen.has(key)) out.issues.push(`duplicate ${m[1].toUpperCase()} Requirements section`);
     seen.add(key);
+    const before = out[key].length;
     for (const r of sections(s.body, 3)) {
       const rm = r.title.match(/^Requirement:\s*(.+)$/i);
       if (rm) {
@@ -275,6 +276,12 @@ export function parseDelta(text) {
       } else if (/^Requirement:\s*$/i.test(r.title)) {
         out.issues.push(`${m[1].toUpperCase()} Requirements has a requirement with no name`);
       }
+    }
+    // Empty ADDED/MODIFIED sections are useful template no-ops.  Prose (or an
+    // unrelated heading) in either section is almost certainly a malformed
+    // delta and must not be silently treated as an empty change.
+    if (['added', 'modified'].includes(key) && s.body.trim() && out[key].length === before) {
+      out.issues.push(`${m[1].toUpperCase()} Requirements has content but no Requirement sections`);
     }
   }
   if (!seen.size) out.issues.push('contains no ADDED, MODIFIED, or REMOVED Requirements section');
@@ -297,6 +304,76 @@ export function hasScenario(text) {
 
 export const requirementKey = (name) => String(name ?? '').normalize('NFC').toLocaleLowerCase();
 
+const renderRequirement = (level, requirement) => `${'#'.repeat(level)} Requirement: ${requirement.name}\n\n${requirement.body}\n`;
+
+function headingRanges(text, level) {
+  const lines = normalizeNewlines(text).split('\n');
+  const found = headings(text).filter((h) => h.level === level);
+  return found.map((heading) => {
+    const next = headings(text).find((h) => h.line > heading.line && h.level <= level)?.line ?? lines.length;
+    return { heading, start: heading.line, end: next, raw: lines.slice(heading.line, next).join('\n') + (next < lines.length ? '\n' : '') };
+  });
+}
+
+function rewriteOpenSpecRequirements(raw, take) {
+  const lines = raw.split('\n');
+  const ranges = headingRanges(raw, 3);
+  if (!ranges.length) return raw;
+  let out = lines.slice(0, ranges[0].start).join('\n');
+  if (ranges[0].start) out += '\n';
+  for (const range of ranges) {
+    const match = range.heading.title.match(/^Requirement:\s*(.+)$/i);
+    if (!match) { out += range.raw; continue; }
+    const current = take(match[1].trim());
+    if (!current) continue;
+    const oldBody = range.raw.split('\n').slice(1).join('\n').trim();
+    out += current.name === match[1].trim() && current.body === oldBody
+      ? range.raw
+      : renderRequirement(3, current);
+  }
+  return out;
+}
+
+/**
+ * Update only Requirement blocks in a parsed source.  Unknown sections, exact
+ * frontmatter, and fenced examples are copied verbatim instead of being
+ * reconstructed from the small semantic view used by Keelson.
+ */
+function renderUpdatedRequirements(spec) {
+  const available = spec.requirements.map((requirement) => ({ requirement, used: false }));
+  const take = (name) => {
+    const entry = available.find((candidate) => !candidate.used && requirementKey(candidate.requirement.name) === requirementKey(name));
+    if (entry) entry.used = true;
+    return entry?.requirement ?? null;
+  };
+  const lines = spec.source.split('\n');
+  const ranges = headingRanges(spec.source, 2);
+  const prefixEnd = ranges[0]?.start ?? lines.length;
+  let out = lines.slice(0, prefixEnd).join('\n') + (prefixEnd && prefixEnd < lines.length ? '\n' : '');
+  for (const range of ranges) {
+    const legacy = range.heading.title.match(/^Requirement:\s*(.+)$/i);
+    if (legacy) {
+      const current = take(legacy[1].trim());
+      if (!current) continue;
+      const oldBody = range.raw.split('\n').slice(1).join('\n').trim();
+      out += current.name === legacy[1].trim() && current.body === oldBody
+        ? range.raw
+        : renderRequirement(2, current);
+    } else if (/^Requirements$/i.test(range.heading.title)) {
+      out += rewriteOpenSpecRequirements(range.raw, take);
+    } else {
+      out += range.raw;
+    }
+  }
+  const added = available.filter((entry) => !entry.used).map((entry) => entry.requirement);
+  if (added.length) {
+    if (out && !out.endsWith('\n')) out += '\n';
+    if (out && !out.endsWith('\n\n')) out += '\n';
+    out += added.map((requirement) => renderRequirement(2, requirement)).join('\n');
+  }
+  return out;
+}
+
 export function renderSpec(spec) {
   const { name, purpose = '', requirements = [], decisions = [] } = spec;
   const now = JSON.stringify({
@@ -307,6 +384,30 @@ export function renderSpec(spec) {
     decisions,
   });
   if (spec.source && spec.snapshot === now) return spec.source;
+  if (spec.source && spec.snapshot) {
+    const previous = JSON.parse(spec.snapshot);
+    // Landing only changes requirements and appends decisions.  Preserve all
+    // foreign Markdown in that normal path; canonical rendering remains the
+    // fallback for callers that replace the document's other owned fields.
+    const decisionsAppendOnly = decisions.length >= previous.decisions.length
+      && previous.decisions.every((decision, i) => decisions[i] === decision);
+    if (name === previous.name && purpose === previous.purpose && decisionsAppendOnly) {
+      let source = renderUpdatedRequirements({ ...spec, requirements });
+      const appended = decisions.slice(previous.decisions.length);
+      if (appended.length) {
+        const decisionSections = headingRanges(source, 2).filter((range) => /^Decisions?$/i.test(range.heading.title));
+        if (decisionSections.length) {
+          const last = decisionSections.at(-1);
+          const before = source.split('\n').slice(0, last.end).join('\n');
+          const after = source.split('\n').slice(last.end).join('\n');
+          source = `${before.replace(/\n*$/, '\n\n')}${appended.map((decision) => `- ${decision}`).join('\n')}\n${after}`;
+        } else {
+          source = `${source.replace(/\n*$/, '\n\n')}## Decisions\n\n${appended.map((decision) => `- ${decision}`).join('\n')}\n`;
+        }
+      }
+      return source;
+    }
+  }
   const parts = [`# ${name}`, ''];
   if (purpose) parts.push('## Purpose', '', purpose, '');
   for (const r of requirements) parts.push(`## Requirement: ${r.name}`, '', r.body, '');
