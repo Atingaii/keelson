@@ -225,5 +225,7 @@ test('config migration is pure and idempotent', async () => {
   assert.equal(v1.hooks, true);
   assert.deepEqual(parseConfig('').tools, ['agents']);
   assert.equal(parseConfig('').hooks, true);
+  assert.equal(parseConfig('').confirm.quick, 'proceed');
+  assert.equal(parseConfig('').confirm.spec, 'proceed');
   assert.equal(parseConfig('').version, CONFIG_VERSION);
 });
