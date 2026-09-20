@@ -84,9 +84,6 @@ export async function status({ flags }, cwd = process.cwd()) {
   }
   heading(`Keelson — ${path.basename(root)}`);
   console.log(`${s.specs.length} capabilit${s.specs.length === 1 ? 'y' : 'ies'} in ${s.specsPath} · ${s.changes.length} active change${s.changes.length === 1 ? '' : 's'}${s.focus ? ` · focus ${s.focus}` : ''}${s.head ? ` · HEAD ${s.head}` : ''}${s.dirty ? ` · ${s.dirty} uncommitted` : ''}`);
-  if (s.knowledge.critical || s.knowledge.overBudget) {
-    console.log(dim(`knowledge pressure: ${s.knowledge.critical} hard-limit, ${s.knowledge.overBudget} over-budget · run keelson doctor`));
-  }
   console.log('');
   if (!s.changes.length) console.log(dim('No change in flight.'));
   for (const c of s.changes) {
