@@ -9,7 +9,7 @@ export const DEFAULT_CONFIG = {
   lang: 'en',
   profile: 'lean',
   default_tier: 'auto',
-  confirm: { quick: 'proceed', spec: 'wait' },
+  confirm: { quick: 'proceed', spec: 'proceed' },
   land: 'fold',
   check: [],
   guide: false,
