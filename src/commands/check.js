@@ -8,6 +8,7 @@ import { evaluateLifecycle } from '../lib/lifecycle.js';
 import { worktreeFingerprint } from '../lib/git.js';
 import { ok, fail, warn, heading, info } from '../lib/out.js';
 import { readSession } from '../lib/session.js';
+import { maintainRuntime } from '../lib/maintenance.js';
 
 export function verifyLine(claim, results, tree) {
   return `### Verify: ${claim}\n${results.map((r) => `\`${r.cmd}\` exit ${r.exit}`).join('; ')}${tree ? ` · tree ${tree}` : ''}`;
@@ -15,6 +16,7 @@ export function verifyLine(claim, results, tree) {
 
 export async function check({ flags, positional }, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
+  maintainRuntime(root);
   const cfg = loadConfig(projectPaths(root).config);
   const p = projectPaths(root, cfg);
   const entries = positional.length ? [{ name: positional.join(' '), command: positional.join(' '), kind: 'check' }] : checkEntries(cfg);
