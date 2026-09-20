@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 export const exists = (p) => fs.existsSync(p);
 export const isDir = (p) => exists(p) && fs.statSync(p).isDirectory();
@@ -7,7 +8,13 @@ export const read = (p) => fs.readFileSync(p, 'utf8');
 export const readOr = (p, fallback = '') => (exists(p) ? read(p) : fallback);
 export const write = (p, s) => {
   fs.mkdirSync(path.dirname(p), { recursive: true });
-  fs.writeFileSync(p, s);
+  const tmp = `${p}.${process.pid}.${crypto.randomUUID()}.tmp`;
+  try {
+    const mode = exists(p) ? fs.statSync(p).mode & 0o777 : 0o600;
+    const fd = fs.openSync(tmp, 'wx', mode);
+    try { fs.writeFileSync(fd, s); fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+    fs.renameSync(tmp, p);
+  } finally { fs.rmSync(tmp, { force: true }); }
 };
 export const mkdirp = (p) => fs.mkdirSync(p, { recursive: true });
 export const listDirs = (p) =>
@@ -43,14 +50,40 @@ export function replaceDirSafe(dest, populate) {
   }
 }
 export const writeJson = (p, obj) => write(p, JSON.stringify(obj, null, 2) + '\n');
-export const readJson = (p, fallback = null) => {
+export const readJson = (p, fallback = null, { strict = true } = {}) => {
   if (!exists(p)) return fallback;
   try {
     return JSON.parse(read(p));
-  } catch {
+  } catch (cause) {
+    if (strict) throw Object.assign(new Error(`cannot parse ${p}: ${cause.message}. Repair the file; it has not been overwritten.`), { exitCode: 5 });
     return fallback;
   }
 };
+
+/** Serialize a synchronous read/modify/write. A dead process lock is never guessed stale. */
+export function withLock(file, fn, { timeout = 10000 } = {}) {
+  const lock = `${file}.lock`;
+  mkdirp(path.dirname(lock));
+  const start = Date.now();
+  let fd;
+  for (;;) {
+    try { fd = fs.openSync(lock, 'wx', 0o600); break; }
+    catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+      if (Date.now() - start >= timeout) throw new Error(`lock timeout: ${lock}. Check for an active writer before removing an abandoned lock.`);
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
+    }
+  }
+  try { fs.writeFileSync(fd, `${process.pid}\n`); return fn(); }
+  finally { fs.closeSync(fd); fs.rmSync(lock, { force: true }); }
+}
+
+export function append(file, text) {
+  return withLock(file, () => {
+    const fd = fs.openSync(file, 'a', 0o600);
+    try { fs.writeFileSync(fd, text); fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+  });
+}
 
 /** Recursively list files under dir, returning relative posix paths. */
 export function walk(dir, { ignore = ['node_modules', '.git'] } = {}) {

@@ -3,6 +3,7 @@ import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { exists } from './fs.js';
 import { loadConfig } from './config.js';
+import { runtimeDir } from './runtime-path.js';
 
 export const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const KEELSON_DIR = '.keelson';
@@ -56,9 +57,9 @@ export const projectPaths = (root, cfg = null) => {
     changes: path.join(k, 'changes'),
     archive: path.join(k, 'changes', 'archive'),
     hooks: path.join(k, 'hooks'),
-    runtime: path.join(k, '.runtime'),
-    sessions: path.join(k, '.runtime', 'sessions'),
-    evidence: path.join(k, '.runtime', 'evidence'),
+    runtime: runtimeDir(root),
+    sessions: path.join(runtimeDir(root), 'sessions'),
+    evidence: path.join(runtimeDir(root), 'evidence'),
     legacyLocal: path.join(k, '.local'),
   };
 };

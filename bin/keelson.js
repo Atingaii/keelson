@@ -10,6 +10,6 @@ main(process.argv.slice(2)).then(
   (err) => {
     console.error(`keelson: ${err?.message ?? err}`);
     if (process.env.KEELSON_DEBUG) console.error(err?.stack);
-    process.exitCode = 1;
+    process.exitCode = err?.exitCode ?? 1;
   },
 );
