@@ -183,7 +183,7 @@ The system SHALL ...
 - orders: offset pagination over cursor; cursor rejected because the table needs page jumps
 ```
 
-一个 capability 即使物理上拆开，在逻辑上仍是一份契约。当合并后的契约超过配置的 spec 预算时，land 会自动保存为有界的 `spec.md` 索引 + `requirements/` 下每个当前 requirement 一个文件，并在需要时增加 `decisions.md`。顶层索引保持常量大小；后续 base hash 与 delta merge 都针对重建后的逻辑契约，因此分片对 change 透明。
+一个 capability 即使物理上拆开，在逻辑上仍是一份契约。当合并后的契约超过配置的 spec 预算时，land 会自动保存为有界的 `spec.md` 索引 + `requirements/` 下每个当前 requirement 一个文件，并在需要时把 capability 局部长期理由拆进 `decisions/`。顶层索引保持常量大小；后续 base hash 与 delta merge 都针对重建后的逻辑契约，因此分片对 change 透明。
 
 变更里的 delta spec 带一个 `base:` 戳（创建 delta 时主 spec 的哈希，或 `new`）和三个段：
 
