@@ -3,7 +3,8 @@ import { spawnSync } from 'node:child_process';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { loadConfig, checkEntries } from '../lib/config.js';
 import { write, mkdirp, readOr } from '../lib/fs.js';
-import { loadAllChanges, loadChange, derivedWorkStatus } from '../lib/changes.js';
+import { loadAllChanges, loadChange } from '../lib/changes.js';
+import { evaluateLifecycle } from '../lib/lifecycle.js';
 import { worktreeFingerprint } from '../lib/git.js';
 import { ok, fail, warn, heading, info } from '../lib/out.js';
 import { readSession } from '../lib/session.js';
@@ -56,8 +57,10 @@ export async function check({ flags, positional }, cwd = process.cwd()) {
       write(ledger, `${cur.replace(/\n*$/, '\n')}\n${line}\n`);
       ok(`recorded in .keelson/changes/${name}/ledger.md`);
       const updated = loadChange(p.changes, name);
-      const work = updated ? derivedWorkStatus(updated, tree) : null;
-      if (work === 'ready') ok(`${name}: ready → run \`keelson land ${name}\`; do not wait for the user to say "done"`);
+      const activeNames = new Set(loadAllChanges(p.changes).map((c) => c.name));
+      const lifecycle = updated ? evaluateLifecycle(updated, tree, { activeNames }) : null;
+      if (lifecycle?.work === 'ready') ok(`${name}: ready → run \`keelson land ${name}\`; do not wait for the user to say "done"`);
+      else if (lifecycle?.blockedBy.length) info(`${name}: verification passed, but lifecycle still waits on ${lifecycle.blockedBy.join(', ')}`);
     }
   } else {
     console.log('Ledger line (or re-run with --record to append it):');
