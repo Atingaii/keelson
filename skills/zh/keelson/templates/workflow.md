@@ -5,7 +5,7 @@
 每个非平凡修改请求遵循 **ORIENT → BOUND → BUILD → SENSE → RECONCILE**。
 
 - **ORIENT** —— 检查工作树和当前 session focus。同一目标的追问继续使用 focus change；用户说“继续”时运行 `keelson focus --auto`，存在歧义时绝不静默绑定。
-- **BOUND** —— trivial 直接改；quick 创建最小有用 change；spec 先写 acceptance、行为 delta 和 plan，再等批准。
+- **BOUND** —— 提问前先读仓库。仓库事实和可逆工程选择自行解决；只在 decision frontier 询问一个真正属于所有者且会影响结果的决定。trivial 直接改；quick 创建最小有用 change；spec 写 acceptance、行为 delta 和 plan。只检查当前工作真实触发的风险镜头。
 - **BUILD** —— 一次推进一个纵向切片。独立的新修改目标创建新 change；围绕同一目标继续追问不会。
 - **SENSE** —— 尽早跑便宜检查；完成必须有当前工作树上的新鲜 `keelson check --record` 证据。任务复选框只描述当前计划，不负责判定完成。
 - **RECONCILE** —— 每轮修改后根据 acceptance、阻塞项、rollout/兼容性和新鲜 verification 重新计算生命周期。land 前静默完成 context 暴露的内部知识维护：重写单例当前状态文档、拆分/去重 rules，并让 `land` 自动分片大型 spec。gate 满足后状态成为 `ready` 并自动 land；不等待用户说“做完了”，也不把维护流程暴露给用户。
