@@ -1,23 +1,61 @@
 # Keelson
 
-**面向 Coding Agent 的项目本地工程控制面。**  
-初始化一次，之后继续像原来一样使用你的 Agent。
+**面向 Coding Agent 的项目本地工程 Harness。**  
+只需运行一次 `keelson init`，之后继续像平时一样使用 Claude Code、Codex、OpenCode、Gemini CLI 或其他受支持 Agent。
 
 [![npm version](https://img.shields.io/npm/v/keelson?style=flat-square)](https://www.npmjs.com/package/keelson)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/Atingaii/keelson/ci.yml?branch=main&style=flat-square)](https://github.com/Atingaii/keelson/actions/workflows/ci.yml)
 
-Coding Agent 很擅长产出代码，却不擅长把项目状态跨会话保存下来：为什么当初这样决定、什么行为属于契约、还有什么没确认、验证证据是不是来自当前代码、下一个 Agent 应该从哪里继续。
+[English](README.md) · [快速开始](#快速开始) · [工作原理](docs/zh/how-it-works.md) · [核心概念](docs/zh/concepts.md)
 
-Keelson 把这些事实留在仓库里，并且只在真正需要时让 Agent 读取。
+Coding Agent 写代码很快，但**聊天窗口不是可靠的软件工程真源**：设计理由埋在历史对话里，新会话又从头理解项目，task checkbox 很容易被误当成“完成”，代码一改旧 verification 就已经失效，架构也可能因为一句“最佳实践”而不断增加不必要的复杂度。
+
+Keelson 把 **项目真相、当前工作、工程决策和绑定代码版本的证据** 留在仓库中。用户仍然只需要正常表达需求；Keelson 与 Agent 负责工程记账、按任务加载必要上下文，并且只把真正属于用户的决定交给用户。
+
+## 为什么是 Keelson？
+
+| Coding Agent 常见失败 | Keelson 的处理 |
+|---|---|
+| 新会话每次从零开始 | Intent、spec、rule、decision 与进行中的 change 都持久化在仓库；session 只保存本地 focus |
+| Agent 要么猜产品意图，要么把技术选型甩给用户 | 自适应决策访谈：先调查，再一次只问一个真正属于所有者的决定，同时给出产品后果、工程影响和有依据的默认推荐 |
+| tasks 都勾完了，却没有证明需求真的满足 | “完成”来自 acceptance + 当前代码树上的新鲜 evidence，而不是 checkbox，也不依赖用户说“做完了” |
+| 架构因为“最佳实践”越来越重 | 第一性还原、可证伪 hypothesis、最小实验、消融/反事实验证；只有广泛且难以撤销的决定才升级为架构问题 |
+| 项目知识越积越多，最终每轮都注入整个历史 | Progressive disclosure、作用域 rule、有界 hot file、自动 spec 分片与 runtime GC |
+| Agent 越开越多，吞吐没有提高，冲突反而更多 | 只有任务边界清晰、输出能独立验证、merge contract 明确时才并行 |
+
+Keelson 的长期取向是：**事实优先于流程、证据优先于断言、单一真源优先于复制、渐进披露优先于永久仪式、强默认值 + 明确逃生口。**
+
+## 设计思想与理论来源
+
+Keelson 不是凭空发明一套“AI 开发流程”，也不是要求每个任务都执行全部经典方法。它把成熟的软件工程思想压缩成按需触发的 reasoning tools：当前任务真的遇到相应不确定性或风险时才加载。
+
+| 来源 / 思想 | 在 Keelson 中如何落地 |
+|---|---|
+| [Matt Pocock 的 skills / Grill](https://github.com/mattpocock/skills) | 实现前先对齐；一次解决一个决定；问题必须具体并带推荐，而不是一次丢给用户一堵问题墙 |
+| [Trellis](https://github.com/mindfold-ai/trellis) | 项目级长期上下文沉淀在仓库；与具体 Agent 解耦；通过 progressive disclosure 按任务加载，而不是把全部规则永久塞进 prompt |
+| **第一性原理** + *The Pragmatic Programmer* | 先拆事实、结果、约束、不变量、假设与机制；优先可逆选择；用 tracer bullet / prototype 先学习再承诺 |
+| John Ousterhout, *A Philosophy of Software Design* | Deep module、information hiding、以复杂度为核心敌人；真实设计分叉才使用 “Design It Twice” |
+| Eric Evans, *Domain-Driven Design* | Ubiquitous language、bounded context、不变量；系统边界跟随领域含义，而不是跟随文件夹形式 |
+| Martin Fowler, *Refactoring* + Michael Feathers, *Working Effectively with Legacy Code* | Characterization test、seam、behavior-preserving 小步重构；替换旧系统优先增量迁移而不是盲目 big-bang rewrite |
+| *Software Architecture in Practice* + Fred Brooks, *The Mythical Man-Month* | Quality-attribute scenario、显式 trade-off、conceptual integrity、沟通/协调成本，以及 second-system effect |
+| *Building Evolutionary Architectures* + 实验设计 / 消融实验 | 用 fitness function 长期保护真正重要的性质；baseline → hypothesis → measure → threshold；必要时做 counterfactual removal 与小型 factorial experiment 识别交互效应 |
+
+这些思想最终被压成一条很短的内部工程循环：
 
 ```text
-事实优先于流程
-证据优先于断言
-单一真源优先于复制
-渐进披露优先于永久仪式
-强默认值 + 明确逃生口
+理解真正 outcome
+→ 区分事实与假设
+→ 用最低成本方式减少不确定性
+→ 只在真正 decision frontier 询问用户
+→ 默认选择简单、可逆的设计
+→ 声称某个机制有可测收益时，用实验/消融证明
+→ 只有广泛且昂贵难改的决定才升级为架构设计
+→ 在当前代码树上验证
+→ 把长期行为/决策沉淀，并把重复约束自动化
 ```
+
+一个 trivial 修改可能几乎跳过所有这些步骤；而迁移、并发、安全边界、性能主张等风险任务会自动触发更多工程方法。**理论是按需调用的思考工具，不是强制仪式。**
 
 ## 60 秒例子
 

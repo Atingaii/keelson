@@ -81,6 +81,27 @@ test('canonical skill separates five conversation intents from automatic complet
   }
 });
 
+test('README explains Keelson failure modes and engineering foundations', () => {
+  const en = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
+  const zh = fs.readFileSync(path.join(ROOT, 'README_CN.md'), 'utf8');
+  for (const txt of [en, zh]) {
+    assert.match(txt, /Grill/);
+    assert.match(txt, /Trellis/);
+    assert.match(txt, /Pragmatic Programmer/);
+    assert.match(txt, /A Philosophy of Software Design/);
+    assert.match(txt, /Domain-Driven Design/);
+    assert.match(txt, /Working Effectively with Legacy Code/);
+    assert.match(txt, /Mythical Man-Month/);
+    assert.match(txt, /Evolutionary Architectures/);
+  }
+  assert.match(en, /First-principles|first-principles/i);
+  assert.match(zh, /第一性原理/);
+  assert.match(en, /ablation|counterfactual/i);
+  assert.match(zh, /消融|反事实/);
+  assert.match(en, /reasoning tools selected on demand/i);
+  assert.match(zh, /按需调用的思考工具/);
+});
+
 test('documentation home and complete user-flow guide exist in both languages', () => {
   for (const file of ['README.md', 'user-flow.md']) {
     assert.ok(fs.existsSync(path.join(ROOT, 'docs', file)), `docs/${file}`);

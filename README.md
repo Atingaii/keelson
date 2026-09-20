@@ -1,23 +1,61 @@
 # Keelson
 
-**A project-local engineering control plane for coding agents.**  
-Initialize once, then keep using your agent normally.
+**A project-local engineering harness for coding agents.**  
+Run `keelson init` once, then keep using Claude Code, Codex, OpenCode, Gemini CLI, or another supported agent normally.
 
 [![npm version](https://img.shields.io/npm/v/keelson?style=flat-square)](https://www.npmjs.com/package/keelson)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/Atingaii/keelson/ci.yml?branch=main&style=flat-square)](https://github.com/Atingaii/keelson/actions/workflows/ci.yml)
 
-Coding agents are good at producing code and bad at carrying project state across sessions: why a decision exists, what behavior is contractual, what is still open, whether verification belongs to the current tree, and where another agent should resume.
+[简体中文](README_CN.md) · [Quick start](#quick-start) · [How it works](docs/how-it-works.md) · [Concepts](docs/concepts.md)
 
-Keelson keeps those facts in the repository and exposes them to the agent only when needed.
+AI coding agents can write code quickly, but a chat window is a poor engineering system of record. Decisions disappear into conversation history, every new session has to rediscover the project, plans are mistaken for completion, verification becomes stale after the next edit, and architectural complexity is often introduced because it sounds like a “best practice”.
+
+Keelson keeps **project truth, current work, engineering decisions, and revision-bound evidence** in the repository. The user keeps talking normally; Keelson and the agent do the engineering bookkeeping, load only the context the current task needs, and ask the owner only for decisions the owner actually owns.
+
+## Why Keelson?
+
+| Common agent failure | What Keelson changes |
+|---|---|
+| A new session starts from scratch | Durable intent, specs, rules, decisions, and active work live in the repository; session state is only a local focus pointer |
+| The agent either guesses product intent or asks the user to choose implementation trivia | Adaptive decision interviews: investigate first, ask one owner-owned decision at a time, show consequences and engineering impact, provide a grounded default |
+| A task list says “done” but nobody proved the requested behavior | Completion comes from acceptance + fresh evidence bound to the current tree, not from checkboxes or a user saying “done” |
+| Architecture grows by cargo-cult “best practices” | First-principles reduction, explicit hypotheses, cheap experiments, ablation/counterfactual checks, and architecture only for consequential hard-to-reverse choices |
+| Project knowledge grows until every prompt is huge | Progressive disclosure, scoped rules, bounded hot files, automatic spec sharding, and runtime garbage collection |
+| More agents create more merge conflicts instead of more throughput | Parallelism is used only when boundaries, independent verification, and the merge contract are clear |
+
+Keelson favors **facts over process, evidence over claims, one source of truth over copies, progressive disclosure over permanent ceremony, and strong defaults with explicit escape hatches**.
+
+## Design foundations
+
+Keelson is a synthesis of established engineering ideas, not a new software-development religion. It does **not** run every idea below on every task. Each principle is loaded only when the current uncertainty or risk makes it useful.
+
+| Influence | What Keelson takes from it |
+|---|---|
+| [Matt Pocock's skills / Grill](https://github.com/mattpocock/skills) | Alignment before implementation; one decision at a time; precise questions with recommendations instead of a wall of clarification |
+| [Trellis](https://github.com/mindfold-ai/trellis) | Repository-local durable engineering context, agent-independent workflow, and progressive disclosure instead of one giant always-on prompt |
+| **First-principles reasoning** + *The Pragmatic Programmer* | Separate facts, outcomes, constraints, invariants, assumptions, and mechanisms; prefer reversible choices, tracer bullets, and prototypes that learn before they commit |
+| John Ousterhout, *A Philosophy of Software Design* | Deep modules, information hiding, complexity as the enemy, and “Design It Twice” for real design forks |
+| Eric Evans, *Domain-Driven Design* | Ubiquitous language, bounded contexts, explicit invariants, and boundaries that follow meaning instead of folder fashion |
+| Martin Fowler, *Refactoring* + Michael Feathers, *Working Effectively with Legacy Code* | Characterization tests, seams, behavior-preserving small steps, and incremental migration instead of blind big-bang rewrites |
+| *Software Architecture in Practice* + Fred Brooks, *The Mythical Man-Month* | Quality-attribute scenarios, explicit trade-offs, conceptual integrity, coordination cost, and the second-system effect |
+| *Building Evolutionary Architectures* + experimental design / ablation | Fitness functions for durable qualities; baseline → hypothesis → measure → threshold; counterfactual removal and small factorial tests when mechanisms interact |
+
+The resulting internal loop is deliberately compact:
 
 ```text
-facts over process
-evidence over claims
-one source of truth over copies
-progressive disclosure over permanent ceremony
-strong defaults with explicit escape hatches
+understand the outcome
+→ separate facts from assumptions
+→ choose the cheapest way to reduce uncertainty
+→ ask the owner only at the real decision frontier
+→ use a reversible/simple design by default
+→ run an experiment or ablation when a mechanism claims a measurable benefit
+→ escalate to architecture only for broad, expensive-to-reverse decisions
+→ verify on the current tree
+→ preserve durable behavior/decisions and automate repeatable constraints
 ```
+
+A trivial change may skip almost all of this. A risky migration, concurrency change, security boundary, or performance claim will trigger more of it. The theories are **reasoning tools selected on demand**, not mandatory ceremony.
 
 ## 60-second example
 
