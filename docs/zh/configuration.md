@@ -68,7 +68,7 @@ effort:
 | `check` | 自动探测 | `keelson check` 按顺序从项目根目录通过 shell 运行的内容。每个条目是一个命令字符串，或对象 `{name, command, kind}`，其中 `kind` 取 `test`、`lint`、`typecheck`、`build`、`fitness`、`check` 之一。对纯字符串，kind 从命令猜测。首次 init 时从 `package.json` 脚本、`pyproject.toml`、`pytest.ini`、`go.mod` 或 `Cargo.toml` 探测 |
 | `guide` | `false` | 所有者正在学习工程时设为 `true`。往 `.keelson/workflow.md` 加一行引导模式说明，往 `keelson context` 加一条提示；技能随后用场景和取舍解释，并在 spec 变更收尾时附一段简短的教学说明。`keelson init --guide` 设置它 |
 | `hooks` | `true` | 是否安装由 Keelson 管理的 lifecycle/session hook 或 plugin。当前控制 Claude、OpenCode、CodeBuddy bridge；Pi 的 `PI_SESSION_ID` 由宿主内置，所以仍保持 native。`--no-hooks` 持久写成 `false`；`--hooks` 重新开启 |
-| `budgets` | 见下文 | 每种文档的行数预算。`keelson doctor` 报告超预算的文档并要求压缩；没有任何东西被自动重写 |
+| `budgets` | 见下文 | 每种文档的软行数预算。Keelson 把压力作为内部信号交给 Agent：大型 spec 自动分片，单例/rule 在 RECONCILE 中自动整理，长期文档只有到 2× 预算才硬失败 |
 | `context` | `""` | 打印在 `keelson context` 输出顶部的自由文本。用于放不进 INTENT.md 的事实，比如技术栈概要 |
 | `paths.specs` | `.keelson/specs` | 行为契约目录，每个能力一个 `<capability>/spec.md`。指向已有的契约目录即可复用 |
 | `refs.architecture` | 自动探测 | 架构说明的路径，由 `keelson context` 引用，从不复制 |
