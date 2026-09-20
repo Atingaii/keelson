@@ -30,10 +30,8 @@ Keelson 的长期取向是：**事实优先于流程、证据优先于断言、�
 
 Keelson 不是凭空发明一套“AI 开发流程”，也不是要求每个任务都执行全部经典方法。它把成熟的软件工程思想压缩成按需触发的 reasoning tools：当前任务真的遇到相应不确定性或风险时才加载。
 
-| 来源 / 思想 | 在 Keelson 中如何落地 |
+| 工程理论 / 方法 | 在 Keelson 中如何落地 |
 |---|---|
-| [Matt Pocock 的 skills / Grill](https://github.com/mattpocock/skills) | 实现前先对齐；一次解决一个决定；问题必须具体并带推荐，而不是一次丢给用户一堵问题墙 |
-| [Trellis](https://github.com/mindfold-ai/trellis) | 项目级长期上下文沉淀在仓库；与具体 Agent 解耦；通过 progressive disclosure 按任务加载，而不是把全部规则永久塞进 prompt |
 | **第一性原理** + *The Pragmatic Programmer* | 先拆事实、结果、约束、不变量、假设与机制；优先可逆选择；用 tracer bullet / prototype 先学习再承诺 |
 | John Ousterhout, *A Philosophy of Software Design* | Deep module、information hiding、以复杂度为核心敌人；真实设计分叉才使用 “Design It Twice” |
 | Eric Evans, *Domain-Driven Design* | Ubiquitous language、bounded context、不变量；系统边界跟随领域含义，而不是跟随文件夹形式 |
