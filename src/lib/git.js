@@ -16,7 +16,15 @@ export function git(root, args, { allowFail = true, env = {} } = {}) {
 }
 
 function gitBytes(root, args) {
-  return execFileSync('git', args, { cwd: root, maxBuffer: 32 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
+  return execFileSync('git', args, {
+    cwd: root,
+    maxBuffer: 32 * 1024 * 1024,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    // The fallback below deliberately recognizes only Git's stable C locale
+    // diagnostic for an ordinary directory. Other Git failures are evidence
+    // that the input set cannot be established and must fail closed.
+    env: { ...process.env, LC_ALL: 'C', LANG: 'C', LANGUAGE: 'C' },
+  });
 }
 
 export const isGitRepo = (root) => git(root, ['rev-parse', '--is-inside-work-tree']) === 'true';
@@ -82,6 +90,31 @@ function addGitEntries(entries, root, args, kind) {
     if (!rawFile.length || isKeelsonPath(rawFile)) continue;
     entries.push({ kind, rawFile, indexMode: metadata ? Number.parseInt(metadata[0], 8) : null });
   }
+}
+
+function hasGitMetadata(root) {
+  for (let current = path.resolve(root);;) {
+    try {
+      fs.lstatSync(path.join(current, '.git'));
+      return true;
+    } catch (error) {
+      if (error?.code !== 'ENOENT' && error?.code !== 'ENOTDIR') throw error;
+    }
+    const parent = path.dirname(current);
+    if (parent === current) return false;
+    current = parent;
+  }
+}
+
+function isOrdinaryNonGitDirectory(error, root) {
+  if (hasGitMetadata(root) || process.env.GIT_DIR) return false;
+  const stderr = Buffer.isBuffer(error?.stderr) ? error.stderr.toString('utf8') : String(error?.stderr ?? '');
+  const lines = stderr.trimEnd().split(/\r?\n/);
+  const ordinaryDirectory = /^fatal: not a git repository \(or any of the parent directories\): \.git$/;
+  const mountBoundary = /^fatal: not a git repository \(or any parent up to mount point .+\)$/;
+  const boundary = 'Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).';
+  return lines.some((line) => ordinaryDirectory.test(line) || mountBoundary.test(line))
+    && lines.every((line) => ordinaryDirectory.test(line) || mountBoundary.test(line) || line === boundary);
 }
 
 function updateField(hash, value) {
@@ -209,7 +242,7 @@ function gitFingerprintEntries(root) {
     // Do not pay for rev-parse in normal Git projects. The legacy fallback
     // remains for ordinary non-Git directories; an error inside a repository
     // still propagates rather than silently omitting inputs.
-    if (error?.status === 128 && !isGitRepo(root)) return null;
+    if (error?.status === 128 && isOrdinaryNonGitDirectory(error, root)) return null;
     throw error;
   }
   entries.sort((a, b) => Buffer.compare(a.rawFile, b.rawFile) || a.kind.localeCompare(b.kind));

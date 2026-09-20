@@ -155,6 +155,39 @@ test('non-Git fallback frames current file contents without timestamp shortcuts'
   assert.notEqual(worktreeFingerprint(root), beforeNewline);
 });
 
+test('fingerprints fail closed when a Git worktree has unusable metadata', () => {
+  const root = tmpProject({ 'code.js': 'export const value = 1;\n' });
+  execFileSync('git', ['init', '-q'], { cwd: root });
+  fs.writeFileSync(path.join(root, '.git/config'), '[core\n  repositoryformatversion = 0\n');
+  assert.throws(() => worktreeFingerprint(root));
+
+  const corrupt = tmpProject({ 'code.js': 'export const value = 1;\n' });
+  execFileSync('git', ['init', '-q'], { cwd: corrupt });
+  fs.rmSync(path.join(corrupt, '.git/HEAD'));
+  assert.throws(() => worktreeFingerprint(corrupt));
+});
+
+test('non-Git fallback accepts Git's mount-boundary diagnostic', (t) => {
+  if (process.platform === 'win32' || !fs.existsSync('/dev/shm')) return t.skip('the Git mount-boundary diagnostic is POSIX-specific');
+  const root = fs.mkdtempSync('/dev/shm/keelson-git-boundary-');
+  try {
+    let stderr = '';
+    try {
+      execFileSync('git', ['ls-files', '-s', '-z'], {
+        cwd: root,
+        env: { ...process.env, LC_ALL: 'C', LANG: 'C', LANGUAGE: 'C' },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+    } catch (error) {
+      stderr = Buffer.from(error.stderr ?? '').toString('utf8');
+    }
+    if (!stderr.includes('any parent up to mount point')) return t.skip('this host did not stop Git discovery at /dev/shm');
+    assert.match(worktreeFingerprint(root), /^[a-f0-9]{64}$/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('untracked tab names remain paths, rather than being parsed as stage metadata', (t) => {
   if (process.platform === 'win32') return t.skip('Win32 filenames cannot contain tab characters');
   const root = tmpProject({ 'tracked.txt': 'one' });
