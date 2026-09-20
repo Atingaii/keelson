@@ -153,3 +153,15 @@ The reviewer independently recalculated every retained latest p95 from 30 sample
 
 ### Note: final local regression and push
 The final shipping code passes `npm test` 154/154 with zero skips, `npm run lint`, `keelson validate` and the package dry run. The full raw TAP and hashes are retained; documentation/evidence changed during that preliminary run, so a separate signed complete-tree check follows. Main 93f0822 is pushed; remote and local feature branches are gone. Its six-job remote CI is pending. A supplementary unbounded token scan matched `sk-` inside twelve `flask-` directory names; boundary inspection confirmed path-only false positives. The shell sequence had continued the push after that scan assertion, so it was rechecked explicitly: bounded patterns over 361 changed evidence files yield zero matches. This is a pattern scan, not proof that arbitrary secret formats are absent.
+
+### Note: rejected operator invocation
+The first final `check` invocation incorrectly placed `--change <name>` between optional `--record` and its claim. The trailing claim was therefore a positional shell command, exited 127 and was correctly recorded as a failed partial suite that cannot authorize landing. Preserve that envelope and log. The corrected invocation places the quoted claim immediately after `--record` and runs the complete configured lint/test suite.
+
+### Note: final signed engineering acceptance
+The corrected complete-tree `check --record` passes lint and all 154 tests with zero skips, verifies unchanged code/contracts and reports ready. The earlier failed partial envelope remains in the append-only ledger. GitHub Actions run 35514294108 at 93f0822 completes all six OS/Node jobs successfully; its API observation is retained in evidence/ci-93f0822.json. Proceed with normal land, without force. Four latency budgets and supplemental 3/3 remain open outcomes, assigned in ROADMAP; this engineering acceptance does not fulfill an all-dimensions-excellent claim.
+
+### Verify: checks failed
+`Engineering lint and regression gates pass; remaining benchmark targets are tracked separately` exit 127 · tree bd74fac391910a6a56340fcfcaeb20aacc603bfac1aabb59857f92ef02466b6b
+
+### Verify: Engineering lint and regression gates pass; remaining benchmark targets are tracked separately
+`npm run lint` exit 0; `npm run test` exit 0 · tree bd74fac391910a6a56340fcfcaeb20aacc603bfac1aabb59857f92ef02466b6b
