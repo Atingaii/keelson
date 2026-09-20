@@ -42,6 +42,19 @@
 
 `keelson doctor` 还会报告跨能力重复的需求、闲置两周的变更、超过 25 个任务的变更、超预算的常驻 rules，以及比源码树更旧的生成文档。用一个小变更修掉它点名的问题，像其他变更一样落地。
 
+## 自动维护对用户不可见
+<!-- keelson: id=reconcile.automatic | without: 所有者被要求执行清理命令、spec 变成巨型单文件，或者整理一直拖到本身成为一个项目 | sunset: never -->
+
+把知识形态当成基础设施，而不是用户工作。当 `keelson context` 暴露内部 maintenance finding 时，在同一轮工程工作里自行解决，不要求所有者介入：
+
+- **大型 specs** —— 不要通过摘要丢掉 requirement。`keelson land` 会自动把大型 capability 从单个 `spec.md` 变成有界索引 + `requirements/*.md`，需要时再加 `decisions.md`。总知识量可以持续增长，但每个高频读取文件保持小。
+- **Rules** —— 按真实路径/作用域拆分并更新 `rules/index.md`；合并重复规则，能确定性检查的散文规则改为 fitness check。
+- **NOW / INTENT** —— 永远不拆分，只重写成短小的当前状态；历史留给 git。
+- **ADR / decisions** —— 项目使用 `refs.decisions` 时，一个长期决策一个 ADR；目录可以持续增加，但不要在每个会话全量注入 ADR。capability 局部决策可以进入有界的 `decisions.md`。
+- **Runtime** —— session pointer 和 evidence log 都是缓存；Keelson 会在正常命令中顺手回收旧数据。
+
+只有压缩会改变产品语义、授权、兼容性或其他真正属于所有者的决策时才询问用户。移动文件、更新索引、去重、删除历史叙述和缓存清理都属于内部维护，静默完成。
+
 ## 园艺节奏
 <!-- keelson: id=reconcile.cadence | without: 只有疼了才看知识健康，到那时清理本身已经是一个项目 | sunset: never -->
 
