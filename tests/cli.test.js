@@ -657,6 +657,27 @@ test('large logical specs auto-shard without user maintenance', () => {
   assert.match(read(dir, '.keelson/changes/extend-orders/specs/orders/spec.md'), /^base: [0-9a-f]{10}$/m);
 });
 
+test('auto-sharding preserves pre-existing unmanaged requirements directories', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--no-hooks'], { env });
+  write(dir, '.keelson/config.yaml', read(dir, '.keelson/config.yaml').replace('spec: 250', 'spec: 10'));
+  write(dir, '.keelson/specs/orders/spec.md', '# orders\n\n## Requirement: Existing\nold\n### Scenario: existing\n- WHEN old\n- THEN kept\n');
+  write(dir, '.keelson/specs/orders/requirements/manual.md', '# user-owned\nkeep me\n');
+  run(dir, ['new', 'extend-existing', '--tier', 'quick', '--capability', 'orders'], { env });
+  write(dir, '.keelson/changes/extend-existing/change.md', read(dir, '.keelson/changes/extend-existing/change.md').replace('- [ ] … — check: `…`', '- [x] works — check: `true`'));
+  write(dir, '.keelson/changes/extend-existing/ledger.md', '### Verify: ok\n`true` exit 0\n');
+  const delta = read(dir, '.keelson/changes/extend-existing/specs/orders/spec.md').replace(
+    '## ADDED Requirements\n\n### Requirement: …\n…',
+    '## ADDED Requirements\n\n### Requirement: Added\nnew\n#### Scenario: added\n- WHEN new\n- THEN present'
+  );
+  write(dir, '.keelson/changes/extend-existing/specs/orders/spec.md', delta);
+  run(dir, ['land', 'extend-existing'], { env });
+  assert.equal(read(dir, '.keelson/specs/orders/requirements/manual.md'), '# user-owned\nkeep me\n');
+  assert.match(read(dir, '.keelson/specs/orders/spec.md'), /^requirements_dir: keelson-requirements$/m);
+  assert.ok(exists(dir, '.keelson/specs/orders/keelson-requirements/existing.md'));
+  assert.ok(exists(dir, '.keelson/specs/orders/keelson-requirements/added.md'));
+});
+
 test('hard knowledge limits fail validate and preflight land before writing specs', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--no-hooks'], { env });
