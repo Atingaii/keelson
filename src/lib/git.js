@@ -164,8 +164,9 @@ function hashGitEntries(hash, root, entries) {
 /**
  * Fingerprint current inputs with `.keelson/` excluded, so a ledger append
  * does not invalidate its own evidence. Git supplies the tracked and
- * non-ignored path set; Node reads every included entry on every call. This
- * deliberately avoids stat or filename caches, including same-mtime edits.
+ * non-ignored path set; every included entry is freshly content-addressed on
+ * every call (regular files through Git's native reader). This deliberately
+ * avoids stat or filename caches, including same-mtime edits.
  *
  * Git fingerprints are SHA-256 rather than Git tree IDs. Existing 40-byte
  * Git-tree records therefore become stale and must be re-recorded.
