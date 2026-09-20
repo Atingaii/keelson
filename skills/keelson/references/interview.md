@@ -1,6 +1,6 @@
 # Adaptive decision interviews
 
-Keelson users do not need software-architecture vocabulary. Interviewing is hidden control logic: discover only decisions the owner truly owns, make each one easy to answer, then return to building. Ordinary work is **not** a questionnaire; explicit “grill me” requests are deeper stress tests of the same decision tree.
+Keelson users do not need software-architecture vocabulary. Interviewing is hidden control logic: discover only decisions the owner truly owns, make each one easy to answer, then return to building. Ordinary work is **not** a questionnaire; explicit “stress-test this” requests are deeper stress tests of the same decision tree.
 
 ## Question protocol: earn the interruption
 <!-- keelson: id=interview.protocol | without: the agent asks unnecessary questions, hands implementation choices to the owner, or interrupts without knowing what the answer changes | sunset: never -->
@@ -117,4 +117,4 @@ For ordinary work, stop asking as soon as the next vertical slice has:
 - no unresolved owner-owned decision that blocks it;
 - an acceptance/evidence path.
 
-Questions about later slices remain open without blocking current work. If the owner explicitly asks to be grilled or stress-tested, continue through every **material** branch inside the requested boundary, but still reject speculative future branches and low-value implementation trivia.
+Questions about later slices remain open without blocking current work. If the owner explicitly asks for a deep stress test, continue through every **material** branch inside the requested boundary, but still reject speculative future branches and low-value implementation trivia.
