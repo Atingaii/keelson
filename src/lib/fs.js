@@ -87,7 +87,20 @@ export function withLock(file, fn, { timeout = 10000 } = {}) {
     }
   }
   try { fs.writeFileSync(fd, `${process.pid}\n`); return fn(); }
-  finally { fs.closeSync(fd); fs.rmSync(lock, { force: true }); }
+  finally {
+    fs.closeSync(fd);
+    const deadline = Date.now() + 1000;
+    for (;;) {
+      try { fs.unlinkSync(lock); break; }
+      catch (error) {
+        if (error.code === 'ENOENT') break;
+        // A competing Windows opener can briefly deny deletion too. Retry
+        // only removal of our acquired lock, never the completed callback.
+        if (process.platform !== 'win32' || !['EPERM', 'EACCES', 'EBUSY'].includes(error.code) || Date.now() >= deadline) throw error;
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
+      }
+    }
+  }
 }
 
 export function append(file, text) {

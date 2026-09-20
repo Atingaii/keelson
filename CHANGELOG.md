@@ -17,6 +17,7 @@ This version is in the Git repository; an npm publication is a separate release 
 
 ### Changed
 
+- Concurrent Windows checks retry transient lock-release failures without repeating completed writes.
 - Default init installs small discovery shims and project facts; `guide` loads installed guidance on demand. `--vendor` explicitly copies it.
 - No generated .gitignore changes. Signed logs and public keys stay with archived changes; private keys, trust and focus remain local.
 - Codex uses CODEX_THREAD_ID. Host capability, documentation confidence and actual testing are distinguished.

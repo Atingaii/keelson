@@ -95,3 +95,56 @@ test('persistent Windows sharing conflicts time out without removing another loc
   t.mock.restoreAll();
   assert.equal(fs.readFileSync(`${file}.lock`, 'utf8'), 'other writer');
 });
+
+function denyLockRemoval(t, lock, deniedAttempts, code = 'EPERM') {
+  let attempts = 0;
+  for (const method of ['rmSync', 'unlinkSync']) {
+    const original = fs[method];
+    t.mock.method(fs, method, (file, ...args) => {
+      if (file === lock) {
+        assert.equal(fs.readFileSync(lock, 'utf8'), `${process.pid}\n`);
+        if (++attempts <= deniedAttempts) throw Object.assign(new Error('sharing violation'), { code });
+      }
+      return original(file, ...args);
+    });
+  }
+  return () => attempts;
+}
+
+test('lock release survives transient Windows sharing conflicts without repeating the write', (t) => {
+  const dir = tmpProject({});
+  const file = path.join(dir, 'state.json');
+  simulateWindows(t);
+  const attempts = denyLockRemoval(t, `${file}.lock`, 3);
+  let writes = 0;
+  assert.equal(withLock(file, () => { writes++; return 'saved'; }), 'saved');
+  assert.equal(writes, 1);
+  assert.equal(attempts(), 4);
+  assert.equal(fs.existsSync(`${file}.lock`), false);
+  withLock(file, () => { writes++; });
+  assert.equal(writes, 2);
+});
+
+test('lock release bounds persistent Windows sharing failures and preserves the lock', (t) => {
+  const dir = tmpProject({});
+  const file = path.join(dir, 'state.json');
+  simulateWindows(t);
+  let clock = 1000;
+  t.mock.method(Date, 'now', () => { clock += 400; return clock; });
+  const attempts = denyLockRemoval(t, `${file}.lock`, Infinity);
+  let writes = 0;
+  assert.throws(() => withLock(file, () => { writes++; }), { code: 'EPERM' });
+  assert.equal(writes, 1);
+  assert.equal(attempts(), 3);
+  assert.equal(fs.existsSync(`${file}.lock`), true);
+});
+
+test('lock release does not retry unrelated errors', (t) => {
+  const dir = tmpProject({});
+  const file = path.join(dir, 'state.json');
+  simulateWindows(t);
+  const attempts = denyLockRemoval(t, `${file}.lock`, Infinity, 'EIO');
+  assert.throws(() => withLock(file, () => {}), { code: 'EIO' });
+  assert.equal(attempts(), 1);
+  assert.equal(fs.existsSync(`${file}.lock`), true);
+});
