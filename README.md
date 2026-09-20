@@ -30,10 +30,8 @@ Keelson favors **facts over process, evidence over claims, one source of truth o
 
 Keelson is a synthesis of established engineering ideas, not a new software-development religion. It does **not** run every idea below on every task. Each principle is loaded only when the current uncertainty or risk makes it useful.
 
-| Influence | What Keelson takes from it |
+| Engineering foundation | How Keelson uses it |
 |---|---|
-| [Matt Pocock's skills / Grill](https://github.com/mattpocock/skills) | Alignment before implementation; one decision at a time; precise questions with recommendations instead of a wall of clarification |
-| [Trellis](https://github.com/mindfold-ai/trellis) | Repository-local durable engineering context, agent-independent workflow, and progressive disclosure instead of one giant always-on prompt |
 | **First-principles reasoning** + *The Pragmatic Programmer* | Separate facts, outcomes, constraints, invariants, assumptions, and mechanisms; prefer reversible choices, tracer bullets, and prototypes that learn before they commit |
 | John Ousterhout, *A Philosophy of Software Design* | Deep modules, information hiding, complexity as the enemy, and “Design It Twice” for real design forks |
 | Eric Evans, *Domain-Driven Design* | Ubiquitous language, bounded contexts, explicit invariants, and boundaries that follow meaning instead of folder fashion |
