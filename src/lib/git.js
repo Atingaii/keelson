@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { isUtf8 } from 'node:buffer';
 import { execFileSync } from 'node:child_process';
 import { walk } from './fs.js';
 
@@ -51,16 +52,25 @@ function isKeelsonPath(file) {
   return file.equals(KEELSON_DIR) || (file.length > KEELSON_DIR.length && file.subarray(0, KEELSON_DIR.length).equals(KEELSON_DIR) && file[KEELSON_DIR.length] === 0x2f);
 }
 
-export function resolveFingerprintPath(root, bytes) {
-  const rel = bytes.toString('utf8');
-  if (!Buffer.from(rel, 'utf8').equals(bytes)) throw new Error('cannot fingerprint a Git path that is not valid UTF-8');
+function fingerprintPathResolver(root) {
   const base = path.resolve(root);
-  const file = path.resolve(base, rel);
-  const relative = path.relative(base, file);
-  if (!relative || relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
-    throw new Error('cannot fingerprint a Git path outside the project root');
-  }
-  return file;
+  const prefix = base.endsWith(path.sep) ? base : `${base}${path.sep}`;
+  const separators = path.sep === '\\' ? /[\\/]/ : /\//;
+  return (bytes) => {
+    if (!isUtf8(bytes)) throw new Error('cannot fingerprint a Git path that is not valid UTF-8');
+    const rel = bytes.toString('utf8');
+    // Git emits canonical relative names. Reject any escape component, then
+    // concatenate with the already-resolved root without a path.relative call
+    // for every entry in a large repository.
+    if (!rel || path.isAbsolute(rel) || rel.split(separators).includes('..')) {
+      throw new Error('cannot fingerprint a Git path outside the project root');
+    }
+    return `${prefix}${rel}`;
+  };
+}
+
+export function resolveFingerprintPath(root, bytes) {
+  return fingerprintPathResolver(root)(bytes);
 }
 
 function addGitEntries(entries, root, args, kind) {
@@ -84,8 +94,8 @@ function contentDigest(value) {
   return crypto.createHash('sha256').update(value).digest();
 }
 
-function prepareEntry(root, entry) {
-  const file = resolveFingerprintPath(root, entry.rawFile);
+function prepareEntry(resolvePath, entry) {
+  const file = resolvePath(entry.rawFile);
   if (!file) return null;
   let stat;
   try {
@@ -134,35 +144,50 @@ function gitObjectDigests(root, entries) {
   return digests;
 }
 
-function hashPreparedEntry(hash, entry, digest) {
-  updateField(hash, entry.kind);
-  updateField(hash, entry.rawFile);
+function framedValues(values) {
+  const fields = values.map((value) => Buffer.isBuffer(value) ? value : Buffer.from(String(value)));
+  const total = fields.reduce((sum, field) => sum + 8 + field.length, 0);
+  const framed = Buffer.allocUnsafe(total);
+  let offset = 0;
+  for (const field of fields) {
+    framed.writeUInt32BE(0, offset);
+    framed.writeUInt32BE(field.length, offset + 4);
+    offset += 8;
+    field.copy(framed, offset);
+    offset += field.length;
+  }
+  return framed;
+}
+
+function framePreparedEntry(entry, digest) {
   if (entry.type === 'gitlink') {
-    const head = git(entry.file, ['rev-parse', '--verify', 'HEAD']);
-    updateField(hash, 'gitlink');
-    updateField(hash, head ?? 'missing');
-    return;
+    return framedValues([entry.kind, entry.rawFile, 'gitlink', git(entry.file, ['rev-parse', '--verify', 'HEAD']) ?? 'missing']);
   }
   if (entry.type === 'symlink') {
-    updateField(hash, 'symlink');
-    updateField(hash, contentDigest(fs.readlinkSync(entry.file, { encoding: 'buffer' })));
-    return;
+    return framedValues([entry.kind, entry.rawFile, 'symlink', contentDigest(fs.readlinkSync(entry.file, { encoding: 'buffer' }))]);
   }
-  if (entry.type !== 'file') {
-    updateField(hash, 'other');
-    updateField(hash, String(entry.mode));
-    return;
-  }
-  updateField(hash, 'file');
-  updateField(hash, String(entry.mode & 0o111));
-  updateField(hash, digest);
+  if (entry.type !== 'file') return framedValues([entry.kind, entry.rawFile, 'other', String(entry.mode)]);
+  return framedValues([entry.kind, entry.rawFile, 'file', String(entry.mode & 0o111), digest]);
 }
 
 function hashGitEntries(hash, root, entries) {
-  const prepared = entries.map((entry) => prepareEntry(root, entry)).filter(Boolean);
+  const resolvePath = fingerprintPathResolver(root);
+  const prepared = entries.map((entry) => prepareEntry(resolvePath, entry)).filter(Boolean);
   const regular = prepared.filter((entry) => entry.type === 'file');
   const digests = gitObjectDigests(root, regular);
-  for (const entry of prepared) hashPreparedEntry(hash, entry, digests.get(entry));
+  let pending = [];
+  let pendingBytes = 0;
+  for (const entry of prepared) {
+    const framed = framePreparedEntry(entry, digests.get(entry));
+    pending.push(framed);
+    pendingBytes += framed.length;
+    if (pendingBytes >= 512 * 1024) {
+      hash.update(Buffer.concat(pending, pendingBytes));
+      pending = [];
+      pendingBytes = 0;
+    }
+  }
+  if (pendingBytes) hash.update(Buffer.concat(pending, pendingBytes));
 }
 
 /**
