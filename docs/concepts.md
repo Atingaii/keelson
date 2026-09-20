@@ -4,7 +4,7 @@ Keelson is a small set of files, a thin CLI, and one skill. This page is the mod
 
 ## Design laws
 
-Keelson borrows mature failure-control ideas from several engineering disciplines, but turns them into existing files and CLI invariants rather than new ceremonies.
+Keelson applies mature failure-control principles as existing files and CLI invariants rather than adding new ceremonies.
 
 | Law | Why it matters | Keelson mechanism |
 |---|---|---|
