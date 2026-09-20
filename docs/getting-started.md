@@ -69,17 +69,17 @@ On the first non-trivial conversation the agent:
 
 1. reads the repository and existing referenced material;
 2. drafts `.keelson/INTENT.md` from evidence already present;
-3. asks you to confirm or correct the project boundary in one short exchange;
-4. shapes the actual request.
+3. shapes the actual request immediately;
+4. asks one boundary question only if the repository cannot answer something that materially changes the current work.
 
 It does **not** inventory the whole repository into specs and rules. Those appear later only when current work exposes a behavior contract or durable invariant worth preserving.
 
 Example:
 
 > **You:** Add search to the orders page.  
-> **Agent:** I understand this as filtering the existing orders list by order number and customer name; no global search and no public API change. I found the existing pagination contract and will preserve it. Is that boundary right?
+> **Agent:** Understood as filtering the existing orders list by order number and customer name, preserving the existing pagination contract; no public API change is implied by the repository. I’ll proceed with that boundary.
 
-Once confirmed, work continues normally.
+If the repository showed two plausible meanings that changed the product, the agent would ask that one question instead. Otherwise work continues immediately.
 
 The agent does **not** ask you to choose databases, queues, consistency models, or architecture patterns just because they exist. Before every question it asks: what will this answer change, who owns the answer, and can repository evidence or a cheap experiment settle it? If the choice is reversible engineering detail, the agent chooses a sensible project-aligned default. If you say “not sure,” that is useful information, not a failed answer.
 
