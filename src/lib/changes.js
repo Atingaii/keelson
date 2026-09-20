@@ -80,6 +80,10 @@ export function derivedWorkStatus(change, fingerprint, options = {}) {
   return evaluateLifecycle(change, fingerprint, options).work;
 }
 
+export function loadAllChanges(changesDir) {
+  return listChanges(changesDir).map((n) => loadChange(changesDir, n)).filter(Boolean);
+}
+
 /** Pairs of active changes that touch the same capability or the same declared paths. */
 export function sharedContracts(changes) {
   const out = [];
