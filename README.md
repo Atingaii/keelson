@@ -130,7 +130,7 @@ changes/rename-buyer/
 
 `tasks.md`, `ledger.md`, delta specs, and `handoff.md` appear only when they carry a plan, evidence, contract delta, or explicit ownership transfer.
 
-Large capabilities automatically become a small `spec.md` index + `requirements/*.md` + optional `decisions.md`. ADR/rule/spec file counts may grow with the project, but only relevant files are loaded for current work. Old session/evidence cache entries are pruned automatically.
+Large capabilities automatically become a small `spec.md` index + `requirements/*.md` + `decisions/*.md` when needed. ADR/rule/spec file counts may grow with the project, while individual hot files and current context remain bounded. Old session/evidence cache entries are pruned automatically.
 
 **Empty scaffolding is not progress; a closed conversation is not completion; control-plane maintenance is not user work.**
 
