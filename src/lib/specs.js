@@ -35,12 +35,14 @@ export function capabilityStorageOptions(specsDir, capability) {
   if (data.layout === 'sharded') {
     return {
       requirementsDir: data.requirements_dir || 'requirements',
-      decisionsFile: data.decisions_file || 'decisions.md',
+      decisionsDir: data.decisions_dir || null,
+      decisionsFile: data.decisions_file || null,
     };
   }
   return {
     requirementsDir: firstFree(dir, 'requirements', 'keelson-requirements'),
-    decisionsFile: firstFree(dir, 'decisions.md', 'keelson-decisions.md'),
+    decisionsDir: firstFree(dir, 'decisions', 'keelson-decisions'),
+    decisionsFile: null,
   };
 }
 
@@ -60,8 +62,17 @@ export function readCapabilitySpec(specsDir, capability) {
     if (!rel.endsWith('.md')) continue;
     requirements.push(...parseSpec(read(path.join(reqDir, rel))).requirements);
   }
-  const decisionsPath = path.join(dir, data.decisions_file || 'decisions.md');
-  const decisions = exists(decisionsPath) ? parseSpec(read(decisionsPath)).decisions : [];
+  const decisions = [];
+  if (data.decisions_dir) {
+    const decisionsDir = path.join(dir, data.decisions_dir);
+    for (const rel of walk(decisionsDir)) {
+      if (!rel.endsWith('.md')) continue;
+      decisions.push(...parseSpec(read(path.join(decisionsDir, rel))).decisions);
+    }
+  } else {
+    const decisionsPath = path.join(dir, data.decisions_file || 'decisions.md');
+    if (exists(decisionsPath)) decisions.push(...parseSpec(read(decisionsPath)).decisions);
+  }
   return renderSpec({
     name: capability,
     purpose: index.purpose,
@@ -84,19 +95,38 @@ function uniqueRequirementFiles(requirements, requirementsDir) {
   });
 }
 
-function renderIndex(capability, spec, reqFiles, { requirementsDir, decisionsFile, hasDecisions }) {
+function uniqueDecisionFiles(decisions, decisionsDir) {
+  return decisions.map((decision, i) => {
+    const digest = crypto.createHash('sha1').update(decision).digest('hex').slice(0, 8);
+    const words = decision
+      .replace(/^[^:]+:\s*/, '')
+      .split(/\s+/)
+      .slice(0, 6)
+      .join('-');
+    const stem = slugify(words) || 'decision';
+    return {
+      rel: `${decisionsDir}/${String(i + 1).padStart(3, '0')}-${stem}-${digest}.md`,
+      text: `# Decision\n\n## Decisions\n\n- ${decision}\n`,
+    };
+  });
+}
+
+function renderIndex(capability, spec, reqFiles, { requirementsDir, decisionsDir, decisionsFile, decisionCount }) {
   const parts = [
     '---',
     'layout: sharded',
     `requirements_dir: ${requirementsDir}`,
-    `decisions_file: ${decisionsFile}`,
+    ...(decisionsDir ? [`decisions_dir: ${decisionsDir}`] : decisionsFile ? [`decisions_file: ${decisionsFile}`] : []),
     '---',
     `# ${capability}`,
     '',
   ];
   if (spec.purpose) parts.push('## Purpose', '', spec.purpose.trim(), '');
   parts.push(`- \`${requirementsDir}/\` — ${reqFiles.length} current requirement file(s); read only relevant files`);
-  if (hasDecisions) parts.push(`- \`${decisionsFile}\` — capability-local durable decisions`);
+  if (decisionCount) {
+    const location = decisionsDir ? `${decisionsDir}/` : decisionsFile;
+    parts.push(`- \`${location}\` — ${decisionCount} capability-local durable decision file(s)`);
+  }
   parts.push('');
   return parts.join('\n');
 }
@@ -107,7 +137,8 @@ function renderIndex(capability, spec, reqFiles, { requirementsDir, decisionsFil
  */
 export function planCapabilityStorage(capability, logicalText, budget = 0, {
   requirementsDir = 'requirements',
-  decisionsFile = 'decisions.md',
+  decisionsDir = 'decisions',
+  decisionsFile = null,
 } = {}) {
   const spec = parseSpec(logicalText);
   const canonical = renderSpec({
@@ -127,14 +158,20 @@ export function planCapabilityStorage(capability, logicalText, budget = 0, {
   }
 
   const reqFiles = uniqueRequirementFiles(spec.requirements, requirementsDir);
-  const decisionsText = spec.decisions.length
-    ? `# Decisions — ${capability}\n\n## Decisions\n\n${spec.decisions.map((d) => `- ${d}`).join('\n')}\n`
-    : null;
-  const indexText = renderIndex(capability, spec, reqFiles, { requirementsDir, decisionsFile, hasDecisions: Boolean(decisionsText) });
+  const decisionFiles = spec.decisions.length
+    ? uniqueDecisionFiles(spec.decisions, decisionsDir)
+    : [];
+  const indexText = renderIndex(capability, spec, reqFiles, {
+    requirementsDir,
+    decisionsDir,
+    decisionsDir,
+    decisionsFile,
+    decisionCount: decisionFiles.length,
+  });
   const files = [
     { rel: 'spec.md', text: indexText },
     ...reqFiles.map(({ rel, text }) => ({ rel, text })),
-    ...(decisionsText ? [{ rel: decisionsFile, text: decisionsText }] : []),
+    ...decisionFiles,
   ];
   const hardLimit = soft * 2;
   const hardOver = files
@@ -158,11 +195,13 @@ export function writeCapabilityStorage(specsDir, capability, plan) {
   const { data } = parseFrontmatter(currentMain);
   if (data.layout === 'sharded') {
     rmrf(path.join(dir, data.requirements_dir || 'requirements'));
-    rmrf(path.join(dir, data.decisions_file || 'decisions.md'));
+    if (data.decisions_dir) rmrf(path.join(dir, data.decisions_dir));
+    if (data.decisions_file) rmrf(path.join(dir, data.decisions_file));
   }
   if (plan.mode === 'sharded') {
     rmrf(path.join(dir, plan.requirementsDir));
-    rmrf(path.join(dir, plan.decisionsFile));
+    if (plan.decisionsDir) rmrf(path.join(dir, plan.decisionsDir));
+    if (plan.decisionsFile) rmrf(path.join(dir, plan.decisionsFile));
   }
   for (const file of plan.files) write(path.join(dir, file.rel), file.text);
 }
@@ -174,9 +213,16 @@ export function capabilityPhysicalDocs(specsDir, capability) {
   if (main) out.push({ rel: 'spec.md', file: path.join(dir, 'spec.md') });
   const { data } = parseFrontmatter(main);
   if (data.layout !== 'sharded') return out;
-  const decisionsRel = data.decisions_file || 'decisions.md';
-  const decisions = path.join(dir, decisionsRel);
-  if (exists(decisions)) out.push({ rel: decisionsRel, file: decisions });
+  if (data.decisions_dir) {
+    const decisionsDir = path.join(dir, data.decisions_dir);
+    for (const rel of walk(decisionsDir)) {
+      if (rel.endsWith('.md')) out.push({ rel: `${data.decisions_dir}/${rel}`, file: path.join(decisionsDir, rel) });
+    }
+  } else {
+    const decisionsRel = data.decisions_file || 'decisions.md';
+    const decisions = path.join(dir, decisionsRel);
+    if (exists(decisions)) out.push({ rel: decisionsRel, file: decisions });
+  }
   const requirementsRel = data.requirements_dir || 'requirements';
   const reqDir = path.join(dir, requirementsRel);
   for (const rel of walk(reqDir)) {
