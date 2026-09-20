@@ -1,6 +1,6 @@
 # Reconcile and compact
 
-Landing a change is not the end of it. Two passes keep the project's knowledge true and small: reconcile writes the new stable facts back into the current truth, and compact removes what no longer belongs there. Both are suggestions to a person, never automatic rewrites; `keelson doctor` lists what it finds.
+Landing a change is not the end of it. Two passes keep the project's knowledge true and small: reconcile writes new stable facts back into current truth, and compact removes what no longer belongs there. These are normal internal Agent duties during RECONCILE, not housekeeping the owner has to request; `keelson doctor` remains a diagnostic view.
 
 ## Reconcile: where does each new fact go?
 <!-- keelson: id=reconcile.route | without: the change's facts stay in change.md and chat; the specs, rules, and glossary describe last quarter's system | sunset: never -->
@@ -40,7 +40,7 @@ When the soft budget is crossed, run a compaction pass on that document, choosin
 - **Automate** a checkable rule into `config.yaml → check` and shorten the prose to a pointer.
 - **Archive** a change that has stalled (`keelson cancel` with a reason) rather than leaving it half-open.
 
-`keelson doctor` also reports duplicated requirements across capabilities, changes idle for two weeks, changes with more than 25 tasks, always-on rules over budget, and generated documents older than the source tree. Fix what it names, in a small change, and land that like any other.
+`keelson doctor` also detects duplicated requirements across capabilities, idle/oversized changes, overgrown always-on rules, and stale generated docs. The Agent consumes those signals opportunistically and folds safe cleanup into the current engineering pass; it does not create owner-visible maintenance work unless semantics would change.
 
 ## Automatic maintenance is invisible
 <!-- keelson: id=reconcile.automatic | without: the owner is asked to run housekeeping commands, specs become giant monoliths, or cleanup is postponed until it becomes a separate project | sunset: never -->
@@ -58,4 +58,4 @@ Only involve the owner when compaction would change product semantics, authoriza
 ## Gardening cadence
 <!-- keelson: id=reconcile.cadence | without: knowledge health is only looked at when it hurts, by which time the cleanup is a project of its own | sunset: never -->
 
-Run `keelson doctor` when a milestone closes and whenever `keelson status` shows nothing in flight. Ten minutes then saves a rewrite later. Treat its output as a list of small, separately landable fixes, never as a mandate to restructure the project.
+The Agent re-evaluates knowledge health during normal context/reconcile cycles and after meaningful landings. Maintenance is incremental and silent: keep each hot document readable continuously instead of scheduling cleanup days or asking the owner to manage the control plane.
