@@ -27,7 +27,7 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
   const orderedChanges = focus ? [...changes].sort((a, b) => (a.name === focus ? -1 : b.name === focus ? 1 : 0)) : changes;
   const specs = listDirs(p.specs);
   const refs = Object.entries(cfg.refs ?? {}).filter(([, v]) => v);
-  const knowledgeFindings = knowledgeHealth(root, cfg, p).filter((h) => h.kind === 'budget' || h.kind === 'budget-hard');
+  const knowledgeFindings = knowledgeHealth(root, cfg, p);
   const data = {
     root,
     intent: readOr(p.intent).trim(),
@@ -45,7 +45,7 @@ export async function context({ flags, positional }, cwd = process.cwd()) {
     knowledge: {
       critical: knowledgeFindings.filter((h) => h.level === 'error').length,
       overBudget: knowledgeFindings.filter((h) => h.level === 'warn').length,
-      maintenance: knowledgeFindings.map((h) => ({ level: h.level, kind: h.kind, text: h.text, fix: h.fix })),
+      maintenance: knowledgeFindings.slice(0, 8).map((h) => ({ level: h.level, kind: h.kind, text: h.text, fix: h.fix })),
     },
     changes: orderedChanges.map((c) => {
       const contractDrift = changeSpecDrift(c, p.specs);
