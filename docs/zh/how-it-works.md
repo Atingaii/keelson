@@ -97,7 +97,7 @@ Codex、Gemini CLI、Kiro CLI 在获得同等级、可验证的 deterministic br
 
 有 identity 时，`keelson new` 把新 work item 绑定到当前 session；`check --record`、`land`、`cancel`、`handoff` 优先使用 focused change。Land/cancel 会清除所有仍指向该长期 change 的本地 pointer。
 
-session 文件被 gitignore；删除它们只影响便利性，不影响工作事实。
+session 文件被 gitignore；删除它们只影响便利性，不影响工作事实。正常 Keelson 命令会顺手回收过期 session pointer 和旧 evidence log，因此 runtime 存储不需要用户做 housekeeping。
 
 ## Hook（Claude Code）
 
@@ -126,7 +126,7 @@ canonical Skill 只把**对话 turn**分成五类：
 
 “完成”不是第六类意图。Work readiness 由长期状态机械推导。
 
-每轮修改后 Agent 都 reconcile 当前 focused change。当 tasks/acceptance 满足、阻塞问题/假设消失、rollout 条件满足、当前 tree 的 verification 新鲜时，`keelson status` 显示 `ready`；`keelson check --record` 也会直接提示 `ready → land now`。Agent 必须先 land，再向用户宣称完成。
+每轮修改后 Agent 都 reconcile 当前 focused change。当 acceptance 满足、活动依赖与阻塞问题/假设消失、rollout 条件满足、当前 tree 的 verification 新鲜时，`keelson status` 显示 `ready`；`tasks.md` 始终只是可变执行计划，不拥有完成判定权；`keelson check --record` 也会直接提示 `ready → land now`。Agent 必须先 land，再向用户宣称完成。
 
 结束聊天或切换话题都不能触发这个状态转换。
 
@@ -183,6 +183,8 @@ The system SHALL ...
 - orders: offset pagination over cursor; cursor rejected because the table needs page jumps
 ```
 
+一个 capability 即使物理上拆开，在逻辑上仍是一份契约。当合并后的契约超过配置的 spec 预算时，land 会自动保存为有界的 `spec.md` 索引 + `requirements/` 下每个当前 requirement 一个文件，并在需要时增加 `decisions.md`。顶层索引保持常量大小；后续 base hash 与 delta merge 都针对重建后的逻辑契约，因此分片对 change 透明。
+
 变更里的 delta spec 带一个 `base:` 戳（创建 delta 时主 spec 的哈希，或 `new`）和三个段：
 
 ```markdown
@@ -236,7 +238,7 @@ base: 4233e56865
 - 每个活动变更中 `change.md`、`tasks.md`、`ledger.md`、`handoff.md` 里最新的修改时间（14 天后视为闲置）和任务数（超过 25 视为过大）；
 - `docs/generated/` 下的文件是否比 `src/`（没有 `src/` 时为项目根目录）下最新的文件旧一天以上。
 
-每条发现都带一个建议的修复。输出是一份小压缩清单，由人或代理去做，并像任何其他变更一样落地。
+每条发现都带一个建议的修复。这些 finding 是 RECONCILE 阶段给 Agent 的内部维护信号：常规拆分、去重、当前状态重写和索引修复都静默完成，不要求所有者维护 Keelson。只有清理会改变产品语义或所有者控制的策略时，才作为真正决策询问用户。
 
 ## NOW.md
 
