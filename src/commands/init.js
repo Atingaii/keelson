@@ -135,11 +135,16 @@ export async function init({ flags }, cwd = process.cwd()) {
     console.log(`  ${workflow.status.padEnd(9)} ${workflow.path}`);
     for (const f of plannedCanonicalSkillFiles(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
     for (const rel of plannedManagedRemovals(root, targets)) console.log(`  ${'remove'.padEnd(9)} ${rel} (stale managed surface)`);
+    const dryDiscovery = new Set();
     for (const t of targets) {
-      for (const f of plannedSkillFiles(root, t, { lang: cfg.lang, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
+      const discoveryKey = `${t.instructions}|${t.skillsDir}|${t.rulesFile ?? ''}`;
+      if (!dryDiscovery.has(discoveryKey)) {
+        dryDiscovery.add(discoveryKey);
+        for (const f of plannedSkillFiles(root, t, { lang: cfg.lang, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
+        const ins = path.join(root, t.instructions);
+        console.log(`  ${(exists(ins) ? (read(ins).includes('<!-- keelson:start -->') ? 'refresh' : 'append') : 'create').padEnd(9)} ${t.instructions}`);
+      }
       for (const f of plannedSessionAdapterFiles(root, t)) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
-      const ins = path.join(root, t.instructions);
-      console.log(`  ${(exists(ins) ? (read(ins).includes('<!-- keelson:start -->') ? 'refresh' : 'append') : 'create').padEnd(9)} ${t.instructions}`);
     }
     if (retiredFromConfig.length) console.log(`  migrate   config tools: drop retired ${retiredFromConfig.join(', ')}`);
     if (retiredOverrides.length) console.log(`  migrate   config platforms: drop retired ${retiredOverrides.join(', ')}`);
@@ -191,10 +196,17 @@ export async function init({ flags }, cwd = process.cwd()) {
   const canonicalSkillPath = installCanonicalSkill(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION });
   ok(`canonical runtime → ${workflowPath}; ${canonicalSkillPath}`);
 
+  const discoveryInstalled = new Set();
   for (const t of targets) {
-    const skillPath = installSkill(root, t, { lang: cfg.lang, version: PKG_VERSION });
-    const files = installInstructions(root, t, { lang: cfg.lang });
-    ok(`${t.label}: discovery shim → ${skillPath}; instructions → ${files.join(', ')}${t.confidence === 'convention' ? dim(' (path by convention; run `keelson doctor` after your first session)') : ''}`);
+    const discoveryKey = `${t.instructions}|${t.skillsDir}|${t.rulesFile ?? ''}`;
+    if (!discoveryInstalled.has(discoveryKey)) {
+      discoveryInstalled.add(discoveryKey);
+      const skillPath = installSkill(root, t, { lang: cfg.lang, version: PKG_VERSION });
+      const files = installInstructions(root, t, { lang: cfg.lang });
+      ok(`${t.label}: discovery shim → ${skillPath}; instructions → ${files.join(', ')}${t.confidence === 'convention' ? dim(' (path by convention; run `keelson doctor` after your first session)') : ''}`);
+    } else {
+      info(`${t.label}: reuses existing discovery surface ${t.instructions} + ${t.skillsDir}/keelson`);
+    }
     if (t.hooks) {
       installHooks(root);
       ok(`${t.label}: hooks → .claude/settings.json (session snapshot + per-prompt state line)`);
