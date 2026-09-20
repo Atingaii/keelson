@@ -9,7 +9,8 @@ The line between "did one task" and "kept a project moving" is whether the next 
 |---|---|
 | What is in flight across the project, what is blocked, the next step | `NOW.md`, committed, rewritten in full |
 | Continuation state of one change: confirmed decisions, done slices, open and blocked items, ruled-out assumptions, next step, verification status | `changes/<name>/handoff.md`, committed |
-| Check output, session scratch, machine-specific state | `.keelson/.local/`, never committed |
+| Signed check records and referenced output | `changes/<name>/ledger.jsonl` + `evidence/`, retained with the change; review output before sharing |
+| Private signing keys, command trust, session scratch | Git's private `keelson-runtime` directory, or a user cache outside non-Git projects; never committed |
 
 Anything a colleague on another machine would need is not local state.
 

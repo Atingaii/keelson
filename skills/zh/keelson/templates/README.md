@@ -1,7 +1,7 @@
 <!-- 由 Keelson 生成；`keelson update` 会刷新。项目事实写入各自负责的文件，不要写进这份地图。 -->
 # Keelson 项目地图 — {{project}}
 
-`.keelson/` 是项目的工程控制面：给人看的当前事实、给 Agent 的 canonical 指导，以及工作进行中才存在的临时变更状态。只有真正值得保留的信息出现时，它才增长。
+`.keelson/` 保存项目事实、契约、决策与变更证据。只有真正值得保留的信息出现时，它才增长。Agent 指导从已安装的 Keelson 包中读取。
 
 ## 从这里开始
 
@@ -9,15 +9,13 @@
 - **现在在做什么？** → `NOW.md`
 - **项目为什么存在 / 边界是什么？** → `INTENT.md`
 
-Agent 从 `workflow.md` → `skill/SKILL.md` 开始。其他内容都按需自动维护；正常开发不需要任何人管理 Keelson 目录。
+Agent 从 `keelson guide workflow` 和 `keelson guide` 开始，再按需读取具体 reference。其他内容都按需自动维护；正常开发不需要任何人管理 Keelson 目录。
 
 ## init 后始终存在
 
 | 路径 | 用途 |
 |---|---|
 | `README.md` | 这份项目地图 |
-| `workflow.md` | 小型、始终适用的执行内核 |
-| `skill/` | canonical Keelson 路由器与按需 references |
 | `INTENT.md` | 项目目的、边界、硬约束、Agent 权限 |
 | `NOW.md` | 当前状态、阻塞、下一具体步骤 |
 | `config.yaml` | 用户控制的 Keelson 配置 |
@@ -38,9 +36,11 @@ Agent 从 `workflow.md` → `skill/SKILL.md` 开始。其他内容都按需自�
 | `changes/<name>/ledger.md` | 真正发生了裁定、根因、分派或验证事件 |
 | `changes/<name>/handoff.md` | 工作所有权真正跨人/跨机器，或需要显式交接包 |
 | `changes/<name>/specs/**` | spec 级变更修改行为契约 |
-| `.runtime/sessions/` | 宿主/会话提供稳定 identity 时；只保存本地 focus 指针，绝不保存完成状态 |
-| `.runtime/evidence/` | 检查真正产生本机输出时；gitignored |
-| `hooks/` | 已选宿主存在 Keelson 生命周期 hook 集成 |
+| `changes/<name>/decisions.json` | 需要结构化选择及其解决历史时 |
+| `changes/<name>/ledger.jsonl` + `evidence/` | 产生已签名检查记录、签名公钥和按内容寻址的输出时 |
+| `workflow.md` + `skill/` | 负责人明确选择 `--vendor` 复制包内指导时 |
+
+私钥、命令信任、锁和会话焦点保存在本目录之外：Git 私有的 `keelson-runtime` 目录，无 Git 时使用用户缓存。Hook 从已安装的包执行。初始化不会编辑 `.gitignore`；分享检查日志前请审阅其内容。
 
 ## 一次变更完成后留下什么
 

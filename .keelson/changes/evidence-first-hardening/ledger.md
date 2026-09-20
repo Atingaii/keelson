@@ -28,3 +28,14 @@ Recovery journals now store project-relative targets and runtime-relative sessio
 
 ### Note: review workspace correction
 The reviewer accidentally initialized the main checkout and misidentified newly generated benchmark license files as its own temporary output. Its tracked edits were restored, and the deleted task-created license files were regenerated from the pinned upstream sources with verified hashes before commit. Subsequent reviewer work is read-only; cleanup must use exact paths recorded when the reviewer creates its own fixtures.
+
+### Dispatch: recovery re-review → deep (gpt-5.6-terra)
+Result: pass
+Static review of `6c33053` confirmed that moved projects and invalid or incomplete journals are validated in full before target deletion. No remaining P1/P2 was found within that recovery scope.
+
+### Note: integrated verification and real migration
+The integrated suite at `8d15bd1` passed 124/125 tests; its only failure is the repository's own lightweight installation assertion. Running the actual 0.3-to-0.4 migration exposed incorrect legacy lean-file hashes and rejection of an unchanged old discovery shim. Those defects are being fixed with fixtures captured from the actual baseline, rather than bypassed with `--force`. Generated project maps and handoff guidance now describe package guidance, durable signed logs and private runtime accurately.
+
+### Dispatch: archived attestation review → deep (gpt-5.6-terra)
+Result: fail
+The new original-name resolver could confuse a legacy change named `tidy-cancelled` or `tidy-<digits>` with a suffix belonging to `tidy`. Legacy names without explicit metadata must not guess across those suffixes; an exact archive directory remains available. This finding is being fixed before the benchmark freeze.
