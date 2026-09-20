@@ -596,6 +596,66 @@ test('sessions focus independent work items; ready is derived without a user fin
   assert.equal(degraded.suggested, 'beta');
 });
 
+test('depends is a real lifecycle gate for status and land', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--no-hooks'], { env });
+  run(dir, ['new', 'base-work'], { env });
+  run(dir, ['new', 'child-work', '--depends', 'base-work'], { env });
+  for (const name of ['base-work', 'child-work']) {
+    write(dir, `.keelson/changes/${name}/change.md`, read(dir, `.keelson/changes/${name}/change.md`).replace('- [ ] … — check: `…`', '- [x] works — check: `true`'));
+    write(dir, `.keelson/changes/${name}/ledger.md`, '### Verify: ok\n`true` exit 0\n');
+  }
+  const st = JSON.parse(run(dir, ['status', '--json'], { env }).stdout);
+  const child = st.changes.find((x) => x.name === 'child-work');
+  assert.equal(child.work, 'in-progress');
+  assert.deepEqual(child.blockedBy, ['base-work']);
+  assert.ok(child.gates.some((g) => g.code === 'dependencies' && g.pass === false));
+  const refused = run(dir, ['land', 'child-work'], { env, allowFail: true });
+  assert.equal(refused.code, 1);
+  assert.match(refused.stderr, /depends on active change\(s\): base-work/);
+});
+
+test('hard knowledge limits fail validate and preflight land before writing specs', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--no-hooks'], { env });
+  write(dir, '.keelson/config.yaml', read(dir, '.keelson/config.yaml').replace('INTENT: 120', 'INTENT: 5').replace('spec: 250', 'spec: 6'));
+  write(dir, '.keelson/INTENT.md', '# intent\n' + 'truth\n'.repeat(11));
+  const invalid = run(dir, ['validate', '--json'], { env, allowFail: true });
+  assert.equal(invalid.code, 1);
+  assert.ok(JSON.parse(invalid.stdout).errors.some((e) => /budget-hard: INTENT\.md/.test(e)));
+
+  // Restore INTENT so the landing assertion isolates projected spec growth.
+  write(dir, '.keelson/INTENT.md', '# intent\nsmall\n');
+  run(dir, ['new', 'bounded-spec', '--tier', 'quick', '--capability', 'orders'], { env });
+  write(dir, '.keelson/changes/bounded-spec/change.md', read(dir, '.keelson/changes/bounded-spec/change.md').replace('- [ ] … — check: `…`', '- [x] works — check: `true`'));
+  write(dir, '.keelson/changes/bounded-spec/ledger.md', '### Verify: ok\n`true` exit 0\n');
+  write(dir, '.keelson/changes/bounded-spec/specs/orders/spec.md', [
+    '---',
+    'base: new',
+    '---',
+    '## ADDED Requirements',
+    '### Requirement: Large bounded contract',
+    'The API SHALL stay bounded.',
+    '#### Scenario: one',
+    '- WHEN a',
+    '- THEN b',
+    '#### Scenario: two',
+    '- WHEN c',
+    '- THEN d',
+    '#### Scenario: three',
+    '- WHEN e',
+    '- THEN f',
+    '#### Scenario: four',
+    '- WHEN g',
+    '- THEN h',
+    ''
+  ].join('\n'));
+  const refused = run(dir, ['land', 'bounded-spec'], { env, allowFail: true });
+  assert.equal(refused.code, 1);
+  assert.match(refused.stderr, /projected .*orders\/spec\.md.*hard limit/);
+  assert.ok(!exists(dir, '.keelson/specs/orders/spec.md'), 'budget refusal must happen before any durable spec write');
+});
+
 test('handoff and session hook tolerate CRLF files', () => {
   const dir = tmpProject({});
   execFileSync('git', ['init', '-q'], { cwd: dir });
