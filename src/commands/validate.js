@@ -7,6 +7,7 @@ import { parseSpec, parseDelta, parseFrontmatter, hasSection, EFFORT_TIERS, ROOT
 import { loadAllChanges } from '../lib/changes.js';
 import { datedIdPatterns } from '../lib/models.js';
 import { knowledgeHealth } from '../lib/health.js';
+import { readCapabilitySpec } from '../lib/specs.js';
 import { ok, fail, warn } from '../lib/out.js';
 
 export function validateProject(root) {
@@ -35,7 +36,7 @@ export function validateProject(root) {
       errors.push(`${p.specsRel}/${cap}/ has no spec.md`);
       continue;
     }
-    const s = parseSpec(read(f));
+    const s = parseSpec(readCapabilitySpec(p.specs, cap));
     if (!s.requirements.length) warnings.push(`${p.specsRel}/${cap}/spec.md has no "## Requirement:" sections`);
     for (const r of s.requirements) if (!/###\s+Scenario:/i.test(r.body)) warnings.push(`${p.specsRel}/${cap}: requirement "${r.name}" has no scenario`);
     const names = s.requirements.map((r) => r.name.toLowerCase());
