@@ -1,12 +1,12 @@
 <p align="center"><img src="docs/assets/keelson-banner.png" alt="Keelson" width="620"></p>
 
-<p align="center"><strong>Give your coding agent a project memory and a clear path to done.</strong></p>
-<p align="center">A local CLI + Agent Skill that keeps context, decisions, and verification with your code—from the first request to the next session.</p>
+<p align="center"><strong>Start with a conversation. Leave work the next session can build on.</strong></p>
+<p align="center">Project memory, engineering guidance, and acceptance checks for your coding agent. Describe the outcome; keep decisions and verification alongside the code.</p>
 
 <p align="center">
 <a href="README_CN.md">简体中文</a> ·
-<a href="docs/README.md">Documentation</a> ·
 <a href="#quick-start">Quick start</a> ·
+<a href="docs/README.md">Documentation</a> ·
 <a href="docs/platforms.md">Agent support</a>
 </p>
 
@@ -15,42 +15,90 @@
 <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT license"></a>
 </p>
 
-<p align="center"><img src="docs/assets/keelson-demo.gif" alt="Actual Keelson CLI run: a failing check, a code fix, passing verification, and an archived change" width="100%"></p>
-<p align="center"><sub>Real CLI output from a prepared example project. Fix, verify, and retain the result.</sub></p>
+<p align="center"><img src="docs/assets/keelson-demo.gif" alt="Real agent conversation replay: a task-filter request followed by implementation, verification, and archiving" width="100%"></p>
+<p align="center"><sub>Initialized example repository · Translated excerpts from a real session, with waits shortened · Just describe the task</sub></p>
 
-## What Keelson does
+## Why Keelson?
 
-| Capability | Workflow |
+Coding agents can write code. Ongoing development also needs shared context, clear boundaries, and a reliable way to establish that work is done.
+
+| A familiar problem | How Keelson helps |
 | --- | --- |
-| **Session continuity** | Project context, decisions, and unfinished work stay in the repository. |
-| **Scoping and acceptance** | The agent reads the code, clarifies key decisions, and defines acceptance before implementation. |
-| **Frontend design** | 22 [design actions](docs/frontend.md) cover visual craft, interaction, adaptation, and browser verification. Explore them with `keelson design`. |
-| **Verification and archiving** | Check records follow the code they tested. Changed inputs require fresh verification before normal completion. |
+| Every new session starts with another project explanation | Goals, decisions, and unfinished work stay in the repository for the next session. |
+| Implementation starts before the request is understood | The agent reads existing code, defines acceptance, and asks about decisions that change the direction. |
+| The code is written, but completion is unclear | Check records track the inputs they verified, keeping implementation, verification, and completion distinct. |
+| The page works, but its design and interactions feel unfinished | Design guidance covers typography, color, feedback, responsive behavior, and accessibility, with browser acceptance. |
+
+Keelson combines an **Agent Skill + local CLI**. The skill guides the agent's work; the CLI manages project state and verification records. Use it for features, bug fixes, refactoring, and frontend improvements.
+
+## Requirements
+
+- **Node.js 20+**, npm, and Git.
+- A coding agent that can read project files, make changes, and run commands.
+- A local project directory; Git is recommended for tracking code and project knowledge.
+
+Keelson generates integrations for Codex, Claude Code, OpenCode, Gemini CLI, and other hosts. See [Agent support](docs/platforms.md) for capabilities and validation coverage.
 
 ## Quick start
 
-Requires **Node.js 20+** and a coding agent. Install from source:
+**1. Install the CLI** (currently from source):
 
 ```bash
 git clone https://github.com/Atingaii/keelson.git
 cd keelson
 npm ci
 npm link
+```
 
+**2. Initialize your project**, using Codex here:
+
+```bash
 cd /path/to/your/project
 keelson init --codex
 ```
 
-`npm link` uses this checkout; keep it in place. [Setup and other agents →](docs/getting-started.md)
+**3. Open your agent in that directory and describe the task.** Initialize once, then keep working through conversation.
 
-## Use it through conversation
+> Add a priority filter to the task list: show everything by default, with an option for high-priority tasks only. Keep existing calls compatible, add tests, and verify the result.
 
-> Improve the settings page. Keep our brand, preserve input when saving fails, and check the mobile flow.
+`npm link` uses this checkout, so keep it in place. See the [setup guide](docs/getting-started.md) and [supported agents](docs/platforms.md).
 
-1. **Describe the outcome.** The agent reads the project and clarifies the decisions that matter.
-2. **Let it work.** It implements, reviews, and checks the result against the acceptance criteria.
-3. **Keep the result.** It runs the configured checks with `keelson check --trust --record` and archives the change when the gates pass.
+## From request to completion
 
-Review configured check commands before their first execution. Use `keelson status` whenever you want to see progress. Project notes grow as needed; initialization stays small.
+**Understand → Scope → Implement and verify → Archive and resume**
 
-[Full walkthrough](docs/getting-started.md) · [Verification and trust](docs/verification.md) · [CLI reference](docs/cli.md) · [Contributing](CONTRIBUTING.md) · [MIT](LICENSE)
+The agent loads relevant guidance, maintains acceptance criteria, and runs project checks. It wraps up when the gates pass, asking for your input when a choice changes the plan. Small edits stay lightweight.
+
+You can also ask:
+
+- **Explore:** “Find where this feature belongs. Don't change code yet.”
+- **Improve an interface:** “Polish the settings page, keep our brand, preserve input when saving fails, and check the mobile flow.”
+- **Resume:** “Continue the previous change. First check what's left.”
+
+Frontend work has 22 composable [design actions](docs/frontend.md), discoverable with `keelson design`, including critique, simplification, polish, and adaptation. Checking the actual interface requires the agent to use a browser.
+
+## What stays in your project?
+
+Initialization creates a small foundation. Further documents appear as the work needs them:
+
+| Location | Purpose |
+| --- | --- |
+| `.keelson/INTENT.md`, `.keelson/NOW.md` | Project goals, constraints, and current progress. |
+| `.keelson/config.yaml` | Project check commands and workflow configuration. |
+| `.keelson/changes/`, `.keelson/specs/`, `.keelson/rules/` | Changes, behavior contracts, and project rules created as needed. |
+| Host entry points such as `AGENTS.md` | Direct the agent to Keelson. |
+
+Guidance comes from the installed package by default. Use `--vendor` when you want to commit a copy alongside your project. See [configuration](docs/configuration.md) for paths and options.
+
+## Engineering principles
+
+- **Start with the problem.** Establish outcomes, constraints, and invariants before choosing mechanisms. Additional complexity must earn its place.
+- **Load and retain what matters.** Small edits move directly; larger work adds contracts and plans. Preserve knowledge the next change will need.
+- **Build through feedback.** Use small steps, independent review, and focused checks. Record test results separately from browser observations.
+- **Ground completion in evidence.** Check records are tied to verified inputs; changed code needs fresh verification. Ending a conversation does not finish a task.
+
+Review commands in `.keelson/config.yaml` before their first execution. The agent runs and records checks with `keelson check --trust --record`; passing exit codes still need an acceptance review. See [verification and trust](docs/verification.md).
+
+## Documentation and contributing
+
+[Documentation](docs/README.md) · [CLI reference](docs/cli.md) · [Frontend design](docs/frontend.md) · [Contributing](CONTRIBUTING.md) · [Report an issue](https://github.com/Atingaii/keelson/issues) · [MIT](LICENSE)

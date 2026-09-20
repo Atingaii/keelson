@@ -1,0 +1,124 @@
+{
+  "locales": {
+    "zh": {
+      "scenes": [
+        {
+          "label": "描述目标",
+          "user": "给任务列表加一个优先级筛选：默认显示全部，也能只看高优先级。保持现有调用兼容，补齐测试并完成验证。",
+          "assistant": "我会先检查任务列表及现有测试，按 Keelson 技能的项目流程添加筛选，并验证原有调用仍然可用。"
+        },
+        {
+          "label": "明确范围",
+          "user": "",
+          "assistant": "当前只有一个 `listTasks(tasks)` 函数，没有界面层。我会增加可选参数 `{ priority: 'all' | 'high' }`：省略时保持原样返回全部任务的副本，选择 `high` 时只保留高优先级任务。测试将覆盖旧调用、筛选结果、顺序和输入不被修改。",
+          "activity": "已检查现有实现、调用方和项目约定"
+        },
+        {
+          "label": "实现与验证",
+          "user": "",
+          "assistant": "筛选已实现，6 项测试全部通过；原有单参数调用和可迭代输入也保持兼容。",
+          "activity": "代码与测试已更新 · 检查通过"
+        },
+        {
+          "label": "完成与接续",
+          "user": "",
+          "assistant": "Keelson 验证已记录并归档，未提交 Git。",
+          "result": [
+            "默认显示全部 · 可筛选高优先级",
+            "6 项测试通过 · 验收 2/2",
+            "项目知识与验证记录已保留"
+          ]
+        }
+      ],
+      "note": "会话节选"
+    },
+    "en": {
+      "scenes": [
+        {
+          "label": "Describe the task",
+          "user": "Add a priority filter to the task list: show everything by default, with an option for high-priority tasks only. Keep existing calls compatible, add tests, and verify the result.",
+          "assistant": "I'll inspect the task list and existing tests, follow the Keelson project workflow to add filtering, and verify that existing calls still work."
+        },
+        {
+          "label": "Set the scope",
+          "user": "",
+          "assistant": "The project has a listTasks(tasks) function and no UI layer. I'll add an optional { priority: 'all' | 'high' } parameter: omit it to return a copy of all tasks, or choose high to keep only high-priority tasks. Tests will cover existing calls, filtering, order, and unchanged inputs.",
+          "activity": "Reviewed the implementation, callers, and project conventions"
+        },
+        {
+          "label": "Implement and verify",
+          "user": "",
+          "assistant": "Filtering is implemented and all 6 tests pass; existing single-argument calls and iterable inputs remain compatible.",
+          "activity": "Code and tests updated · Checks passed"
+        },
+        {
+          "label": "Finish and retain context",
+          "user": "",
+          "assistant": "Keelson verification has been recorded and archived. No Git commit was made.",
+          "result": [
+            "All tasks by default · Optional high-priority filter",
+            "6 tests passed · Acceptance 2/2",
+            "Project context and verification records retained"
+          ]
+        }
+      ],
+      "note": "Translated from Chinese excerpts"
+    }
+  },
+  "provenance": {
+    "recorded_on": "2026-09-20",
+    "agent": "Codex CLI",
+    "method": "Actual codex exec --json run in an initialized, isolated example repository; selected public messages and tool results. No fabricated agent replies. Typing and waits are edited for playback.",
+    "input": "给任务列表加一个优先级筛选：默认显示全部，也能只看高优先级。保持现有调用兼容，补齐测试并完成验证。",
+    "raw_session_sha256": "06074c5458472af21792ccc49438f64ad0ff7bef0d634b7ca778de9036577005",
+    "exit_code": 0,
+    "selected_events": [
+      {
+        "id": "item_0",
+        "type": "agent_message",
+        "text": "我会先检查任务列表及现有测试，按 Keelson 技能的项目流程添加筛选，并验证原有调用仍然可用。"
+      },
+      {
+        "id": "item_10",
+        "type": "agent_message",
+        "text": "当前只有一个 `listTasks(tasks)` 函数，没有界面层。我会增加可选参数 `{ priority: 'all' | 'high' }`：省略时保持原样返回全部任务的副本，选择 `high` 时只保留高优先级任务。测试将覆盖旧调用、筛选结果、顺序和输入不被修改。"
+      },
+      {
+        "id": "item_20",
+        "type": "agent_message",
+        "text": "筛选已实现，6 项测试全部通过；原有单参数调用和可迭代输入也保持兼容。我正在核对最终差异、记录验证证据并收尾归档。"
+      },
+      {
+        "id": "item_24",
+        "type": "agent_message",
+        "text": "已完成，原有调用保持兼容：\n\n```js\nlistTasks(tasks);                       // 默认全部\nlistTasks(tasks, { priority: 'all' });   // 全部\nlistTasks(tasks, { priority: 'high' });  // 仅高优先级\n```\n\n6 项测试全部通过，覆盖兼容性、筛选、顺序、输入不变及边界情况；`git diff --check` 通过。Keelson 验证已记录并归档，未提交 Git。无临时产物需要清理。\n\n> **Recap**\n>\n> 优先级筛选及测试已完成，验证通过。\n>\n> 本轮已应用：开发工作原则（vibe-coding.md）。"
+      },
+      {
+        "id": "item_22",
+        "type": "command_execution",
+        "command": "/bin/bash -lc \"git diff --check && git diff --stat && keelson check --trust --record '6 项测试通过：默认全部、high 筛选、原调用兼容、顺序与输入不变、空输入和 iterable'\"",
+        "aggregated_output": "\n> test\n> node --test tests/*.test.mjs\n\nTAP version 13\n# Subtest: lists tasks without mutating the input\nok 1 - lists tasks without mutating the input\n  ---\n  duration_ms: 2.028351\n  ...\n# Subtest: defaults to all tasks for omitted or empty options and explicit all\nok 2 - defaults to all tasks for omitted or empty options and explicit all\n  ---\n  duration_ms: 0.243434\n  ...\n# Subtest: filters high priority tasks in input order without mutating tasks or options\nok 3 - filters high priority tasks in input order without mutating tasks or options\n  ---\n  duration_ms: 0.292157\n  ...\n# Subtest: returns an empty list when there are no high priority tasks\nok 4 - returns an empty list when there are no high priority tasks\n  ---\n  duration_ms: 0.179345\n  ...\n# Subtest: handles empty input for both filters\nok 5 - handles empty input for both filters\n  ---\n  duration_ms: 0.207233\n  ...\n# Subtest: preserves iterable input compatibility\nok 6 - preserves iterable input compatibility\n  ---\n  duration_ms: 1.57479\n  ...\n1..6\n# tests 6\n# suites 0\n# pass 6\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 97.27882\n✓ npm run test: exit 0\nall checks passed\nrecorded in .keelson/changes/priority-filter/ledger.jsonl\npriority-filter: ready → run `keelson land priority-filter`\n",
+        "exit_code": 0
+      },
+      {
+        "id": "item_23",
+        "type": "command_execution",
+        "command": "/bin/bash -lc 'keelson status && keelson land priority-filter'",
+        "aggregated_output": "Keelson — taskboard-recorded\n0 capabilities in .keelson/specs · 1 active change · focus priority-filter · HEAD c0593dfb44 · 4 uncommitted\n\npriority-filter  [quick]  work: ready  verify: ✓ passed  release: unreleased  (Keelson Demo)\n   acceptance 2/2\n\nNOW.md\n# Now\n\n任务列表支持可选参数 `{ priority: 'all' | 'high' }`，默认返回全部任务，high 仅返回高优先级。\n保留单参数调用、可迭代输入、顺序和浅拷贝语义；6 项回归测试覆盖默认、筛选和边界行为。\nLanding priority-filter (quick)\n✓ .keelson/specs/tasks: +1 added, ~0 modified, -0 removed\n✓ archived → .keelson/changes/archive/2026-09-20-priority-filter\n· session focus was cleared for the landed change; NOW.md is optional project-level context, not the source of work lifecycle state\n· commit the landing together with the last code change; release status is derived from git tags\n",
+        "exit_code": 0
+      }
+    ],
+    "fixture_before": {
+      "package.json": "{\n  \"name\": \"taskboard-example\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"scripts\": {\n    \"test\": \"node --test tests/*.test.mjs\"\n  }\n}\n",
+      "src/tasks.mjs": "export function listTasks(tasks) {\n  return [...tasks];\n}\n",
+      "tests/tasks.test.mjs": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { listTasks } from '../src/tasks.mjs';\ntest('lists tasks without mutating the input', () => {\n  const tasks = [{ id: 1, title: 'Ship the settings page', priority: 'high' }, { id: 2, title: 'Update the guide', priority: 'normal' }];\n  assert.deepEqual(listTasks(tasks), tasks);\n  assert.notEqual(listTasks(tasks), tasks);\n});\n"
+    },
+    "fixture_after": {
+      "package.json": "{\n  \"name\": \"taskboard-example\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"scripts\": {\n    \"test\": \"node --test tests/*.test.mjs\"\n  }\n}\n",
+      "src/tasks.mjs": "/** List all tasks by default, or only tasks with high priority. */\nexport function listTasks(tasks, { priority = 'all' } = {}) {\n  const result = [...tasks];\n  return priority === 'high'\n    ? result.filter(task => task.priority === 'high')\n    : result;\n}\n",
+      "tests/tasks.test.mjs": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { listTasks } from '../src/tasks.mjs';\ntest('lists tasks without mutating the input', () => {\n  const tasks = [{ id: 1, title: 'Ship the settings page', priority: 'high' }, { id: 2, title: 'Update the guide', priority: 'normal' }];\n  assert.deepEqual(listTasks(tasks), tasks);\n  assert.notEqual(listTasks(tasks), tasks);\n});\n\ntest('defaults to all tasks for omitted or empty options and explicit all', () => {\n  const tasks = [{ id: 1, priority: 'normal' }, { id: 2, priority: 'high' }, { id: 3 }];\n  for (const options of [undefined, {}, { priority: undefined }, { priority: 'all' }]) {\n    const result = listTasks(tasks, options);\n    assert.deepEqual(result, tasks);\n    assert.notEqual(result, tasks);\n  }\n});\n\ntest('filters high priority tasks in input order without mutating tasks or options', () => {\n  const tasks = Object.freeze([\n    Object.freeze({ id: 1, priority: 'high' }),\n    Object.freeze({ id: 2, priority: 'normal' }),\n    Object.freeze({ id: 3 }),\n    Object.freeze({ id: 4, priority: 'high' }),\n  ]);\n  const options = Object.freeze({ priority: 'high' });\n  const result = listTasks(tasks, options);\n  assert.deepEqual(result, [tasks[0], tasks[3]]);\n  assert.notEqual(result, tasks);\n  result.pop();\n  assert.equal(tasks.length, 4);\n  assert.deepEqual(listTasks(tasks), tasks);\n});\n\ntest('returns an empty list when there are no high priority tasks', () => {\n  assert.deepEqual(listTasks([{ id: 1, priority: 'normal' }, { id: 2 }], { priority: 'high' }), []);\n});\n\ntest('handles empty input for both filters', () => {\n  const tasks = [];\n  for (const priority of ['all', 'high']) {\n    const result = listTasks(tasks, { priority });\n    assert.deepEqual(result, []);\n    assert.notEqual(result, tasks);\n  }\n});\n\ntest('preserves iterable input compatibility', () => {\n  const high = { id: 1, priority: 'high' };\n  const normal = { id: 2, priority: 'normal' };\n  const tasks = new Set([high, normal]);\n  assert.deepEqual(listTasks(tasks), [high, normal]);\n  assert.deepEqual(listTasks(tasks, { priority: 'high' }), [high]);\n});\n"
+    },
+    "reproduce_animation": "python3 scripts/render-demo.py --source docs/assets/demo-session.json",
+    "limits": "A task-list module demonstration, not a browser UI. The English replay translates the Chinese session. This does not claim live validation of other agent hosts."
+  }
+}

@@ -1,312 +1,282 @@
 #!/usr/bin/env python3
-"""Capture the current CLI in an isolated fixture and render both README GIFs.
+"""Render a recorded agent conversation; never execute an agent or demo project.
 
-Run from any directory: python3 scripts/render-demo.py
-Requires Node, Git, Python 3 and Pillow (development tooling only).
-Ubuntu fonts: fonts-dejavu-core and fonts-wqy-zenhei at the paths below.
-No network, installed keelson executable, HOME override, or CLI mocks are used.
-Timing is edited; terminal text comes from captured subprocess output.
-The explicit fixture editor is not a Keelson implementation capability.
+Usage: python3 scripts/render-demo.py --source docs/assets/demo-session.json
+Development dependencies: Python 3, Pillow; Ubuntu fonts-dejavu-core and
+fonts-wqy-zenhei. Override font paths with KEELSON_DEMO_FONT_LATIN,
+KEELSON_DEMO_FONT_BOLD and KEELSON_DEMO_FONT_ZH when using another system.
+
+Source schema:
+  {"locales": {"zh": {"scenes": [{"label": "...", "user": "...",
+    "assistant": "...", "activity": "...", "result": "..."}], "note": "..."},
+    "en": {"scenes": [...], "note": "English translation of ..."}},
+   "provenance": {"...": "source session and evidence references"}}
+
+user/assistant are verbatim excerpts, or explicitly disclosed translations.
+An empty user/assistant string continues the existing conversation. Optional
+activity/result fields contain evidence-backed summaries (strings or lists),
+rendered distinctly from quoted messages. The order is user, assistant,
+activity, result. Excerpt selection and truthfulness belong to the source;
+the renderer neither invents nor summarizes text. It only wraps and scrolls
+complete lines. All waiting and typing durations are edited playback.
 """
 
+import argparse
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
-import re
-import shutil
-import subprocess
-import tempfile
-import textwrap
 import uuid
 
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
-CLI = ROOT / "bin/keelson.js"
-ASSETS = ROOT / "docs/assets"
-WIDTH, HEIGHT = 1160, 740
-FONT_MONO = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
-FONT_TEXT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-FONT_ZH = "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"
-CHANGE = "fix-empty-title"
-ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+WIDTH, HEIGHT = 1160, 800
+LEFT, TEXT_WIDTH = 66, 1026
+BODY_TOP, LINE_HEIGHT, VISIBLE_ROWS = 165, 41, 13
+COLORS = {
+    'paper': '#f6f1e8', 'ink': '#172b40', 'copper': '#ad7149',
+    'terminal': '#112235', 'rule': '#34465a', 'muted': '#a3b1c0',
+    'user': '#f0c2a0', 'assistant': '#f2eee8', 'activity': '#acbdcb',
+    'result': '#bbd8c4', 'footer': '#74706a',
+}
+FONT_LATIN = os.environ.get('KEELSON_DEMO_FONT_LATIN', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf')
+FONT_BOLD = os.environ.get('KEELSON_DEMO_FONT_BOLD', '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf')
+FONT_ZH = os.environ.get('KEELSON_DEMO_FONT_ZH', '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc')
+
+
+def load_source(path):
+    source = json.loads(path.read_text(encoding='utf-8'))
+    if not isinstance(source.get('provenance'), dict) or not source['provenance']:
+        raise ValueError('Source must include nonempty provenance; this renderer does not create a session.')
+    locales = source.get('locales', {})
+    if set(locales) != {'en', 'zh'}:
+        raise ValueError('Source must contain both locales.en and locales.zh.')
+    for lang, locale in locales.items():
+        scenes = locale.get('scenes')
+        if not isinstance(scenes, list) or not scenes:
+            raise ValueError(f'{lang}: provide at least one scene.')
+        if not isinstance(locale.get('note', ''), str):
+            raise ValueError(f'{lang}.note must be a string.')
+        for index, scene in enumerate(scenes):
+            for key in ('label', 'user', 'assistant'):
+                if not isinstance(scene.get(key), str):
+                    raise ValueError(f'{lang}.scenes[{index}].{key} must be a string (empty is allowed for continuation).')
+            for key in ('activity', 'result'):
+                value = scene.get(key, '')
+                if not isinstance(value, str) and not (isinstance(value, list) and all(isinstance(v, str) for v in value)):
+                    raise ValueError(f'{lang}.scenes[{index}].{key} must be a string or a list of strings.')
+            if not any(scene.get(key) for key in ('user', 'assistant', 'activity', 'result')):
+                raise ValueError(f'{lang}.scenes[{index}] has no content.')
+    return source
+
+
+def fonts_for(lang):
+    family = FONT_ZH if lang == 'zh' else FONT_LATIN
+    return {
+        'body': ImageFont.truetype(family, 30),
+        'small': ImageFont.truetype(family, 23),
+        'label': ImageFont.truetype(family, 19),
+        'footer': ImageFont.truetype(family, 15),
+        'brand': ImageFont.truetype(FONT_BOLD, 31),
+    }
+
+
+def wrap(text, font, width):
+    """Preserve explicit line breaks and all non-whitespace characters."""
+    rows = []
+    for paragraph in text.split('\n'):
+        if not paragraph:
+            rows.append('')
+            continue
+        remaining = paragraph
+        while font.getlength(remaining) > width:
+            low, high = 1, len(remaining)
+            while low < high:
+                middle = (low + high + 1) // 2
+                if font.getlength(remaining[:middle]) <= width:
+                    low = middle
+                else:
+                    high = middle - 1
+            cut = low
+            space = remaining.rfind(' ', 0, cut + 1)
+            if space > cut // 2:
+                cut = space
+            if cut < 1 or font.getlength(remaining[:cut]) > width:
+                raise ValueError('A glyph is wider than the text area.')
+            rows.append(remaining[:cut])
+            remaining = remaining[cut:].lstrip(' ')
+        rows.append(remaining)
+    return rows
+
+
+def rows_for(blocks, fonts, lang):
+    rows = []
+    for kind, text in blocks:
+        if rows:
+            rows.append(('', 'gap', 0))
+        if kind == 'assistant':
+            rows.append(('Agent', 'label', 0))
+        elif kind == 'activity':
+            rows.append(('工作记录（摘要）' if lang == 'zh' else 'Activity summary', 'label', 0))
+        elif kind == 'result':
+            rows.append(('结果（摘要）' if lang == 'zh' else 'Result summary', 'label', 0))
+        font = fonts['small'] if kind in ('activity', 'result') else fonts['body']
+        indent = 35 if kind == 'user' else 0
+        for index, row in enumerate(wrap(text, font, TEXT_WIDTH - indent)):
+            rows.append((('> ' if index == 0 else '  ') + row if kind == 'user' else row, kind, 0))
+    return rows
+
+
+def events_for(locale, lang):
+    """Progressively append messages to one continuous conversation."""
+    events, completed = [], []
+    for scene_index, scene in enumerate(locale['scenes']):
+        for kind in ('user', 'assistant', 'activity', 'result'):
+            value = scene.get(kind, '')
+            text = '\n'.join(value) if isinstance(value, list) else value
+            if not text:
+                continue
+            # Around 100 text updates per language: natural progression without
+            # thousands of nearly identical GIF frames or single-letter flicker.
+            chunk = 7 if lang == 'zh' else 14
+            if kind in ('activity', 'result'):
+                chunk *= 2
+            for end in range(chunk, len(text), chunk):
+                events.append({'scene': scene_index, 'blocks': completed + [(kind, text[:end])],
+                               'weight': 1.0, 'typing': kind in ('user', 'assistant')})
+            completed = completed + [(kind, text)]
+            hold = {'user': 14, 'assistant': 23, 'activity': 12, 'result': 26}[kind]
+            events.append({'scene': scene_index, 'blocks': completed.copy(), 'weight': hold, 'typing': False})
+    events[-1]['weight'] += 24
+    return events
+
+
+def duration_list(events, seconds):
+    ticks = round(seconds * 100)
+    total = sum(event['weight'] for event in events)
+    durations = [max(5, round(ticks * event['weight'] / total)) for event in events]
+    difference = ticks - sum(durations)
+    longest = max(range(len(events)), key=lambda i: durations[i])
+    durations[longest] += difference
+    if durations[longest] < 5:
+        raise ValueError('Too much text for this duration; use shorter faithful excerpts or a longer duration.')
+    return [value * 10 for value in durations]
+
+
+def draw_frame(locale, lang, event, fonts):
+    canvas = Image.new('RGB', (WIDTH, HEIGHT), COLORS['paper'])
+    draw = ImageDraw.Draw(canvas)
+    draw.rounded_rectangle((34, 26, 44, 59), radius=4, fill=COLORS['copper'])
+    draw.text((58, 23), 'keelson', font=fonts['brand'], fill=COLORS['ink'])
+    tagline = '在仓库里，对话就能开始。' if lang == 'zh' else 'Start with a conversation in your repo.'
+    draw.text((WIDTH - 35 - fonts['label'].getlength(tagline), 36), tagline,
+              font=fonts['label'], fill=COLORS['footer'])
+    draw.rounded_rectangle((32, 90, 1128, 725), radius=18, fill=COLORS['terminal'])
+    for x in (58, 76, 94):
+        draw.ellipse((x, 113, x + 7, 120), fill='#728398')
+    panel_label = '当前仓库' if lang == 'zh' else 'workspace'
+    draw.text((121, 104), panel_label, font=fonts['label'], fill=COLORS['muted'])
+    label = locale['scenes'][event['scene']]['label']
+    if fonts['label'].getlength(label) > 650:
+        raise ValueError(f'Scene label is too wide: {label}')
+    draw.text((1092 - fonts['label'].getlength(label), 104), label,
+              font=fonts['label'], fill=COLORS['user'])
+    draw.line((56, 143, 1104, 143), fill=COLORS['rule'], width=1)
+    rows = rows_for(event['blocks'], fonts, lang)
+    start = max(0, len(rows) - VISIBLE_ROWS)
+    # Scroll only by complete rows. No raster clipping or cut-off glyphs.
+    visible = rows[start:]
+    if start:
+        draw.text((1076, 141), '↑', font=fonts['label'], fill=COLORS['muted'])
+    for index, (line, kind, _) in enumerate(visible):
+        if kind == 'gap':
+            continue
+        font = fonts['label'] if kind == 'label' else fonts['small'] if kind in ('activity', 'result') else fonts['body']
+        color = COLORS['muted'] if kind == 'label' else COLORS[kind]
+        x, y = LEFT, BODY_TOP + index * LINE_HEIGHT
+        bbox = draw.textbbox((x, y), line, font=font)
+        if bbox[2] > 1102 or bbox[3] > 711:
+            raise ValueError(f'Text would exceed the conversation viewport: {line!r}, bbox={bbox}')
+        draw.text((x, y), line, font=font, fill=color)
+        if event['typing'] and index == len(visible) - 1 and font.getlength(line) < TEXT_WIDTH - 22:
+            caret_x = x + font.getlength(line) + 5
+            draw.rectangle((caret_x, y + 10, caret_x + 2, y + 33), fill=COLORS['user'])
+    footer = ('真实 Agent 会话回放 · 等待已压缩' if lang == 'zh'
+              else 'Real agent session replay · waits shortened')
+    if locale.get('note'):
+        footer += ' · ' + locale['note']
+    footer_rows = wrap(footer, fonts['footer'], 1092)
+    if len(footer_rows) > 2:
+        raise ValueError(f'{lang}: source note is too long for the footer.')
+    for index, row in enumerate(footer_rows):
+        draw.text((34, 750 + index * 21), row, font=fonts['footer'], fill=COLORS['footer'])
+    return canvas
+
+
+def render(locale, lang, destination, evidence, seconds):
+    fonts = fonts_for(lang)
+    events = events_for(locale, lang)
+    durations = duration_list(events, seconds)
+    frames = [draw_frame(locale, lang, event, fonts) for event in events]
+    palette_sheet = Image.new('RGB', (580 * 4, 400 * 4))
+    for index in range(16):
+        frame_index = round(index * (len(frames) - 1) / 15)
+        palette_sheet.paste(frames[frame_index].resize((580, 400)), ((index % 4) * 580, (index // 4) * 400))
+    palette = palette_sheet.quantize(colors=128, method=0)
+    indexed = [frame.quantize(palette=palette, dither=0) for frame in frames]
+    indexed[0].save(destination, save_all=True, append_images=indexed[1:], duration=durations,
+                    optimize=True, loop=0, disposal=1)
+    with Image.open(destination) as gif:
+        actual_duration = 0
+        sample_indices = {round(i * (gif.n_frames - 1) / 5) for i in range(6)}
+        for index in range(gif.n_frames):
+            gif.seek(index)
+            actual_duration += gif.info['duration']
+            if index in sample_indices:
+                gif.convert('RGB').save(evidence / f'decoded-{lang}-{index:03d}.png')
+        return {'path': str(destination), 'width': gif.width, 'height': gif.height,
+                'frames': gif.n_frames, 'duration_seconds': actual_duration / 1000,
+                'bytes': destination.stat().st_size,
+                'sha256': hashlib.sha256(destination.read_bytes()).hexdigest()}
 
 
 def main():
-    git_dir = subprocess.check_output(
-        ["git", "rev-parse", "--absolute-git-dir"], cwd=ROOT, text=True
-    ).strip()
-    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:6]
-    evidence = Path(git_dir) / "keelson-task-evidence/readme-demo" / run_id
-    evidence.mkdir(parents=True)
-    ASSETS.mkdir(parents=True, exist_ok=True)
-    records = []
-    scenes = []
-    env = os.environ.copy()
-    env.update({"NO_COLOR": "1", "FORCE_COLOR": "0", "CI": "1"})
-    for key in ("CODEX_THREAD_ID", "KEELSON_SESSION_ID", "PI_SESSION_ID", "CLAUDE_SESSION_ID"):
-        env.pop(key, None)
-    temp = Path(tempfile.mkdtemp(prefix="keelson-gif-capture-"))
-    project = temp / "title-example"
-    project.mkdir()
-    (evidence / "temporary-directory.txt").write_text(str(temp) + "\n")
-
-    def run(argv, expected=0, display=None):
-        result = subprocess.run(argv, cwd=project, env=env, text=True,
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        output = ANSI.sub("", result.stdout).rstrip()
-        record = {"argv": [str(x) for x in argv], "display": display or " ".join(argv),
-                  "exit_code": result.returncode, "stdout_stderr": output}
-        records.append(record)
-        save_records()
-        if result.returncode != expected:
-            raise RuntimeError(f"Unexpected exit {result.returncode}: {record['display']}\n{output}")
-        return record
-
-    def save_records():
-        (evidence / "transcript.json").write_text(json.dumps(records, ensure_ascii=False, indent=2) + "\n")
-        (evidence / "transcript.txt").write_text("\n\n".join(
-            f"$ {r['display']}\n{r['stdout_stderr']}\n[exit {r['exit_code']}]" for r in records) + "\n")
-
-    def keelson(args, expected=0):
-        return run(["node", str(CLI), *args], expected, "keelson " + " ".join(args))
-
-    try:
-        run(["git", "init", "-q", "-b", "main"])
-        run(["git", "config", "user.name", "Demo"])
-        (project / ".keelson").mkdir()
-        (project / ".keelson/config.yaml").write_text(
-            'version: 4\nlang: en\ncheck:\n  - name: title-regression\n    command: node test.mjs\n')
-        (project / ".keelson/INTENT.md").write_text("# Title example\nBlank titles need a stable fallback.\n")
-        (project / ".keelson/NOW.md").write_text("# Now\nFix empty title handling.\n")
-        (project / "title.mjs").write_text(
-            "export function titleSlug(title) {\n  return title.trim().toLowerCase().replace(/\\s+/g, '-');\n}\n")
-        (project / "test.mjs").write_text(textwrap.dedent('''\
-            import assert from 'node:assert/strict';
-            import { titleSlug } from './title.mjs';
-            const cases = [['normal title', 'Hello Team', 'hello-team'], ['blank title', '   ', 'untitled']];
-            let passed = 0;
-            for (const [name, input, expected] of cases) {
-              const actual = titleSlug(input);
-              try {
-                assert.equal(actual, expected);
-                console.log(`PASS ${name}`);
-                passed++;
-              } catch (error) {
-                if (error.code !== 'ERR_ASSERTION') throw error;
-                console.log(`FAIL ${name}`);
-                console.log(`  expected: ${JSON.stringify(expected)}`);
-                console.log(`  received: ${JSON.stringify(actual)}`);
-              }
-            }
-            console.log(`${passed}/${cases.length} assertions passed.`);
-            process.exitCode = passed === cases.length ? 0 : 1;
-            '''))
-        (project / "describe-change.py").write_text(textwrap.dedent(f'''\
-            from pathlib import Path
-            p = Path('.keelson/changes/{CHANGE}/change.md')
-            header = p.read_text().split('---', 2)[1]
-            p.write_text('---' + header + '---\\n\\n# Fix empty title\\n\\n## Why\\nBlank input currently produces an empty slug.\\n\\n## What\\n- Add an untitled fallback.\\n\\n## Acceptance\\n- [ ] Blank title becomes untitled; normal titles still work. — check: `node test.mjs`\\n')
-            print('Acceptance saved in change.md:')
-            print('  [ ] Blank title becomes untitled; normal titles still work.')
-            '''))
-        (project / "apply-fix.py").write_text(textwrap.dedent('''\
-            from pathlib import Path
-            import difflib
-            p = Path('title.mjs')
-            before = p.read_text()
-            after = before.replace("replace(/\\\\s+/g, '-');", "replace(/\\\\s+/g, '-') || 'untitled';")
-            assert before != after, 'Expected the original bug'
-            p.write_text(after)
-            print('Explicit code edit by the fixture helper:')
-            print(''.join(difflib.unified_diff(before.splitlines(True), after.splitlines(True), fromfile='title.mjs (before)', tofile='title.mjs (after)')), end='')
-            '''))
-        (project / "accept-fix.py").write_text(textwrap.dedent(f'''\
-            from pathlib import Path
-            import subprocess
-            subprocess.run(['node', 'test.mjs'], check=True)
-            p = Path('.keelson/changes/{CHANGE}/change.md')
-            p.write_text(p.read_text().replace('- [ ] Blank title', '- [x] Blank title'))
-            print('Acceptance checked after the assertions passed.')
-            '''))
-        # Preserve exact source bytes as text; Node also discovers tests in .git.
-        fixture = evidence / "fixture-inputs"
-        fixture.mkdir()
-        for name in ("title.mjs", "test.mjs", "describe-change.py", "apply-fix.py", "accept-fix.py"):
-            shutil.copy2(project / name, fixture / (name + ".txt"))
-        shutil.copy2(project / ".keelson/config.yaml", fixture / "config.yaml")
-
-        created = keelson(["new", CHANGE, "--tier", "quick"])
-        described = run(["python3", "describe-change.py"])
-        scenes.append([created, described])
-        failed = keelson(["check", "--trust", "--record"], 1)
-        assert 'FAIL blank title' in failed['stdout_stderr']
-        scenes.append([failed])
-        blocked = keelson(["land", CHANGE], 1)
-        assert 'cannot land' in blocked['stdout_stderr'] and 'verification failed' in blocked['stdout_stderr']
-        scenes.append([blocked])
-        edited = run(["python3", "apply-fix.py"])
-        scenes.append([edited])
-        run(["python3", "accept-fix.py"])
-        passed = keelson(["check", "--record"])
-        assert 'ready' in passed['stdout_stderr'] and 'all checks passed' in passed['stdout_stderr']
-        scenes.append([passed])
-        status = keelson(["status", "--json"])
-        status_data = json.loads(status['stdout_stderr'])
-        (evidence / "status-ready.json").write_text(json.dumps(status_data, indent=2) + "\n")
-        landed = keelson(["land", CHANGE, "--now", "No change in flight."])
-        assert 'archived' in landed['stdout_stderr']
-        scenes.append([landed])
-        archive = list((project / ".keelson/changes/archive").glob("*-" + CHANGE))
-        assert len(archive) == 1 and not (project / ".keelson/changes" / CHANGE).exists()
-        shutil.copytree(archive[0], evidence / "archived-change")
-        keelson(["status", "--json"])
-        outputs = render(scenes, evidence)
-        summary = {
-            "source": "Current repository CLI; all terminal text is captured output, not fabricated.",
-            "scope": "Preconfigured, isolated title example; explicit fixture helper edits code. Not an AI session recording.",
-            "playback": "Edited timing; selected commands shown with complete output. Setup, status queries and the acceptance helper are retained in the transcript.",
-            "cli_command_display": "keelson is displayed for node <repository>/bin/keelson.js; argv is retained in transcript.json.",
-            "offscreen_action": "accept-fix.py reruns the real assertions and checks acceptance before the final recorded check; fully logged.",
-            "results": {"failed_check_exit": failed['exit_code'], "blocked_land_exit": blocked['exit_code'],
-                        "passed_check_exit": passed['exit_code'], "land_exit": landed['exit_code'],
-                        "archive_created": True, "active_change_removed": True},
-            "assets": outputs, "temporary_directory": str(temp), "temporary_directory_removed": False,
-        }
-        (evidence / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
-    finally:
-        shutil.rmtree(temp)
-        summary_path = evidence / "summary.json"
-        if summary_path.exists():
-            summary = json.loads(summary_path.read_text())
-            summary['temporary_directory_removed'] = not temp.exists()
-            summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
-        (evidence / "cleanup.txt").write_text(f"Removed only this run's temporary directory: {temp}\nExists after cleanup: {temp.exists()}\n")
-    print(json.dumps({"evidence": str(evidence), "assets": outputs}, ensure_ascii=False, indent=2))
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--source', required=True, type=Path, help='Committed JSON containing actual message excerpts and provenance.')
+    parser.add_argument('--output-dir', type=Path, default=ROOT / 'docs/assets')
+    parser.add_argument('--evidence-dir', type=Path, help='Preserve decoded samples and the render summary here.')
+    parser.add_argument('--duration', type=float, default=40, help='Edited playback duration per language, 30–45 seconds.')
+    parser.add_argument('--validate-only', action='store_true', help='Check every frame layout without writing GIFs.')
+    args = parser.parse_args()
+    if not 30 <= args.duration <= 45:
+        parser.error('--duration must be between 30 and 45 seconds.')
+    source = load_source(args.source)
+    if args.validate_only:
+        for lang, locale in source['locales'].items():
+            fonts = fonts_for(lang)
+            events = events_for(locale, lang)
+            duration_list(events, args.duration)
+            for event in events:
+                draw_frame(locale, lang, event, fonts)
+            print(f'{lang}: {len(events)} frames validated; all rows fit; no files written.')
+        return
+    run_id = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid.uuid4().hex[:6]
+    # No git or AI subprocess is needed; external users may choose another path.
+    evidence = args.evidence_dir or ROOT / '.git/keelson-task-evidence/readme-demo' / ('conversation-' + run_id)
+    evidence.mkdir(parents=True, exist_ok=True)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    results = []
+    for lang in ('en', 'zh'):
+        filename = 'keelson-demo-zh.gif' if lang == 'zh' else 'keelson-demo.gif'
+        results.append(render(source['locales'][lang], lang, args.output_dir / filename, evidence, args.duration))
+    summary = {'source': str(args.source.resolve()), 'source_sha256': hashlib.sha256(args.source.read_bytes()).hexdigest(),
+               'provenance': source['provenance'], 'mode': 'Offline replay of selected real message excerpts; edited waiting and typing durations.',
+               'artifacts': results, 'visual_review': 'Decoded samples provided; human review must be performed separately.'}
+    (evidence / 'render-summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    print(json.dumps({'evidence': str(evidence), 'artifacts': results}, ensure_ascii=False, indent=2))
 
 
-def render(scenes, evidence):
-    captions = {
-        "en": [
-            ("Make the finish line explicit.", "One small fix. One written acceptance criterion."),
-            ("A failed check stays visible.", "The real regression fails, and its result is recorded."),
-            ("Unfinished work cannot quietly land.", "Keelson refuses to archive this failing change."),
-            ("Apply the actual code fix.", "An explicit editor adds the fallback. Keelson does not write it."),
-            ("Fresh evidence makes it ready.", "After confirming acceptance, rerun and record the checks."),
-            ("Close the change with its evidence.", "The verified change is archived, ready for the final commit."),
-        ],
-        "zh": [
-            ("先把“怎样算完成”写清楚。", "一个小修复，一条明确的验收条件。"),
-            ("测试失败，留下真实记录。", "回归用例发现问题，失败结果写入变更证据。"),
-            ("未完成的变更，会被拦下来。", "检查失败时，Keelson 拒绝归档。"),
-            ("实际修改代码，再往下走。", "独立编辑脚本补上默认值，代码并非由 CLI 自动修复。"),
-            ("新验证通过，才进入 ready。", "确认验收项后，重新执行并记录检查。"),
-            ("带着验证证据，完成归档。", "已验证的变更和记录一起归档，接下来可提交代码。"),
-        ],
-    }
-    outputs = []
-    mono = ImageFont.truetype(FONT_MONO, 22)
-    mono_small = ImageFont.truetype(FONT_MONO, 17)
-    text_font = ImageFont.truetype(FONT_TEXT, 20)
-    bold = ImageFont.truetype(FONT_BOLD, 29)
-    for lang in ("en", "zh"):
-        title_font = ImageFont.truetype(FONT_ZH, 33) if lang == "zh" else bold
-        caption_font = ImageFont.truetype(FONT_ZH, 23) if lang == "zh" else text_font
-        footer_font = ImageFont.truetype(FONT_ZH, 18) if lang == "zh" else ImageFont.truetype(FONT_TEXT, 16)
-        frames, durations = [], []
-        for step, records in enumerate(scenes):
-            terminal = []
-            for record in records:
-                if terminal:
-                    terminal.append(("", "output"))
-                command = record['display']
-                # Quote the multiword --now value as a real shell command.
-                if "--now No change in flight." in command:
-                    command = command.replace("--now No change in flight.", '--now "No change in flight."')
-                terminal.extend(wrap_line("$ " + command, mono, 1020, "command"))
-                for line in record['stdout_stderr'].splitlines():
-                    terminal.extend(wrap_line(line, mono, 1020, "output"))
-            if len(terminal) > 13:
-                raise RuntimeError(f"Scene {step + 1}: {len(terminal)} lines exceed terminal capacity")
-            command_lines = 1
-            while command_lines < len(terminal) and terminal[command_lines][1] == 'command':
-                command_lines += 1
-            for reveal, duration in ((command_lines, 650), (max(command_lines, len(terminal) // 2), 750), (len(terminal), 4100)):
-                canvas = Image.new("RGB", (WIDTH, HEIGHT), "#f6f1e8")
-                draw = ImageDraw.Draw(canvas)
-                draw.rounded_rectangle((36, 27, 47, 56), radius=5, fill="#ad7149")
-                draw.text((59, 24), "keelson", font=bold, fill="#182c40")
-                top = "ONE FIX, FROM CHECK TO CLOSE" if lang == "en" else "一个修复，从检查到归档"
-                top_font = ImageFont.truetype(FONT_ZH, 19) if lang == "zh" else ImageFont.truetype(FONT_TEXT, 15)
-                draw.text((WIDTH - 38 - draw.textlength(top, font=top_font), 34), top, font=top_font, fill="#686b70")
-                draw.rounded_rectangle((36, 86, 1124, 533), radius=17, fill="#112235")
-                for x, color in ((62, "#788697"), (80, "#788697"), (98, "#788697")):
-                    draw.ellipse((x, 106, x + 8, 114), fill=color)
-                draw.text((125, 98), "title-example  /  recorded terminal output", font=mono_small, fill="#a8b4c2")
-                label = f"{step + 1:02d} / 06"
-                draw.text((1010, 98), label, font=mono_small, fill="#a8b4c2")
-                draw.line((58, 132, 1102, 132), fill="#34465a", width=1)
-                for index, (line, kind) in enumerate(terminal[:reveal]):
-                    color = "#efc7a7" if kind == "command" else "#e6ece6"
-                    if kind == "output" and ("FAIL" in line or "✗" in line or "cannot land" in line or "verification failed" in line):
-                        color = "#f6b998"
-                    if kind == "output" and ("PASS" in line or "✓" in line or "ready →" in line):
-                        color = "#b5e8c6"
-                    draw.text((59, 149 + index * 28), line, font=mono, fill=color)
-                for i in range(6):
-                    x = 37 + i * 183
-                    draw.rounded_rectangle((x, 551, x + 169, 556), radius=2, fill="#ad7149" if i <= step else "#dbd3c7")
-                title, subtitle = captions[lang][step]
-                if draw.textlength(title, font=title_font) > 1088 or draw.textlength(subtitle, font=caption_font) > 1088:
-                    raise RuntimeError("Caption exceeds canvas")
-                draw.text((36, 577), title, font=title_font, fill="#182c40")
-                draw.text((37, 627), subtitle, font=caption_font, fill="#5d646c")
-                footer = ("Real CLI output · preconfigured example · code edited explicitly · playback timing edited"
-                          if lang == "en" else "真实 CLI 输出 · 预配置示例 · 显式编辑代码 · 已调整播放节奏")
-                draw.text((37, 693), footer, font=footer_font, fill="#73706b")
-                frames.append(canvas)
-                durations.append(duration)
-            if step in (0, 2, 3, 4, 5):
-                frames[-1].save(evidence / f"frame-{lang}-{step + 1}.png")
-        filename = "keelson-demo.gif" if lang == "en" else "keelson-demo-zh.gif"
-        destination = ASSETS / filename
-        palette_source = Image.new("RGB", (290 * 6, 185 * 3))
-        for index, frame in enumerate(frames):
-            palette_source.paste(frame.resize((290, 185)), ((index % 6) * 290, (index // 6) * 185))
-        palette = palette_source.quantize(colors=128, method=0)
-        indexed = [frame.quantize(palette=palette, dither=0) for frame in frames]
-        indexed[0].save(destination, save_all=True, append_images=indexed[1:], duration=durations,
-                        loop=0, optimize=True, disposal=1)
-        with Image.open(destination) as gif:
-            actual_duration = 0
-            for i in range(gif.n_frames):
-                gif.seek(i)
-                actual_duration += gif.info['duration']
-            # Decode the final GIF itself for visual review, not only source frames.
-            gif.seek(gif.n_frames - 1)
-            gif.convert("RGB").save(evidence / f"decoded-final-{lang}.png")
-            outputs.append({"path": str(destination.relative_to(ROOT)), "width": gif.width,
-                            "height": gif.height, "frames": gif.n_frames, "duration_seconds": actual_duration / 1000,
-                            "bytes": destination.stat().st_size})
-    return outputs
-
-
-def wrap_line(line, font, width, kind):
-    if not line:
-        return [("", kind)]
-    remaining, lines = line, []
-    while font.getlength(remaining) > width:
-        count = int(width / font.getlength("M"))
-        cut = remaining.rfind(" ", 0, count + 1)
-        if cut < max(8, count // 2):
-            cut = count
-        lines.append((remaining[:cut], kind))
-        remaining = "  " + remaining[cut:].lstrip()
-    lines.append((remaining, kind))
-    return lines
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

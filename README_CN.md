@@ -1,56 +1,104 @@
 <p align="center"><img src="docs/assets/keelson-banner.png" alt="Keelson" width="620"></p>
 
-<p align="center"><strong>让编码 Agent 记住项目，把每次修改推进到验收。</strong></p>
-<p align="center">本地 CLI + Agent Skill，将项目背景、决策和验证结果留在代码旁，让一次对话的成果成为下一次开发的起点。</p>
+<p align="center"><strong>在仓库里对话，让每次开发都有据可循、有处接续。</strong></p>
+<p align="center">为编码 Agent 提供项目记忆、工程方法和验收流程。你描述目标，Agent 推进实现，把决策与验证留在代码旁。</p>
 
 <p align="center">
 <a href="README.md">English</a> ·
-<a href="docs/zh/README.md">完整文档</a> ·
 <a href="#快速开始">快速开始</a> ·
+<a href="docs/zh/README.md">文档</a> ·
 <a href="docs/platforms.md">Agent 支持</a>
 </p>
 
 <p align="center">
 <a href="https://github.com/Atingaii/keelson/actions/workflows/ci.yml"><img src="https://github.com/Atingaii/keelson/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
-<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT 许可证"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT license"></a>
 </p>
 
-<p align="center"><img src="docs/assets/keelson-demo-zh.gif" alt="Keelson 实际 CLI 演示：检查失败、修复代码、验证通过并归档变更" width="100%"></p>
-<p align="center"><sub>来自预配置示例项目的真实 CLI 输出：修复问题，完成验证，保留结果。</sub></p>
+<p align="center"><img src="docs/assets/keelson-demo-zh.gif" alt="真实 Agent 对话回放：用户提出任务筛选需求，Agent 完成实现、验证与归档" width="100%"></p>
+<p align="center"><sub>已初始化的示例仓库 · 真实会话节选，等待已压缩 · 用户只需提出需求</sub></p>
 
-## Keelson 能做什么
+## 为什么选择 Keelson？
 
-| 能力 | 工作方式 |
+编码 Agent 能写代码，但长期开发还需要持续的上下文、明确的边界和可信的验收。
+
+| 开发中遇到的问题 | Keelson 如何处理 |
 | --- | --- |
-| **跨会话接续** | 项目背景、已有决策和未完成的工作留在仓库里。 |
-| **澄清与验收** | Agent 先读代码，明确关键决策，并在实现前写下验收标准。 |
-| **前端设计** | 22 个[设计动作](docs/zh/frontend.md)覆盖视觉、交互、适配和浏览器验证，运行 `keelson design` 即可查看。 |
-| **验证与归档** | 检查记录绑定实际代码；输入变化后，正常完成流程要求重新验证。 |
+| 换个会话，又要解释整个项目 | 将目标、决策和未完成工作保存在仓库，下次继续读取。 |
+| 需求说完就开写，结果偏离预期 | 先读现有实现，明确验收；只对影响方向的关键选择提问。 |
+| 代码写完了，却不知道是否真的完成 | 保存与当前代码对应的检查记录，区分实现、验证和完成。 |
+| 页面能用，却缺少设计与交互细节 | 提供设计指导，覆盖排版、配色、状态反馈、响应式和无障碍，并要求浏览器验收。 |
+
+Keelson 由 **Agent Skill + 本地 CLI** 组成：Skill 指导 Agent 如何工作，CLI 管理项目状态与验证记录。适用于新功能、问题修复、重构和前端体验优化。
+
+## 环境要求
+
+- **Node.js 20+**，以及 npm、Git。
+- 一个能读取项目、修改文件并执行命令的编码 Agent。
+- 一个本地项目目录；建议使用 Git 管理代码和项目知识。
+
+支持生成 Codex、Claude Code、OpenCode、Gemini CLI 等宿主的集成入口；各宿主的能力与验证范围见 [Agent 支持](docs/platforms.md)。
 
 ## 快速开始
 
-需要 **Node.js 20+** 和编码 Agent。从源码安装：
+**1. 安装 CLI**（当前从源码安装）：
 
 ```bash
 git clone https://github.com/Atingaii/keelson.git
 cd keelson
 npm ci
 npm link
+```
 
+**2. 在你的项目中初始化**，以 Codex 为例：
+
+```bash
 cd /path/to/your/project
 keelson init --codex --lang zh
 ```
 
-`npm link` 使用当前源码目录，请保留该目录。[完整安装与其他 Agent →](docs/zh/getting-started.md)
+**3. 在这个目录启动 Agent，直接提出需求。** 初始化只需一次；后续正常对话即可。
 
-## 像平常一样对话
+> 给任务列表加一个优先级筛选：默认显示全部，也能只看高优先级。保持现有调用兼容，补齐测试并完成验证。
 
-> 改善设置页，保留品牌风格。保存失败时保留输入，并检查手机端操作流程。
+`npm link` 使用当前源码目录，请保留该目录。更多设置见[上手教程](docs/zh/getting-started.md)；其他宿主见 [Agent 支持](docs/platforms.md)。
 
-1. **说清目标。** Agent 阅读项目，与你明确关键决策。
-2. **交给它推进。** Agent 实现、审阅，并对照验收标准检查结果。
-3. **留下可接续的成果。** Agent 通过 `keelson check --trust --record` 执行配置的检查，满足条件后归档变更。
+## 从一句需求到一次完成
 
-首次执行前检查配置中的命令。想看进度时运行 `keelson status`。项目说明随开发按需补齐，初始化保持精简。
+**理解目标 → 明确范围 → 实现与验证 → 归档与接续**
 
-[上手教程](docs/zh/getting-started.md) · [验证与信任](docs/zh/verification.md) · [命令参考](docs/zh/cli.md) · [贡献指南](CONTRIBUTING.md) · [MIT](LICENSE)
+Agent 按任务读取需要的指导，维护验收标准并执行项目检查；条件满足后自动收尾。遇到影响方案的选择时再与你确认，普通小修改保持轻量。
+
+你也可以这样说：
+
+- **讨论方案：**“先看看这个功能应该放在哪里，暂时不改代码。”
+- **改善界面：**“优化设置页，保留品牌风格，保存失败时不要丢输入，并检查手机端体验。”
+- **接着开发：**“继续上次的改动，先确认还剩什么。”
+
+前端任务有 22 个可组合的[设计动作](docs/zh/frontend.md)，可通过 `keelson design` 查看，包括审视、简化、打磨和适配。实际界面效果需要 Agent 使用浏览器检查。
+
+## 项目里会留下什么？
+
+初始化保留最少的项目文件，后续随实际开发补充：
+
+| 位置 | 用途 |
+| --- | --- |
+| `.keelson/INTENT.md`、`.keelson/NOW.md` | 项目目标、约束与当前进展。 |
+| `.keelson/config.yaml` | 项目检查命令和工作流配置。 |
+| `.keelson/changes/`、`.keelson/specs/`、`.keelson/rules/` | 按需建立的变更、行为契约和项目规则。 |
+| 宿主入口，如 `AGENTS.md` | 引导 Agent 加载 Keelson。 |
+
+默认从已安装的包读取指导。需要把指导副本一并提交时，才使用 `--vendor`。目录与选项详见[配置文档](docs/zh/configuration.md)。
+
+## 工程学原理
+
+- **从问题出发。** 先确认结果、约束和不变量，再选择技术方案；额外机制必须证明有用。
+- **按需加载，逐步沉淀。** 小改动直接推进，复杂任务补充契约与计划；只保留下一次开发需要的知识。
+- **用反馈推动实现。** 小步实现、独立审阅、针对性验证；测试结果与界面观察分别记录。
+- **让完成有证据。** 检查记录绑定受检输入，代码变化后需要重新验证；结束对话不等于完成任务。
+
+首次执行前应审阅 `.keelson/config.yaml` 中的检查命令。Agent 使用 `keelson check --trust --record` 运行并记录检查；退出码通过仍需对照验收标准。详见[验证与信任](docs/zh/verification.md)。
+
+## 文档与参与
+
+[完整文档](docs/zh/README.md) · [命令参考](docs/zh/cli.md) · [前端设计](docs/zh/frontend.md) · [贡献指南](CONTRIBUTING.md) · [反馈问题](https://github.com/Atingaii/keelson/issues) · [MIT](LICENSE)
