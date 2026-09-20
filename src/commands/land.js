@@ -11,6 +11,7 @@ import { specBase } from './new.js';
 import { ok, warn, info, heading } from '../lib/out.js';
 import { clearChangeBindings, readSession } from '../lib/session.js';
 import { budgetStatus } from '../lib/health.js';
+import { readCapabilitySpec, planCapabilityStorage, writeCapabilityStorage } from '../lib/specs.js';
 
 export function mergeDelta(mainText, deltaText, capability) {
   const main = mainText ? parseSpec(mainText) : { purpose: '', requirements: [], decisions: [] };
@@ -71,7 +72,7 @@ export function landingBlockers(c, fingerprint, { confirmAssumptions = false, ac
       continue;
     }
     const mainPath = path.join(p.specs, cap, 'spec.md');
-    const baseText = projected.get(cap)?.text ?? readOr(mainPath, '');
+    const baseText = projected.get(cap)?.text ?? readCapabilitySpec(p.specs, cap);
     const { text, report } = mergeDelta(baseText, read(path.join(c.dir, 'specs', df)), cap);
     projected.set(cap, { path: mainPath, text });
     deltaReports.push({ cap, report });
@@ -87,17 +88,19 @@ export function landingBlockers(c, fingerprint, { confirmAssumptions = false, ac
   }
   for (const [cap, lines] of byCap) {
     const mainPath = path.join(p.specs, cap, 'spec.md');
-    const baseText = projected.get(cap)?.text ?? readOr(mainPath, '');
+    const baseText = projected.get(cap)?.text ?? readCapabilitySpec(p.specs, cap);
     projected.set(cap, { path: mainPath, text: appendDecisions(baseText, cap, lines) });
   }
 
   for (const [cap, item] of projected) {
-    const pressure = budgetStatus(item.text, cfg.budgets?.spec);
-    if (pressure.state === 'hard' && !flags.force) {
-      throw new Error(`cannot land "${name}": projected ${p.specsRel}/${cap}/spec.md is ${pressure.lines} lines, above hard limit ${pressure.hardLimit} (budget ${pressure.budget}). Compact or split the capability first; --force is only for an explicit owner override.`);
+    const storage = planCapabilityStorage(cap, item.text, cfg.budgets?.spec);
+    item.storage = storage;
+    if (storage.hardOver.length && !flags.force) {
+      const detail = storage.hardOver.map((f) => `${f.rel} ${f.lines} lines`).join(', ');
+      throw new Error(`cannot land "${name}": auto-sharding still leaves oversized spec shard(s) in ${p.specsRel}/${cap}: ${detail} (hard limit ${storage.hardLimit}). Semantically compact that requirement first; --force is only for an explicit owner override.`);
     }
-    if (pressure.state === 'hard') warn(`${p.specsRel}/${cap}/spec.md exceeds hard knowledge limit (${pressure.lines}/${pressure.hardLimit}) but owner explicitly forced landing`);
-    else if (pressure.state === 'compact') warn(`${p.specsRel}/${cap}/spec.md will be ${pressure.lines} lines (budget ${pressure.budget}); land is allowed, but compact/split it before it reaches ${pressure.hardLimit}`);
+    if (storage.mode === 'sharded') info(`${p.specsRel}/${cap}: auto-organize → bounded index + ${storage.files.length - 1} shard(s)`);
+    if (storage.hardOver.length) warn(`${p.specsRel}/${cap}: owner forced oversized shard(s): ${storage.hardOver.map((f) => f.rel).join(', ')}`);
   }
 
   let nextNowText = null;
@@ -112,7 +115,7 @@ export function landingBlockers(c, fingerprint, { confirmAssumptions = false, ac
     else if (pressure.state === 'compact') warn(`NOW.md will be ${pressure.lines} lines (budget ${pressure.budget}); compact it to current state`);
   }
 
-  for (const item of projected.values()) if (!dry) write(item.path, item.text);
+  for (const [cap, item] of projected) if (!dry) writeCapabilityStorage(p.specs, cap, item.storage);
   for (const { cap, report } of deltaReports) {
     ok(`${p.specsRel}/${cap}: +${report.added.length} added, ~${report.modified.length} modified, -${report.removed.length} removed${report.missing.length ? ` (${report.missing.join('; ')})` : ''}`);
   }
