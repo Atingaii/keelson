@@ -22,7 +22,7 @@ Keep the audit internal except for the facts/assumptions needed in the short wri
 ## Write back your understanding
 <!-- keelson: id=shape.write-back | without: agent builds its own interpretation; mismatches surface after code exists | sunset: never -->
 
-For every non-trivial change, before creating anything, state in 3–6 lines: the outcome, the boundaries (what is explicitly out), the constraints you found, and the success check. Separate what the user said from what you assumed. For quick changes, proceed right after writing it unless `config.yaml` says `confirm.quick: wait`. For spec changes, wait.
+For every non-trivial change, before creating anything, state in 3–6 lines: the outcome, the boundaries (what is explicitly out), the constraints you found, and the success check. Separate what the user said from what you assumed. Proceed after the write-back unless the matching `confirm.quick|spec` setting is `wait` or a real owner-owned decision remains unresolved. High-risk actions still follow `INTENT.md → Authorizations`.
 
 > Understood as: add offset pagination to `/orders` (`page`, `size`, default 20) using the shared response envelope from `rules/api.md`; table gets a pager, no infinite scroll. Assumed: sort stays by `created_at desc`. Done when `npm test -- orders` passes and the pager renders.
 
