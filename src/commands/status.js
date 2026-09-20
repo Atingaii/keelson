@@ -9,6 +9,7 @@ import { worktreeFingerprint, headSha, lastTag, foldedSince, gitStatusShort, isG
 import { heading, dim, warn } from '../lib/out.js';
 import { knowledgeHealth } from '../lib/health.js';
 import { maintainRuntime } from '../lib/maintenance.js';
+import { changeSpecDrift } from '../lib/specs.js';
 
 export function projectStatus(root) {
   const cfg = loadConfig(projectPaths(root).config);
@@ -22,7 +23,8 @@ export function projectStatus(root) {
   const focus = session.state?.change && changes.some((c) => c.name === session.state.change) ? session.state.change : null;
   const activeNames = new Set(changes.map((c) => c.name));
   const rows = changes.map((c) => {
-    const lifecycle = evaluateLifecycle(c, fp, { activeNames });
+    const contractDrift = changeSpecDrift(c, p.specs);
+    const lifecycle = evaluateLifecycle(c, fp, { activeNames, contractDrift });
     const verification = lifecycle.verification;
     const blockedBy = lifecycle.blockedBy;
     const handoff = c.handoff ? { updated: c.handoff.updated, at: c.handoff.at, headMoved: Boolean(c.handoff.at && head && !head.startsWith(c.handoff.at) && !c.handoff.at.startsWith(head)), next: c.handoff.next } : null;
