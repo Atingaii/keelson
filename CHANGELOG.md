@@ -9,7 +9,7 @@ All notable changes to this project are documented here. The format follows Keep
 - Per-session focus runtime under gitignored `.keelson/.runtime/sessions/`: session pointers select durable changes but never carry completion state.
 - `keelson focus [change] [--auto|--clear]`: safe agent-facing session routing with explicit degraded behavior when a host has no verified identity bridge.
 - Derived work state `ready`: when acceptance/tasks, blockers/assumptions, rollout, and current-tree verification satisfy the gates, `check --record` tells the agent to land immediately without waiting for a user finish phrase.
-- Claude hooks now hash the host session id, persist only an opaque local pointer, bridge `KEELSON_SESSION_ID` into later CLI commands, and keep parallel conversations isolated.
+- Native session focus now covers four hosts with minimal adapters: Claude hooks, one OpenCode project plugin, Pi's built-in `PI_SESSION_ID` (no adapter file), and CodeBuddy hooks for SessionStart/UserPromptSubmit plus Bash/PowerShell PreToolUse. Raw host session ids are never stored.
 - `.keelson/README.md`: a package-owned human project map that explains what to read first, what every Keelson artifact means, and what survives landing; `keelson update` refreshes it without overwriting project facts.
 - New `harness.md` skill reference: feedforward/feedback controls, mechanical invariants, repeated-failure promotion, verification baselines, and sunset conditions for model-specific guidance.
 
