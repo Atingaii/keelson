@@ -1,0 +1,26 @@
+{
+  "baseline": "f6ce125",
+  "capture": "The f6ce125 CLI generated en/zh × lean/guided × guide on/off, plus CodeBuddy --hooks, in isolated temporary projects.",
+  "treeDigest": "sha256 of sorted rel\\0normalized-file-sha256\\n",
+  "canonicalSkills": {
+    "en/lean": "07ac8e2cb1010956fb172b72661a29ec3c6552ce19433fc4b1a31d012d65272b",
+    "en/guided": "a3a6572d22d88f872eaf0326b0af3c674064cd027abba449715bf64e45201652",
+    "zh/lean": "08dd2c503b58372ef85c460867c6e5ef116919b1f69a00449f1ef750cd7603a0",
+    "zh/guided": "d00636b7408c34cabf097d22d347d1e551f629f126f7c9e156760cb73d7d9506"
+  },
+  "workflows": {
+    "en/off": "8f8b682ce18a8b9fe6acf16fb528a2a752a4c874db7fc23b3029b7d83ba20dd1",
+    "en/on": "eab1d92c97ca695b34ae2290d6533858da7ab89f912ce31acbb89e979b75945b",
+    "zh/off": "d8c89ed738bf8c82e643aea41d1cf30cd48b218035234a60b09a2ba6183ae7a4",
+    "zh/on": "a3495a7de442c25aa8e41a3d680cf396c6207d2bdc8566d6d1644aa28bd7f5ba"
+  },
+  "discoveryShims": {
+    "en": "68a1924866f8ee5af87d0cd75884d3d1ba5bb3138c4daa2d6bd0f6a7d53cd2ef",
+    "zh": "4157f6ca8898e6e94a351d1fa63da580c54574049cc4af549834ee4fcb4a237b"
+  },
+  "copiedHooks": {
+    "session-start.mjs": "2c425e68f52b1b9c8febeb410916b14b302893bf0b241ea1b9ba4275452ee217",
+    "prompt-state.mjs": "cd7301e7efa00368a437d8a3e084844df1cd611969ae2465c82d8ac8f6707131",
+    "codebuddy-session.mjs": "cbdcbac42ab752387721c3b53f9fae50a22e04d2e04dbb612dba45d90efc25a8"
+  }
+}

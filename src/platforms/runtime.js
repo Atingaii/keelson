@@ -77,39 +77,59 @@ function normalize(text) {
   return String(text).replace(/\r\n?/g, '\n');
 }
 
-// These hashes are the exact lean v0.3 output. Some references had guided
-// blocks removed at render time, so raw package files are not ownership proof.
-const LEGACY_V03_SKILL_HASHES = new Map(`SKILL.md 6c1d26976fdc0c0ddf714f20ee0150ddd4f5a90f86aa9e484f4492de8d8bb12e
-references/build.md db9cbde5a8325ba02653455f618408de879d946ca2e5dbe313bcb65b48191b8c
-references/context.md 30e0a08427fd542b407afa607b62f7649e5a4d94f80c47e3ff049fa1898e5012
-references/debug.md 7709ac8366ace80ebca52deb297b284d21597b92a21a2488bf4aa36bb83e4b3d
-references/design-lenses.md fd4f2f98433411426534a28d8dde809e63203cce106c6f834a64e9fbb6848576
-references/discover.md e5254a3e45f06e6660398652bb4ebcb7d7dc1d4b13fffc7d19333828f1dec027
-references/engineer.md 5446edf1abdc5f611a60891e3e99c8a5630b3a7364cb1aa239dadb681beaf17b
-references/handoff.md 3e733f1b643371fbfb38f19bf882de8a908e35b4701e32f80a5e22c766c34656
-references/harness.md 41f9f68abcba57256e14036e2b5fce1dc320b69cfc29a183cd9db514cb25fe84
-references/interview.md 754d328582ece5638eedf00f7598e5c7ea9436461ae763d98d062a63f97ba765
-references/land.md 185af35388ce7768e1f9d8972777473abb24f8b5ec91d06c4236408ecafa186f
-references/model.md 23f8414ff2b04e08660d94f72003f85b006547d87c19140746d58015071a9a93
-references/plan.md 92fc655e6381d195a4a3fe803a98f1c3b7f5691a92370c1c91902326f0896565
-references/reconcile.md f10681dce0a99e4b775ab50dfa0025639f9f718ce80ab2514f89b3aa990ae19c
-references/shape.md 15ad8313300a9abb30d648c52544c6a089cf7293aa55fb12a7e964e6d74a18ad
-references/verify.md b8f617f5060a598bb135e62a2087252b5e9bc2f2dde58bd2e26f0fc5249e3faf`.split('\n').map((line) => line.split(' ')));
-
-const LEGACY_V03_SKILL_SHIM_HASH = '68a1924866f8ee5af87d0cd75884d3d1ba5bb3138c4daa2d6bd0f6a7d53cd2ef';
+// Captured by running f6ce125's v0.3 CLI for every supported language/profile
+// combination. A tree hash commits to both paths and normalized file bytes, so
+// adding a neighbor or editing one byte makes this fail closed.
+const LEGACY_V03_SKILL_TREE_HASHES = new Map([
+  ['en/lean', '07ac8e2cb1010956fb172b72661a29ec3c6552ce19433fc4b1a31d012d65272b'],
+  ['en/guided', 'a3a6572d22d88f872eaf0326b0af3c674064cd027abba449715bf64e45201652'],
+  ['zh/lean', '08dd2c503b58372ef85c460867c6e5ef116919b1f69a00449f1ef750cd7603a0'],
+  ['zh/guided', 'd00636b7408c34cabf097d22d347d1e551f629f126f7c9e156760cb73d7d9506'],
+]);
+const LEGACY_V03_SKILL_SHIM_HASHES = new Set([
+  '68a1924866f8ee5af87d0cd75884d3d1ba5bb3138c4daa2d6bd0f6a7d53cd2ef',
+  '4157f6ca8898e6e94a351d1fa63da580c54574049cc4af549834ee4fcb4a237b',
+]);
+const LEGACY_V03_WORKFLOW_HASHES = new Set([
+  '8f8b682ce18a8b9fe6acf16fb528a2a752a4c874db7fc23b3029b7d83ba20dd1',
+  'eab1d92c97ca695b34ae2290d6533858da7ab89f912ce31acbb89e979b75945b',
+  'd8c89ed738bf8c82e643aea41d1cf30cd48b218035234a60b09a2ba6183ae7a4',
+  'a3495a7de442c25aa8e41a3d680cf396c6207d2bdc8566d6d1644aa28bd7f5ba',
+]);
 
 function fileHash(text) {
   return crypto.createHash('sha256').update(normalize(text)).digest('hex');
 }
 
+function ownedWalk(dir) {
+  return walk(dir, { ignore: [] });
+}
+
+function hasSymbolicLink(dir) {
+  const visit = (current) => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      if (entry.isSymbolicLink()) return true;
+      if (entry.isDirectory() && visit(path.join(current, entry.name))) return true;
+    }
+    return false;
+  };
+  try { return visit(dir); } catch { return true; }
+}
+
+function treeHash(dir) {
+  if (hasSymbolicLink(dir)) return null;
+  try {
+    return crypto.createHash('sha256').update(ownedWalk(dir)
+      .map((rel) => `${rel}\0${fileHash(read(path.join(dir, rel)))}\n`).join('')).digest('hex');
+  } catch { return null; }
+}
+
 function canonicalSkillMatches(root, { lang, profile, version }) {
   const dest = path.join(root, CANONICAL_SKILL_DIR);
   const files = renderSkillFiles(lang, profile, version);
-  if (JSON.stringify(walk(dest)) === JSON.stringify(files.map((file) => file.rel).sort()) &&
+  if (!hasSymbolicLink(dest) && JSON.stringify(ownedWalk(dest)) === JSON.stringify(files.map((file) => file.rel).sort()) &&
     files.every((file) => exists(path.join(dest, file.rel)) && normalize(read(path.join(dest, file.rel))) === file.content)) return true;
-  return lang === 'en' && profile === 'lean' && version === '0.3.0' &&
-    JSON.stringify(walk(dest)) === JSON.stringify([...LEGACY_V03_SKILL_HASHES.keys()].sort()) &&
-    [...LEGACY_V03_SKILL_HASHES].every(([rel, expected]) => fileHash(read(path.join(dest, rel))) === expected);
+  return version === '0.3.0' && treeHash(dest) === LEGACY_V03_SKILL_TREE_HASHES.get(`${lang}/${profile}`);
 }
 
 export function installCanonicalSkill(root, { lang, profile, version, force = false }) {
@@ -128,12 +148,12 @@ export function installCanonicalSkill(root, { lang, profile, version, force = fa
 
 function legacyV03SkillShimMatches(dest, legacyVersion) {
   const skill = path.join(dest, 'SKILL.md');
-  return legacyVersion === '0.3.0' && exists(skill) && walk(dest).length === 1 && fileHash(read(skill)) === LEGACY_V03_SKILL_SHIM_HASH;
+  return legacyVersion === '0.3.0' && exists(skill) && !hasSymbolicLink(dest) && ownedWalk(dest).length === 1 && LEGACY_V03_SKILL_SHIM_HASHES.has(fileHash(read(skill)));
 }
 
 function skillShimMatches(dest, content, legacyVersion) {
   const skill = path.join(dest, 'SKILL.md');
-  return exists(skill) && walk(dest).length === 1 &&
+  return exists(skill) && !hasSymbolicLink(dest) && ownedWalk(dest).length === 1 &&
     (normalize(read(skill)) === content || legacyV03SkillShimMatches(dest, legacyVersion));
 }
 
@@ -216,7 +236,7 @@ export function removeCanonicalRuntime(root, { lang, profile, version, guide = f
   }
   const workflow = path.join(root, CANONICAL_WORKFLOW);
   if (exists(workflow)) {
-    const legacyWorkflow = lang === 'en' && version === '0.3.0' && fileHash(read(workflow)) === '8f8b682ce18a8b9fe6acf16fb528a2a752a4c874db7fc23b3029b7d83ba20dd1';
+    const legacyWorkflow = version === '0.3.0' && LEGACY_V03_WORKFLOW_HASHES.has(fileHash(read(workflow)));
     if (normalize(read(workflow)) === workflowContent(lang, guide) || legacyWorkflow) {
       rmrf(workflow);
       removed.push(CANONICAL_WORKFLOW);

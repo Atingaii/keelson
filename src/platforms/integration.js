@@ -13,6 +13,7 @@ export const LEGACY_MANAGED_STATE = path.join('.keelson', '.managed.json');
 const LEGACY_COPIED_HOOK_HASHES = new Map([
   ['session-start.mjs', '2c425e68f52b1b9c8febeb410916b14b302893bf0b241ea1b9ba4275452ee217'],
   ['prompt-state.mjs', 'cd7301e7efa00368a437d8a3e084844df1cd611969ae2465c82d8ac8f6707131'],
+  ['codebuddy-session.mjs', 'cbdcbac42ab752387721c3b53f9fae50a22e04d2e04dbb612dba45d90efc25a8'],
 ]);
 
 export const LEGACY_MANAGED_PATHS = [

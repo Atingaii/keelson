@@ -1,5 +1,6 @@
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -20,12 +21,59 @@ function recordFixture(dir, name) {
 
 // Captured from the actual 0.3 project output. This fixture is deliberately
 // static: migration tests must not depend on an ancestor being in CI history.
-function restoreV03Project(dir) {
-  const fixture = path.resolve('tests/fixtures/v0.3-runtime');
-  fs.cpSync(path.join(fixture, '.keelson'), path.join(dir, '.keelson'), { recursive: true });
-  fs.cpSync(path.join(fixture, '.agents'), path.join(dir, '.agents'), { recursive: true });
-  fs.cpSync(path.join(fixture, '.claude'), path.join(dir, '.claude'), { recursive: true });
+const V03_FIXTURE = path.resolve('tests/fixtures/v0.3-runtime');
+const V03_CASES = ['en', 'zh'].flatMap((lang) => ['lean', 'guided'].flatMap((profile) =>
+  [false, true].map((guide) => ({ lang, profile, guide }))));
+
+function restoreV03Project(dir, { lang = 'en', profile = 'lean', guide = false, codeBuddyHook = false } = {}) {
+  fs.cpSync(path.join(V03_FIXTURE, '.keelson'), path.join(dir, '.keelson'), { recursive: true });
+  fs.cpSync(path.join(V03_FIXTURE, '.agents'), path.join(dir, '.agents'), { recursive: true });
+  fs.cpSync(path.join(V03_FIXTURE, '.claude'), path.join(dir, '.claude'), { recursive: true });
+  const skill = path.join(dir, '.keelson', 'skill');
+  const variant = path.join(V03_FIXTURE, 'skills', `${lang}-${profile}`);
+  if (fs.existsSync(variant)) {
+    fs.rmSync(skill, { recursive: true, force: true });
+    fs.cpSync(variant, skill, { recursive: true });
+  }
+  const workflow = path.join(V03_FIXTURE, 'workflows', `${lang}-${guide ? 'on' : 'off'}.md`);
+  if (fs.existsSync(workflow)) fs.copyFileSync(workflow, path.join(dir, '.keelson', 'workflow.md'));
+  if (lang === 'zh') fs.copyFileSync(path.join(V03_FIXTURE, 'shims', 'zh-SKILL.md'), path.join(dir, '.agents', 'skills', 'keelson', 'SKILL.md'));
+  const config = read(dir, '.keelson/config.yaml')
+    .replace(/^lang:.*$/m, `lang: ${lang}`)
+    .replace(/^profile:.*$/m, `profile: ${profile}`)
+    .replace(/^guide:.*$/m, `guide: ${guide}`);
+  write(dir, '.keelson/config.yaml', config);
+  if (codeBuddyHook) fs.copyFileSync(path.join(V03_FIXTURE, 'hooks', 'codebuddy-session.mjs'), path.join(dir, '.keelson', 'hooks', 'codebuddy-session.mjs'));
 }
+
+const normalizedHash = (text) => crypto.createHash('sha256').update(text.replace(/\r\n?/g, '\n')).digest('hex');
+function fixtureTreeHash(dir) {
+  const files = fs.readdirSync(dir, { recursive: true })
+    .filter((entry) => typeof entry === 'string' && fs.statSync(path.join(dir, entry)).isFile())
+    .map((rel) => ({ rel, posix: rel.split(path.sep).join('/') }))
+    .sort((a, b) => a.posix < b.posix ? -1 : a.posix > b.posix ? 1 : 0);
+  return normalizedHash(files.map(({ rel, posix }) => `${posix}\0${normalizedHash(fs.readFileSync(path.join(dir, rel), 'utf8'))}\n`).join(''));
+}
+
+test('the static v0.3 fixture is byte-for-byte the captured ownership matrix', () => {
+  const ownership = JSON.parse(fs.readFileSync(path.join(V03_FIXTURE, 'ownership.json'), 'utf8'));
+  for (const [key, expected] of Object.entries(ownership.canonicalSkills)) {
+    const [lang, profile] = key.split('/');
+    const dir = lang === 'en' && profile === 'lean' ? path.join(V03_FIXTURE, '.keelson', 'skill') : path.join(V03_FIXTURE, 'skills', `${lang}-${profile}`);
+    assert.equal(fixtureTreeHash(dir), expected, key);
+  }
+  for (const [key, expected] of Object.entries(ownership.workflows)) {
+    const [lang, guide] = key.split('/');
+    const file = lang === 'en' && guide === 'off' ? path.join(V03_FIXTURE, '.keelson', 'workflow.md') : path.join(V03_FIXTURE, 'workflows', `${lang}-${guide}.md`);
+    assert.equal(normalizedHash(fs.readFileSync(file, 'utf8')), expected, key);
+  }
+  assert.equal(normalizedHash(read(V03_FIXTURE, '.agents/skills/keelson/SKILL.md')), ownership.discoveryShims.en);
+  assert.equal(normalizedHash(read(V03_FIXTURE, 'shims/zh-SKILL.md')), ownership.discoveryShims.zh);
+  for (const [name, expected] of Object.entries(ownership.copiedHooks)) {
+    const file = name === 'codebuddy-session.mjs' ? path.join(V03_FIXTURE, 'hooks', name) : path.join(V03_FIXTURE, '.keelson', 'hooks', name);
+    assert.equal(normalizedHash(fs.readFileSync(file, 'utf8')), expected, name);
+  }
+});
 
 test('default installation stays within the lightweight budget and leaves ignore files alone', () => {
   for (const [tool, instruction] of [['claude', 'CLAUDE.md'], ['codex', 'AGENTS.md']]) {
@@ -80,6 +128,18 @@ test('switching hosts retains a changed discovery shim and its neighboring files
   assert.match(read(dir, '.agents/skills/keelson/SKILL.md'), /keelson guide/);
 });
 
+test('an unchanged discovery shim with hidden user neighbors is never removed', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--tools', 'claude', '--no-hooks'], { env });
+  write(dir, '.claude/skills/keelson/node_modules/owner.txt', 'owner dependency\n');
+  write(dir, '.claude/skills/keelson/.git/owner', 'owner metadata\n');
+  run(dir, ['update', '--codex', '--no-hooks'], { env });
+  assert.equal(read(dir, '.claude/skills/keelson/node_modules/owner.txt'), 'owner dependency\n');
+  assert.equal(read(dir, '.claude/skills/keelson/.git/owner'), 'owner metadata\n');
+  run(dir, ['uninstall'], { env });
+  assert.equal(read(dir, '.claude/skills/keelson/node_modules/owner.txt'), 'owner dependency\n');
+  assert.equal(read(dir, '.claude/skills/keelson/.git/owner'), 'owner metadata\n');
+});
+
 test('Kiro upsert retains frontmatter and user content', () => {
   const dir = tmpProject({ 'AGENTS.md': '---\ninclusion: always\n---\n\n# User note\n' });
   run(dir, ['init', '--tools', 'kiro', '--no-hooks'], { env });
@@ -88,13 +148,27 @@ test('Kiro upsert retains frontmatter and user content', () => {
 });
 
 
-test('update migrates the exact real v0.3 runtime to a light Codex install', () => {
-  const dir = tmpProject({}); restoreV03Project(dir);
-  run(dir, ['update', '--codex', '--no-hooks'], { env });
-  for (const rel of ['.keelson/skill', '.keelson/workflow.md', '.keelson/hooks']) assert.ok(!exists(dir, rel), rel);
-  assert.match(read(dir, '.agents/skills/keelson/SKILL.md'), /keelson guide/);
-  assert.equal(JSON.parse(read(dir, '.keelson/manifest.json')).vendor, false);
-  assert.equal(JSON.parse(read(dir, '.claude/settings.json')).hooks, undefined);
+test('update migrates every exact real v0.3 runtime profile to a light Codex install', () => {
+  for (const options of V03_CASES) {
+    const dir = tmpProject({}); restoreV03Project(dir, options);
+    run(dir, ['update', '--codex', '--no-hooks'], { env });
+    for (const rel of ['.keelson/skill', '.keelson/workflow.md', '.keelson/hooks']) assert.ok(!exists(dir, rel), `${options.lang}/${options.profile}/${options.guide}: ${rel}`);
+    assert.match(read(dir, '.agents/skills/keelson/SKILL.md'), /keelson guide/);
+    assert.equal(JSON.parse(read(dir, '.keelson/manifest.json')).vendor, false);
+    assert.equal(JSON.parse(read(dir, '.claude/settings.json')).hooks, undefined);
+  }
+});
+
+test('a one-byte change to each v0.3 canonical profile stays protected', () => {
+  for (const options of V03_CASES) {
+    const dir = tmpProject({}); restoreV03Project(dir, options);
+    const skill = '.keelson/skill/SKILL.md';
+    const original = read(dir, skill);
+    write(dir, skill, `${original}x`);
+    run(dir, ['update', '--codex', '--no-hooks'], { env });
+    assert.equal(read(dir, skill), `${original}x`, `${options.lang}/${options.profile}/${options.guide}`);
+    assert.ok(!exists(dir, '.keelson/workflow.md'));
+  }
 });
 
 test('v0.3 migration retains an edited copied hook', () => {
@@ -103,6 +177,19 @@ test('v0.3 migration retains an edited copied hook', () => {
   run(dir, ['update', '--codex', '--no-hooks'], { env });
   assert.equal(read(dir, '.keelson/hooks/prompt-state.mjs'), '// user hook\n');
   assert.ok(!exists(dir, '.keelson/hooks/session-start.mjs'));
+});
+
+test('v0.3 retires only the exact copied CodeBuddy hook', () => {
+  const known = tmpProject({}); restoreV03Project(known, { codeBuddyHook: true });
+  write(known, '.keelson/hooks/owner.mjs', '// owner hook\n');
+  run(known, ['update', '--codebuddy', '--no-hooks'], { env });
+  assert.ok(!exists(known, '.keelson/hooks/codebuddy-session.mjs'));
+  assert.equal(read(known, '.keelson/hooks/owner.mjs'), '// owner hook\n');
+
+  const edited = tmpProject({}); restoreV03Project(edited, { codeBuddyHook: true });
+  write(edited, '.keelson/hooks/codebuddy-session.mjs', '// owner edit\n');
+  run(edited, ['update', '--codebuddy', '--no-hooks'], { env });
+  assert.equal(read(edited, '.keelson/hooks/codebuddy-session.mjs'), '// owner edit\n');
 });
 
 test('a custom v0.3 discovery shim stops migration before any write', () => {
