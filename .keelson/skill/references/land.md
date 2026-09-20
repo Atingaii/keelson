@@ -7,7 +7,7 @@ A change is implemented when its slices are verified, integrated when it is on t
 
 Run it when the change is integrated (merged, or committed on the mainline in a solo repository). It refuses while any of these hold, and says which:
 
-- tasks or acceptance items unchecked;
+- acceptance items unchecked (task checkboxes are advisory plan state, not landing gates);
 - open questions remain;
 - verification is not-run, failed, partial, or stale (fingerprint differs from the working tree);
 - `(assumed)` decisions exist and `--confirm-assumptions` was not passed — the owner confirms them, not you;
