@@ -7,11 +7,10 @@ import { loadChange, loadAllChanges, sharedContracts } from '../lib/changes.js';
 import { evaluateLifecycle } from '../lib/lifecycle.js';
 import { parseSpec, parseDelta, renderSpec, parseFrontmatter } from '../lib/markdown.js';
 import { worktreeFingerprint } from '../lib/git.js';
-import { specBase } from './new.js';
 import { ok, warn, info, heading } from '../lib/out.js';
 import { clearChangeBindings, readSession } from '../lib/session.js';
 import { budgetStatus } from '../lib/health.js';
-import { readCapabilitySpec, planCapabilityStorage, writeCapabilityStorage, capabilityStorageOptions } from '../lib/specs.js';
+import { readCapabilitySpec, planCapabilityStorage, writeCapabilityStorage, capabilityStorageOptions, changeSpecDrift } from '../lib/specs.js';
 
 export function mergeDelta(mainText, deltaText, capability) {
   const main = mainText ? parseSpec(mainText) : { purpose: '', requirements: [], decisions: [] };
@@ -58,19 +57,13 @@ export function appendDecisions(specText, capability, lines) {
 
 /** Everything that stops a landing. Pure; used by `land` and `doctor`. */
 export function landingBlockers(c, fingerprint, { confirmAssumptions = false, acceptDrift = false, specsDir, activeNames = [] } = {}) {
-  const lifecycle = evaluateLifecycle(c, fingerprint, { activeNames, confirmAssumptions });
-  const b = [...lifecycle.blockers];
-  if (specsDir && !acceptDrift) {
-    for (const df of c.deltaFiles) {
-      const cap = path.dirname(df).replace(/\\/g, '/');
-      const { data } = parseFrontmatter(read(path.join(c.dir, 'specs', df)));
-      if (!data.base || cap === '.') continue;
-      const main = readCapabilitySpec(specsDir, cap);
-      const now = main ? specBase(main) : 'new';
-      if (now !== data.base) b.push(`specs/${cap} changed since this delta was written (base ${data.base}, now ${now}); re-read it, then pass --accept-drift`);
-    }
-  }
-  return b;
+  const contractDrift = specsDir ? changeSpecDrift(c, specsDir) : [];
+  return evaluateLifecycle(c, fingerprint, {
+    activeNames,
+    confirmAssumptions,
+    contractDrift,
+    acceptDrift,
+  }).blockers;
 }
 
 export async function land({ flags, positional }, cwd = process.cwd()) {
