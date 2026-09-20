@@ -599,6 +599,17 @@ test('sessions focus independent work items; ready is derived without a user fin
   assert.equal(degraded.suggested, 'beta');
 });
 
+test('spec changes do not invent alternatives when there is no material fork', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--no-hooks'], { env });
+  run(dir, ['new', 'follow-existing-pattern', '--tier', 'spec', '--capability', 'orders'], { env });
+  const change = read(dir, '.keelson/changes/follow-existing-pattern/change.md');
+  assert.doesNotMatch(change, /^## Alternatives$/m);
+  const validation = JSON.parse(run(dir, ['validate', '--json'], { env }).stdout);
+  assert.equal(validation.ok, true);
+  assert.ok(!validation.errors.some((e) => /Alternatives/.test(e)));
+});
+
 test('depends is a real lifecycle gate for status and land', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--no-hooks'], { env });
