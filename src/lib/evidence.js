@@ -119,6 +119,9 @@ export function inspectEvidence(root, dir) {
 export function trustCommands(root, commands, trusted = false) {
   const file = path.join(runtimeDir(root), 'trusted-checks.json');
   const digest = sha256(JSON.stringify(commands));
-  if (trusted) { write(file, JSON.stringify({ digest }) + '\n'); return; }
-  if (readJson(file, null)?.digest !== digest) throw Object.assign(new Error(`check commands require local trust:\n${commands.map((c) => `  ${c}`).join('\n')}\nReview these commands, then run keelson check --trust --record. Trust is invalidated when commands change.`), { exitCode: 4 });
+  return withLock(file, () => {
+    if (readJson(file, null)?.digest === digest) return;
+    if (trusted) { write(file, JSON.stringify({ digest }) + '\n'); return; }
+    throw Object.assign(new Error(`check commands require local trust:\n${commands.map((c) => `  ${c}`).join('\n')}\nReview these commands, then run keelson check --trust --record. Trust is invalidated when commands change.`), { exitCode: 4 });
+  });
 }

@@ -88,3 +88,11 @@ Main 5504180 was pushed. Run https://github.com/Atingaii/keelson/actions/runs/35
 ## 2026-09-20 exploratory verification guidance
 
 The first original Keelson D-17 supplemental replay fails at the extra context-popped boundary: a late receiver exception replaces collected errors. The original acceptance still passes. Added a general English/Chinese verification paragraph covering failure chains, late observers and preserved outer state. Declared three fresh repetitions and unchanged supplemental replay in `evals/supplemental/ITERATION.md` before running them. This is a post-observation exploratory iteration, not a replacement ranking or proven causal benefit. Repository guidance checks pass 17/17 (`node --test tests/repo.test.js`).
+
+## 2026-09-20 Windows sharing conflicts
+
+Remote 6e2a3f8 passes Ubuntu/macOS Node 20/22. Windows Node 20 fails concurrent trust-record rename with EPERM; Node 22 fails exclusive signing-lock open with EPERM. Both raw TAP extracts are retained. Serialize trust decisions and skip identical writes; retry Windows transient sharing errors within existing lock deadlines and a one-second atomic-rename bound, never unlinking the destination or another writer’s lock. Five fault-injection cases yield four expected failures against fa7c874; the fixed cases plus the full evidence suite pass 14/14 locally. Real Windows rerun and independent review remain required.
+
+Remote old branches were rechecked at fcfbb76 and had no unique commits. Explicit SHA leases deleted all three; `git ls-remote --heads origin` now reports only main. Local active worktrees remain until delivery.
+
+- Independent Windows remediation review: PASS, no P1/P2 findings. The reviewer reproduced all 14 filesystem/evidence cases with no skips and verified archived CI/error-injection hashes. Linux syntax and `validate` checks pass. Real Windows CI remains the platform acceptance gate; a persistent Windows ACL error can report lock timeout after the bounded wait.

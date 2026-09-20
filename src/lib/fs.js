@@ -13,7 +13,17 @@ export const write = (p, s) => {
     const mode = exists(p) ? fs.statSync(p).mode & 0o777 : 0o600;
     const fd = fs.openSync(tmp, 'wx', mode);
     try { fs.writeFileSync(fd, s); fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
-    fs.renameSync(tmp, p);
+    const deadline = Date.now() + 1000;
+    for (;;) {
+      try { fs.renameSync(tmp, p); break; }
+      catch (error) {
+        // Windows can briefly deny replacement while another process has the
+        // destination open. Keep the old file intact and retry the same atomic
+        // rename; never emulate replacement by unlinking the destination.
+        if (process.platform !== 'win32' || !['EPERM', 'EACCES', 'EBUSY'].includes(error.code) || Date.now() >= deadline) throw error;
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
+      }
+    }
   } finally { fs.rmSync(tmp, { force: true }); }
 };
 export const mkdirp = (p) => fs.mkdirSync(p, { recursive: true });
@@ -69,7 +79,9 @@ export function withLock(file, fn, { timeout = 10000 } = {}) {
   for (;;) {
     try { fd = fs.openSync(lock, 'wx', 0o600); break; }
     catch (error) {
-      if (error.code !== 'EEXIST') throw error;
+      // A Windows lock file being closed/deleted may report a sharing error
+      // instead of EEXIST. Wait within the same bound; never remove its lock.
+      if (error.code !== 'EEXIST' && !(process.platform === 'win32' && ['EPERM', 'EACCES', 'EBUSY'].includes(error.code))) throw error;
       if (Date.now() - start >= timeout) throw new Error(`lock timeout: ${lock}. Check for an active writer before removing an abandoned lock.`);
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
     }

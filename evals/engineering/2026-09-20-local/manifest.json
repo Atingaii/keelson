@@ -408,6 +408,96 @@
         "todo": 0
       },
       "note": "Linux reproduction of macOS temporary-directory symlink identity: passes after canonicalizing newly created fixture paths"
+    },
+    {
+      "file": "windows-atomic-negative.tap.log",
+      "sha256": "23b2302e295cff8775c16049ec8a63be0774037bd5e80df093af214d5c6206fb",
+      "bytes": 2359,
+      "tap_counts": {
+        "tests": 3,
+        "pass": 1,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "note": "Counterfactual against fa7c874: expected regression failures."
+    },
+    {
+      "file": "windows-atomic-positive.tap.log",
+      "sha256": "65e79fe5f41e7ab73aa06d9283c89ffa8029b37faf9565ef08e9d1d39ae950fa",
+      "bytes": 2511,
+      "tap_counts": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "note": "Current Windows sharing-conflict patch, local fault injection plus existing evidence tests; not proof of real Windows CI success."
+    },
+    {
+      "file": "windows-atomic-lock-negative.tap.log",
+      "sha256": "3f4408d66c8291de03f88b31174f9084faf17819939bbd20e0bf2730fecfd350",
+      "bytes": 5300,
+      "tap_counts": {
+        "tests": 5,
+        "pass": 1,
+        "fail": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "note": "Counterfactual against fa7c874: expected regression failures."
+    },
+    {
+      "file": "windows-atomic-lock-positive.tap.log",
+      "sha256": "0fd4b52858083f7a0e057020a991d7e4414d9048849368c2c1b11c7a0a62bc87",
+      "bytes": 2958,
+      "tap_counts": {
+        "tests": 14,
+        "pass": 14,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "note": "Current Windows sharing-conflict patch, local fault injection plus existing evidence tests; not proof of real Windows CI success."
+    },
+    {
+      "file": "ci-windows20-6e2a3f8.tap.log",
+      "sha256": "2f1810add3b554e75b06a163513d087f0c1b684e450cbef98c7d32afc0f2fa89",
+      "bytes": 26624,
+      "tap_counts": {
+        "tests": 133,
+        "pass": 129,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 3,
+        "todo": 0
+      },
+      "source_commit": "6e2a3f8",
+      "workflow_run": 35509551218,
+      "workflow_job": 106074951625,
+      "note": "TAP extracted from remote GitHub job log, timestamp prefixes removed. Windows Node 20/22 concurrency failures retained."
+    },
+    {
+      "file": "ci-windows22-6e2a3f8.tap.log",
+      "sha256": "8bb969f986c00aaf6f8b4aacdb1a5fa46423256aad45f8c1f2512b31ee61309d",
+      "bytes": 27758,
+      "tap_counts": {
+        "tests": 133,
+        "pass": 129,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 3,
+        "todo": 0
+      },
+      "source_commit": "6e2a3f8",
+      "workflow_run": 35509551218,
+      "workflow_job": 106074951656,
+      "note": "TAP extracted from remote GitHub job log, timestamp prefixes removed. Windows Node 20/22 concurrency failures retained."
     }
   ]
 }
