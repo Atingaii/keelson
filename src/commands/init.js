@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { projectPaths, findProjectRoot } from '../lib/paths.js';
 import { exists, write, read, mkdirp, readOr } from '../lib/fs.js';
 import { loadConfig, saveConfig, DEFAULT_CONFIG, CONFIG_VERSION } from '../lib/config.js';
-import { PLATFORMS, PLATFORM_IDS, RETIRED_PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile, plannedManagedRemovals, reconcileManagedTargets, writeManagedState } from '../platforms/index.js';
+import { PLATFORMS, PLATFORM_IDS, RETIRED_PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, installSessionAdapter, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile, plannedManagedRemovals, plannedSessionAdapterFiles, reconcileManagedTargets, writeManagedState } from '../platforms/index.js';
 import { list } from '../lib/args.js';
 import { ok, info, warn, heading, dim } from '../lib/out.js';
 import { detectAndCache, detectLocal } from '../lib/models.js';
@@ -137,6 +137,7 @@ export async function init({ flags }, cwd = process.cwd()) {
     for (const rel of plannedManagedRemovals(root, targets)) console.log(`  ${'remove'.padEnd(9)} ${rel} (stale managed surface)`);
     for (const t of targets) {
       for (const f of plannedSkillFiles(root, t, { lang: cfg.lang, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
+      for (const f of plannedSessionAdapterFiles(root, t)) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
       const ins = path.join(root, t.instructions);
       console.log(`  ${(exists(ins) ? (read(ins).includes('<!-- keelson:start -->') ? 'refresh' : 'append') : 'create').padEnd(9)} ${t.instructions}`);
     }
@@ -198,6 +199,9 @@ export async function init({ flags }, cwd = process.cwd()) {
       installHooks(root);
       ok(`${t.label}: hooks → .claude/settings.json (session snapshot + per-prompt state line)`);
     }
+    const sessionFiles = installSessionAdapter(root, t);
+    if (sessionFiles.length) ok(`${t.label}: native session adapter → ${sessionFiles.join(', ')}`);
+    else if (t.sessionAdapter === 'pi-env') info(`${t.label}: native session focus uses PI_SESSION_ID; no adapter file needed`);
   }
   writeManagedState(root, targets, PKG_VERSION);
   ok('.keelson/manifest.json (generated-surface ownership)');
