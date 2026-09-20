@@ -29,7 +29,9 @@ export function installTargets(tools, cfg = null) {
   const targets = [];
   const seen = new Set();
   const push = (t) => {
-    const key = `${t.instructions}|${t.skillsDir}|${t.rulesFile ?? ''}`;
+    // Host identity is part of the target contract now: two hosts may reuse the
+    // same discovery files but still require different session adapters.
+    const key = t.id ?? `${t.instructions}|${t.skillsDir}|${t.rulesFile ?? ''}`;
     if (seen.has(key)) return;
     seen.add(key);
     targets.push(t);
@@ -37,7 +39,8 @@ export function installTargets(tools, cfg = null) {
   for (const id of tools) {
     const p = platformFor(id, cfg);
     if (!p) throw new Error(`unknown tool "${id}". Known: ${PLATFORM_IDS.join(', ')}`);
-    push({ ...p, hooks: Boolean(p.hooks && cfg?.hooks !== false) });
+    const sessionAdapter = p.sessionAdapter === 'pi-env' ? 'pi-env' : cfg?.hooks === false ? null : p.sessionAdapter ?? null;
+    push({ ...p, hooks: Boolean(p.hooks && cfg?.hooks !== false), sessionAdapter });
   }
   push(CROSS_TOOL);
   return targets;
