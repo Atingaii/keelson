@@ -536,6 +536,23 @@
         "todo": 0
       },
       "note": "Four newly integrated benchmark-tool regression cases, separate from the preceding full core run."
+    },
+    {
+      "file": "ci-macos20-7bdaf7b.tap.log",
+      "sha256": "863b26fa79ba5a888709fe995f3f5f0c381675fb28faedb7fad39e913ecbecba",
+      "bytes": 31570,
+      "source_commit": "7bdaf7b",
+      "workflow_run": 35511042265,
+      "workflow_job": 106078888765,
+      "tap_counts": {
+        "tests": 150,
+        "pass": 148,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "note": "Actual macOS Node 20 CI failure retained: two importer-search expectations fail after Git ERE optimization; remote repair remains pending."
     }
   ],
   "updated_at_utc": "2026-09-20T12:35:04.321907+00:00"

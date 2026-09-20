@@ -62,6 +62,8 @@ keelson land fix-pagination
 
 [Benchmark 的协议、固定版本和原始结果](benchmarks/README.md) 使用相同 Flask 任务、模型和预算，对照 Keelson、裸 Codex、**OpenSpec**、**Trellis**、**Superpowers**。分别报告功能验收、框架激活、耗时、token 和决策行为，小样本结果只说明对应任务，不作为通用排名。
 
+查看[实测结果与限制](evals/RESULTS.md)。原始固定任务分数与后续健壮性探测分开报告，失败与环境无效的尝试也全部保留。
+
 Keelson 参考 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 的差量契约、[Trellis](https://github.com/mindfold-ai/Trellis) 的持久项目上下文和 [Superpowers](https://github.com/obra/superpowers) 的实施与评审流程。证据使用 [in-toto Statement](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md) 和 [DSSE](https://github.com/secure-systems-lab/dsse) 格式；本地签名记录不等于 SLSA 认证。
 
 ## 开发

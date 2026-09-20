@@ -102,3 +102,9 @@ Remote old branches were rechecked at fcfbb76 and had no unique commits. Explici
 ## 2026-09-20 fingerprint integration
 
 The current worktree fingerprint batches unfiltered Git blob hashing while framing path, type, executable mode and actual current content; no Git status/stat cache is trusted. New regressions cover preserved mtime/size changes, unusual paths, symlinks, gitlinks, nested projects and filesystem roots. Lint and the full core suite at 4cf1681 pass 146/146, with zero skips. Four benchmark-tool cases subsequently added at 9f1765e pass separately. Verification docs explicitly disclose the v2 freshness migration and submodule boundary. Remote CI and a combined final suite are still required; CLI latency targets remain open.
+
+## 2026-09-20 model exploration and portable importer follow-up
+
+The formal five-method matrix contains 45 valid cells; Keelson 7b2c303 passes 9/9 original task checks, while its three original D-17 patches fail the separately frozen supplemental probe. The first fresh fa7c874 guidance repetition passes original checks but also fails the supplemental late-observer boundary; 16 and 153 claimed test passes match raw command output, and normal land is observed. The other two declared repetitions continue. No historical score is replaced.
+
+Remote 7bdaf7b Ubuntu Node 20/22 passes. macOS reports two importer failures because the optimized Git search used GNU word-boundary syntax with a POSIX ERE engine; the raw macOS Node 20 TAP is archived. A portable-expression repair and a fresh six-job run are required. The supplemental replay CLI now validates arguments before creating output and supports a read-only help command; its accidental two-file help output was explicitly resolved and removed.

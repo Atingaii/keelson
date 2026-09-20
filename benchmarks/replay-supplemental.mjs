@@ -84,13 +84,33 @@ function testOne({ sha, patchFile = null, evidence }) {
 
 function requireArg(flag) {
   const index = process.argv.indexOf(flag);
-  return index === -1 ? null : process.argv[index + 1];
+  if (index === -1) return null;
+  const value = process.argv[index + 1];
+  if (!value || value.startsWith('--')) throw new Error(`${flag} requires a value`);
+  return value;
 }
 
+if (process.argv.includes('--help')) {
+  console.log('Usage: node benchmarks/replay-supplemental.mjs [--preflight | RESULT_ROOT ...] [--output DIR] [--repetition-start N]');
+  process.exit(0);
+}
 const output = path.resolve(requireArg('--output') ?? path.join(root, 'evals/results/supplemental-d17'));
 const mode = process.argv.includes('--preflight') ? 'preflight' : 'replay';
 const repetitionStart = Number(requireArg('--repetition-start') ?? 1);
 if (!Number.isSafeInteger(repetitionStart) || repetitionStart < 1) throw new Error('--repetition-start must be a positive integer');
+const roots = [];
+for (let index = 2; index < process.argv.length; index += 1) {
+  const value = process.argv[index];
+  if (value === '--output' || value === '--repetition-start') { index += 1; continue; }
+  if (value === '--preflight') continue;
+  if (value.startsWith('--')) throw new Error(`unknown option: ${value}`);
+  roots.push(path.resolve(value));
+}
+if (mode === 'replay' && !roots.length) throw new Error('replay requires one or more formal result roots');
+if (mode === 'preflight' && roots.length) throw new Error('--preflight does not accept result roots');
+for (const resultRoot of roots) {
+  if (!fs.statSync(resultRoot).isDirectory()) throw new Error(`result root is not a directory: ${resultRoot}`);
+}
 if (!fs.existsSync(supplemental)) throw new Error(`missing frozen supplemental test: ${supplemental}`);
 if (fs.existsSync(output) && fs.readdirSync(output).length) throw new Error(`refusing to overwrite existing evidence: ${output}`);
 fs.mkdirSync(output, { recursive: true });
@@ -106,14 +126,6 @@ if (mode === 'preflight') {
   fs.writeFileSync(path.join(output, 'summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
   process.exitCode = summary.valid ? 0 : 1;
 } else {
-  const roots = [];
-  for (let index = 2; index < process.argv.length; index += 1) {
-    const value = process.argv[index];
-    if (value === '--output' || value === '--repetition-start') { index += 1; continue; }
-    if (value.startsWith('--')) throw new Error(`unknown option: ${value}`);
-    roots.push(value);
-  }
-  if (!roots.length) throw new Error('replay requires one or more formal result roots');
   const rows = [];
   for (const resultRoot of roots) {
     for (const entry of fs.readdirSync(resultRoot, { withFileTypes: true })) {
