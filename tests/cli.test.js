@@ -711,6 +711,59 @@ test('auto-sharding preserves pre-existing unmanaged requirements directories', 
   assert.ok(exists(dir, '.keelson/specs/orders/keelson-requirements/added.md'));
 });
 
+test('legacy sharded decision files migrate to bounded decision shards without touching neighbors', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--no-hooks'], { env });
+  write(dir, '.keelson/config.yaml', read(dir, '.keelson/config.yaml').replace('spec: 250', 'spec: 12'));
+  write(dir, '.keelson/specs/orders/spec.md', [
+    '---',
+    'layout: sharded',
+    'requirements_dir: requirements',
+    'decisions_file: decisions.md',
+    '---',
+    '# orders',
+    '',
+    '## Purpose',
+    'Orders.',
+    ''
+  ].join('\n'));
+  write(dir, '.keelson/specs/orders/requirements/existing.md', '# Existing\n\n## Requirement: Existing\n\nold\n### Scenario: existing\n- WHEN old\n- THEN kept\n');
+  write(dir, '.keelson/specs/orders/decisions.md', '# Decisions — orders\n\n## Decisions\n\n- orders: existing durable rationale\n');
+  write(dir, '.keelson/specs/orders/decisions/manual.md', '# project-owned neighbor\nkeep me\n');
+
+  run(dir, ['new', 'migrate-decisions', '--tier', 'quick', '--capability', 'orders'], { env });
+  write(dir, '.keelson/changes/migrate-decisions/change.md', read(dir, '.keelson/changes/migrate-decisions/change.md').replace('- [ ] … — check: `…`', '- [x] works — check: `true`'));
+  write(dir, '.keelson/changes/migrate-decisions/ledger.md', '### Verify: ok\n`true` exit 0\n');
+  const deltaPath = '.keelson/changes/migrate-decisions/specs/orders/spec.md';
+  const base = read(dir, deltaPath).match(/^base: (\S+)/m)[1];
+  write(dir, deltaPath, [
+    '---',
+    `base: ${base}`,
+    '---',
+    '## ADDED Requirements',
+    '### Requirement: Added',
+    'new',
+    '#### Scenario: added',
+    '- WHEN new',
+    '- THEN present',
+    '',
+    '## MODIFIED Requirements',
+    '',
+    '## REMOVED Requirements',
+    ''
+  ].join('\n'));
+
+  run(dir, ['land', 'migrate-decisions'], { env });
+  const index = read(dir, '.keelson/specs/orders/spec.md');
+  assert.match(index, /^decisions_dir: keelson-decisions$/m);
+  assert.doesNotMatch(index, /^decisions_file:/m);
+  assert.equal(exists(dir, '.keelson/specs/orders/decisions.md'), false);
+  assert.equal(read(dir, '.keelson/specs/orders/decisions/manual.md'), '# project-owned neighbor\nkeep me\n');
+  const shards = fs.readdirSync(path.join(dir, '.keelson/specs/orders/keelson-decisions')).filter((f) => f.endsWith('.md'));
+  assert.equal(shards.length, 1);
+  assert.match(read(dir, path.join('.keelson/specs/orders/keelson-decisions', shards[0])), /existing durable rationale/);
+});
+
 test('hard knowledge limits fail validate and preflight land before writing specs', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--no-hooks'], { env });
