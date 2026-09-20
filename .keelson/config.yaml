@@ -11,7 +11,7 @@ profile: lean
 default_tier: auto
 confirm:
   quick: proceed
-  spec: wait
+  spec: proceed
 land: fold
 check:
   - npm run lint
