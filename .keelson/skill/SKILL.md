@@ -12,7 +12,7 @@ The project-local kernel is `.keelson/workflow.md`. Keelson constrains **state t
 
 | Intent | Typical request | Start with |
 |---|---|---|
-| **Explore** | compare, explain, “what should we do?”, “grill me” | `discover.md` + `interview.md`; read-only until a modification is requested |
+| **Explore** | compare, explain, “what should we do?”, “stress-test this” | `discover.md` + `interview.md`; read-only until a modification is requested |
 | **Change** | build, add, refactor, migrate, “also change…” | `shape.md` → `context.md`; load `model.md` for boundary/language questions, `engineer.md` for non-obvious technical choices, `design-lenses.md` only for triggered risks; spec-sized work adds `plan.md` |
 | **Fix** | bug, failing test, unexpected behavior | `debug.md`, then `verify.md` |
 | **Resume** | continue, pick this back up | `keelson focus --auto` + current context; use `handoff.md` only when a real ownership/machine transfer exists |
