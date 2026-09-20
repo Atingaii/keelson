@@ -8,7 +8,7 @@ cd keelson
 npm ci
 npm link
 cd /path/to/your/project
-keelson init --codex
+keelson init --codex --lang zh
 ```
 
 `npm link` 将当前源码的 CLI 放到命令路径。团队需要可复现安装时，应固定 Git 提交。包名为 `@atingaii/keelson`，此处不代表已发布到 npm。
@@ -28,4 +28,4 @@ keelson init --codex
 
 `keelson ask` 保存决策及依据，`keelson doctor --session` 诊断会话身份。`update` 更新集成入口；`uninstall` 保留项目知识和证据。希望把包内指导一起提交时，显式使用 `init --vendor`。
 
-详情见[证据与信任](../verification.md)、[CLI](../cli.md)及[配置](../configuration.md)。
+详情见[证据与信任](verification.md)、[CLI](cli.md)及[配置](configuration.md)。
