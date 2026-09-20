@@ -31,14 +31,24 @@ session.source = 'codebuddy';
 writeJson(sessionFile, session);
 
 const event = input.hook_event_name || '';
-if (event === 'PreToolUse' && String(input.tool_name || '').toLowerCase() === 'bash') {
+if (event === 'PreToolUse' && ['bash', 'powershell'].includes(String(input.tool_name || '').toLowerCase())) {
   const command = input.tool_input?.command;
   if (typeof command !== 'string' || !command.trim()) process.exit(0);
   if (/\bKEELSON_SESSION_ID\s*=/.test(command.slice(0, 180))) process.exit(0);
+  const tool = String(input.tool_name || '').toLowerCase();
+  const injected = tool === 'powershell'
+    ? `$env:KEELSON_SESSION_ID='${opaque}'; ${command}`
+    : `export KEELSON_SESSION_ID=${shellQuote(opaque)}; ${command}`;
   process.stdout.write(JSON.stringify({
+    continue: true,
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
-      modifiedInput: { command: `export KEELSON_SESSION_ID=${shellQuote(opaque)}; ${command}` },
+      permissionDecision: 'allow',
+      permissionDecisionReason: 'Keelson attached the opaque session identity used only for local work-focus routing.',
+      modifiedInput: {
+        ...input.tool_input,
+        command: injected,
+      },
     },
   }));
   process.exit(0);
