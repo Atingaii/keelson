@@ -4,6 +4,7 @@ import { exists, read, readOr, listDirs, walk } from './fs.js';
 import { parseRulesIndex } from './rules.js';
 import { parseSpec } from './markdown.js';
 import { loadAllChanges } from './changes.js';
+import { capabilityPhysicalDocs, readCapabilitySpec } from './specs.js';
 
 const lines = (t) => String(t ?? '').split('\n').length;
 export const HARD_BUDGET_MULTIPLIER = 2;
@@ -60,11 +61,14 @@ export function knowledgeHealth(root, cfg, p) {
   for (const cap of listDirs(p.specs)) {
     const f = path.join(p.specs, cap, 'spec.md');
     if (!exists(f)) continue;
-    const txt = read(f);
-    over(`${p.specsRel}/${cap}/spec.md`, f, b.spec);
-    const bodies = parseSpec(txt).requirements.map((r) => r.body).join('\n');
-    if (HISTORY_NARRATIVE.test(bodies) || ORDINAL_UPDATE.test(txt)) out.push({ level: 'warn', kind: 'narrative', text: `${p.specsRel}/${cap}/spec.md reads like history in places`, fix: 'current truth is present tense; reasons go to Decisions, the sequence of changes stays in git' });
-    for (const r of parseSpec(txt).requirements) {
+    for (const doc of capabilityPhysicalDocs(p.specs, cap)) {
+      over(`${p.specsRel}/${cap}/${doc.rel}`, doc.file, b.spec);
+    }
+    const txt = readCapabilitySpec(p.specs, cap);
+    const parsed = parseSpec(txt);
+    const bodies = parsed.requirements.map((r) => r.body).join('\n');
+    if (HISTORY_NARRATIVE.test(bodies) || ORDINAL_UPDATE.test(txt)) out.push({ level: 'warn', kind: 'narrative', text: `${p.specsRel}/${cap} reads like history in places`, fix: 'current truth is present tense; reasons go to Decisions, the sequence of changes stays in git' });
+    for (const r of parsed.requirements) {
       const key = r.name.toLowerCase();
       if (reqIndex.has(key)) out.push({ level: 'warn', kind: 'duplicate', text: `requirement "${r.name}" appears in both ${reqIndex.get(key)} and ${cap}`, fix: 'one capability owns a requirement; the other links to it' });
       else reqIndex.set(key, cap);
