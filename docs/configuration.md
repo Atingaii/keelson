@@ -96,7 +96,7 @@ effort:
 | `handoff` | `100` | each active `handoff.md` |
 | `always-on` | `300` | the rule files routed by `**` or `*`, added together, because every session reads them |
 
-Budgets are in lines. Crossing one is a signal to compact that document (rewrite in the present tense, split by capability or scope, delete what git already keeps, move a checkable rule into `check:`), never an error. Set a key to `0` to disable that budget.
+Budgets are in lines and are soft compaction thresholds. Crossing one warns and surfaces knowledge pressure in `status` / `context`. Durable truth (`INTENT`, `ROADMAP`, `NOW`, `GLOSSARY`, specs, rules, and the always-on rule set) has a hard ceiling at **2× the configured budget**; `validate` / `doctor` fail beyond it, and `land` refuses a projected spec or NOW that would cross it before writing anything. Active `change.md` and `handoff.md` are temporary scaffolding, so they only warn. Set a key to `0` to disable that budget.
 
 ### Check kinds
 
