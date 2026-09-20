@@ -35,5 +35,81 @@
   "purpose": "Module import/startup diagnostic only; not command end-to-end timing or a target-qualified performance sample. No bundle is shipped based on this diagnostic.",
   "method": "Ten source imports followed by ten imports of an esbuild bundle, separate Node processes; shared host and concurrently running model experiments. The bundle retains original source import.meta.url values for this diagnostic only.",
   "source_spike": "import fs from 'node:fs';\nimport path from 'node:path';\nimport { pathToFileURL } from 'node:url';\nimport { spawnSync } from 'node:child_process';\nimport { performance } from 'node:perf_hooks';\nconst temporary = path.dirname(import.meta.filename);\nconst root = '/home/ubuntu/github/keelson';\nconst esbuild = await import(pathToFileURL(path.join(temporary, 'node_modules/esbuild/lib/main.js')));\nawait esbuild.build({ entryPoints: [path.join(root, 'src/commands/status.js')], bundle: true, platform: 'node', format: 'esm', banner: {js: 'import { createRequire as bundleCreateRequire } from \"node:module\"; const require = bundleCreateRequire(import.meta.url);'}, outfile: path.join(temporary, 'status.mjs'), plugins: [{name:'preserve-original-url-for-diagnostic', setup(build) { build.onLoad({filter:/\\.js$/}, async (args) => ({contents: fs.readFileSync(args.path,'utf8').replaceAll('import.meta.url', JSON.stringify(pathToFileURL(args.path).href)),loader:'js'}));}}] });\nconst output = {diagnosticOnly:true, esbuild:esbuild.version, samples:10, cases:{}};\nfor(const [name,module] of [['original',path.join(root,'src/commands/status.js')],['bundled',path.join(temporary,'status.mjs')]]) {\n const samples=[];\n for(let i=0;i<10;i++) { const start=performance.now(); const result=spawnSync(process.execPath,['--input-type=module','-e',`await import(${JSON.stringify(pathToFileURL(module).href)})`],{encoding:'utf8',cwd:root}); if(result.status!==0)throw new Error(result.stderr);samples.push(+(performance.now()-start).toFixed(3)); }\n output.cases[name]=samples;\n}\nfs.writeFileSync(path.join(temporary,'diagnostic.json'),JSON.stringify(output,null,2)+'\\n');\nconsole.log(JSON.stringify(output));\n",
-  "initial_trial": "The first bundle could not load because an ESM bundle lacked createRequire for yaml/process. It yielded no valid bundled samples; the diagnostic was rerun after adding the require shim."
+  "initial_trial": "The first bundle could not load because an ESM bundle lacked createRequire for yaml/process. It yielded no valid bundled samples; the diagnostic was rerun after adding the require shim.",
+  "whole_command_diagnostic": {
+    "diagnosticOnly": true,
+    "sourceCommit": "c7cd11cc7ef20c2c0bf77435973fa5006fbcee65",
+    "observedAt": "2026-09-20T13:17:18.743Z",
+    "modelRunsConcurrent": true,
+    "files": 5000,
+    "cases": {
+      "original": [
+        441.985,
+        428.386,
+        649.638,
+        579.233,
+        430.109
+      ],
+      "bundled": [
+        374.532,
+        593.922,
+        552.389,
+        488.095,
+        544.541
+      ]
+    },
+    "identicalStatus": true,
+    "instrumented": {
+      "timings": {
+        "read": {
+          "calls": 77,
+          "ms": 4.876148999999927
+        },
+        "execFileSync:rev-parse --git-path keelson-runtime": {
+          "calls": 1,
+          "ms": 8.574790000000007
+        },
+        "lstat": {
+          "calls": 5032,
+          "ms": 72.88356699999827
+        },
+        "execFileSync:rev-parse --is-inside-work-tree": {
+          "calls": 1,
+          "ms": 5.300414999999987
+        },
+        "execFileSync:ls-files -s -z": {
+          "calls": 1,
+          "ms": 9.184985000000012
+        },
+        "execFileSync:ls-files --others --exclude-standard -z": {
+          "calls": 1,
+          "ms": 9.122699999999952
+        },
+        "createHash": {
+          "calls": 3,
+          "ms": 0.8603339999999662
+        },
+        "execFileSync:hash-object --no-filters --stdin-paths": {
+          "calls": 1,
+          "ms": 84.050858
+        },
+        "execFileSync:rev-parse --short=10 HEAD": {
+          "calls": 1,
+          "ms": 4.568455999999969
+        },
+        "execFileSync:describe --tags --abbrev=0": {
+          "calls": 1,
+          "ms": 3.811407000000031
+        },
+        "execFileSync:status --porcelain": {
+          "calls": 1,
+          "ms": 21.991618000000017
+        }
+      },
+      "importMs": 115.81817999999998,
+      "executionMs": 466.259016
+    },
+    "limitations": "Five samples per case without signed records, unbalanced sequential order, models and supplemental replay used the same shared VM. Not a target-eligible result. Bundled path preserves source URLs solely for this diagnostic. No production dependency or package change.",
+    "source": "import fs from 'node:fs';\nimport path from 'node:path';\nimport cp from 'node:child_process';\nimport { performance } from 'node:perf_hooks';\nimport { pathToFileURL } from 'node:url';\nconst temporary = path.dirname(import.meta.filename);\nconst fixture = path.join(temporary,'fixture');\nconst root = '/home/ubuntu/github/keelson';\nfunction run(cmd,args,options={}) { const r=cp.spawnSync(cmd,args,{cwd:fixture,encoding:'utf8',...options});if(r.status!==0)throw new Error(r.stderr);return r.stdout; }\nif(!fs.existsSync(fixture)) {\n fs.mkdirSync(fixture);for(let i=0;i<5000;i++){const d=path.join(fixture,'src',String(Math.floor(i/100)));fs.mkdirSync(d,{recursive:true});fs.writeFileSync(path.join(d,`f${i}.js`),`export const fixture${i} = ${i};\\n`);}\n run('git',['init','-q']);run('git',['add','src']);run('git',['-c','user.name=Diagnostic fixture','-c','user.email=fixture@example.invalid','commit','-qm','fixture']);\n run(process.execPath,[path.join(root,'bin/keelson.js'),'init','--tools','agents','--no-hooks']);\n fs.writeFileSync(path.join(fixture,'.keelson/config.yaml'),'version: 4\\ncheck: []\\n');\n}\nconst original=path.join(root,'src/commands/status.js');const bundle=path.join(temporary,'status.mjs');\nconst output={diagnosticOnly:true,sourceCommit:run('git',['rev-parse','HEAD'],{cwd:root}).trim(),observedAt:new Date().toISOString(),modelRunsConcurrent:true,files:5000,cases:{},identicalStatus:true};let reference;\nfor(const [name,module] of [['original',original],['bundled',bundle]]) {const samples=[];\n for(let i=0;i<5;i++){const start=performance.now();const result=run(process.execPath,['--input-type=module','-e',`const {status}=await import(${JSON.stringify(pathToFileURL(module).href)}); await status({flags:{json:true}},${JSON.stringify(fixture)});`]);samples.push(+(performance.now()-start).toFixed(3));reference??=result;if(result!==reference)output.identicalStatus=false;}\n output.cases[name]=samples;\n}\nconst profileSource=`import fs from 'node:fs';import cp from 'node:child_process';import crypto from 'node:crypto';import {performance} from 'node:perf_hooks';import {syncBuiltinESMExports} from 'node:module';\n const timings={};\n for(const [obj,key,label] of [[cp,'execFileSync','execFileSync'],[fs,'lstatSync','lstat'],[fs,'readFileSync','read'],[crypto,'createHash','createHash']]){const original=obj[key];obj[key]=function(...args){const s=performance.now();try{return original.apply(this,args);}finally{const k=key==='execFileSync'?label+':'+args[1].join(' '):label;const t=timings[k]??={calls:0,ms:0};t.calls++;t.ms+=performance.now()-s;}};}syncBuiltinESMExports();\n const s=performance.now();const {status}=await import(${JSON.stringify(pathToFileURL(original).href)});const imported=performance.now();const stdout=console.log;console.log=()=>{};await status({flags:{json:true}},${JSON.stringify(fixture)});stdout(JSON.stringify({timings,importMs:imported-s,executionMs:performance.now()-imported}));`;\noutput.instrumented=JSON.parse(run(process.execPath,['--input-type=module','-e',profileSource]));\nfs.writeFileSync(path.join(temporary,'whole.json'),JSON.stringify(output,null,2)+'\\n');console.log(JSON.stringify(output));\n"
+  }
 }
