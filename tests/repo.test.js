@@ -85,8 +85,6 @@ test('README explains Keelson failure modes and engineering foundations', () => 
   const en = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
   const zh = fs.readFileSync(path.join(ROOT, 'README_CN.md'), 'utf8');
   for (const txt of [en, zh]) {
-    assert.match(txt, /Grill/);
-    assert.match(txt, /Trellis/);
     assert.match(txt, /Pragmatic Programmer/);
     assert.match(txt, /A Philosophy of Software Design/);
     assert.match(txt, /Domain-Driven Design/);
@@ -100,6 +98,38 @@ test('README explains Keelson failure modes and engineering foundations', () => 
   assert.match(zh, /消融|反事实/);
   assert.match(en, /reasoning tools selected on demand/i);
   assert.match(zh, /按需调用的思考工具/);
+});
+
+test('repository prose stays provenance-neutral', () => {
+  const roots = ['.agents', '.claude-plugin', '.claude', '.github', '.keelson', 'bin', 'docs', 'hooks', 'registry', 'skills', 'src', 'tests'];
+  const files = roots.flatMap((dir) => fs.existsSync(path.join(ROOT, dir)) ? walk(path.join(ROOT, dir)).map((f) => path.join(dir, f)) : []);
+  for (const entry of fs.readdirSync(ROOT, { withFileTypes: true })) {
+    if (entry.isFile()) files.push(entry.name);
+  }
+
+  const forbidden = [
+    ['gr', 'ill'].join(''),
+    ['tre', 'llis'].join(''),
+    ['super', 'powers'].join(''),
+    ['matt', 'pocock'].join(''),
+    ['mind', 'fold-ai'].join(''),
+    ['inspired', ' by'].join(''),
+    ['borrowed', ' from'].join(''),
+    ['reference', ' project'].join(''),
+    ['参考', '项目'].join(''),
+    ['借', '鉴'].join(''),
+    ['灵感', '来源'].join(''),
+    ['受', '启发'].join(''),
+  ];
+
+  const offenders = [];
+  for (const rel of [...new Set(files)]) {
+    const full = path.join(ROOT, rel);
+    let txt;
+    try { txt = fs.readFileSync(full, 'utf8'); } catch { continue; }
+    for (const term of forbidden) if (txt.toLowerCase().includes(term.toLowerCase())) offenders.push(`${rel}: ${term}`);
+  }
+  assert.deepEqual(offenders, []);
 });
 
 test('documentation home and complete user-flow guide exist in both languages', () => {
