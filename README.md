@@ -84,6 +84,19 @@ A session is only a local focus pointer. Ending a session never completes, cance
 
 See the full walkthrough: **[Complete user flow](docs/user-flow.md)**.
 
+## You do not need to be the architect
+
+Keelson does not turn every feature into an architecture interview. The agent reads the repository first, decides reversible implementation details itself, and asks only when **your answer changes the product, risk boundary, public compatibility, cost, or another durable commitment**.
+
+When it must ask, it defaults to one concrete decision at a time:
+
+> **You:** Build a shared memory service for several agents.  
+> **Agent:** One choice changes the design: should a memory be private until explicitly shared, or visible to the whole team by default? I recommend private-by-default + explicit sharing because it keeps the permission boundary narrow while still allowing collaboration. If you are not sure, I can use that default.
+
+Technical vocabulary comes after the consequence is understood. “Not sure” is a valid answer: Keelson then investigates, uses a reversible default, or makes the trade-off visible with a small prototype. `guide: true` adds teaching explanations; understandable questions are the default for everyone.
+
+Cross-domain concerns are risk-triggered, not a questionnaire. A payment change may trigger data integrity and audit/reconciliation; a webhook may trigger idempotency/retry; an auth change may trigger security/privacy. Those concerns become acceptance tests, rules, or evidence—not a generic architecture document.
+
 ## A small control plane that grows only when needed
 
 Fresh init deliberately starts small:
