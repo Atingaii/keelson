@@ -80,13 +80,9 @@ function renderIndex(capability, spec, reqFiles, { requirementsDir, decisionsFil
     '',
   ];
   if (spec.purpose) parts.push('## Purpose', '', spec.purpose.trim(), '');
-  parts.push(
-    '## Files',
-    '',
-    `- \`${requirementsDir}/\` — ${reqFiles.length} current requirement file(s); read only those relevant to the current change`,
-  );
+  parts.push(`- \`${requirementsDir}/\` — ${reqFiles.length} current requirement file(s); read only relevant files`);
   if (hasDecisions) parts.push(`- \`${decisionsFile}\` — capability-local durable decisions`);
-  parts.push('', 'This bounded index is maintained automatically by Keelson.', '');
+  parts.push('');
   return parts.join('\n');
 }
 
