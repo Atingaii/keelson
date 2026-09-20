@@ -42,6 +42,19 @@ When the soft budget is crossed, run a compaction pass on that document, choosin
 
 `keelson doctor` also reports duplicated requirements across capabilities, changes idle for two weeks, changes with more than 25 tasks, always-on rules over budget, and generated documents older than the source tree. Fix what it names, in a small change, and land that like any other.
 
+## Automatic maintenance is invisible
+<!-- keelson: id=reconcile.automatic | without: the owner is asked to run housekeeping commands, specs become giant monoliths, or cleanup is postponed until it becomes a separate project | sunset: never -->
+
+Treat knowledge shape as infrastructure, not user work. When `keelson context` exposes internal maintenance findings, resolve them in the same engineering pass without asking the owner:
+
+- **Large specs** — do not summarize away requirements. `keelson land` automatically changes a large capability from one `spec.md` into a bounded index plus `requirements/*.md` and, when needed, `decisions.md`. Total knowledge may grow; each frequently-read file stays small.
+- **Rules** — split by actual path/scope and update `rules/index.md`; merge duplicate rules and replace prose with a fitness check when deterministic.
+- **NOW / INTENT** — never shard. Rewrite them as a short current-state view; history stays in git.
+- **ADRs / decisions** — one durable decision per ADR when the project uses `refs.decisions`; the directory may grow, but do not inject every ADR into every session. Capability-local decisions may live in a bounded `decisions.md`.
+- **Runtime** — session pointers and evidence logs are caches. Keelson garbage-collects old entries opportunistically from normal commands.
+
+Only involve the owner when compaction would change product semantics, authorization, compatibility, or another decision they actually own. File movement, indexing, deduplication, history removal, and cache cleanup are maintenance and happen silently.
+
 ## Gardening cadence
 <!-- keelson: id=reconcile.cadence | without: knowledge health is only looked at when it hurts, by which time the cleanup is a project of its own | sunset: never -->
 
