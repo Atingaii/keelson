@@ -4,7 +4,7 @@ Keelson has one user-facing workflow:
 
 > **Run `keelson init` once, then keep talking to your coding agent normally.**
 
-For the full start-to-finish example—including Explore, quick/spec changes, handoff, verification, landing, bugs, upgrades, and uninstall—read [Complete user flow](user-flow.md).
+For the full start-to-finish example—including continuous follow-up questions, session recovery, quick/spec changes, explicit transfer handoffs, verification, automatic readiness/landing, bugs, upgrades, and uninstall—read [Complete user flow](user-flow.md).
 
 ## Install
 
@@ -90,16 +90,17 @@ Project knowledge appears only when useful:
 - `rules/` — when a stable path-scoped engineering invariant must survive future sessions;
 - `specs/` — when observable behavior needs a durable contract;
 - `changes/` — while non-trivial work is in flight;
-- `.local/` — when machine-local verification evidence is produced.
+- `.runtime/sessions/` — when a host/session identity can carry a local focus pointer;
+- `.runtime/evidence/` — when machine-local verification output is produced.
 
-A quick change starts with only `change.md`. A spec-sized change also starts with a task plan and behavior delta. Ledger and handoff files appear only after an event or a session boundary actually exists.
+A quick change starts with only `change.md`. A spec-sized change also starts with a task plan and behavior delta. Ledger appears after a real event. Handoff appears only for explicit ownership/machine transfer; ordinary new chat sessions use local session focus/candidate recovery.
 
 ## The commands you may care about
 
 ```bash
 keelson status
 ```
-Shows active work, verification freshness, open questions, handoffs, and release state.
+Shows active work (including mechanically derived `ready`), current session focus, verification freshness, open questions, transfer handoffs, and release state.
 
 ```bash
 keelson doctor

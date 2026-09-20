@@ -6,14 +6,22 @@ All notable changes to this project are documented here. The format follows Keep
 
 ### Added
 
+- Per-session focus runtime under gitignored `.keelson/.runtime/sessions/`: session pointers select durable changes but never carry completion state.
+- `keelson focus [change] [--auto|--clear]`: safe agent-facing session routing with explicit degraded behavior when a host has no verified identity bridge.
+- Derived work state `ready`: when acceptance/tasks, blockers/assumptions, rollout, and current-tree verification satisfy the gates, `check --record` tells the agent to land immediately without waiting for a user finish phrase.
+- Native session focus now covers four hosts with minimal adapters: Claude hooks, one OpenCode project plugin, Pi's built-in `PI_SESSION_ID` (no adapter file), and CodeBuddy hooks for SessionStart/UserPromptSubmit plus Bash/PowerShell PreToolUse. Raw host session ids are never stored.
 - `.keelson/README.md`: a package-owned human project map that explains what to read first, what every Keelson artifact means, and what survives landing; `keelson update` refreshes it without overwriting project facts.
 - New `harness.md` skill reference: feedforward/feedback controls, mechanical invariants, repeated-failure promotion, verification baselines, and sunset conditions for model-specific guidance.
 
 ### Changed
 
+- Conversation/session lifecycle is now independent from durable change lifecycle: closing a window, going idle, compaction, or switching focus cannot complete/cancel/land work.
+- `handoff.md` is reserved for explicit ownership/machine transfer; ordinary new sessions recover from durable change state plus local focus/candidate resolution.
+- Machine-local check output moved from `.keelson/.local/evidence/` to `.keelson/.runtime/evidence/`; the legacy `.local/` path remains gitignored/cleaned for compatibility.
+- Platform metadata now reports session-focus capability separately from discovery support (`native` vs `degraded`).
 - Fresh init is now a minimal standing control plane: `README.md`, `INTENT.md`, `NOW.md`, `config.yaml`, `manifest.json`, `workflow.md`, and `skill/`. Empty ROADMAP/GLOSSARY/rules/specs/changes trees are no longer pre-created.
 - Change workspaces now grow progressively: quick changes start with `change.md` only; spec changes add `tasks.md` and behavior deltas; `ledger.md` and `handoff.md` appear only after the corresponding event or session boundary.
-- The canonical Skill routes requests through six user intents — Explore, Change, Fix, Resume, Finish, Improve — while detailed references remain an internal capability library.
+- The canonical Skill now routes five **conversation** intents — Explore, Change, Fix, Resume, Improve. Completion/Finish is no longer a user intent; `ready` is derived from durable gates and current-tree verification.
 - Top-level CLI help now separates the small user command surface from agent workflow and advanced maintenance commands.
 - README and documentation were reorganized around one golden path, with a documentation home and complete end-to-end user flow in English and Chinese.
 - Generated surfaces are now reconciled as desired state through `.keelson/manifest.json`: switching hosts removes stale Keelson adapters and hook registrations without touching neighboring user files.
@@ -21,7 +29,7 @@ All notable changes to this project are documented here. The format follows Keep
 - `keelson doctor` now detects package-owned runtime, shim, managed-state, rule-file, and registered-hook drift rather than checking only file presence/version.
 - `--no-hooks` is persistent (`hooks: false`) and can be reversed with `--hooks`; config schema is version 4. Fresh init falls back to portable `agents` instead of assuming Claude Code when no first-class host is detected.
 - Keelson now uses a single project-local runtime root: `.keelson/workflow.md` and `.keelson/skill/` hold the canonical workflow, skill, and references. `AGENTS.md`, `CLAUDE.md`, `.agents/skills/keelson/`, and native host skill paths are discovery shims only, eliminating duplicated guidance while preserving platform discovery.
-- Platform generation is now standards-first: Cursor, GitHub Copilot, and Kilo Code reuse the canonical `AGENTS.md` + `.agents/skills/` surface instead of receiving duplicate Keelson copies; Kiro keeps only its native skill path where it adds discovery, Qoder's documented skill path is retained, and speculative duplicate rule files are removed.
+- Platform generation is standards-first and bounded to the seven first-class hosts plus portable fallback; native paths exist only where documented discovery adds capability, and guessed legacy adapters migrate away safely.
 - The canonical `SKILL.md` is now a thin on-demand router rather than a second copy of the resident ORIENT → BOUND → BUILD → SENSE → RECONCILE loop; a repository test caps it at 60 lines.
 - Markdown parsing and generated agent surfaces are now line-ending agnostic: LF and CRLF parse identically, while package-owned rendered Markdown emits LF for stable cross-platform output.
 - BOUND now performs an assumption audit before ambiguous non-trivial work: established facts stay separate from plan-required assumptions, reality-owned gaps are investigated, user-owned load-bearing gaps produce one highest-value question, and material results route into existing change/spec/rule artifacts instead of a new prompt diary.

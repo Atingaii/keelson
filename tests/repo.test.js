@@ -70,11 +70,13 @@ test('every guidance section carries without and sunset; SKILL.md stays short', 
   }
 });
 
-test('canonical skill exposes a six-intent user mental model', () => {
+test('canonical skill separates five conversation intents from automatic completion', () => {
   for (const lang of ['skills/keelson', 'skills/zh/keelson']) {
     const skill = fs.readFileSync(path.join(ROOT, lang, 'SKILL.md'), 'utf8');
-    for (const intent of ['Explore', 'Change', 'Fix', 'Resume', 'Finish', 'Improve']) assert.match(skill, new RegExp(`\\b${intent}\\b`), `${lang}: ${intent}`);
-    assert.match(skill, /Artifacts are containers for information|工件是信息容器/);
+    for (const intent of ['Explore', 'Change', 'Fix', 'Resume', 'Improve']) assert.match(skill, new RegExp(`\\b${intent}\\b`), `${lang}: ${intent}`);
+    assert.match(skill, /Completion is \*\*not\*\* an intent|“完成”\*\*不是一种用户意图\*\*/);
+    assert.match(skill, /ready/);
+    assert.match(skill, /Artifacts are information containers|工件是信息容器/);
   }
 });
 
@@ -83,8 +85,8 @@ test('documentation home and complete user-flow guide exist in both languages', 
     assert.ok(fs.existsSync(path.join(ROOT, 'docs', file)), `docs/${file}`);
     assert.ok(fs.existsSync(path.join(ROOT, 'docs', 'zh', file)), `docs/zh/${file}`);
   }
-  assert.match(fs.readFileSync(path.join(ROOT, 'docs', 'user-flow.md'), 'utf8'), /init once, talk normally/i);
-  assert.match(fs.readFileSync(path.join(ROOT, 'docs', 'zh', 'user-flow.md'), 'utf8'), /init 一次，正常对话/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'docs', 'user-flow.md'), 'utf8'), /Conversation lifecycle is not work lifecycle/i);
+  assert.match(fs.readFileSync(path.join(ROOT, 'docs', 'zh', 'user-flow.md'), 'utf8'), /对话生命周期不等于工作生命周期/);
 });
 
 test('resident instructions are discovery-only shims into .keelson', () => {
@@ -147,9 +149,16 @@ test('platform registry exposes exactly seven first-class hosts plus the portabl
     assert.equal(reg.platforms[id].support, 'first-class', id);
     assert.notEqual(reg.platforms[id].confidence, 'convention', id);
     assert.equal(reg.platforms[id].rulesFile, undefined, `${id}: no duplicate host rule file`);
+    assert.ok(['native', 'degraded'].includes(reg.platforms[id].sessionFocus), `${id}: sessionFocus capability is explicit`);
   }
+  for (const id of ['claude', 'opencode', 'pi', 'codebuddy']) assert.equal(reg.platforms[id].sessionFocus, 'native', id);
+  for (const id of ['codex', 'gemini', 'kiro']) assert.equal(reg.platforms[id].sessionFocus, 'degraded', id);
+  assert.equal(reg.platforms.opencode.sessionAdapter, 'opencode-plugin');
+  assert.equal(reg.platforms.pi.sessionAdapter, 'pi-env');
+  assert.equal(reg.platforms.codebuddy.sessionAdapter, 'codebuddy-hooks');
   assert.equal(reg.platforms.agents.support, 'portable');
   assert.equal(reg.platforms.agents.skillsDir, '.agents/skills');
+  assert.equal(reg.platforms.agents.sessionFocus, 'degraded');
   assert.match(reg.platforms.agents.examples, /Any host/);
 });
 

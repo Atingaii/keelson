@@ -32,7 +32,7 @@ Exit 1 for an unknown/retired host or invalid profile.
 keelson platforms [--json]
 ```
 
-Lists the seven first-class hosts plus the portable fallback with support level, instruction and skill discovery paths, hook support, confidence, and installed/configured state.
+Lists the seven first-class hosts plus the portable fallback with discovery support, `sessionFocus` capability (`native|degraded`), instruction/Skill paths, hooks, confidence, and installed/configured state.
 
 ## `keelson update`
 
@@ -71,6 +71,19 @@ Rules that apply (2):
 ! active change add-pagination (ann, in-progress) declares these paths or capabilities — coordinate before editing
 ```
 
+## `keelson focus`
+
+```text
+keelson focus [change] [--auto|--clear] [--json]
+```
+
+Agent-facing session routing. It changes only the gitignored conversation pointer; it never changes durable work status.
+
+- `focus <change>`: bind this session to one active change when a stable session identity is available.
+- `--auto`: keep an existing valid focus; otherwise choose a unique branch match or sole active change.
+- `--clear`: clear this session pointer without cancelling/completing the change.
+- degraded mode: when the host exposes no verified session identity, Keelson returns a safe candidate but does not persist a global/shared focus. Ambiguity is never guessed.
+
 ## `keelson new`
 
 ```text
@@ -101,7 +114,7 @@ Exit 1 when the change exists, the tier is unknown, or `--worktree` is used outs
 keelson status [--json]
 ```
 
-Per active change: work, verification, and release state; owner and branch; slices with progress and what they deliver (or the task list when there are no slices); acceptance progress; open questions and what they block; assumed decisions awaiting the owner; handoff stamp and whether HEAD moved since. Then shared-contract warnings between active changes, the last tag with changes landed since it, and `NOW.md`.
+Per active change: derived work state (including `ready`), verification, and release; current session focus; owner and branch; slices with progress and what they deliver (or the task list when there are no slices); acceptance progress; open questions and what they block; assumed decisions awaiting the owner; handoff stamp and whether HEAD moved since. Then shared-contract warnings between active changes, the last tag with changes landed since it, and `NOW.md`.
 
 ```text
 Keelson — shop
@@ -123,7 +136,7 @@ share-links  [spec]  work: in-progress  verify: ~ stale  release: unreleased  (a
 keelson handoff [name] [--by who] [--json]
 ```
 
-Creates `changes/<name>/handoff.md` from the template, or re-stamps an existing one, with `at` (short HEAD), `updated`, and `by`. The agent fills the sections. With one active change the name may be omitted.
+Creates/re-stamps an explicit transfer package. This is for ownership/machine transfer, not ordinary chat resume. With a session focus, that change is preferred; otherwise a sole active change may be omitted.
 
 ## `keelson validate`
 
@@ -131,7 +144,7 @@ Creates `changes/<name>/handoff.md` from the template, or re-stamps an existing 
 keelson validate [--json]
 ```
 
-Structural checks over `.keelson/` and the specs directory. Errors (exit 1): missing `INTENT.md` or `NOW.md`; bad `profile` or `land`; rule files referenced but missing; spec directories without `spec.md`; duplicate requirements; bad tier or work status; missing `Why`/`What`; spec tier missing `How`/`Alternatives`/`Impact` or fewer than two alternatives; bad effort tags; `Verify:` entries without command or exit; unknown root-cause categories; dated model IDs anywhere under `.keelson/`. Warnings: template placeholders, rules not listed in the index, requirements without scenarios, acceptance items without a check kind, open questions without `blocks:`, dependencies on inactive changes, `**BREAKING**` without `Rollout`, slices without `Delivers:`, `Verify:` entries without `tree`, `Dispatch:` entries without `Result:`, handoffs without `at:`, missing refs paths, `.gitignore` without `.keelson/.local/`, and a slice named after a layer (`database`, `backend`, `frontend`, `ui`, `api`, `model`, `storage`, `infra`, and their variants), because a slice should be one user-observable path through every layer.
+Structural checks over `.keelson/` and the specs directory. Errors (exit 1): missing `INTENT.md` or `NOW.md`; bad `profile` or `land`; rule files referenced but missing; spec directories without `spec.md`; duplicate requirements; bad tier or work status; missing `Why`/`What`; spec tier missing `How`/`Alternatives`/`Impact` or fewer than two alternatives; bad effort tags; `Verify:` entries without command or exit; unknown root-cause categories; dated model IDs anywhere under `.keelson/`. Warnings: template placeholders, rules not listed in the index, requirements without scenarios, acceptance items without a check kind, open questions without `blocks:`, dependencies on inactive changes, `**BREAKING**` without `Rollout`, slices without `Delivers:`, `Verify:` entries without `tree`, `Dispatch:` entries without `Result:`, handoffs without `at:`, missing refs paths, `.gitignore` without `.keelson/.runtime/`, and a slice named after a layer (`database`, `backend`, `frontend`, `ui`, `api`, `model`, `storage`, `infra`, and their variants), because a slice should be one user-observable path through every layer.
 
 ```text
 ! changes/demo/tasks.md: slice "Backend" is named after a layer; a slice should be one user-observable path through all layers (tracer bullet)
@@ -143,7 +156,7 @@ Structural checks over `.keelson/` and the specs directory. Errors (exit 1): mis
 keelson check [cmd...] [--record [claim]] [--change name] [--quiet] [--json]
 ```
 
-Runs the entries in `config.yaml → check` (or the single command given as positional arguments), saves each output to `.keelson/.local/evidence/<timestamp>-<n>.log`, and prints one exit code per entry. An entry may be a command string or `{name, command, kind}`; named entries print their name and kind before the command:
+Runs the entries in `config.yaml → check` (or the single command given as positional arguments), saves each output to `.keelson/.runtime/evidence/<timestamp>-<n>.log`, and prints one exit code per entry. An entry may be a command string or `{name, command, kind}`; named entries print their name and kind before the command:
 
 ```text
 keelson check — 3 commands
@@ -246,4 +259,4 @@ keelson restore [--force] [--dry-run] [--dir <path>]
 keelson uninstall [--purge]
 ```
 
-Removes generated runtime/integration surfaces: host skill shim directories, discovery blocks, host-specific rule files when configured, hook entries in `.claude/settings.json`, `.keelson/workflow.md`, `.keelson/skill/`, `.keelson/hooks/`, and `.keelson/.local/`. Keeps the project facts under `.keelson/` (INTENT, NOW, ROADMAP, rules, specs, changes). `--purge` removes `.keelson/` as well; specs stored outside it are untouched.
+Removes generated runtime/integration surfaces: host skill shim directories, discovery blocks, host-specific rule files when configured, hook entries in `.claude/settings.json`, `.keelson/workflow.md`, `.keelson/skill/`, `.keelson/hooks/`, `.keelson/.runtime/`, and legacy `.keelson/.local/`. Keeps the project facts under `.keelson/` (INTENT, NOW, ROADMAP, rules, specs, changes). `--purge` removes `.keelson/` as well; specs stored outside it are untouched.

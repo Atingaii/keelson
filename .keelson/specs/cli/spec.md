@@ -21,8 +21,37 @@ Running `keelson init` or `keelson update` twice SHALL produce the same files as
 - WHEN `change.md` holds a `(assumed)` decision and `--confirm-assumptions` is not passed
 - THEN `keelson land` exits 1 and says the owner must confirm it
 
+## Requirement: Session focus routing
+The CLI SHALL keep per-session focus under gitignored `.keelson/.runtime/sessions/` when a stable opaque session identity is available. Focus SHALL select an active change for agent-facing commands but SHALL NOT mutate durable work lifecycle state.
+
+### Scenario: New change becomes current focus
+- GIVEN `KEELSON_SESSION_ID` identifies a session
+- WHEN `keelson new alpha` succeeds
+- THEN that session's local focus points to `alpha`
+
+### Scenario: Commands prefer focused change
+- GIVEN two active changes and the current session focuses `alpha`
+- WHEN `keelson check --record`, `keelson land`, `keelson cancel`, or `keelson handoff` omits a change name
+- THEN the command targets `alpha`, not the other active change
+
+### Scenario: Auto resume in degraded mode
+- GIVEN no stable session identity is available
+- WHEN `keelson focus --auto` finds one unique branch/active candidate
+- THEN it reports that candidate without creating a global/shared mutable focus
+
+### Scenario: Clear focus
+- WHEN `keelson focus --clear` runs with a stable session identity
+- THEN only the session pointer is deleted; the active change remains unchanged
+
+## Requirement: Ready is derived from durable gates
+The CLI SHALL derive `ready` independently of conversation phrasing when all required tasks and acceptance are complete, no blocking open questions or unconfirmed assumptions remain, breaking rollout requirements are satisfied, and current-tree verification passes.
+
+### Scenario: Verification closes the final gate
+- GIVEN all non-verification gates already pass
+- WHEN `keelson check --record` records passing evidence for the current tree
+- THEN the change reports `ready` and the CLI tells the agent to land without waiting for an owner "done" phrase
 ## Requirement: Evidence is recorded with a fingerprint
-`keelson check --record` SHALL run the configured checks, save their output under `.keelson/.local/evidence/`, and append a `Verify:` entry that names each command, its exit code, and the working-tree fingerprint with `.keelson/` excluded.
+`keelson check --record` SHALL run the configured checks, save their output under `.keelson/.runtime/evidence/`, and append a `Verify:` entry that names each command, its exit code, and the working-tree fingerprint with `.keelson/` excluded.
 
 ### Scenario: Ledger append
 - WHEN `keelson check --record "claim"` runs with one active change

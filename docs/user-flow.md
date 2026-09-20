@@ -1,8 +1,22 @@
 # Complete user flow
 
-The important UX rule is simple: **Keelson is not another process the user operates.** The user talks to Claude Code, Codex, OpenCode, Pi, Gemini CLI, Kiro CLI, or CodeBuddy CLI as usual. Keelson turns the useful parts of that work into reviewable project state underneath the conversation.
+The central rule is:
 
-## 0. Install and initialize
+> **Conversation lifecycle is not work lifecycle.**
+
+Users may keep asking questions, go idle, close the terminal, open another window, or return tomorrow without ever saying “start task” or “finish task”. Keelson must remain correct anyway.
+
+Keelson therefore keeps three different kinds of state:
+
+```text
+Durable project truth     INTENT / specs / rules
+Durable work item         changes/<name>/
+Ephemeral conversation    .runtime/sessions/<key>.json
+```
+
+A session file only answers **“which durable change is this conversation currently focused on?”** It never says whether the change is complete.
+
+## 0. Initialize once
 
 ```bash
 npm install -g keelson
@@ -10,9 +24,9 @@ cd my-project
 keelson init
 ```
 
-If a first-class host is detected, Keelson installs its discovery shim. Otherwise it uses the portable `AGENTS.md + .agents/skills/` layer.
+Then use Claude Code, Codex, OpenCode, Pi, Gemini CLI, Kiro CLI, or CodeBuddy normally.
 
-A fresh project starts deliberately small:
+Fresh init stays small:
 
 ```text
 .keelson/
@@ -23,265 +37,336 @@ A fresh project starts deliberately small:
 ├── manifest.json
 ├── workflow.md
 └── skill/
-    ├── SKILL.md
-    └── references/
 ```
 
-There is no empty ROADMAP, glossary, rules tree, specs tree, changes tree, task list, ledger, or handoff.
+Runtime state appears only when needed:
 
-## 1. First conversation: confirm intent, not a whole repository model
+```text
+.keelson/.runtime/
+├── sessions/<opaque-key>.json
+└── evidence/
+```
 
-You open your normal coding agent.
+It is gitignored.
+
+## 1. A normal conversation can last indefinitely
 
 > **You:** Add search to the orders page.
 
-On first contact, the agent reads the repository and drafts `.keelson/INTENT.md` from what already exists. It does **not** try to document every capability in the repository.
-
-> **Agent:** I read the project first. I understand it as an internal order-management app; the public API is intentionally out of scope, and destructive production operations still require explicit confirmation. I recorded that in INTENT.  
-> For this request, I understand “search” as filtering orders by order number and customer name on the existing list page. No global site search. Is that boundary right?
-
-You correct only what matters. The agent rewrites INTENT/NOW from the answer and continues.
-
-## 2. Explore mode: thinking is read-only
-
-> **You:** Before we build it, is client-side search or server-side search better here?
-
-Keelson routes this to **Explore**. The agent reads the current code/specs/rules and discusses alternatives. No change directory is created merely because you are thinking.
-
-If a quick experiment beats discussion, the agent may run a read-only benchmark/spike and report the result. Nothing durable is written unless the result changes future work.
-
-## 3. Quick change: one file until more state exists
-
-Suppose the request is clear and does not change the behavior contract:
-
-> **You:** Rename the internal “buyer” field to “customer” everywhere in the admin UI. Behavior should not change.
-
-The agent writes back the boundary, then internally runs something equivalent to:
-
-```bash
-keelson new rename-buyer --tier quick
-```
-
-The workspace starts as:
+The agent confirms the load-bearing boundary and creates a durable change.
 
 ```text
-.keelson/changes/rename-buyer/
+.keelson/changes/order-search/
 └── change.md
 ```
 
-No empty task list or ledger is created.
+If the host exposes a trustworthy session identity, Keelson also binds this conversation locally:
 
-The agent edits the code and runs the project checks:
-
-```bash
-keelson check --record "buyer renamed without behavior change" --change rename-buyer
+```json
+{
+  "schema": 1,
+  "change": "order-search"
+}
 ```
 
-Only now does `ledger.md` appear, because evidence now exists.
+The raw host session id is not stored.
 
-If the change finishes in one session, there is never a `handoff.md`.
+Now the user can keep talking:
 
-## 4. Spec-sized change: boundary → approval → slices
+> **You:** Why did you choose server-side search?
 
-Now a behavior contract really changes:
+That is **Explore/explanation inside the same focused work**, not a new task.
 
-> **You:** Let customers revoke a share link, and revoked links must immediately stop opening images.
+> **You:** Highlight the matching text too.
 
-The agent routes this to **Change** and performs four things before implementation:
+That changes the same requested outcome, so the existing `order-search` change is updated.
 
-1. reads current project state and impact;
-2. separates facts, assumptions, and unanswered owner decisions;
-3. writes a reviewable change boundary and acceptance criteria;
-4. writes the behavior delta and implementation slices.
+> **You:** What happens on mobile?
 
-The workspace grows because the information is now real:
+Still an informational follow-up. No lifecycle transition.
 
-```text
-.keelson/
-├── specs/
-│   └── sharing/spec.md              # current truth, if it did not already exist
-└── changes/revoke-share-link/
-    ├── change.md                    # why / scope / acceptance / decisions
-    ├── tasks.md                     # vertical slices because this work needs a plan
-    └── specs/sharing/spec.md        # behavior delta
-```
+> **You:** By the way, fix the billing export crash too.
 
-The agent shows you the load-bearing choices before code:
+That is an independent modification outcome. The agent creates a second durable change and moves this session's focus to it. The original order-search change remains active; it is not completed or cancelled merely because the conversation changed topic.
 
-> **Agent:** Proposed contract: revocation is immediate for every image access path; existing browser bytes are not remotely erasable; no grace period.  
-> Alternative: 5-minute grace period lowers cache churn but violates “immediately”. I recommend immediate denial.  
-> Acceptance is three scenarios: revoked page access, revoked direct image access, and existing unrevoked links unchanged. Approve this boundary?
+## 2. Closing the window means almost nothing
 
-For a spec-sized change, implementation waits for approval unless your config explicitly says otherwise.
+Suppose the user simply closes the terminal.
 
-## 5. Build: one vertical slice at a time
+Keelson does **not**:
 
-After approval, the agent implements the narrowest end-to-end slice first rather than “database, then backend, then frontend”.
+- mark the focused change complete;
+- create a fake handoff;
+- archive the change;
+- rewrite project truth;
+- infer that the user is “done for today”.
 
-Example:
+The durable change directory remains exactly as it was.
 
-```text
-Slice 1: Revoke and deny page access
-Slice 2: Deny direct image access
-Slice 3: Management UI and regression coverage
-```
+The session pointer is only machine-local runtime state. It may later disappear without affecting the change.
 
-Cheap targeted checks run during work. Full configured checks are reserved for completion claims.
+This is the same principle used by a database transaction coordinator or scheduler: **liveness of a client connection is not business-state completion**.
 
-If the agent discovers a stable project-specific invariant such as “all share authorization passes through canViewShare()”, that rule is persisted only if future sessions need it. If a command can enforce it, the command is preferred over prose.
+## 3. A new session deliberately recovers focus
 
-## 6. Stop and resume: state crosses the session boundary
+Tomorrow the user opens a new Agent window:
 
-Suppose you stop after slice 1.
+> **You:** Continue.
 
 The agent runs:
 
 ```bash
-keelson handoff revoke-share-link
+keelson focus --auto
 ```
 
-Now—and only now—`handoff.md` appears.
+Resolution is conservative:
+
+1. keep an already-valid session focus;
+2. if exactly one active change matches the current branch, suggest/bind it;
+3. otherwise, if there is exactly one active change, suggest/bind it;
+4. if several candidates remain, do **not** guess.
+
+In the ambiguous case the agent asks only the disambiguating question, for example:
+
+> There are two active changes: `order-search` and `billing-export-crash`. Which one do you want to continue?
+
+On hosts without a reliable session-identity bridge, the same safe degraded rule applies. Work remains correct even if convenience is reduced.
+
+## 4. Quick change: no fake project-management ceremony
+
+> **You:** Rename the internal “buyer” label to “customer”; behavior stays the same.
+
+The agent creates:
 
 ```text
-changes/revoke-share-link/
-├── change.md
-├── tasks.md
-├── handoff.md
-└── specs/sharing/spec.md
+changes/rename-buyer/
+└── change.md
 ```
 
-It records the current commit, what is confirmed, what is done, what remains, and the next concrete step.
+It does not create empty tasks, ledger, handoff, spec, or design files.
 
-Tomorrow:
+The conversation may contain ten follow-up questions. Nothing about that changes the work lifecycle.
 
-> **You:** Continue.
-
-The new session reads NOW + handoff and resumes the recorded next step. It does not restart discovery or ask you to repeat settled decisions.
-
-## 7. Verify: evidence is tied to the exact tree
-
-Before saying “done”, the agent runs:
+When implementation and acceptance are ready, the agent records evidence:
 
 ```bash
-keelson check --record "revocation end-to-end" --change revoke-share-link
+keelson check --record "buyer rename preserves behavior"
 ```
 
-`ledger.md` now contains the command/exit results plus a worktree fingerprint.
+Now `ledger.md` appears because there is a real verification event.
 
-If code changes afterward, `keelson status` marks that verification **stale**. A green result from an older tree cannot be reused as a completion claim.
-
-The agent also maps each acceptance item to a real check. “Tests pass” is not enough when an acceptance criterion has no coverage.
-
-## 8. Finish: review → fold truth → remove scaffolding
-
-When tasks and acceptance are complete and evidence is fresh:
-
-```bash
-keelson land revoke-share-link
-```
-
-Keelson refuses to land if there are open questions, unchecked acceptance, stale evidence, unconfirmed assumptions, breaking changes without rollout, or spec drift.
-
-On success:
-
-- delta behavior folds into the main capability spec;
-- durable decisions remain beside that behavior;
-- temporary change scaffolding disappears by default;
-- full chronology stays in Git history;
-- NOW is rewritten to the current state.
-
-The project ends with **less temporary material than during implementation**.
-
-## 9. Fix mode: bugs do not need a fake feature process
-
-> **You:** This endpoint returns 500 when the customer name contains emoji. Fix it.
-
-The agent routes to **Fix**:
-
-1. reproduce;
-2. locate the failure;
-3. add a negative regression check;
-4. fix the cause, not the symptom;
-5. run fresh verification.
-
-If it is a small local defect, no spec or design document is invented. If the fix reveals a missing behavior contract or recurring invariant, only then does Keelson persist one.
-
-## 10. Improve mode: repeated failure becomes a stronger control
-
-If the same failure class keeps recurring, the agent can run:
-
-```bash
-keelson retro
-```
-
-The escalation path is deliberately narrow:
+If all gates hold, the CLI reports:
 
 ```text
-one-off defect
-→ recurring failure class
-→ scoped rule/spec clarification
-→ executable fitness check
-→ remove redundant prose
+rename-buyer: ready → run `keelson land rename-buyer`;
+do not wait for the user to say "done"
 ```
 
-The harness should become more precise, not simply larger.
+The agent lands it immediately before making a completion claim.
 
-## 11. What you use directly
+## 5. Spec-sized change: durable work grows independently of chat
 
-### See current state
+> **You:** Let customers revoke share links, and revoked links must immediately stop opening images.
+
+The agent creates a spec-sized work item after the owner approves the behavior boundary:
+
+```text
+.keelson/
+├── specs/
+│   └── sharing/spec.md
+└── changes/revoke-share-link/
+    ├── change.md
+    ├── tasks.md
+    └── specs/sharing/spec.md
+```
+
+The user may then ask:
+
+> Why no grace period?  
+> Does this invalidate CDN cache?  
+> What about already-open browser tabs?  
+> Also change the button copy.
+
+Those are all conversation turns. They do not need “task start/finish” markers. The agent classifies each turn as explanation, modification of the same outcome, or a genuinely independent outcome.
+
+## 6. Readiness is derived, not announced
+
+A change becomes `ready` only when the mechanical/durable state says so:
+
+```text
+required tasks complete
+AND acceptance complete
+AND no blocking open questions
+AND no unconfirmed assumptions
+AND breaking change has rollout
+AND verification passes on current tree
+```
+
+For a quick change, absence of a tasks file is fine.
+
+For a spec change, the planned tasks/acceptance contract matters.
+
+If verification was green and code is edited afterward, readiness disappears because evidence becomes stale.
+
+This is why the user never has to say:
+
+> “This task is finished.”
+
+The repository already knows whether the work is ready.
+
+## 7. Completion is an automatic Agent transition
+
+When `keelson check --record` causes the current change to become `ready`, the agent follows with:
+
+```bash
+keelson land
+```
+
+The focused change is selected automatically when session identity exists.
+
+Landing:
+
+- folds behavior deltas into current specs;
+- folds durable decisions beside the behavior they explain;
+- removes/archive temporary change scaffolding according to config;
+- clears every local session pointer that referenced that change.
+
+Only after successful landing may the agent say the change is complete.
+
+If an owner decision is still required, it does not land. It asks that one decision instead.
+
+## 8. What if the user asks another question after landing?
+
+Nothing special.
+
+> **You:** Why did you use a unique index here?
+
+That is an informational question. The agent answers it. It does not resurrect the landed change.
+
+> **You:** Make duplicate submissions return the existing record instead of 409.
+
+That is a new behavior modification. The agent creates a new change if non-trivial.
+
+So there is no “conversation ends when task ends” assumption in either direction.
+
+## 9. Handoff is now a real transfer artifact
+
+Ordinary session continuity does **not** require `handoff.md`.
+
+Use:
+
+```bash
+keelson handoff <change>
+```
+
+when work ownership really moves:
+
+- another developer/agent on another machine takes over;
+- a long-running worktree is explicitly handed to someone else;
+- the owner wants a committed cold-start transfer package.
+
+A handoff remains committed because another machine needs it.
+
+A normal new chat window does not need one; it reconstructs from durable change state plus local session focus/candidate resolution.
+
+## 10. Parallel conversations
+
+Suppose two Agent windows work in parallel:
+
+```text
+session A → order-search
+session B → billing-export
+```
+
+Each session gets its own gitignored pointer.
+
+```text
+.runtime/sessions/
+├── a1….json → order-search
+└── b9….json → billing-export
+```
+
+`keelson check --record`, `land`, and `handoff` prefer the current session focus, so verification from one window does not accidentally land the other change.
+
+If session identity is unavailable or ambiguous, Keelson refuses to guess and requires an explicit change name.
+
+This is deliberate fail-safe behavior.
+
+## 11. Fix mode works the same way
+
+> **You:** Emoji in customer names makes this endpoint return 500.
+
+The agent reproduces, adds a regression check, fixes the cause, and verifies.
+
+The user might then ask several technical questions; the same work item remains focused.
+
+When the regression acceptance and verification are satisfied, it becomes `ready` and lands. No “finish” phrase.
+
+## 12. Project truth is slower-lived than work
+
+After a change lands, only durable truth survives:
+
+- observable behavior → specs;
+- stable scoped invariant → rules/checks;
+- stable terminology → glossary;
+- project-level direction/state → ROADMAP/NOW when genuinely useful;
+- history → Git.
+
+Session pointers disappear locally. Temporary work artifacts fold away.
+
+The lifetimes therefore form:
+
+```text
+conversation/session   minutes–hours, local
+change/work item       minutes–days/weeks, committed
+project truth          months–years, committed
+git history            permanent record
+```
+
+## 13. What the user actually does
+
+Usually:
+
+```bash
+keelson init
+```
+
+Then natural language.
+
+Optional visibility:
 
 ```bash
 keelson status
 ```
 
-Useful when you want an at-a-glance view of active changes, verification freshness, open questions, handoffs, and release state.
-
-### Diagnose
+Diagnostics/update:
 
 ```bash
 keelson doctor
-```
-
-Doctor checks the canonical runtime, host shims, install manifest, registered hooks, project validation, evidence freshness, conflicts, and knowledge health. Findings name the repair.
-
-### Upgrade or change coding hosts
-
-```bash
-npm install -g keelson@latest
 keelson update
 ```
 
-The install manifest records which generated surfaces Keelson owns. Update reconciles actual disk state toward the configured target and removes stale Keelson-owned adapters without deleting neighboring user files.
+The Agent handles `focus`, `new`, `context`, `impact`, `check`, `land`, and exceptional `handoff`.
 
-### Remove Keelson
-
-```bash
-keelson uninstall
-```
-
-This removes generated runtime/integration surfaces but keeps project facts. Use `--purge` only when you explicitly want the whole `.keelson/` directory removed.
-
-## The mental model in one screen
+## Mental model
 
 ```text
-YOU
- │
- │ normal conversation
- ▼
-CODING AGENT
- │
- ├─ Explore ───────────── read-only thinking
- ├─ Change ────────────── bound → build slices
- ├─ Fix ───────────────── reproduce → repair
- ├─ Resume ────────────── NOW + handoff
- ├─ Finish ────────────── verify → land
- └─ Improve ───────────── failure → stronger control
- │
- ▼
-.keelson/
- ├─ always: intent + now + runtime + config + manifest
- ├─ on demand: roadmap / glossary / rules / specs
- └─ in flight only: change artifacts + evidence + handoff
+conversation turns
+      │
+      ▼
+session focus ───────────────┐
+(local, ephemeral)           │
+      │                      │
+      ▼                      │
+durable change/work item ◄───┘
+(committed, lifecycle state)
+      │
+      │ ready when gates/evidence say so
+      ▼
+land automatically
+      │
+      ▼
+durable project truth
 ```
 
-The golden path is intentionally boring: **init once, talk normally, inspect status only when you want visibility.**
+**The user never has to perform lifecycle bookkeeping through conversation phrases.**

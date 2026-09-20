@@ -56,7 +56,9 @@ export const projectPaths = (root, cfg = null) => {
     changes: path.join(k, 'changes'),
     archive: path.join(k, 'changes', 'archive'),
     hooks: path.join(k, 'hooks'),
-    local: path.join(k, '.local'),
-    evidence: path.join(k, '.local', 'evidence'),
+    runtime: path.join(k, '.runtime'),
+    sessions: path.join(k, '.runtime', 'sessions'),
+    evidence: path.join(k, '.runtime', 'evidence'),
+    legacyLocal: path.join(k, '.local'),
   };
 };

@@ -2,9 +2,13 @@
 
 # 验证
 
-完成是一个附带证据的声明。证据以两种互相独立的方式失效：记录可能无效（检查根本没跑、跑在旧代码上、或只跑了一部分），内容可能无效（跑了、通过了，却仍然没有检查被要求的东西）。Keelson 用机械手段处理第一种，为第二种给代理一个结构。
+Ready/完成是由证据支撑的生命周期状态，不是用户必须说出的一句话。证据以两种互相独立的方式失效：记录可能无效（检查根本没跑、跑在旧代码上、或只跑了一部分），内容可能无效（跑了、通过了，却仍然没有检查被要求的东西）。Keelson 用机械手段处理第一种，为第二种给代理一个结构。
 
 这两半各有名字。**机械证据**是全部配置的检查在当前树上通过：测试、lint、类型检查、构建，以及任何 `fitness` 检查（变成命令的架构或质量约束）。**行为证据**是 `change.md` 的验收清单，每一项映射到覆盖它的测试、命令、人工检查或评审，并且只在那项检查跑过之后才勾选。机械证据是必要的，永远不充分；落地两者都需要。
+
+## Ready 转换
+
+Verification 必要但不充分。记录检查之后，Keelson 会重新评估 focused change；当 acceptance/tasks、open questions、assumptions、rollout 与当前 tree verification 全部满足 gate 时，work 自动成为 `ready`，CLI 直接提示应 land。Agent 必须先 land 再宣称完成，用户不需要主动宣布“任务做完了”。
 
 ## 记录有效性
 
@@ -18,7 +22,7 @@ keelson check --record "pagination end to end"
 
 1. 按顺序通过 shell 运行 `config.yaml → check` 下的每个条目，关闭颜色；条目是命令字符串或 `{name, command, kind}`，`kind` 取 `test`、`lint`、`typecheck`、`build`、`fitness`、`check` 之一；
 2. 打印每条命令的输出（除非 `--quiet`）和退出码；
-3. 把每条命令的完整输出保存到 `.keelson/.local/evidence/<timestamp>-<n>.log`；
+3. 把每条命令的完整输出保存到 `.keelson/.runtime/evidence/<timestamp>-<n>.log`；
 4. 计算工作树指纹；
 5. 往活动变更的 `ledger.md`（或 `--change` 指定的那个）追加一条 `Verify:`：
 

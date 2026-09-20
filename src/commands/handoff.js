@@ -7,6 +7,7 @@ import { parseFrontmatter } from '../lib/markdown.js';
 import { headSha, gitUserName } from '../lib/git.js';
 import { skillSource } from '../platforms/index.js';
 import { ok, info } from '../lib/out.js';
+import { readSession } from '../lib/session.js';
 
 /** Create or re-stamp handoff.md for a change. The agent writes the content; the CLI keeps `at`, `updated`, `by` truthful. */
 export async function handoff({ flags, positional }, cwd = process.cwd()) {
@@ -16,8 +17,10 @@ export async function handoff({ flags, positional }, cwd = process.cwd()) {
   let name = positional[0];
   if (!name) {
     const all = loadAllChanges(p.changes);
-    if (all.length === 1) name = all[0].name;
-    else throw new Error(all.length ? `several active changes (${all.map((c) => c.name).join(', ')}); name one` : 'no active change');
+    const focused = readSession(root).state?.change;
+    if (focused && all.some((c) => c.name === focused)) name = focused;
+    else if (all.length === 1) name = all[0].name;
+    else throw new Error(all.length ? `several active changes (${all.map((c) => c.name).join(', ')}); bind one with \`keelson focus <name>\` or name one` : 'no active change');
   }
   const c = loadChange(p.changes, name);
   if (!c) throw new Error(`no change named "${name}"`);
@@ -32,7 +35,7 @@ export async function handoff({ flags, positional }, cwd = process.cwd()) {
     write(file, front + tpl);
     ok(`created ${path.relative(root, file)}`);
   }
-  info('a handoff is a current-state summary, not a diary: goal and confirmed decisions, done, open/blocked, ruled out, next step, verification');
+  info('handoff is for real ownership/machine transfer; ordinary session continuation uses .keelson/.runtime/sessions and the durable change artifacts');
   if (flags.json) console.log(JSON.stringify({ name, file }));
   return 0;
 }

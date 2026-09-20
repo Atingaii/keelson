@@ -36,7 +36,7 @@ Fresh init 创建：
 - `skill/SKILL.md` —— 把用户意图路由到按需工程能力；
 - `README.md` —— 人类项目地图。
 
-ROADMAP、Glossary、rules、specs、活动 changes、ledger、handoff、evidence 和 hooks 都不是常驻要求。只有真的承载信息或已选宿主集成需要时才出现。
+ROADMAP、Glossary、rules、specs、活动 changes、transfer handoff、evidence、hooks 与 session runtime 都不是常驻要求；只有真正承载信息或宿主集成需要时才出现。
 
 ## Canonical runtime 与宿主发现
 
@@ -74,35 +74,61 @@ Keelson 对 package-owned Skill 目录采用可恢复替换：先完整生成同
 
 `keelson doctor` 会把 canonical workflow、Skill 文件集合/内容、发现 shim、manifest 状态和已注册 hook 脚本，与当前 CLI 本应生成的结果比较。漂移报告会指出具体表面和修复路径。
 
+## Session runtime：只保存焦点，不保存生命周期
+
+Conversation 状态故意与长期 work 分开，并且只存在本机：
+
+```text
+.keelson/.runtime/
+├── sessions/<opaque-key>.json
+└── evidence/
+```
+
+session record 只保存例如 `change: order-search` 的指针，绝不保存 completed/cancelled。宿主原始 session id 在写磁盘前会被转换成 opaque key。
+
+当前有四种 native session focus 实现：
+
+- **Claude Code** —— SessionStart/UserPromptSubmit hook 把宿主 session id 哈希后，通过环境桥把 opaque `KEELSON_SESSION_ID` 传给后续 CLI。
+- **OpenCode** —— 一个项目 plugin 利用官方 tool hook 给 Bash command 前置 opaque `KEELSON_SESSION_ID`。
+- **Pi** —— 不需要额外 Keelson adapter 文件；Pi 已把 `PI_SESSION_ID` 暴露给 shell tool，Keelson 只在内存中哈希后用于本地 pointer。
+- **CodeBuddy** —— 项目 hook 能收到 `session_id`；Bash `PreToolUse` 确定性注入 Keelson identity，SessionStart/UserPromptSubmit 注入极小 focus context。
+
+Codex、Gemini CLI、Kiro CLI 在获得同等级、可验证的 deterministic bridge 前保持**安全降级，而不是猜测**。`keelson focus --auto` 仍可利用 branch 唯一匹配/唯一 active change；有歧义时必须显式给 change 名。长期 work state 始终保持正确。
+
+有 identity 时，`keelson new` 把新 work item 绑定到当前 session；`check --record`、`land`、`cancel`、`handoff` 优先使用 focused change。Land/cancel 会清除所有仍指向该长期 change 的本地 pointer。
+
+session 文件被 gitignore；删除它们只影响便利性，不影响工作事实。
+
 ## Hook（Claude Code）
 
 Claude Code 启用 hook 时，init 把两个自包含 Node 脚本复制到 `.keelson/hooks/` 并注册到 `.claude/settings.json`。运行时不依赖全局 Keelson 常驻进程。
 
 | Hook | 事件 | 用途 |
 |---|---|---|
-| `session-start.mjs` | `SessionStart` | 紧凑当前状态：NOW、活动 changes、handoff 下一步 |
-| `prompt-state.mjs` | `UserPromptSubmit` | 一行活动 change / verification 状态；空闲时不输出 |
+| `session-start.mjs` | `SessionStart` | 解析匿名 session identity、刷新本地 focus、注入紧凑当前 work context |
+| `prompt-state.mjs` | `UserPromptSubmit` | 刷新本地 session runtime 并注入 focused change；唯一 active change 只是 resume candidate，不静默绑定 |
 
 Hook 注入的是**状态，不是工作流指令**。工作流仍然来自 canonical runtime。
 
 `--no-hooks` 会把 `hooks: false` 持久写进项目 config，之后 update 保持关闭；`--hooks` 显式重新开启。宿主设置文件里其他人的 hooks 不会被覆盖。
 
-## 意图路由与内部能力
+## 对话意图与自动生命周期
 
-canonical Skill 不再把 13 个 reference 暴露成 13 条用户工作流，而是先把请求归为六种意图：
+canonical Skill 只把**对话 turn**分成五类：
 
 | 意图 | 路由 |
 |---|---|
 | Explore | discover + shape，只读 |
 | Change | shape → context → 需要时 plan → build |
 | Fix | debug → verify |
-| Resume | handoff + 当前上下文 |
-| Finish | verify → land → reconcile |
+| Resume | session focus / candidate resolution + 当前 context |
 | Improve | harness → reconcile |
 
-`model.md` 和 `engineer.md` 是二级 lens：只有术语/边界漂移，或存在真实设计/可靠性取舍时才读取。
+“完成”不是第六类意图。Work readiness 由长期状态机械推导。
 
-因此渐进披露同时发生在两侧：用户只需要一个很小的心智模型；Agent 遇到复杂任务时仍能进入更深工程能力。
+每轮修改后 Agent 都 reconcile 当前 focused change。当 tasks/acceptance 满足、阻塞问题/假设消失、rollout 条件满足、当前 tree 的 verification 新鲜时，`keelson status` 显示 `ready`；`keelson check --record` 也会直接提示 `ready → land now`。Agent 必须先 land，再向用户宣称完成。
+
+结束聊天或切换话题都不能触发这个状态转换。
 
 ## 渐进式 change workspace
 
@@ -127,9 +153,9 @@ changes/<name>/
 其他文件由事件触发：
 
 - 第一次发生 Ruling、Root cause、Dispatch、Escalate 或 Verify 时才有 `ledger.md`；
-- 工作需要穿过会话/人员边界时才有 `handoff.md`；
+- `handoff.md` 只在明确跨人/跨机器所有权转移时出现；普通新 session 从长期 work + 本地 focus/candidate resolution 重建；
 - 只有受影响能力才有额外 delta spec；
-- 检查真正产生本机输出时才有 `.local/evidence/`。
+- 检查真正产生本机输出时才有 `.runtime/evidence/`。
 
 这样文件存在本身就有含义，而不是空模板。
 
@@ -214,7 +240,7 @@ base: 4233e56865
 
 ## NOW.md
 
-`NOW.md` 是快照，不是日志。每次落地和每次中途停下时整体重写：在做什么、卡在哪或有什么不确定（包括"尚未检查：…"）、下一步具体做什么。`keelson land --now "<text>"` 写它。会话启动 hook 打印它。
+`NOW.md` 是可选的项目级快照，不是 conversation/change lifecycle 的来源。Session focus 位于 `.runtime/sessions/`，长期 work state 位于 `changes/`。只有项目级下一步确实变化时，`keelson land --now "<text>"` 才需要更新 NOW。
 
 ## Rules 路由
 

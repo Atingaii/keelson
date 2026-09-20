@@ -4,4 +4,5 @@ npm-debug.log*
 *.tgz
 /tmp/
 # Keelson: per-machine session state and check evidence
+.keelson/.runtime/
 .keelson/.local/

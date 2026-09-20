@@ -22,7 +22,7 @@ export function validateProject(root) {
   if (!exists(p.specs) && p.specsRel !== '.keelson/specs') warnings.push(`paths.specs points at ${p.specsRel}, which does not exist`);
   for (const [k, v] of Object.entries(cfg.refs ?? {})) if (v && !/^https?:\/\//.test(v) && !exists(path.join(root, v))) warnings.push(`refs.${k} points at ${v}, which does not exist`);
   const gi = readOr(path.join(root, '.gitignore'), '');
-  if (exists(path.join(root, '.git')) && !/^\.keelson\/\.local\/?$/m.test(gi)) warnings.push('.gitignore does not exclude .keelson/.local/ (session state and evidence would be committed)');
+  if (exists(path.join(root, '.git')) && !/^\.keelson\/\.runtime\/?$/m.test(gi)) warnings.push('.gitignore does not exclude .keelson/.runtime/ (session focus and evidence would be committed)');
 
   const idx = parseRulesIndex(readOr(p.rulesIndex));
   for (const e of idx) if (!exists(path.join(p.rules, e.file))) errors.push(`rules/index.md references missing file: ${e.file}`);
@@ -82,7 +82,7 @@ export function validateProject(root) {
   }
 
   const patterns = datedIdPatterns();
-  for (const f of walk(p.keelson, { ignore: ['node_modules', '.git', '.local'] })) {
+  for (const f of walk(p.keelson, { ignore: ['node_modules', '.git', '.local', '.runtime'] })) {
     if (!/\.(md|yaml|yml|json)$/.test(f) || f.startsWith('hooks/')) continue;
     const txt = read(path.join(p.keelson, f));
     for (const re of patterns) {

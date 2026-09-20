@@ -4,6 +4,10 @@ Completion is a claim with evidence attached. Evidence can fail in two independe
 
 The two halves have names. **Mechanical evidence** is the full set of configured checks passing on the current tree: tests, lint, type checks, the build, and any `fitness` check (an architecture or quality constraint turned into a command). **Behavioural evidence** is the acceptance list of `change.md`, each item mapped to the test, command, manual check, or review that covers it, and ticked only after that check ran. Mechanical evidence is necessary and never sufficient; a landing needs both.
 
+## Ready transition
+
+Verification is necessary but not sufficient. After a recorded check, Keelson re-evaluates the focused change. If its acceptance/tasks, open questions, assumptions, rollout and current-tree verification all satisfy the gates, work becomes `ready` and the CLI prints a land-now hint. The agent lands before making a completion claim; the user does not need to announce completion.
+
 ## Record validity
 
 ### keelson check --record
@@ -16,7 +20,7 @@ The command:
 
 1. runs every entry under `config.yaml → check`, in order, through the shell, with colour disabled; an entry is a command string or `{name, command, kind}` with `kind` in `test`, `lint`, `typecheck`, `build`, `fitness`, `check`;
 2. prints each command's output (unless `--quiet`) and its exit code;
-3. saves the full output of each command to `.keelson/.local/evidence/<timestamp>-<n>.log`;
+3. saves the full output of each command to `.keelson/.runtime/evidence/<timestamp>-<n>.log`;
 4. computes the worktree fingerprint;
 5. appends a `Verify:` entry to the active change's `ledger.md` (or the one named with `--change`):
 

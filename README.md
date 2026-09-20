@@ -21,27 +21,26 @@ strong defaults with explicit escape hatches
 
 ## 60-second example
 
-You keep talking normally:
+You do **not** have to tell Keelson when a task starts or ends.
 
 > **You:** Let customers revoke share links. Revoked links must immediately stop opening images.
 
-The agent reads the current project, writes back the boundary, and asks only the load-bearing question:
+The agent creates/binds one durable change and keeps this conversation focused on it.
 
-> **Agent:** I will treat revocation as immediate denial on every image access path; already-downloaded browser bytes cannot be remotely erased. No grace period. I recommend this over a timed grace period because “immediate” is part of the requirement. Approve that boundary?
+> **You:** Why not use a 5-minute grace period?  
+> **Agent:** That would reduce cache churn, but it conflicts with “immediately”. I recommend immediate denial.
 
-After approval it creates only the artifacts this change needs, implements one vertical slice at a time, and records verification against the exact worktree.
+> **You:** Also make sure direct image URLs stop working.  
+> **Agent:** Same change. I added that access path to the existing acceptance boundary.
 
-If you stop:
+> **You:** What happens on mobile?  
+> **Agent:** That is an informational follow-up, not a new work item. The same revocation contract applies.
 
-> **You:** Stop here.  
-> **Agent:** Handoff written. Next step: deny direct image access for revoked links.
+You can keep asking questions like this indefinitely. No “finish task” phrase is required.
 
-Tomorrow:
+When acceptance is satisfied and fresh verification matches the current tree, Keelson derives the work state as **ready**. The agent lands it automatically before claiming completion. If you simply close the window first, the durable change remains in progress; only the local session focus disappears.
 
-> **You:** Continue.  
-> **Agent:** Resuming from the recorded handoff; the previous decision is already confirmed.
-
-Before saying “done”, Keelson requires fresh evidence. If code changes after verification, that evidence becomes stale.
+A later session can deliberately resume it with `keelson focus --auto` when the candidate is unambiguous. A committed `handoff.md` is reserved for a real ownership/machine transfer, not ordinary chat continuation.
 
 ## Quick start
 
@@ -71,18 +70,21 @@ The rest of the CLI exists primarily for the coding agent.
 
 ## One golden path
 
-Keelson routes natural-language work into six intents:
+Conversation intent and work lifecycle are separate.
+
+Keelson routes user messages into five conversational intents:
 
 | Intent | What it means |
 |---|---|
-| **Explore** | Think, compare, clarify; stay read-only until you ask for a change |
-| **Change** | Bound a feature/refactor/migration, then deliver the smallest vertical slices |
+| **Explore** | Think, compare, explain, clarify; read-only until a modification is requested |
+| **Change** | Build/refactor/migrate, or continue modifying the currently focused outcome |
 | **Fix** | Reproduce → locate → regression check → repair → verify |
-| **Resume** | Read NOW + handoff and continue the recorded next step |
-| **Finish** | Verify → review → land → fold durable truth back |
+| **Resume** | Rebind a new session to existing durable work when the candidate is clear |
 | **Improve** | Turn recurring failures into a spec, scoped rule, or executable check |
 
-These are routing modes for the agent, not commands the user has to memorize.
+**Completion is not an intent.** It is derived from the work item: acceptance complete, no blocking questions/assumptions, required rollout present, and fresh verification on the current tree. Once those gates hold, the change becomes `ready` and the agent runs the landing/reconciliation path without waiting for the user to say “done”.
+
+A session is only a local focus pointer. Ending a session never completes, cancels, or lands a change.
 
 See the full walkthrough: **[Complete user flow](docs/user-flow.md)**.
 
@@ -103,16 +105,25 @@ Fresh init deliberately starts small:
     └── references/
 ```
 
-Optional knowledge appears only when it carries real information:
+Optional durable knowledge appears only when it carries real information:
 
 ```text
-ROADMAP.md                   # only when a milestone needs to live here
-GLOSSARY.md                  # only when vocabulary is load-bearing
-rules/                       # only for durable scoped invariants
-specs/<capability>/spec.md   # only for behavior contracts
-changes/<name>/              # only while non-trivial work is in flight
-.local/                      # local evidence, gitignored
+ROADMAP.md                   # milestone/direction if the tracker does not already own it
+GLOSSARY.md                  # load-bearing vocabulary
+rules/                       # durable scoped invariants
+specs/<capability>/spec.md   # behavior contracts
+changes/<name>/              # durable work items in flight
 ```
+
+Ephemeral machine-local state is separate:
+
+```text
+.runtime/
+├── sessions/<key>.json      # this conversation's current change focus only
+└── evidence/                # check output
+```
+
+`.runtime/` is gitignored. A session file is never a task record and never stores “completed”.
 
 A quick change begins with only:
 
@@ -121,9 +132,9 @@ changes/rename-buyer/
 └── change.md
 ```
 
-`tasks.md`, `ledger.md`, `handoff.md`, and delta specs appear only when the change actually needs a plan, evidence, a session boundary, or a behavior-contract delta.
+`tasks.md`, `ledger.md`, delta specs, and `handoff.md` appear only when they carry a plan, evidence, contract delta, or explicit ownership transfer.
 
-**Empty scaffolding is not progress.**
+**Empty scaffolding is not progress; a closed conversation is not completion.**
 
 ## One canonical runtime
 
@@ -142,18 +153,18 @@ This keeps host compatibility from multiplying project rules.
 
 Official support is intentionally bounded to seven CLI hosts plus the portable standards layer:
 
-| Host | Instructions | Skill discovery | Evidence |
-|---|---|---|---|
-| Claude Code | `CLAUDE.md` | `.claude/skills/` | verified |
-| Codex CLI | `AGENTS.md` | `.agents/skills/` | verified |
-| OpenCode | `AGENTS.md` | `.agents/skills/` | documented |
-| Pi | `AGENTS.md` | `.agents/skills/` | documented |
-| Gemini CLI | `GEMINI.md` | `.agents/skills/` | documented |
-| Kiro CLI | `AGENTS.md` | `.kiro/skills/` | documented |
-| CodeBuddy CLI | `CODEBUDDY.md` | `.codebuddy/skills/` | documented |
-| Portable Agent Skills readers | `AGENTS.md` | `.agents/skills/` | fallback |
+| Host | Instructions | Skill discovery | Session focus | Evidence |
+|---|---|---|---|---|
+| Claude Code | `CLAUDE.md` | `.claude/skills/` | **native** | verified |
+| Codex CLI | `AGENTS.md` | `.agents/skills/` | degraded | verified |
+| OpenCode | `AGENTS.md` | `.agents/skills/` | **native** | documented |
+| Pi | `AGENTS.md` | `.agents/skills/` | **native** | documented |
+| Gemini CLI | `GEMINI.md` | `.agents/skills/` | degraded | documented |
+| Kiro CLI | `AGENTS.md` | `.kiro/skills/` | degraded | documented |
+| CodeBuddy CLI | `CODEBUDDY.md` | `.codebuddy/skills/` | **native** | documented |
+| Portable Agent Skills readers | `AGENTS.md` | `.agents/skills/` | degraded | fallback |
 
-A host becomes first-class only when its discovery paths are verified or backed by primary documentation and it passes the same init/update/doctor/uninstall contract.
+A host becomes first-class only when discovery/lifecycle paths are verified or backed by primary documentation and it passes the shared contract. Session focus is a separate capability: `native` currently covers Claude hooks, the OpenCode project plugin, Pi's built-in session environment, and CodeBuddy hooks. `degraded` means durable work remains correct but ambiguous conversations must select a change explicitly. `--no-hooks` disables hook/plugin bridges (Pi remains native because its session environment is built in).
 
 ## Reliability is part of the product
 

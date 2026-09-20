@@ -65,7 +65,7 @@ effort:
 | `land` | `fold` | `fold` removes the change directory after merging. `keep` moves it to `changes/archive/` |
 | `check` | detected | What `keelson check` runs, in order, from the project root through the shell. Each entry is a command string, or an object `{name, command, kind}` where `kind` is one of `test`, `lint`, `typecheck`, `build`, `fitness`, `check`. For a plain string the kind is guessed from the command. Detected from `package.json` scripts, `pyproject.toml`, `pytest.ini`, `go.mod`, or `Cargo.toml` on first init |
 | `guide` | `false` | `true` when the owner is learning engineering. Adds a guided-mode line to `.keelson/workflow.md` and a note to `keelson context`; the skill then explains with scenarios and trade-offs and closes spec changes with a short teaching note. `keelson init --guide` sets it |
-| `hooks` | `true` | Whether hook-capable selected hosts should install their Keelson hooks. `--no-hooks` writes `false` and stays off on later `update`; `--hooks` turns them back on |
+| `hooks` | `true` | Whether Keelson-managed lifecycle/session hooks or plugins are installed for selected hosts. This currently controls Claude, OpenCode, and CodeBuddy bridges; Pi stays native because `PI_SESSION_ID` is provided by Pi itself. `--no-hooks` persists `false`; `--hooks` turns managed bridges back on |
 | `budgets` | see below | Line budgets per document type. `keelson doctor` reports a document over its budget and asks for a compaction; nothing is rewritten automatically |
 | `context` | `""` | Free text printed at the top of `keelson context` output. Use it for facts that do not fit INTENT.md, such as a tech stack summary |
 | `paths.specs` | `.keelson/specs` | Directory of behaviour contracts, one `<capability>/spec.md` each. Point it at an existing contracts directory to reuse it |
@@ -115,7 +115,7 @@ platforms:
     instructionsFormat: kiro
 ```
 
-Keys: `instructions` (the file that receives the discovery block), `instructionsFormat` (`kiro` writes a standalone steering file with an inclusion header instead of a marked block), `skillsDir` (where the one-file `keelson/SKILL.md` discovery shim is installed), `rulesFile` and `rulesFormat` (`mdc` for a rule file with frontmatter, `md` for plain Markdown), and `hooks` (`true` only for a tool that runs hooks the way Claude Code does). Overrides apply to `init`, `update`, `doctor`, `uninstall`, and `ablate`. Use them when a supported host's local/older installation reads a different documented path.
+Keys: `instructions` (the file that receives the discovery block), `instructionsFormat` (`kiro` writes a standalone steering file with an inclusion header instead of a marked block), `skillsDir` (where the one-file `keelson/SKILL.md` discovery shim is installed), `rulesFile` and `rulesFormat` (`mdc` for a rule file with frontmatter, `md` for plain Markdown), and host-specific discovery/session fields when you intentionally override a documented local installation. Session adapter internals are registry-owned and normally should not be overridden. Overrides apply to `init`, `update`, `doctor`, `uninstall`, and `ablate`. Use them when a supported host's local/older installation reads a different documented path.
 
 ### Migration
 
@@ -139,7 +139,7 @@ Edit the lines to fit the project. The `Working defaults` section states the siz
 |---|---|---|
 | `tier` | `--tier` | `quick` or `spec` |
 | `created` | date | Creation date |
-| `status` | `new`, `land --keep`, `cancel`, or the agent | Work status: `clarifying`, `in-progress`, `blocked`, `in-review`, `integrated`, `cancelled`. Explicit values win over derived ones |
+| `status` | `new`, `land --keep`, `cancel`, or the agent | Work status: `clarifying`, `in-progress`, `blocked`, `ready`, `in-review`, `integrated`, `cancelled`. `ready` is normally derived from acceptance/gates plus fresh verification; durable explicit `blocked`/`integrated`/`cancelled` override derivation |
 | `owner` | git user name, or `--owner` | Who is driving the change |
 | `branch` | current branch, or the worktree branch | Where the work happens |
 | `worktree` | `--worktree` | Relative path of the worktree created for the change |
@@ -163,5 +163,7 @@ Edit the lines to fit the project. The `Working defaults` section states the siz
 | `ANTHROPIC_MODEL`, `OPENAI_MODEL` | Reported as the tool's default model by `keelson models --detect` |
 | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY` | Their presence is recorded by detection. `--refresh` uses the first two to query provider catalogues |
 | `CLAUDE_PROJECT_DIR` | Set by Claude Code; the hooks use it to find the project |
+| `KEELSON_SESSION_ID` | Opaque session identity injected by native Keelson bridges (Claude/OpenCode/CodeBuddy). Used only to select `.keelson/.runtime/sessions/<key>.json` |
+| `PI_SESSION_ID` | Provided by Pi to shell tools; Keelson hashes it in memory to resolve the local session focus |
 | `NO_COLOR` | Disables coloured CLI output |
 | `KEELSON_DEBUG` | Prints stack traces on errors |

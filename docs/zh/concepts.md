@@ -16,11 +16,26 @@ Keelson 吸收多个成熟工程领域里的失效控制思想，但把它们落
 | **显式状态机优先于模糊形容词** | 一个“完成”会掩盖彼此独立的失败维度 | work / verification / release 三维状态与明确 land gate |
 | **可观测性必须带修复方向** | 只说“有问题”的健康检查会把诊断成本推给用户 | `doctor` 指出漂移/健康问题对应的表面与修复动作（`update`、压缩、重验） |
 | **证据必须绑定版本** | 可复现性要求知道某个结论究竟针对哪份工件 | `Verify:` 把命令、退出码绑定到工作树指纹；代码变化后证据自动 stale |
-| **交接是易丢信息的接口** | 人因失效经常发生在换人、换班、换会话处 | `handoff.md`、`NOW.md`、owner/branch、唯一具体下一步；易失细节留在本机 |
+| **连接状态不是工作状态** | 窗口/session 丢失不能破坏长期生命周期 | `.runtime/sessions/` 只保存 focus；`changes/` 拥有 work state；`handoff.md` 只用于真实交接 |
 | **渐进披露优先于万能清单** | 指令越多，注意力与遵从度最终越差 | 极薄发现 shim → 紧凑 workflow → 一个任务 reference → 路径作用域 rules |
-| **黄金路径 + 逃生口** | 常见场景应几乎不要求用户学习产品术语，非常见场景仍必须可配置 | 用户正常对话；Skill 路由六类意图；tier/config/host 标志是显式覆盖，不是使用前提 |
+| **黄金路径 + 逃生口** | 常见场景应几乎不要求用户学习产品术语，非常见场景仍必须可配置 | 用户正常对话；五类对话意图负责路由；完成状态自动推导 |
 
 这些原则首先约束 Harness 自身。理想结果通常是 Keelson 变得更薄：一个原则一旦被机械化执行，就删掉重复提示词。
+
+## Session、Work Item 与项目真相
+
+这三种生命周期绝不能混在一起。
+
+| 状态 | 位置 | 生命周期 | 含义 |
+|---|---|---|---|
+| 对话/session focus | `.keelson/.runtime/sessions/<key>.json` | 分钟～小时，本机 | 当前 AI 窗口正在围绕哪个 active change |
+| Change/work item | `.keelson/changes/<name>/` | 分钟～数天/数周，提交 Git | 长期需求目标、验收与证据状态 |
+| 项目真相 | `INTENT.md`、specs、rules、glossary | 数月～数年，提交 Git | 未来工作应视作当前事实的内容 |
+| 历史 | Git | 长期 | 时间线和已经折叠的临时工件 |
+
+关闭 session 不会完成 change；切换 focus 不会取消之前的 change；change land 后才会清除所有指向它的本地 session pointer。
+
+`handoff.md` 不是普通 session pointer，而是真正换人/换机器时的显式 transfer artifact。
 
 ## 目标、里程碑、变更、切片
 
@@ -89,29 +104,38 @@ Keelson 保留长期项目需要的能力，把它们分布在文件里，而不
 
 ## 三个状态维度
 
-单一的"完成"无法表达"已实现、测试全绿、等待评审、未合并"或"已合并、迁移未执行"。Keelson 为每个变更报告三个维度。
+单一“完成”会把实现、证据、集成和发布混为一谈，因此 Keelson 分开报告。
 
 ### work
 
-`clarifying`、`in-progress`、`blocked`、`in-review`、`integrated`、`cancelled`。
+`clarifying`、`in-progress`、`blocked`、**`ready`**、`in-review`（兼容旧/人工状态）、`integrated`、`cancelled`。
 
-`change.md` frontmatter 里显式的 `status:` 优先。否则：没有任务是 `clarifying`；有未勾选的任务是 `in-progress`；所有任务勾选且 `Verify:` 通过是 `in-review`。`keelson new` 给 spec 变更写 `clarifying`，给 quick 变更写 `in-progress`。`keelson land --keep` 写 `integrated`；`keelson cancel` 写 `cancelled`。代理因未决问题停下时手动设为 `blocked`。
+关键状态 `ready` **由仓库状态推导，而不是用户宣布**。同时满足以下条件才 ready：
+
+- 已存在的 tasks 全部完成（quick change 没有 tasks 完全合法）；
+- 必需 acceptance 完成；
+- 没有 blocking open questions；
+- 没有未确认 assumptions；
+- breaking change 有 rollout；
+- 当前 worktree 上最后一次 verification 通过。
+
+结束一次 session 对 work state 没有任何影响。进入 ready 后，Agent 应在宣称完成前自动 land。显式的 `blocked`、`integrated`、`cancelled` 仍是长期覆盖状态。
 
 ### verification
 
 `not-run`、`passed`、`failed`、`partial`、`stale`。
 
-由 `ledger.md` 里最后一条 `Verify:` 推导。没有条目是 `not-run`。没有退出码的条目是 `partial`。非零退出是 `failed`。退出码为 0 且记录的 `tree` 与当前工作树指纹一致是 `passed`；不一致是 `stale`。见[验证](verification.md)。
+来自最后一条 `Verify:`。通过记录只属于它测量的 worktree fingerprint，之后修改代码就 stale。
 
 ### release
 
-除非 frontmatter 里的 `release:` 另有说明，否则为 `unreleased`。项目层面，`keelson status` 读取最后一个 git tag，列出其后折叠的变更。带 `## Rollout` 段的变更在其步骤执行完之前不算完成。
+除非 frontmatter 另有说明，否则是 `unreleased`。项目发布状态从 Git tag 推导；land/integration 与生产 rollout 不是同一件事。
 
 ## 记录有效性与内容有效性
 
 证据以两种互相独立的方式失效。
 
-**记录有效性**问的是检查是否真的跑了、跑在这份代码上、完整跑完。`keelson check --record` 机械地回答它：运行配置的命令，把输出保存到 `.keelson/.local/evidence/`，写一条 `Verify:`，写明每条命令、退出码和工作树指纹。此后对代码的任何编辑都让这条记录过期。
+**记录有效性**问的是检查是否真的跑了、跑在这份代码上、完整跑完。`keelson check --record` 机械地回答它：运行配置的命令，把输出保存到 `.keelson/.runtime/evidence/`，写一条 `Verify:`，写明每条命令、退出码和工作树指纹。此后对代码的任何编辑都让这条记录过期。
 
 **内容有效性**问的是跑过的东西是否覆盖了被要求的东西。没有工具能回答它；代理对照 `change.md → Acceptance` 和原始请求来回答。每个验收项写明如何检查（`test:`、`check:`、`manual:`、`review:`），只在那项检查跑过之后才勾选。spec 变更上的陌生读者评审捕捉作者的盲点。为了通过而改动的测试是对验收标准的改动，需要所有者决定。
 
@@ -119,12 +143,13 @@ Keelson 保留长期项目需要的能力，把它们分布在文件里，而不
 
 | 信息 | 位置 | 进 git |
 |---|---|---|
-| 项目事实、specs、rules、路线图、术语表、当前状态 | `.keelson/` | 是 |
-| 变更工件，包括 `handoff.md` 和 `ledger.md` | `.keelson/changes/<name>/` | 是，直到变更折叠；之后在历史里 |
-| 检查输出、本机状态 | `.keelson/.local/` | 否 |
-| 模型探测缓存、用户级层级覆盖、ablation 暂存 | `~/.keelson/` | 否 |
+| 项目事实/specs/rules | `.keelson/` | 是 |
+| 活动长期 work | `.keelson/changes/<name>/` | 是，折叠后留在 Git 历史 |
+| 明确交接包 | `changes/<name>/handoff.md` | 是，只在真正交接时创建 |
+| session focus + 检查输出 | `.keelson/.runtime/` | 否 |
+| 用户模型缓存 / ablation 暂存 | `~/.keelson/` | 否 |
 
-另一台机器上的同事接续工作所需的一切都提交。
+另一台机器通过 Git 获得长期 work state；普通本地聊天 focus 故意不共享。
 
 ## Keelson 不是什么
 

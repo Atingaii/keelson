@@ -1,16 +1,18 @@
 # Keelson workflow
 
-This is the project-local operating kernel. Project truth lives under `.keelson/`; existing project documents are referenced from `config.yaml`, never duplicated. Task-specific depth lives in `.keelson/skill/` and is loaded only when needed.
+Project truth and durable work live under `.keelson/`. Machine-local conversation focus and evidence live under gitignored `.keelson/.runtime/`. A **session is not a task**: it only points at the work item this conversation is currently about.
 
-Every non-trivial change follows **ORIENT → BOUND → BUILD → SENSE → RECONCILE**.
+Every non-trivial modifying request follows **ORIENT → BOUND → BUILD → SENSE → RECONCILE**.
 
-- **ORIENT** — inspect the current worktree and run `keelson context --paths <files>`; before changing a shared module run `keelson impact <files>`.
-- **BOUND** — trivial: do it; quick: write back understanding and create the smallest useful change artifact; spec: clarify acceptance, write the behavior delta and plan, then wait for approval.
-- **BUILD** — work one vertical slice at a time. Keep unrelated cleanup out; never silently weaken tests or change a behavioral contract.
-- **SENSE** — run cheap relevant checks early. Claims such as done/fixed/passing require fresh `keelson check --record` evidence on the current tree.
-- **RECONCILE** — fold durable facts into specs/rules/glossary/NOW; unfinished cross-session work gets `keelson handoff <name>`.
-- **Create artifacts lazily.** An empty document is not progress. ROADMAP, GLOSSARY, rules, specs, tasks, ledger, and handoff appear only when they carry information another person or session would need.
-- Repeated failure classes become a scoped rule or executable fitness check through `keelson retro`; shrink prose once automation carries the invariant.
-- If `NOW.md` starts with "First contact", draft `INTENT.md` from the repository and ask the owner to confirm or correct it. Do not inventory the repository; create specs/rules only as real work exposes a durable contract or invariant.
+- **ORIENT** — inspect the worktree and current session focus. Same-goal follow-ups keep the focused change. For “continue”, run `keelson focus --auto`; never bind an ambiguous session silently.
+- **BOUND** — trivial: edit directly; quick: create the smallest useful change; spec: acceptance + behavior delta + plan, then wait for approval.
+- **BUILD** — one vertical slice at a time. A new independent requested outcome gets a new change; continuing questions about the same outcome do not.
+- **SENSE** — cheap checks early; completion requires fresh `keelson check --record` evidence on the current tree.
+- **RECONCILE** — evaluate lifecycle after each modifying pass. If gates are satisfied, status becomes `ready` and the agent lands automatically; do not wait for the user to say “done”. Fold durable facts into specs/rules/glossary as needed.
+- Ending a session, going idle, compaction, or closing the window changes only session runtime state. It never completes, cancels, or lands durable work.
+- `handoff.md` is reserved for real transfer across people/machines or deliberate ownership change. Normal new sessions reconstruct from change/task/ledger state and optional session focus.
+- Create artifacts lazily. Empty documents are not progress.
+- Repeated failure classes become scoped rules or executable fitness checks; shrink prose after automation carries the invariant.
+- First contact confirms `INTENT.md`; specs/rules grow only when real work exposes durable truth.
 
-The canonical task router is `.keelson/skill/SKILL.md`. It chooses the user intent first, then loads only the references needed for that intent.
+The canonical router is `.keelson/skill/SKILL.md`. It classifies conversation intent; lifecycle transitions are derived from work state, not user phrasing.

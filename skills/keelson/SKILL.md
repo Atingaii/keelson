@@ -1,34 +1,38 @@
 ---
 name: keelson
-description: Engineering control plane for coding work in repositories with a .keelson/ directory. Use for exploring an idea, building or changing code, fixing/debugging, continuing prior work, reviewing/finishing/landing, or improving recurring engineering failures. Routes the task into the smallest Keelson workflow while keeping project truth, evidence, and continuation state current.
+description: Engineering control plane for coding work in repositories with a .keelson/ directory. Use for exploring an idea, changing code, fixing/debugging, continuing prior work, or improving recurring engineering failures. Keeps conversation sessions separate from durable work items so users can keep asking questions without having to announce when a task starts or ends.
 ---
 
 # Keelson
 
-The project-local kernel is `.keelson/workflow.md`. Keelson constrains **state transitions and evidence**, not implementation taste. User instructions and project instructions win. Read `.keelson/README.md` when you need the project map.
+The project-local kernel is `.keelson/workflow.md`. Keelson constrains **state transitions and evidence**, not implementation taste. User and project instructions win.
 
-## Pick the intent, then load only what it needs
+## Classify the conversation, not the lifecycle
 
 | Intent | Typical request | Start with |
 |---|---|---|
-| **Explore** | “what should we build?”, compare approaches, “grill me” | `discover.md` + `shape.md`; read-only until the owner asks to change the project |
-| **Change** | build, add, refactor, migrate | `shape.md` → `context.md`; add `plan.md` for spec-sized work, then `build.md` |
-| **Fix** | bug, failing test, unexpected behaviour | `debug.md`, then `verify.md` |
-| **Resume** | continue, pick this back up, hand off | `handoff.md` + current context; resume the next proven step instead of re-planning |
-| **Finish** | review, done?, wrap up, land, release | `verify.md` → `land.md` → `reconcile.md` |
+| **Explore** | compare, explain, “what should we do?”, “grill me” | `discover.md` + `shape.md`; read-only until a modification is requested |
+| **Change** | build, add, refactor, migrate, “also change…” | `shape.md` → `context.md`; add `plan.md` for spec-sized work, then `build.md` |
+| **Fix** | bug, failing test, unexpected behavior | `debug.md`, then `verify.md` |
+| **Resume** | continue, pick this back up | `keelson focus --auto` + current context; use `handoff.md` only when a real ownership/machine transfer exists |
 | **Improve** | repeated mistake, harness/rule/process problem, retro | `harness.md` + `reconcile.md` |
 
-Use `model.md` when vocabulary or boundaries drift and `engineer.md` only when a real design/reliability trade-off exists.
+Completion is **not** an intent and never depends on the user saying “done”. It is a state transition: when the focused change has satisfied acceptance, no blocking questions/assumptions, required rollout, and fresh verification on the current tree, it becomes `ready`. Run the Finish path (`verify.md` → `land.md` → `reconcile.md`) automatically before claiming completion.
 
 ## Operating rules
 
-- If `NOW.md` says “First contact”, inspect the repository and draft `INTENT.md`; ask the owner to confirm or correct it. Do not inventory the whole repository into specs/rules—create those only when current work needs a durable contract or invariant.
-- Non-trivial work starts from the current tree: `keelson context --paths <files>`; before changing a shared module, `keelson impact <files>`.
-- Size the change: **trivial** = do it; **quick** = write back understanding and create a lightweight change; **spec** = acceptance + delta specs + plan, then wait for approval.
-- Artifacts are containers for information, not ceremony. Do **not** create an empty ROADMAP, GLOSSARY, rule, tasks, ledger, handoff, or spec just because a template exists.
+- A conversation/session is only a focus pointer. Ending a window, going idle, or continuing to ask questions MUST NOT mark a change complete.
+- `keelson new` binds the new change to the current session when session identity is available. Same-goal follow-ups stay on that change; an independent requested outcome gets a new change and focus moves.
+- On Resume, use `keelson focus --auto`; branch match or a sole active change may be suggested. Never silently bind an ambiguous session.
+- If `NOW.md` says “First contact”, infer and confirm `INTENT.md`; do not inventory the whole repository into specs/rules.
+- Non-trivial modifying work starts from current context; shared modules get `keelson impact <files>`.
+- Size only the work: trivial = direct edit; quick = lightweight change; spec = acceptance + behavior delta + plan, then approval.
+- Artifacts are information containers, not ceremony. Do not create empty roadmap/glossary/rule/task/ledger/handoff/spec files.
 - Keep **code reality**, **confirmed truth**, and **planned change** distinct. Open questions block only dependent slices.
-- Completion claims require fresh `keelson check --record` evidence on the current tree. Never silently weaken an acceptance check.
-- Repeated failures graduate to the narrowest durable control: spec → scoped rule → executable fitness check. Remove redundant prose after automation carries the invariant.
-- Use floating effort tiers `light | standard | deep`; never persist dated model IDs.
+- Fresh `keelson check --record` evidence is required for completion claims. Never weaken acceptance to make a check pass.
+- A `ready` change should be landed without waiting for a special user phrase. If landing still needs an owner decision, stop on that decision only.
+- `handoff.md` is for real transfer across people/machines or deliberate ownership change; ordinary session continuity comes from durable change artifacts plus `.keelson/.runtime/sessions/`.
+- Repeated failures graduate to the narrowest durable control: spec → scoped rule → executable fitness check; remove redundant prose afterward.
+- Use `light | standard | deep`; never persist dated model IDs.
 
-Use `keelson <command> --help` for mechanics; users normally only need `init`, `status`, `doctor`, `update`, and `uninstall`.
+Users normally need only `init`, `status`, `doctor`, `update`, and `uninstall`; the agent uses the rest.

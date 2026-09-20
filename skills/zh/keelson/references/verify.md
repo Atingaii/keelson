@@ -1,18 +1,18 @@
 # Verifying（验证）
 
-完成是一个附带证据的断言，而证据有两个会独立失效的属性：记录可能无效（从没跑过、跑在旧代码上、只跑了一部分），内容可能无效（跑了、通过了，却仍没检查负责人要的东西）。本参考两者都管。它不会随模型变强而变薄，因为它关乎的是世界，不是判断。
+Ready/完成是由长期 gate 与证据支撑的状态，而证据有两个会独立失效的属性：记录可能无效（从没跑过、跑在旧代码上、只跑了一部分），内容可能无效（跑了、通过了，却仍没检查负责人要的东西）。本参考两者都管。它不会随模型变强而变薄，因为它关乎的是世界，不是判断。
 
 ## 记录有效性：`keelson check --record`
 <!-- keelson: id=verify.fresh | without: "应该能过"和"看起来对"取代了运行命令；最后一次改动之前的证据被当成当前的 | sunset: never -->
 
-在说"完成、修好、通过、做完"之前：运行 `keelson check --record "<claim>"`。它运行项目配置的检查命令，把完整输出保存到 `.keelson/.local/evidence/`，并向 ledger 追加一条 `Verify:`，写明每条命令、退出码，以及它所运行的工作树指纹：
+在说"完成、修好、通过、做完"之前：运行 `keelson check --record "<claim>"`。它运行项目配置的检查命令，把完整输出保存到 `.keelson/.runtime/evidence/`，并向 ledger 追加一条 `Verify:`，写明每条命令、退出码，以及它所运行的工作树指纹：
 
 ```markdown
 ### Verify: pagination end-to-end
 `npm run lint` exit 0; `npm run test` exit 0 · tree 5bcb829dae
 ```
 
-`keelson status` 把该指纹与当前树比较，任何代码改动之后都会报 `stale`；`keelson land` 拒绝过期、失败或缺失的证据。之前的一次运行、部分运行或子代理的汇报都不是证据；diff 和一条新鲜的 `Verify:` 才是。额外的单条命令可以用 `keelson check "<cmd>" --record` 检查。
+`keelson status` 把该指纹与当前树比较，任何代码改动之后都会报 `stale`；`keelson land` 拒绝过期、失败或缺失的证据。若这次记录关闭了最后一个 gate，`keelson check --record` 会直接提示 change 已 `ready`，Agent 应立即 land，而不是等用户说“做完了”。之前的一次运行、部分运行或子代理的汇报都不是证据；diff 和一条新鲜的 `Verify:` 才是。额外的单条命令可以用 `keelson check "<cmd>" --record` 检查。
 
 某项检查跑不了（环境缺失、服务不可用），就在 ledger 里记一条 `Note:`，并写进 `NOW.md → Blocked / uncertain`。部分验证按部分汇报；绝不向上取整。
 
@@ -42,7 +42,7 @@
 ```
 Done: offset pagination on /orders, pager in the table.
 Evidence: `npm test -- orders` exit 0 (14 passed); `npm run lint` exit 0 · tree 5bcb829dae. Acceptance 3/3.
-Open: none. Change in review; `keelson land add-pagination` when integrated.
+Open: none. `keelson land add-pagination` succeeded; durable behavior/decisions were folded.
 ```
 
 <!-- guided -->

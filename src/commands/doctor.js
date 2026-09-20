@@ -3,12 +3,13 @@ import { createRequire } from 'node:module';
 import { requireProjectRoot, projectPaths, PKG_ROOT } from '../lib/paths.js';
 import { exists, readOr, readJson, walk } from '../lib/fs.js';
 import { loadConfig, CONFIG_VERSION } from '../lib/config.js';
-import { PLATFORMS, installTargets, managedStateMatches, readManagedState, renderSkillFiles, renderSkillShim, residentBlock, workflowContent } from '../platforms/index.js';
+import { PLATFORMS, installTargets, managedStateMatches, readManagedState, renderSkillFiles, renderSkillShim, residentBlock, workflowContent, sessionAdapterProblems } from '../platforms/index.js';
 import { validateProject } from './validate.js';
 import { projectStatus } from './status.js';
 import { parseFrontmatter } from '../lib/markdown.js';
 import { detectLocal } from '../lib/models.js';
 import { knowledgeHealth } from '../lib/health.js';
+import { listSessionStates } from '../lib/session.js';
 import { ok, warn, fail, heading, dim } from '../lib/out.js';
 
 const require = createRequire(import.meta.url);
@@ -85,6 +86,7 @@ export async function doctor({ flags }, cwd = process.cwd()) {
       else if (!readOr(rules).includes('.keelson/workflow.md')) add('error', `${pl.label}: discovery rules file does not point to .keelson/workflow.md`);
     }
     if (pl.confidence === 'convention') add('info', `${pl.label}: file locations follow the tool's convention and have not been exercised by the maintainers; if the agent does not pick up the skill, override platforms.${pl.id} in config.yaml`);
+    for (const problem of sessionAdapterProblems(root, pl)) add('error', `${problem} (run \`keelson update\`)`);
     if (pl.hooks) {
       const settings = readJson(path.join(root, '.claude', 'settings.json'), {}) ?? {};
       const has = (ev, script) => (settings.hooks?.[ev] ?? []).some((g) => (g.hooks ?? []).some((h) => String(h.command ?? '').includes(script)));
@@ -116,6 +118,11 @@ export async function doctor({ flags }, cwd = process.cwd()) {
     if (c.blockedBy.length) add('info', `${c.name}: waits on ${c.blockedBy.join(', ')}`);
   }
   for (const k of st.conflicts) add('warn', `shared contract between ${k.a} and ${k.b}: ${[...k.capabilities, ...k.paths].join(', ')}`);
+
+  const activeNames = new Set(st.changes.map((c) => c.name));
+  for (const session of listSessionStates(root)) {
+    if (session.change && !activeNames.has(session.change)) add('warn', `stale session focus points to missing change "${session.change}" under .keelson/.runtime/sessions/`);
+  }
 
   const health = knowledgeHealth(root, cfg, p);
   for (const h of health) add(h.level, `${h.kind}: ${h.text} → ${h.fix}`);

@@ -1,18 +1,18 @@
 # Verifying
 
-Completion is a claim with evidence attached, and evidence has two properties that fail independently: the record can be invalid (never ran, ran on older code, ran partially) and the content can be invalid (ran, passed, and still did not check what the owner asked for). This reference covers both. It does not get thinner as models improve, because it is about the world, not about judgment.
+Readiness/completion is a lifecycle state backed by evidence, and evidence has two properties that fail independently: the record can be invalid (never ran, ran on older code, ran partially) and the content can be invalid (ran, passed, and still did not check what the owner asked for). This reference covers both. It does not get thinner as models improve, because it is about the world, not about judgment.
 
 ## Record validity: `keelson check --record`
 <!-- keelson: id=verify.fresh | without: "should pass" and "looks right" replace running the command; evidence from before the last edit is presented as current | sunset: never -->
 
-Before saying done, fixed, passing, or complete: run `keelson check --record "<claim>"`. It runs the project's configured commands, saves their full output under `.keelson/.local/evidence/`, and appends a `Verify:` entry to the ledger with each command, its exit code, and the fingerprint of the working tree it ran against:
+Before saying done, fixed, passing, or complete: run `keelson check --record "<claim>"`. It runs the project's configured commands, saves their full output under `.keelson/.runtime/evidence/`, and appends a `Verify:` entry to the ledger with each command, its exit code, and the fingerprint of the working tree it ran against:
 
 ```markdown
 ### Verify: pagination end-to-end
 `npm run lint` exit 0; `npm run test` exit 0 · tree 5bcb829dae
 ```
 
-`keelson status` compares that fingerprint with the current tree and reports `stale` after any code edit; `keelson land` refuses stale, failed, or missing evidence. A prior run, a partial run, or a subagent's report is not evidence; the diff and a fresh `Verify:` entry are. A single extra command can be checked with `keelson check "<cmd>" --record`.
+`keelson status` compares that fingerprint with the current tree and reports `stale` after any code edit; `keelson land` refuses stale, failed, or missing evidence. If this record closes the final gate, `keelson check --record` reports the change as `ready`; the agent should land immediately rather than wait for a user “done” phrase. A prior run, a partial run, or a subagent's report is not evidence; the diff and a fresh `Verify:` entry are. A single extra command can be checked with `keelson check "<cmd>" --record`.
 
 If a check cannot run (environment missing, service down), say so in the ledger as a `Note:` and in `NOW.md → Blocked / uncertain`. Partial verification is reported as partial; it is never rounded up.
 
@@ -42,6 +42,6 @@ Tell the user what was done, what the evidence is, and what is left. Shape:
 ```
 Done: offset pagination on /orders, pager in the table.
 Evidence: `npm test -- orders` exit 0 (14 passed); `npm run lint` exit 0 · tree 5bcb829dae. Acceptance 3/3.
-Open: none. Change in review; `keelson land add-pagination` when integrated.
+Open: none. `keelson land add-pagination` succeeded; durable behavior/decisions were folded.
 ```
 

@@ -34,7 +34,7 @@ keelson init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided]
 keelson platforms [--json]
 ```
 
-列出 7 个一等公民宿主和通用兜底层，并显示支持层级、说明/Skill 发现路径、hook 能力、可信度以及本机安装/项目配置状态。
+列出 7 个一等公民宿主和通用兜底层，并显示 discovery 支持、`sessionFocus` 能力（`native|degraded`）、说明/Skill 路径、hook、可信度以及本机安装/项目配置状态。
 
 ## `keelson update`
 
@@ -72,6 +72,19 @@ Rules that apply (2):
   rules/api.md  src/api/**
 ! active change add-pagination (ann, in-progress) declares these paths or capabilities — coordinate before editing
 ```
+
+## `keelson focus`
+
+```text
+keelson focus [change] [--auto|--clear] [--json]
+```
+
+给 Agent 使用的 session 路由命令。它只改变 gitignored 的 conversation pointer，绝不改变长期 work status。
+
+- `focus <change>`：宿主存在稳定 session identity 时，把当前 session 绑定到一个 active change。
+- `--auto`：优先保留已有有效 focus；否则选择当前 branch 唯一匹配或全局唯一 active change。
+- `--clear`：清掉当前 session pointer，不 cancel/complete change。
+- degraded mode：宿主没有经过验证的 session identity 时只返回安全候选，不持久化共享/global focus；多个候选永远不猜。
 
 ## `keelson new`
 
@@ -125,7 +138,7 @@ share-links  [spec]  work: in-progress  verify: ~ stale  release: unreleased  (a
 keelson handoff [name] [--by who] [--json]
 ```
 
-从模板创建 `changes/<name>/handoff.md`，或给已有的重新盖戳，写入 `at`（短 HEAD）、`updated` 和 `by`。各部分由代理填写。只有一个活动变更时可以省略名字。
+创建/重新盖戳一个显式 transfer package，只用于换人/换机器，不用于普通聊天恢复。有 session focus 时优先使用它；否则只有一个 active change 时可省略名字。
 
 ## `keelson validate`
 
@@ -133,7 +146,7 @@ keelson handoff [name] [--by who] [--json]
 keelson validate [--json]
 ```
 
-对 `.keelson/` 和 specs 目录的结构检查。错误（退出 1）：缺少 `INTENT.md` 或 `NOW.md`；`profile` 或 `land` 无效；引用了缺失的 rule 文件；spec 目录没有 `spec.md`；重复的需求；层级或 work 状态无效；缺少 `Why`/`What`；spec 层级缺少 `How`/`Alternatives`/`Impact` 或备选少于两个；effort 标记无效；`Verify:` 条目没有命令或退出码；未知的根因类别；`.keelson/` 下任何位置出现带日期的模型 ID。警告：模板占位符、未列入索引的 rules、没有场景的需求、没有检查类型的验收项、没有 `blocks:` 的未决问题、依赖了不活动的变更、`**BREAKING**` 没有 `Rollout`、没有 `Delivers:` 的切片、没有 `tree` 的 `Verify:`、没有 `Result:` 的 `Dispatch:`、没有 `at:` 的交接、缺失的 refs 路径、`.gitignore` 没有 `.keelson/.local/`，以及以层命名的切片（`database`、`backend`、`frontend`、`ui`、`api`、`model`、`storage`、`infra` 及其变体），因为一个切片应该是一条贯穿所有层的、用户可观察的路径。
+对 `.keelson/` 和 specs 目录的结构检查。错误（退出 1）：缺少 `INTENT.md` 或 `NOW.md`；`profile` 或 `land` 无效；引用了缺失的 rule 文件；spec 目录没有 `spec.md`；重复的需求；层级或 work 状态无效；缺少 `Why`/`What`；spec 层级缺少 `How`/`Alternatives`/`Impact` 或备选少于两个；effort 标记无效；`Verify:` 条目没有命令或退出码；未知的根因类别；`.keelson/` 下任何位置出现带日期的模型 ID。警告：模板占位符、未列入索引的 rules、没有场景的需求、没有检查类型的验收项、没有 `blocks:` 的未决问题、依赖了不活动的变更、`**BREAKING**` 没有 `Rollout`、没有 `Delivers:` 的切片、没有 `tree` 的 `Verify:`、没有 `Result:` 的 `Dispatch:`、没有 `at:` 的交接、缺失的 refs 路径、`.gitignore` 没有 `.keelson/.runtime/`，以及以层命名的切片（`database`、`backend`、`frontend`、`ui`、`api`、`model`、`storage`、`infra` 及其变体），因为一个切片应该是一条贯穿所有层的、用户可观察的路径。
 
 ```text
 ! changes/demo/tasks.md: slice "Backend" is named after a layer; a slice should be one user-observable path through all layers (tracer bullet)
@@ -145,7 +158,7 @@ keelson validate [--json]
 keelson check [cmd...] [--record [claim]] [--change name] [--quiet] [--json]
 ```
 
-运行 `config.yaml → check` 里的条目（或作为位置参数给出的单条命令），把每条输出保存到 `.keelson/.local/evidence/<timestamp>-<n>.log`，并为每个条目打印一个退出码。条目可以是命令字符串或 `{name, command, kind}`；有名字的条目在命令前打印名字和类型：
+运行 `config.yaml → check` 里的条目（或作为位置参数给出的单条命令），把每条输出保存到 `.keelson/.runtime/evidence/<timestamp>-<n>.log`，并为每个条目打印一个退出码。条目可以是命令字符串或 `{name, command, kind}`；有名字的条目在命令前打印名字和类型：
 
 ```text
 keelson check — 3 commands
@@ -250,4 +263,4 @@ keelson restore [--force] [--dry-run] [--dir <path>]
 keelson uninstall [--purge]
 ```
 
-移除生成的运行时/集成表面：宿主 skill shim 目录、发现块、配置过的宿主专用 rule 文件、`.claude/settings.json` 里的 hook 条目、`.keelson/workflow.md`、`.keelson/skill/`、`.keelson/hooks/` 和 `.keelson/.local/`。保留 `.keelson/` 中的项目事实（INTENT、NOW、ROADMAP、rules、specs、changes）。`--purge` 连 `.keelson/` 一起移除；存放在它之外的 specs 不受影响。
+移除生成的运行时/集成表面：宿主 skill shim 目录、发现块、配置过的宿主专用 rule 文件、`.claude/settings.json` 里的 hook 条目、`.keelson/workflow.md`、`.keelson/skill/`、`.keelson/hooks/`、`.keelson/.runtime/` 与兼容旧版 `.keelson/.local/`。保留 `.keelson/` 中的项目事实（INTENT、NOW、ROADMAP、rules、specs、changes）。`--purge` 连 `.keelson/` 一起移除；存放在它之外的 specs 不受影响。

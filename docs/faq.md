@@ -1,13 +1,13 @@
 # FAQ
 
-**Does it work without hooks?**
-Yes. Hooks exist only for Claude Code and only inject state. Without them, the discovery block points the agent to `.keelson/workflow.md`, which tells it to run `keelson context --paths <files>` before non-trivial work; `NOW.md` plus each change's `handoff.md` carry continuation state. Pass `--no-hooks` to `init` if you prefer that on Claude Code too.
+**Does it work without hooks/plugins?**
+Yes. Discovery and durable change state never depend on a session adapter. Native session focus currently uses Claude hooks, one OpenCode project plugin, Pi's built-in `PI_SESSION_ID`, and CodeBuddy hooks. `--no-hooks` disables Keelson-managed hook/plugin bridges, so Claude/OpenCode/CodeBuddy fall back to safe candidate/explicit selection; Pi remains native because its session environment is built into the host. Ordinary resume uses durable change state plus local focus/candidate resolution—`handoff.md` is only for an explicit ownership/machine transfer.
 
 **Which tools are supported?**
 Seven first-class CLI hosts: Claude Code, Codex CLI, OpenCode, Pi, Gemini CLI, Kiro CLI, and CodeBuddy CLI. Each adapter uses a verified or host-documented discovery path and points to the same canonical `.keelson/` runtime. Every project also gets the portable `AGENTS.md` + `.agents/skills/` layer for other standards-compatible agents. `keelson init` auto-detects only the first-class hosts; use `keelson init --claude --codex` (or other first-class flags) to choose explicitly.
 
-**Do I have to type commands in chat?**
-No. You talk to the agent as before. The agent runs the CLI itself. Phrases such as "grill me", "status", "hand off", "land it", and "retro" have a defined meaning in the skill, but none is required.
+**Do I have to type commands or say that a task is finished?**
+No. You talk normally. The Agent runs the CLI, binds/recovers session focus when possible, and derives `ready` from acceptance/gates plus fresh verification. You never have to say “start task”, “finish task”, or “today we're done”.
 
 **What happens with a tiny change?**
 Nothing. Trivial changes (style, typos, a one-file fix with no behaviour change) get no change directory and no write-back. The agent just does them.
@@ -52,10 +52,10 @@ Line budgets in `config.yaml → budgets` and `keelson doctor`. Doctor reports a
 No. The `verify` reference asks for evidence that matches the code and covers the acceptance list. The `guided` profile adds a note suggesting test-first when a scenario exists in the delta spec and a prototype when the problem is visual or an unknown API. The `lean` profile leaves the method to the agent.
 
 **What does it cost in tokens?**
-The discovery block is under 10 lines. `.keelson/workflow.md` is a compact operating kernel read for non-trivial work. The session-start hook prints up to about 1,500 characters once; the per-prompt line is a few dozen tokens and empty when idle. The canonical skill loads one reference at a time, each 30 to 90 lines. Rules are read only when their glob matches. Nothing else is injected.
+The discovery block is under 10 lines and the canonical Skill loads references on demand. Native session adapters inject only a compact focus/candidate hint: Claude and CodeBuddy at lifecycle prompts, OpenCode/Pi mostly through shell identity with no extra prose. Rules are read only when their glob matches. Keelson deliberately avoids replaying the whole work history into every turn.
 
 **What if the agent ignores it?**
-Run `keelson doctor`. It checks the canonical `.keelson/workflow.md` and `.keelson/skill/`, then verifies each configured host's discovery shim points to that runtime and matches the CLI version, plus hook registration where applicable. `keelson update` regenerates all of it. If the agent sizes a change wrongly, say "treat this as spec" or "just do it".
+Run `keelson doctor`. It checks the canonical runtime, discovery shims, manifest, native session adapter files/registrations where enabled, stale session pointers, and project validation. `keelson update` repairs package-owned drift. If the agent sizes a change wrongly, say “treat this as spec” or “just do it”.
 
 **How do I get rid of it?**
 `keelson uninstall` removes generated runtime/integration surfaces (`.keelson/workflow.md`, `.keelson/skill/`, host discovery shims, hooks, local state) while keeping project facts under `.keelson/`; add `--purge` to remove `.keelson/` entirely. For a temporary comparison, `keelson ablate` stashes every surface and `keelson restore` brings it back byte for byte.

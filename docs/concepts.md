@@ -14,11 +14,26 @@ Keelson borrows mature failure-control ideas from several engineering discipline
 | **Explicit state machines over adjectives** | “Done” hides independent failure modes | separate work / verification / release dimensions and explicit landing gates |
 | **Observability must name the repair** | A health check that only says “bad” transfers debugging work to the user | `doctor` reports drift/health with the surface and the remediation (`update`, compact, re-check) |
 | **Evidence is revision-bound** | Reproducibility requires knowing which artifact a claim was measured against | `Verify:` entries bind commands and exit codes to a worktree fingerprint; edits make evidence stale |
-| **Handoffs are loss-sensitive interfaces** | Human factors failures happen at shift/session boundaries | `handoff.md`, `NOW.md`, owner/branch, one concrete next step; volatile details stay local |
+| **Connection state is not work state** | UI/session loss must not corrupt durable lifecycle | `.runtime/sessions/` is only a focus pointer; `changes/` owns work state; `handoff.md` is reserved for real transfer |
 | **Progressive disclosure beats universal checklists** | More instructions eventually reduce compliance and attention | tiny discovery shim → compact workflow → one task-specific reference → scoped project rules |
-| **Golden path with escape hatches** | The common case should require almost no product-specific knowledge, while uncommon cases remain possible | user talks normally; the Skill routes six intents; sizing/config/host flags are explicit overrides, not prerequisites |
+| **Golden path with escape hatches** | The common case should require almost no product-specific knowledge, while uncommon cases remain possible | user talks normally; five conversation intents route work; completion is derived automatically |
 
 These are constraints on the harness itself. They should usually make Keelson smaller: when a principle becomes mechanically enforced, delete duplicate prose.
+
+## Session, work item, and project truth
+
+These lifetimes must not be conflated.
+
+| State | Location | Lifetime | Meaning |
+|---|---|---|---|
+| Conversation/session focus | `.keelson/.runtime/sessions/<key>.json` | minutes–hours, machine-local | Which active change this AI window is currently about |
+| Change/work item | `.keelson/changes/<name>/` | minutes–days/weeks, committed | The durable requested outcome and its acceptance/evidence state |
+| Project truth | `INTENT.md`, specs, rules, glossary | months–years, committed | Facts future work should treat as current truth |
+| History | Git | long-term | Chronology and superseded temporary artifacts |
+
+Closing a session never completes a change. Switching session focus never cancels the previous change. Landing a change clears local pointers to it.
+
+A committed `handoff.md` is not the normal session pointer; it is a deliberate transfer artifact when another person/machine needs a cold-start summary.
 
 ## Goal, milestone, change, slice
 
@@ -87,29 +102,38 @@ Open questions block only the slices that depend on them. The rest of the change
 
 ## Three status dimensions
 
-A single "done" cannot express "implemented, tests green, waiting for review, not merged" or "merged, migration not run". Keelson reports three dimensions per change.
+A single “done” conflates implementation, evidence, integration, and release. Keelson reports them separately.
 
 ### Work
 
-`clarifying`, `in-progress`, `blocked`, `in-review`, `integrated`, `cancelled`.
+`clarifying`, `in-progress`, `blocked`, **`ready`**, `in-review` (legacy/manual-compatible), `integrated`, `cancelled`.
 
-An explicit `status:` in `change.md` frontmatter wins. Otherwise: no tasks means `clarifying`; unchecked tasks mean `in-progress`; all tasks checked with a passing `Verify:` means `in-review`. `keelson new` writes `clarifying` for spec changes and `in-progress` for quick ones. `keelson land --keep` writes `integrated`; `keelson cancel` writes `cancelled`. The agent sets `blocked` by hand when it stops on an open question.
+The important transition is `ready`, which is **derived rather than announced by the user**. A change is ready when:
+
+- all existing tasks are complete (no tasks is valid for quick changes);
+- required acceptance is complete;
+- no blocking open questions remain;
+- no unconfirmed assumptions remain;
+- a breaking change has its rollout contract;
+- the latest verification passes on the current worktree.
+
+A session ending has no effect on this state. Once ready, the agent should land automatically before claiming completion. Explicit `blocked`, `integrated`, and `cancelled` remain durable overrides.
 
 ### Verification
 
 `not-run`, `passed`, `failed`, `partial`, `stale`.
 
-Derived from the last `Verify:` entry in `ledger.md`. No entry is `not-run`. An entry without an exit code is `partial`. A non-zero exit is `failed`. An exit of 0 whose recorded `tree` matches the current worktree fingerprint is `passed`; a mismatch is `stale`. See [Verification](verification.md).
+Derived from the last `Verify:` entry. A passing record belongs only to the worktree fingerprint it measured; later edits make it stale.
 
 ### Release
 
-`unreleased` unless `release:` in the frontmatter says otherwise. At the project level, `keelson status` reads the last git tag and lists the changes folded since it. A change with a `## Rollout` section is not finished until its steps have run.
+`unreleased` unless frontmatter says otherwise. Project-level release state is derived from Git tags. Integration/landing and production rollout are not the same event.
 
 ## Record validity and content validity
 
 Evidence fails in two independent ways.
 
-**Record validity** asks whether the check really ran, against this code, in full. `keelson check --record` answers it mechanically: it runs the configured commands, saves their output under `.keelson/.local/evidence/`, and writes a `Verify:` entry that names each command, its exit code, and the worktree fingerprint. Any later edit to the code makes that entry stale.
+**Record validity** asks whether the check really ran, against this code, in full. `keelson check --record` answers it mechanically: it runs the configured commands, saves their output under `.keelson/.runtime/evidence/`, and writes a `Verify:` entry that names each command, its exit code, and the worktree fingerprint. Any later edit to the code makes that entry stale.
 
 **Content validity** asks whether what ran covers what was asked. No tool can answer it; the agent does, against `change.md → Acceptance` and the original request. Each acceptance item names how it is checked (`test:`, `check:`, `manual:`, `review:`) and is ticked only when that check has run. A fresh-reader review on spec changes catches the author's blind spots. A test edited to pass is a change to the acceptance criteria and needs the owner's decision.
 
@@ -117,12 +141,13 @@ Evidence fails in two independent ways.
 
 | Information | Location | In git |
 |---|---|---|
-| Project facts, specs, rules, roadmap, glossary, current state | `.keelson/` | Yes |
-| Change artifacts including `handoff.md` and `ledger.md` | `.keelson/changes/<name>/` | Yes, until the change folds; then in history |
-| Check output, per-machine state | `.keelson/.local/` | No |
-| Model detection cache, user tier overrides, ablation stashes | `~/.keelson/` | No |
+| Project facts/specs/rules | `.keelson/` | Yes |
+| Active durable work | `.keelson/changes/<name>/` | Yes until folded; then Git history |
+| Explicit transfer package | `changes/<name>/handoff.md` | Yes, only when transfer is needed |
+| Session focus + check output | `.keelson/.runtime/` | No |
+| User model cache / ablation stash | `~/.keelson/` | No |
 
-Anything a colleague on another machine would need to continue is committed.
+A colleague on another machine gets durable work state from Git; ordinary local chat focus is intentionally not shared.
 
 ## What Keelson is not
 

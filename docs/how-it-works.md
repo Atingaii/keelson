@@ -34,7 +34,7 @@ Responsibilities are deliberately separated:
 - `skill/SKILL.md` — intent router into on-demand engineering references;
 - `README.md` — human map.
 
-ROADMAP, glossary, rules, specs, active changes, ledgers, handoffs, evidence, and hooks are not standing requirements. They appear only when they carry real information or when a selected host integration needs them.
+ROADMAP, glossary, rules, specs, active changes, transfer handoffs, evidence, hooks, and session runtime are not standing requirements. They appear only when they carry real information or a selected host integration needs them.
 
 ## Canonical runtime and host discovery
 
@@ -72,35 +72,61 @@ Package-owned skill directories are replaced recoverably: Keelson populates a si
 
 `keelson doctor` compares the canonical workflow, canonical skill file set/content, discovery shims, manifest state, and registered hook scripts with what the current CLI would generate. Drift findings name the broken surface and the repair path.
 
+## Session runtime: focus, not lifecycle
+
+Conversation state is machine-local and deliberately separated from durable work:
+
+```text
+.keelson/.runtime/
+├── sessions/<opaque-key>.json
+└── evidence/
+```
+
+A session record stores a pointer such as `change: order-search`. It never stores completion/cancellation. Raw host session ids are hashed/normalized before Keelson writes anything to disk.
+
+Native session focus currently has four implementations:
+
+- **Claude Code** — SessionStart/UserPromptSubmit hooks hash the host session id and bridge an opaque `KEELSON_SESSION_ID` into later CLI commands.
+- **OpenCode** — one project plugin uses the documented tool hook to prepend an opaque `KEELSON_SESSION_ID` to Bash commands.
+- **Pi** — no Keelson adapter file is needed; the CLI already exposes `PI_SESSION_ID` to shell tools, which Keelson hashes before storing a pointer.
+- **CodeBuddy** — project hooks receive `session_id`; a Bash `PreToolUse` hook deterministically injects the opaque Keelson identity, while SessionStart/UserPromptSubmit inject compact focus context.
+
+Codex, Gemini CLI, and Kiro CLI remain **degraded, not guessed** until an equally deterministic bridge is implemented and exercised. Branch match / a sole active change can still be used by `keelson focus --auto`; ambiguity requires an explicit change name. Durable work state remains correct either way.
+
+`keelson new` binds a new work item to the current session when identity is available. `check --record`, `land`, `cancel`, and `handoff` prefer the focused change. Landing/cancelling clears every local pointer that referenced that durable change.
+
+Session files are gitignored. Deleting them affects convenience only.
+
 ## Hooks (Claude Code)
 
 When hooks are enabled for Claude Code, init copies two self-contained Node scripts into `.keelson/hooks/` and registers them in `.claude/settings.json`. They do not depend on a globally installed Keelson process at runtime.
 
 | Hook | Event | Purpose |
 |---|---|---|
-| `session-start.mjs` | `SessionStart` | Compact current-state snapshot: NOW, active changes, handoff next step |
-| `prompt-state.mjs` | `UserPromptSubmit` | One short active-change / verification line; emits nothing while idle |
+| `session-start.mjs` | `SessionStart` | Resolve anonymous session identity, touch local focus state, inject compact current work context |
+| `prompt-state.mjs` | `UserPromptSubmit` | Refresh local session runtime and inject the focused change; a sole active change is only a resume candidate, not silently bound |
 
 Hooks inject **state, not workflow instructions**. The workflow still comes from the canonical runtime.
 
 `--no-hooks` persists `hooks: false` in project config; future `update` runs keep them off. `--hooks` explicitly re-enables them. Keelson preserves unrelated hooks in the host settings file.
 
-## Intent router and internal capabilities
+## Conversation intents and automatic lifecycle
 
-The canonical Skill does not expose thirteen references as thirteen user workflows. It first classifies the request into one of six intents:
+The canonical Skill classifies **conversation turns** into five intents:
 
 | Intent | Route |
 |---|---|
 | Explore | discover + shape, read-only |
 | Change | shape → context → plan when needed → build |
 | Fix | debug → verify |
-| Resume | handoff + current context |
-| Finish | verify → land → reconcile |
+| Resume | session focus/candidate resolution + current context |
 | Improve | harness → reconcile |
 
-`model.md` and `engineer.md` are secondary lenses loaded only when vocabulary/boundaries or a real design/reliability trade-off demands them.
+Completion is not a sixth intent. Work readiness is derived mechanically from durable state.
 
-This is progressive disclosure in both directions: the user sees a small mental model, while the agent can still reach deeper engineering capability when the task warrants it.
+After each modifying pass the agent reconciles the focused change. When tasks/acceptance are satisfied, blocking questions/assumptions are gone, rollout requirements are met, and fresh verification matches the current tree, `keelson status` reports `ready`. `keelson check --record` also emits `ready → land now`. The agent lands before it tells the user the work is complete.
+
+Ending a chat or switching topics cannot cause this transition.
 
 ## Progressive change workspace
 
@@ -125,9 +151,9 @@ changes/<name>/
 Other files are event-driven:
 
 - `ledger.md` appears when the first ruling, root cause, dispatch, escalation, or Verify event is recorded;
-- `handoff.md` appears only when work must cross a session/person boundary;
+- `handoff.md` appears only for explicit ownership/machine transfer; ordinary new sessions reconstruct from durable work + local focus/candidate resolution;
 - extra delta specs appear only for affected capabilities;
-- `.local/evidence/` appears when checks actually produce machine-local output.
+- `.runtime/evidence/` appears when checks actually produce machine-local output.
 
 This keeps artifacts truthful: the existence of a file itself means the project has corresponding information.
 
@@ -212,7 +238,7 @@ Each finding carries a suggested fix. The output is a list of small compactions 
 
 ## NOW.md
 
-`NOW.md` is a snapshot, not a log. It is rewritten in full at every landing and whenever work stops mid-way: what is active, what is blocked or uncertain (including "not yet checked: …"), the next concrete step. `keelson land --now "<text>"` writes it. The session-start hook prints it.
+`NOW.md` is optional project-level context, not the lifecycle source for a conversation or change. Keep it as a concise project snapshot when that adds value. Session focus lives in `.runtime/sessions/`; durable work state lives in `changes/`. `keelson land --now "<text>"` may update NOW when a project-level next step changes.
 
 ## Rules routing
 

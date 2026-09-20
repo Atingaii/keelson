@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-// Keelson session-start hook. Prints a compact project snapshot to stdout; the host adds it as context.
-// Self-contained: no dependency on the keelson CLI being installed. Budget: about 1,500 characters.
+// Keelson SessionStart hook.
+// Tracks session-local work focus under .keelson/.runtime/ and prints a compact project snapshot.
+// Self-contained: no dependency on the keelson CLI being installed.
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -9,11 +11,54 @@ const k = path.join(root, '.keelson');
 if (!fs.existsSync(k)) process.exit(0);
 
 const read = (p) => (fs.existsSync(p) ? fs.readFileSync(p, 'utf8').replace(/\r\n?/g, '\n') : '');
+const readJson = (p) => {
+  try { return JSON.parse(read(p)); } catch { return null; }
+};
+const writeJson = (p, value) => {
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  fs.writeFileSync(p, JSON.stringify(value, null, 2) + '\n');
+};
 const clip = (s, n) => (s.length > n ? s.slice(0, n).replace(/\s+\S*$/, '') + ' …' : s);
 const section = (text, re) => {
   const m = text.match(new RegExp(`^##\\s+(?:${re})[^\\n]*\\n([\\s\\S]*?)(?=^##\\s|(?![\\s\\S]))`, 'im'));
   return m ? m[1].trim() : '';
 };
+const hash = (s, n) => crypto.createHash('sha256').update(String(s)).digest('hex').slice(0, n);
+
+let input = {};
+try {
+  const raw = fs.readFileSync(0, 'utf8');
+  if (raw.trim()) input = JSON.parse(raw);
+} catch {}
+
+const hostSession = input.session_id || input.sessionId || null;
+// Never persist the host's raw session id. The exported identity is already opaque.
+const envIdentity = hostSession ? hash(`claude:${hostSession}`, 32) : (process.env.KEELSON_SESSION_ID || null);
+const sessionKey = envIdentity ? hash(envIdentity, 24) : null;
+const sessionsDir = path.join(k, '.runtime', 'sessions');
+const sessionPath = sessionKey ? path.join(sessionsDir, `${sessionKey}.json`) : null;
+
+if (envIdentity && process.env.CLAUDE_ENV_FILE) {
+  const line = `export KEELSON_SESSION_ID=${envIdentity}`;
+  try {
+    let last = null;
+    if (fs.existsSync(process.env.CLAUDE_ENV_FILE)) {
+      for (const raw of fs.readFileSync(process.env.CLAUDE_ENV_FILE, 'utf8').split(/\r?\n/)) {
+        const t = raw.trim();
+        if (t.startsWith('export KEELSON_SESSION_ID=')) last = t;
+      }
+    }
+    if (last !== line) fs.appendFileSync(process.env.CLAUDE_ENV_FILE, line + '\n');
+  } catch {}
+}
+
+let session = null;
+if (sessionPath) {
+  session = readJson(sessionPath) || { schema: 1, change: null, createdAt: new Date().toISOString() };
+  session.updatedAt = new Date().toISOString();
+  session.source = 'claude-session-start';
+  writeJson(sessionPath, session);
+}
 
 const now = read(path.join(k, 'NOW.md')).trim();
 const roadmapNow = section(read(path.join(k, 'ROADMAP.md')), 'Now');
@@ -30,15 +75,20 @@ const active = fs.existsSync(changesDir)
         const tier = (change.match(/^tier:\s*(\w+)/m) || [])[1] || 'quick';
         const status = (change.match(/^status:\s*([\w-]+)/m) || [])[1] || null;
         const owner = (change.match(/^owner:\s*(.+)$/m) || [])[1] || null;
-        const handoff = read(path.join(dir, 'handoff.md'));
-        const next = handoff ? section(handoff, 'Next') : '';
-        return { name: d.name, tier, status, owner, done, total, next };
+        return { name: d.name, tier, status, owner, done, total };
       })
   : [];
 
-const lines = ['[keelson] Project facts live in .keelson/ (INTENT.md, ROADMAP.md, NOW.md, specs, rules/). Run `keelson context --paths <files>` before non-trivial work; `keelson status` for work/verification/release state.'];
-if (roadmapNow && !/^…/.test(roadmapNow)) lines.push('', '--- ROADMAP.md · Now ---', clip(roadmapNow, 400));
-if (now) lines.push('', '--- NOW.md ---', clip(now, 900));
-lines.push('', `Active changes: ${active.length ? active.map((c) => `${c.name} (${c.tier}${c.status ? `, ${c.status}` : ''}, ${c.done}/${c.total} tasks${c.owner ? `, ${c.owner}` : ''})`).join('; ') : 'none'}`);
-for (const c of active) if (c.next && !/^…/.test(c.next)) lines.push(`  ${c.name} handoff → next: ${clip(c.next.replace(/\s+/g, ' '), 200)}`);
+const focused = session?.change && active.some((c) => c.name === session.change) ? session.change : null;
+const ordered = focused ? [...active].sort((a, b) => (a.name === focused ? -1 : b.name === focused ? 1 : 0)) : active;
+const lines = ['[keelson] Canonical project facts/runtime live under .keelson/. Session focus is local and never marks a change complete.'];
+if (focused) lines.push(`Session focus: ${focused}`);
+else if (active.length === 1) lines.push(`Resume candidate: ${active[0].name} (bind with \`keelson focus --auto\` only if this request continues that work)`);
+else if (active.length > 1) lines.push(`Active changes: ${active.map((c) => c.name).join(', ')} (no session focus)`);
+if (roadmapNow && !/^…/.test(roadmapNow)) lines.push('', '--- ROADMAP.md · Now ---', clip(roadmapNow, 350));
+if (now) lines.push('', '--- NOW.md ---', clip(now, 650));
+if (ordered.length) {
+  lines.push('', '--- Active work ---');
+  for (const c of ordered.slice(0, 6)) lines.push(`${c.name}${c.name === focused ? ' [focus]' : ''}: ${c.tier}${c.status ? `, ${c.status}` : ''}${c.total ? `, ${c.done}/${c.total} tasks` : ''}${c.owner ? `, ${c.owner}` : ''}`);
+}
 process.stdout.write(lines.join('\n') + '\n');

@@ -1,15 +1,20 @@
 # Now
 
-The golden-path redesign is implemented and cross-platform verified. Keelson now presents one user-facing workflow: initialize once, then keep using the coding agent normally. The standing `.keelson/` control plane is intentionally minimal; optional project knowledge and change artifacts appear only when they carry real information. The canonical Skill routes six user intents (Explore, Change, Fix, Resume, Finish, Improve), while detailed references remain an internal capability library.
+The continuous-conversation lifecycle redesign is implemented on top of the golden path. Keelson separates project truth, durable changes/work items, and ephemeral conversation focus. Users can keep asking questions indefinitely; session/window lifetime never marks work complete. A change becomes `ready` only when durable acceptance/gates and current-tree verification say so, and the Agent lands it without waiting for a “done” phrase.
 
-The reliability foundation remains unchanged: one canonical runtime, seven first-class CLI hosts plus the portable Agent Skills layer, `manifest.json` desired-state ownership, recoverable update, drift diagnostics, revision-bound verification, and explicit landing gates.
+Native session focus is now implemented for four first-class hosts:
+- Claude Code — SessionStart/UserPromptSubmit bridge + `CLAUDE_ENV_FILE`; raw session ids are never stored.
+- OpenCode — one project plugin injects opaque `KEELSON_SESSION_ID` into Bash commands.
+- Pi — zero adapter files; Keelson uses Pi's built-in `PI_SESSION_ID` and hashes it before local storage.
+- CodeBuddy — SessionStart/UserPromptSubmit + Bash/PowerShell PreToolUse bridge; unrelated settings/hooks are preserved.
 
-Verification for this redesign passed the full Ubuntu/macOS/Windows × Node 20/22 matrix, repository self-validation, and package smoke.
+Codex CLI, Gemini CLI, and Kiro CLI remain deliberately degraded until Keelson has a deterministic, field-verified bridge. Degraded mode keeps durable work correct and refuses ambiguous automatic focus.
 
 ## Blocked / uncertain
-- Claude Code has end-to-end usage evidence; Codex has Skill-loading evidence. OpenCode, Pi, Gemini CLI, Kiro CLI, and CodeBuddy CLI still rely on host documentation plus the shared lifecycle contract rather than a claimed end-to-end field run.
-- Long-run continuous evolution across several real changes, interrupted updates, host switching, and later resumption still needs broader field evidence.
-- Two agents writing the same branch at the same moment has not been exercised; Keelson exposes semantic overlap but is not a distributed lock.
+- The new four-host session runtime and adapter lifecycle still need the full Ubuntu/macOS/Windows × Node 20/22 CI matrix and package smoke on this branch.
+- Codex, Gemini CLI, and Kiro CLI still need native session adapter evidence before promotion; API existence alone is not enough.
+- Long-running parallel sessions, changed requirements, interrupted updates, host switching, and merge conflicts still need field evidence.
+- Session focus improves routing only; it is intentionally not a distributed lock or backlog/ownership system.
 
 ## Next
-Exercise one real end-to-end change on each remaining first-class host. Then run the continuous-evolution scenario with session breaks, requirement revision, parallel work, host switching, interrupted/retried update, and merge conflict. Use that field evidence to remove ineffective guidance before adding any new control.
+Run the full CI matrix. If green, exercise real parallel conversations on Claude/OpenCode/Pi/CodeBuddy, then implement native adapters for the remaining hosts one at a time only where the host contract is deterministic. Use those field runs to remove unnecessary context injection before adding new process.

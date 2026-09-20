@@ -8,6 +8,7 @@ import { slugify, TIERS } from '../lib/changes.js';
 import { git, isGitRepo, currentBranch, gitUserName } from '../lib/git.js';
 import { list } from '../lib/args.js';
 import { ok, info, warn } from '../lib/out.js';
+import { bindSession } from '../lib/session.js';
 
 const fill = (tpl, vars) => tpl.replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? `{{${k}}}`);
 export const specBase = (text) => crypto.createHash('sha1').update(text).digest('hex').slice(0, 10);
@@ -61,8 +62,10 @@ export async function newChange({ flags, positional }, cwd = process.cwd()) {
     write(path.join(dir, 'specs', cap, 'spec.md'), `---\nbase: ${main ? specBase(main) : 'new'}\n---\n${delta}`);
   }
   ok(`created ${path.relative(root, dir)} (${tier}${owner ? `, owner ${owner}` : ''}${branch && !worktree ? `, branch ${branch}` : ''})`);
+  const focused = bindSession(root, name, { branch: worktree ? name : branch, source: 'new' });
+  if (focused) info(`session focus → ${name}`);
   info(tier === 'spec' ? `fill change.md${caps.length ? ', specs/<capability>/spec.md' : ''}, then tasks.md — see references/plan.md` : 'fill change.md acceptance; tasks.md is optional for a quick change');
   if (tier === 'spec' && !caps.length) warn('spec tier without --capability: add specs/<capability>/spec.md by hand if behaviour changes');
-  if (flags.json) console.log(JSON.stringify({ name, tier, dir, owner, branch: worktree ? name : branch, worktree, capabilities: caps }));
+  if (flags.json) console.log(JSON.stringify({ name, tier, dir, owner, branch: worktree ? name : branch, worktree, capabilities: caps, focused: Boolean(focused) }));
   return 0;
 }

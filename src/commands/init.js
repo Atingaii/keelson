@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { projectPaths, findProjectRoot } from '../lib/paths.js';
 import { exists, write, read, mkdirp, readOr } from '../lib/fs.js';
 import { loadConfig, saveConfig, DEFAULT_CONFIG, CONFIG_VERSION } from '../lib/config.js';
-import { PLATFORMS, PLATFORM_IDS, RETIRED_PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile, plannedManagedRemovals, reconcileManagedTargets, writeManagedState } from '../platforms/index.js';
+import { PLATFORMS, PLATFORM_IDS, RETIRED_PLATFORM_IDS, installTargets, installCanonicalSkill, installSkill, installWorkflow, installInstructions, installHooks, installSessionAdapter, skillSource, plannedCanonicalSkillFiles, plannedSkillFiles, plannedWorkflowFile, plannedManagedRemovals, plannedSessionAdapterFiles, reconcileManagedTargets, writeManagedState } from '../platforms/index.js';
 import { list } from '../lib/args.js';
 import { ok, info, warn, heading, dim } from '../lib/out.js';
 import { detectAndCache, detectLocal } from '../lib/models.js';
@@ -59,8 +59,13 @@ export function detectChecks(root) {
 export function ensureGitignore(root) {
   const gi = path.join(root, '.gitignore');
   const cur = readOr(gi, '');
-  if (/^\.keelson\/\.local\/?$/m.test(cur)) return false;
-  write(gi, `${cur.replace(/\n*$/, cur ? '\n' : '')}# Keelson: per-machine session state and check evidence\n.keelson/.local/\n`);
+  const hasRuntime = /^\.keelson\/\.runtime\/?$/m.test(cur);
+  const hasLegacy = /^\.keelson\/\.local\/?$/m.test(cur);
+  if (hasRuntime && hasLegacy) return false;
+  let add = '';
+  if (!hasRuntime) add += '.keelson/.runtime/\n';
+  if (!hasLegacy) add += '.keelson/.local/\n';
+  write(gi, `${cur.replace(/\n*$/, cur ? '\n' : '')}# Keelson: per-machine runtime state and check evidence\n${add}`);
   return true;
 }
 
@@ -130,10 +135,16 @@ export async function init({ flags }, cwd = process.cwd()) {
     console.log(`  ${workflow.status.padEnd(9)} ${workflow.path}`);
     for (const f of plannedCanonicalSkillFiles(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
     for (const rel of plannedManagedRemovals(root, targets)) console.log(`  ${'remove'.padEnd(9)} ${rel} (stale managed surface)`);
+    const dryDiscovery = new Set();
     for (const t of targets) {
-      for (const f of plannedSkillFiles(root, t, { lang: cfg.lang, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
-      const ins = path.join(root, t.instructions);
-      console.log(`  ${(exists(ins) ? (read(ins).includes('<!-- keelson:start -->') ? 'refresh' : 'append') : 'create').padEnd(9)} ${t.instructions}`);
+      const discoveryKey = `${t.instructions}|${t.skillsDir}|${t.rulesFile ?? ''}`;
+      if (!dryDiscovery.has(discoveryKey)) {
+        dryDiscovery.add(discoveryKey);
+        for (const f of plannedSkillFiles(root, t, { lang: cfg.lang, version: PKG_VERSION })) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
+        const ins = path.join(root, t.instructions);
+        console.log(`  ${(exists(ins) ? (read(ins).includes('<!-- keelson:start -->') ? 'refresh' : 'append') : 'create').padEnd(9)} ${t.instructions}`);
+      }
+      for (const f of plannedSessionAdapterFiles(root, t)) console.log(`  ${f.status.padEnd(9)} ${f.path}`);
     }
     if (retiredFromConfig.length) console.log(`  migrate   config tools: drop retired ${retiredFromConfig.join(', ')}`);
     if (retiredOverrides.length) console.log(`  migrate   config platforms: drop retired ${retiredOverrides.join(', ')}`);
@@ -175,7 +186,7 @@ export async function init({ flags }, cwd = process.cwd()) {
   if (seed('INTENT.md', p.intent)) ok('.keelson/INTENT.md (the agent drafts it from the code on first contact; confirm it when it asks)');
   if (seed('NOW.md', p.now)) ok('.keelson/NOW.md');
   // Progressive disclosure: ROADMAP, GLOSSARY, rules/, specs/, and changes/ are created only when the project actually needs them.
-  if (ensureGitignore(root)) ok('.gitignore: .keelson/.local/ (session state and evidence stay on this machine)');
+  if (ensureGitignore(root)) ok('.gitignore: .keelson/.runtime/ (session focus and evidence stay on this machine)');
   saveConfig(p.config, cfg);
   ok(`.keelson/config.yaml${rawVersion < CONFIG_VERSION ? ` (migrated v${rawVersion} → v${CONFIG_VERSION})` : ''}`);
 
@@ -185,14 +196,24 @@ export async function init({ flags }, cwd = process.cwd()) {
   const canonicalSkillPath = installCanonicalSkill(root, { lang: cfg.lang, profile: cfg.profile, version: PKG_VERSION });
   ok(`canonical runtime → ${workflowPath}; ${canonicalSkillPath}`);
 
+  const discoveryInstalled = new Set();
   for (const t of targets) {
-    const skillPath = installSkill(root, t, { lang: cfg.lang, version: PKG_VERSION });
-    const files = installInstructions(root, t, { lang: cfg.lang });
-    ok(`${t.label}: discovery shim → ${skillPath}; instructions → ${files.join(', ')}${t.confidence === 'convention' ? dim(' (path by convention; run `keelson doctor` after your first session)') : ''}`);
+    const discoveryKey = `${t.instructions}|${t.skillsDir}|${t.rulesFile ?? ''}`;
+    if (!discoveryInstalled.has(discoveryKey)) {
+      discoveryInstalled.add(discoveryKey);
+      const skillPath = installSkill(root, t, { lang: cfg.lang, version: PKG_VERSION });
+      const files = installInstructions(root, t, { lang: cfg.lang });
+      ok(`${t.label}: discovery shim → ${skillPath}; instructions → ${files.join(', ')}${t.confidence === 'convention' ? dim(' (path by convention; run `keelson doctor` after your first session)') : ''}`);
+    } else {
+      info(`${t.label}: reuses existing discovery surface ${t.instructions} + ${t.skillsDir}/keelson`);
+    }
     if (t.hooks) {
       installHooks(root);
       ok(`${t.label}: hooks → .claude/settings.json (session snapshot + per-prompt state line)`);
     }
+    const sessionFiles = installSessionAdapter(root, t);
+    if (sessionFiles.length) ok(`${t.label}: native session adapter → ${sessionFiles.join(', ')}`);
+    else if (t.sessionAdapter === 'pi-env') info(`${t.label}: native session focus uses PI_SESSION_ID; no adapter file needed`);
   }
   writeManagedState(root, targets, PKG_VERSION);
   ok('.keelson/manifest.json (generated-surface ownership)');

@@ -1,6 +1,6 @@
 ---
 name: keelson
-description: Engineering control plane for coding work in repositories with a .keelson/ directory. Use for exploring an idea, building or changing code, fixing/debugging, continuing prior work, reviewing/finishing/landing, or improving recurring engineering failures. Routes the task into the smallest Keelson workflow while keeping project truth, evidence, and continuation state current.
+description: Engineering control plane for coding work in repositories with a .keelson/ directory. Use for exploring an idea, changing code, fixing/debugging, continuing prior work, or improving recurring engineering failures. Keeps conversation sessions separate from durable work items so users can keep asking questions without having to announce when a task starts or ends.
 version: 0.3.0
 ---
 
