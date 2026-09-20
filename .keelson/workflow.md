@@ -7,8 +7,8 @@ Every non-trivial modifying request follows **ORIENT → BOUND → BUILD → SEN
 - **ORIENT** — inspect the worktree and current session focus. Same-goal follow-ups keep the focused change. For “continue”, run `keelson focus --auto`; never bind an ambiguous session silently.
 - **BOUND** — trivial: edit directly; quick: create the smallest useful change; spec: acceptance + behavior delta + plan, then wait for approval.
 - **BUILD** — one vertical slice at a time. A new independent requested outcome gets a new change; continuing questions about the same outcome do not.
-- **SENSE** — cheap checks early; completion requires fresh `keelson check --record` evidence on the current tree.
-- **RECONCILE** — evaluate lifecycle after each modifying pass. If gates are satisfied, status becomes `ready` and the agent lands automatically; do not wait for the user to say “done”. Fold durable facts into specs/rules/glossary as needed.
+- **SENSE** — cheap checks early; completion requires fresh `keelson check --record` evidence on the current tree. Task checkboxes describe the current plan; they never decide completion.
+- **RECONCILE** — evaluate lifecycle after each modifying pass from acceptance, blockers, rollout/compatibility, and fresh verification. If those gates are satisfied, status becomes `ready` and the agent lands automatically; do not wait for the user to say “done” or for every historical plan checkbox to remain relevant. Fold durable facts into specs/rules/glossary as needed.
 - Ending a session, going idle, compaction, or closing the window changes only session runtime state. It never completes, cancels, or lands durable work.
 - `handoff.md` is reserved for real transfer across people/machines or deliberate ownership change. Normal new sessions reconstruct from change/task/ledger state and optional session focus.
 - Create artifacts lazily. Empty documents are not progress.
