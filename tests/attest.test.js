@@ -36,24 +36,25 @@ test('attest resolves a unique archived original name and exports stale signed e
   assert.equal(exported.envelopes.length, 1, 'the signed record remains exportable for inspection');
 });
 
-test('attest prefers an active change and rejects ambiguous legacy archive aliases', () => {
+test('attest prefers an active change and never aliases legacy suffixes to another original name', () => {
   const dir = project();
   change(dir, '.keelson/changes/tidy', { publicKey: 'active-key\n' });
-  change(dir, '.keelson/changes/archive/2026-09-20-tidy-1730000000000', { publicKey: 'first-archive\n' });
-  change(dir, '.keelson/changes/archive/2026-09-20-tidy-cancelled', { publicKey: 'cancelled-archive\n' });
+  // This is the ordinary legacy change name "tidy-cancelled", not a cancelled
+  // archive of "tidy". The old suffix matcher exported it as tidy.
+  change(dir, '.keelson/changes/archive/2026-09-20-tidy-cancelled', { publicKey: 'cancelled-name\n' });
 
   const active = run(dir, ['attest', 'tidy', '--json'], { allowFail: true });
   assert.equal(active.code, 1);
   assert.equal(JSON.parse(active.stdout).publicKey, 'active-key\n');
 
   fs.rmSync(path.join(dir, '.keelson/changes/tidy'), { recursive: true, force: true });
-  const ambiguous = run(dir, ['attest', 'tidy', '--json'], { allowFail: true });
-  assert.notEqual(ambiguous.code, 0);
-  assert.match(ambiguous.stderr, /ambiguous archived change "tidy"/);
-  assert.match(ambiguous.stderr, /2026-09-20-tidy-1730000000000/);
-  assert.match(ambiguous.stderr, /2026-09-20-tidy-cancelled/);
+  const unproven = run(dir, ['attest', 'tidy', '--json'], { allowFail: true });
+  assert.notEqual(unproven.code, 0);
+  assert.equal(unproven.stdout, '', 'the old implementation incorrectly exported this as tidy');
+  assert.match(unproven.stderr, /cannot prove original name "tidy"/);
+  assert.match(unproven.stderr, /2026-09-20-tidy-cancelled/);
 
   const exact = run(dir, ['attest', '2026-09-20-tidy-cancelled', '--json'], { allowFail: true });
   assert.equal(exact.code, 1);
-  assert.equal(JSON.parse(exact.stdout).publicKey, 'cancelled-archive\n');
+  assert.equal(JSON.parse(exact.stdout).publicKey, 'cancelled-name\n');
 });

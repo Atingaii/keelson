@@ -19,25 +19,37 @@ function archivedChangeName(archiveDir, directory) {
 }
 
 function legacyArchiveMatches(directory, name) {
-  // Before landed.json carried the original name, archives were dated and
-  // collision/cancellation suffixes were appended to that date form.
-  return new RegExp(`^\\d{4}-\\d{2}-\\d{2}-${escaped(name)}(?:-cancelled)?(?:-\\d+)?$`).test(directory);
+  // A plain dated legacy directory is the only shape that proves its original
+  // name. A "-cancelled" or numeric suffix can itself be part of that name.
+  return new RegExp(`^\\d{4}-\\d{2}-\\d{2}-${escaped(name)}$`).test(directory);
+}
+
+function uncertainLegacyArchives(directory, name) {
+  return new RegExp(`^\\d{4}-\\d{2}-\\d{2}-${escaped(name)}(?:-cancelled|-\\d+)(?:-\\d+)?$`).test(directory);
 }
 
 function resolveArchivedChange(archiveDir, name) {
   const exact = loadChange(archiveDir, name);
   if (exact) return exact;
 
-  const matches = listDirs(archiveDir)
-    .filter((directory) => {
-      const recorded = archivedChangeName(archiveDir, directory);
-      return recorded === name || (!recorded && legacyArchiveMatches(directory, name));
-    })
-    .map((directory) => ({ directory, change: loadChange(archiveDir, directory) }))
+  const candidates = listDirs(archiveDir)
+    .map((directory) => ({
+      directory,
+      recorded: archivedChangeName(archiveDir, directory),
+      change: loadChange(archiveDir, directory),
+    }))
     .filter(({ change }) => change);
+  const matches = candidates
+    .filter(({ recorded, directory: archiveName }) => {
+      return recorded === name || (!recorded && legacyArchiveMatches(archiveName, name));
+    })
   if (matches.length === 1) return matches[0].change;
   if (matches.length > 1) {
     throw new Error(`ambiguous archived change "${name}"; specify an exact archive directory: ${matches.map(({ directory }) => directory).join(', ')}`);
+  }
+  const uncertain = candidates.filter(({ recorded, directory }) => !recorded && uncertainLegacyArchives(directory, name));
+  if (uncertain.length) {
+    throw new Error(`cannot prove original name "${name}" from legacy archive suffixes; specify an exact archive directory: ${uncertain.map(({ directory }) => directory).join(', ')}`);
   }
   return null;
 }
