@@ -11,7 +11,7 @@ description: 面向含 .keelson/ 目录项目的工程控制层。用于探索�
 
 | 意图 | 常见请求 | 首先读取 |
 |---|---|---|
-| **Explore** | 比较、解释、“应该怎么做”、“grill me” | `discover.md` + `interview.md`；明确要求修改之前保持只读 |
+| **Explore** | 比较、解释、“应该怎么做”、“深挖一下” | `discover.md` + `interview.md`；明确要求修改之前保持只读 |
 | **Change** | 构建、新增、重构、迁移、“再顺便改……” | `shape.md` → `context.md`；边界/术语问题读 `model.md`，非显然技术选择读 `engineer.md`，只有风险触发时才读 `design-lenses.md`；spec 级再加 `plan.md` |
 | **Fix** | bug、测试失败、异常行为 | `debug.md`，随后 `verify.md` |
 | **Resume** | 继续、接着做 | `keelson focus --auto` + 当前上下文；只有真正跨人/跨机器交接时才读 `handoff.md` |
