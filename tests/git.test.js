@@ -99,13 +99,17 @@ test('Git importer search includes untracked code, excludes ignored code, and tr
     'src/tracked.js': "import { value } from './module.js';\n",
     'src/untracked.js': "import { value } from './module.js';\n",
     'src/ignored.js': "import { value } from './module.js';\n",
+    'src/nimbus.js': 'export const nimbus = 1;\n',
+    'src/uses-nimbus.js': "import { nimbus } from './nimbus.js';\n",
+    'src/non-boundary.js': 'const supernimbus = 1;\n',
     '.gitignore': 'src/ignored.js\n',
   });
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
   git('init', '-q');
-  git('add', 'src/module.js', 'src/tracked.js', '.gitignore');
+  git('add', 'src/module.js', 'src/tracked.js', 'src/nimbus.js', 'src/uses-nimbus.js', 'src/non-boundary.js', '.gitignore');
   git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'fixture');
   assert.deepEqual(importers(root, ['src/module.js']).sort(), ['src/tracked.js', 'src/untracked.js']);
+  assert.deepEqual(importers(root, ['src/nimbus.js']), ['src/uses-nimbus.js']);
   assert.deepEqual(importers(root, ['src/missing.js']), []);
 });
 

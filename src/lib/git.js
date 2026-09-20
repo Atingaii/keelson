@@ -243,10 +243,13 @@ export function importers(root, files) {
   if (!names.length) return [];
   const pattern = names.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
   const re = `(import|require|from|include|use)\\b[^\\n]*\\b(${pattern})\\b`;
+  // Git uses platform ERE implementations. Keep its expression to POSIX ERE:
+  // GNU-only \b is not a word boundary there, and [^\n] excludes the letter n.
+  const gitRe = `(import|require|from|include|use)([[:space:]]|[(]).*[^[:alnum:]_](${pattern})([^[:alnum:]_]|$)`;
   let matches = null;
   if (isGitRepo(root)) {
     try {
-      const out = execFileSync('git', ['grep', '--untracked', '--exclude-standard', '-z', '-l', '-E', '-I', '--', re], { cwd: root, encoding: 'buffer', maxBuffer: 32 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
+      const out = execFileSync('git', ['grep', '--untracked', '--exclude-standard', '-z', '-l', '-E', '-I', '--', gitRe], { cwd: root, encoding: 'buffer', maxBuffer: 32 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
       matches = nulRecords(out).map((file) => file.toString('utf8'));
     } catch (error) {
       // `git grep` uses status 1 for a successful search with no matches.
