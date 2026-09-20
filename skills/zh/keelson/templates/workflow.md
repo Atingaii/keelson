@@ -13,6 +13,6 @@
 - `handoff.md` 只用于真正跨人/跨机器或明确所有权转移。普通新会话从 change/task/ledger 状态和可用的 session focus 重建。
 - 工件按需创建；空文档不是进度。
 - 重复 failure class 升级为作用域 rule 或可执行 fitness check；自动化接管后删掉冗余 prose。
-- First contact 只确认 `INTENT.md`；specs/rules 只有真实工作暴露长期真相时才增长。
+- First contact 根据仓库证据推导 `INTENT.md`；只有未决项目边界会实质影响当前工作时才询问所有者。specs/rules 只有真实工作暴露长期真相时才增长。
 
 canonical 路由器是 `.keelson/skill/SKILL.md`。它判断对话意图；生命周期转换来自 work state，而不是用户措辞。
