@@ -17,7 +17,7 @@ profile: lean
 default_tier: auto
 confirm:
   quick: proceed
-  spec: wait
+  spec: proceed
 land: fold
 check:
   - npm run lint
@@ -63,7 +63,7 @@ effort:
 | `profile` | `lean` | `lean` 只发出姿态和原则。`guided` 保留额外的步骤清单和示例。`keelson init --profile` 设置它 |
 | `default_tier` | `auto` | 仅供参考。`auto` 表示代理给每个变更定大小。设为 `quick` 或 `spec` 可在代理读的文件里表明偏好 |
 | `confirm.quick` | `proceed` | `proceed`：代理写回理解后开始。`wait`：先等批准 |
-| `confirm.spec` | `wait` | spec 变更总是等批准，除非你设为 `proceed` |
+| `confirm.spec` | `proceed` | `proceed`：短 write-back 后，只要没有真实的所有者决定未解决就直接推进。团队需要显式 plan 审批点时设为 `wait` |
 | `land` | `fold` | `fold` 在合并后删除变更目录。`keep` 把它移到 `changes/archive/` |
 | `check` | 自动探测 | `keelson check` 按顺序从项目根目录通过 shell 运行的内容。每个条目是一个命令字符串，或对象 `{name, command, kind}`，其中 `kind` 取 `test`、`lint`、`typecheck`、`build`、`fitness`、`check` 之一。对纯字符串，kind 从命令猜测。首次 init 时从 `package.json` 脚本、`pyproject.toml`、`pytest.ini`、`go.mod` 或 `Cargo.toml` 探测 |
 | `guide` | `false` | 所有者正在学习工程时设为 `true`。往 `.keelson/workflow.md` 加一行引导模式说明，往 `keelson context` 加一条提示；技能随后用场景和取舍解释，并在 spec 变更收尾时附一段简短的教学说明。`keelson init --guide` 设置它 |
