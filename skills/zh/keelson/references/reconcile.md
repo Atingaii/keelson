@@ -29,7 +29,7 @@
 ## 压缩：让被读到的东西保持小
 <!-- keelson: id=reconcile.compact | without: 文档无限增长；常驻集合让每个会话都变贵，过时文本被当作现状读取 | sunset: never -->
 
-`config.yaml → budgets` 给每种文档一个行数预算（INTENT、ROADMAP、NOW、GLOSSARY、spec、rule、change、handoff，以及作为整体的常驻 rules）。预算是**软压缩阈值**。长期真相文档的硬上限是**配置预算的 2 倍**：超过后 `validate` / `doctor` 会失败，`land` 还会在真正写入前预检将要生成的 spec 与 NOW，避免半落地。活跃 change/handoff 是临时脚手架，因此只警告、不做硬失败。Keelson 不会自动总结并覆盖原文；语义压缩仍由 Agent/评审者完成。
+`config.yaml → budgets` 给每种文档一个行数预算（INTENT、ROADMAP、NOW、GLOSSARY、spec、rule、change、handoff，以及作为整体的常驻 rules）。预算是**软压缩阈值**。Keelson 会在高频文档失控前自动重组存储：大型 spec 自动变成小型索引 + requirement/decision 分片，runtime 缓存自动回收。如果某个单独语义单元本身仍然过大，Agent 会在 RECONCILE 中自动改写或拆解，并重新验证结果。活跃 change/handoff 只是临时脚手架，不会演变成长期知识仓库。只有整理会改变产品语义、授权、兼容性或其他真正属于所有者的决策时才询问用户。
 
 超过软预算后，对该文档做一遍压缩，逐段选择：
 
@@ -47,10 +47,10 @@
 
 把知识形态当成基础设施，而不是用户工作。当 `keelson context` 暴露内部 maintenance finding 时，在同一轮工程工作里自行解决，不要求所有者介入：
 
-- **大型 specs** —— 不要通过摘要丢掉 requirement。`keelson land` 会自动把大型 capability 从单个 `spec.md` 变成有界索引 + `requirements/*.md`，需要时再加 `decisions.md`。总知识量可以持续增长，但每个高频读取文件保持小。
-- **Rules** —— 按真实路径/作用域拆分并更新 `rules/index.md`；合并重复规则，能确定性检查的散文规则改为 fitness check。
-- **NOW / INTENT** —— 永远不拆分，只重写成短小的当前状态；历史留给 git。
-- **ADR / decisions** —— 项目使用 `refs.decisions` 时，一个长期决策一个 ADR；目录可以持续增加，但不要在每个会话全量注入 ADR。capability 局部决策可以进入有界的 `decisions.md`。
+- **大型 specs** —— 不要通过摘要丢掉 requirement。`keelson land` 会自动把大型 capability 从单个 `spec.md` 变成有界索引 + `requirements/*.md` + `decisions/*.md`。总知识量可以持续增长，但每个高频读取文件保持小。
+- **Rules** —— 按真实路径/作用域拆分并更新 `rules/index.md`；合并重复规则，能确定性检查的散文规则改为 fitness check。单条 rule 仍过宽时，自动重写成保留语义的最小不变量。
+- **NOW / INTENT** —— 永远不拆分，自动重写成短小的当前状态；历史留给 git。
+- **ADR / decisions** —— 项目使用 `refs.decisions` 时，一个长期决策一个 ADR；目录可以持续增加，但不要在每个会话全量注入 ADR。capability 局部决策自动拆成 `decisions/*.md`。
 - **Runtime** —— session pointer 和 evidence log 都是缓存；Keelson 会在正常命令中顺手回收旧数据。
 
 只有压缩会改变产品语义、授权、兼容性或其他真正属于所有者的决策时才询问用户。移动文件、更新索引、去重、删除历史叙述和缓存清理都属于内部维护，静默完成。
