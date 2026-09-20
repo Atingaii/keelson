@@ -83,7 +83,7 @@ If the repository showed two plausible meanings that changed the product, the ag
 
 The agent does **not** ask you to choose databases, queues, consistency models, or architecture patterns just because they exist. Before every question it asks: what will this answer change, who owns the answer, and can repository evidence or a cheap experiment settle it? If the choice is reversible engineering detail, the agent chooses a sensible project-aligned default. If you say “not sure,” that is useful information, not a failed answer.
 
-If you explicitly say “grill me,” the agent continues through the material decision tree. Otherwise it stops questioning as soon as the next safe vertical slice has a clear outcome, boundary, and acceptance check.
+If you explicitly ask to “stress-test this,” the agent continues through the material decision tree. Otherwise it stops questioning as soon as the next safe vertical slice has a clear outcome, boundary, and acceptance check.
 
 ## What grows later
 
