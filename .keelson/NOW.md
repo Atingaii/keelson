@@ -1,6 +1,6 @@
 # Now
 
-The continuous-conversation lifecycle redesign is implemented on top of the golden path. Keelson separates project truth, durable changes/work items, and ephemeral conversation focus. Users can keep asking questions indefinitely; session/window lifetime never marks work complete. A change becomes `ready` only when durable acceptance/gates and current-tree verification say so, and the Agent lands it without waiting for a “done” phrase.
+The continuous-conversation lifecycle redesign is implemented on top of the golden path. Keelson separates project truth, durable changes/work items, ephemeral conversation focus, and mutable execution plans. Users can keep asking questions indefinitely; session/window lifetime never marks work complete, and task checkboxes no longer act as a second manual completion signal. A change becomes `ready` only when durable acceptance/gates and current-tree verification say so, and the Agent lands it without waiting for a “done” phrase.
 
 Native session focus is now implemented for four first-class hosts:
 - Claude Code — SessionStart/UserPromptSubmit bridge + `CLAUDE_ENV_FILE`; raw session ids are never stored.
