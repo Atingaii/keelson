@@ -105,10 +105,10 @@ Keelson SHALL allow total project knowledge to grow with the project while keepi
 ### Scenario: Large capability contract
 - GIVEN a capability's logical contract exceeds the configured spec budget
 - WHEN a change lands
-- THEN Keelson automatically stores a bounded `spec.md` index plus requirement shards and optional capability decisions, while future base hashes, drift checks, validation, and delta merges operate on the reconstructed logical contract
+- THEN Keelson automatically stores a bounded `spec.md` index plus `requirements/*.md` and, when needed, `decisions/*.md`, while future base hashes, drift checks, validation, and delta merges operate on the reconstructed logical contract
 
 ### Scenario: Existing project material is never overwritten by sharding
-- GIVEN the capability directory already contains an unmanaged `requirements/` or `decisions.md`
+- GIVEN the capability directory already contains an unmanaged `requirements/`, `decisions/`, or legacy `decisions.md`
 - WHEN Keelson needs managed shards
 - THEN it chooses a collision-free managed path, records that path in the bounded index, and preserves the pre-existing files byte-for-byte
 
@@ -148,5 +148,5 @@ The agent SHALL be able to find every rule that applies to a path from `rules/in
 - project-layout: changes fold into specs and git history by default; a permanent archive directory was rejected because it duplicates what git already keeps and grows without bound
 - project-layout: task checkboxes are mutable execution-plan state, not lifecycle authority; requiring every historical task to remain checked was rejected because implementation paths legitimately change while acceptance and evidence remain authoritative
 - project-layout: total durable knowledge may grow, but frequently-read physical files stay bounded through automatic sharding, scoping, rewriting, and runtime garbage collection; asking the owner to perform periodic housekeeping was rejected because control-plane maintenance is Keelson's responsibility
-- project-layout: decisions live inside the affected spec rather than in a separate decision log, so the reason for a behaviour sits next to the behaviour
+- project-layout: capability-local current rationale stays beside the affected capability and may shard into `decisions/*.md`; surprising cross-cutting or expensive-to-reverse architecture decisions use the project's referenced ADR system when present, avoiding both a giant global decision log and duplicated rationale
 - project-layout: `.keelson/workflow.md` + `.keelson/skill/` are the sole runtime authority; root/platform files are discovery shims only. Full copies in host directories and symlink-based sharing were rejected because copies drift and symlinks are brittle across Windows/tooling.
