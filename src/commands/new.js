@@ -1,5 +1,4 @@
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { exists, write, read, mkdirp, readOr } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
@@ -9,10 +8,10 @@ import { git, isGitRepo, currentBranch, gitUserName } from '../lib/git.js';
 import { list } from '../lib/args.js';
 import { ok, info, warn } from '../lib/out.js';
 import { bindSession } from '../lib/session.js';
-import { readCapabilitySpec } from '../lib/specs.js';
+import { readCapabilitySpec, specFingerprint } from '../lib/specs.js';
 
 const fill = (tpl, vars) => tpl.replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? `{{${k}}}`);
-export const specBase = (text) => crypto.createHash('sha1').update(text).digest('hex').slice(0, 10);
+export const specBase = specFingerprint;
 
 export async function newChange({ flags, positional }, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
