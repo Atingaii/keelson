@@ -504,6 +504,39 @@
       "sha256": "1b767f0cd9c9d1db25c0044ac5f616b292709cb9196be1827664c883c8a55825",
       "bytes": 2206,
       "note": "GitHub Actions run 35510170688 at 544391f: all six OS/Node jobs successful; Windows runs explicitly skip three POSIX-only cases."
+    },
+    {
+      "file": "main-batch-fingerprint-4cf1681.tap.log",
+      "sha256": "4d0c0694e18bbe0b249789c496221417f2bee5ce95ea214e2344a246c69c5b82",
+      "bytes": 28245,
+      "source_commit": "4cf1681",
+      "command": "npm test",
+      "tap_counts": {
+        "tests": 146,
+        "pass": 146,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "note": "Full core suite started before benchmark tooling was cherry-picked; 146 executed cases. This is not the combined suite."
+    },
+    {
+      "file": "benchmark-tools-9f1765e.tap.log",
+      "sha256": "e239f1d472004366510202c19d8d843b335ae5dee4df90bf7b26a7fcb892fd09",
+      "bytes": 1563,
+      "source_commit": "9f1765e",
+      "command": "node --test tests/benchmark.test.js tests/benchmark.patch.test.js",
+      "tap_counts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "note": "Four newly integrated benchmark-tool regression cases, separate from the preceding full core run."
     }
-  ]
+  ],
+  "updated_at_utc": "2026-09-20T12:35:04.321907+00:00"
 }

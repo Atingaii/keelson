@@ -98,3 +98,7 @@ Remote old branches were rechecked at fcfbb76 and had no unique commits. Explici
 - Independent Windows remediation review: PASS, no P1/P2 findings. The reviewer reproduced all 14 filesystem/evidence cases with no skips and verified archived CI/error-injection hashes. Linux syntax and `validate` checks pass. Real Windows CI remains the platform acceptance gate; a persistent Windows ACL error can report lock timeout after the bounded wait.
 
 - Remote CI at 544391f is green: GitHub Actions run 35510170688 completed all six Ubuntu/macOS/Windows × Node 20/22 jobs successfully. Windows log confirms 138 tests, 135 pass, zero fail and three explicit POSIX-only skips. The API result is retained at `evals/engineering/2026-09-20-local/ci-544391f.json`; later integration requires another final CI run.
+
+## 2026-09-20 fingerprint integration
+
+The current worktree fingerprint batches unfiltered Git blob hashing while framing path, type, executable mode and actual current content; no Git status/stat cache is trusted. New regressions cover preserved mtime/size changes, unusual paths, symlinks, gitlinks, nested projects and filesystem roots. Lint and the full core suite at 4cf1681 pass 146/146, with zero skips. Four benchmark-tool cases subsequently added at 9f1765e pass separately. Verification docs explicitly disclose the v2 freshness migration and submodule boundary. Remote CI and a combined final suite are still required; CLI latency targets remain open.

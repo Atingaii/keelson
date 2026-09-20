@@ -15,7 +15,7 @@ Review `.keelson/config.yaml → check` before the first use of `--trust`. Trust
 
 `changes/<name>/ledger.jsonl` is an append-only sequence of DSSE envelopes. A verification envelope has payload type `application/vnd.in-toto+json` and an in-toto Statement v1 containing:
 
-- a full Git tree object ID (or SHA-256 worktree digest outside Git);
+- a SHA-256 worktree fingerprint, framing each included path, entry type, executable mode, and content digest;
 - a SHA-256 contract digest covering configuration, intent, main specs, rules, change acceptance, delta specs, and structured decisions;
 - exact commands, exit codes, duration, timeout/output-limit status, and SHA-256 output digests;
 - timestamps, CLI version, suite completeness, and whether inputs stayed unchanged during checking;
@@ -32,6 +32,8 @@ Checks default to a ten-minute deadline per command. Override with `--timeout <m
 The current tree must equal the recorded tree. The current contract must equal the recorded contract. The latest verification must contain every configured command, in order, with exit zero; an older successful run cannot hide a later failed run. Partial commands can be recorded for diagnosis but cannot authorize landing.
 
 For Git projects, the worktree fingerprint includes tracked and non-ignored untracked project files, excluding `.keelson/`. Contract files under `.keelson/` are hashed separately. Ignored build products and dependencies are not hashed. This is not a hermetic environment digest: a changed interpreter, dependency installation, network service, clock, or external file requires the operator to rerun checks even if the tree is unchanged.
+
+Each snapshot reads current contents, including same-size edits with restored timestamps. Git supplies the path set and unfiltered blob IDs for ordinary files; newline paths use direct SHA-256 reads. Symlinks bind their link target, and nested Git repositories bind their HEAD, not uncommitted contents inside that repository. Paths that are not valid UTF-8 fail explicitly. This fingerprint format changes both older Git tree IDs and non-Git digests: rerun `check --record` after upgrading; historical signatures remain readable.
 
 Concurrent record writers use a lock and durable append. Logs are content-addressed. A check detects inputs changed between its start and finish. No completion claim is made while another check is active. There is no protection against an adversarial process changing a file and restoring it between the two snapshots.
 

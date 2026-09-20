@@ -1,0 +1,43 @@
+TAP version 13
+# hint: Using 'master' as the name for the initial branch. This default branch name
+# hint: is subject to change. To configure the initial branch name to use in all
+# hint: of your new repositories, which will suppress this warning, call:
+# hint: 
+# hint: \\tgit config --global init.defaultBranch <name>
+# hint: 
+# hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+# hint: 'development'. The just-created branch can be renamed via this command:
+# hint: 
+# hint: \\tgit branch -m <name>
+# Cloning into '/tmp/keelson-bench-patch-Fl8aWm/target'...
+# done.
+# Switched to a new branch 'benchmark-baseline'
+# Subtest: final patch applies tracked modifications and only untracked additions once
+ok 1 - final patch applies tracked modifications and only untracked additions once
+  ---
+  duration_ms: 83.199209
+  ...
+# Subtest: task metadata requires immutable upstream identities and a mechanical threshold
+ok 2 - task metadata requires immutable upstream identities and a mechanical threshold
+  ---
+  duration_ms: 2.064842
+  ...
+# Subtest: only source paths satisfy the source-change threshold and pass remains mechanical
+ok 3 - only source paths satisfy the source-change threshold and pass remains mechanical
+  ---
+  duration_ms: 0.965085
+  ...
+# Subtest: token fields are retained only when emitted by raw Codex events
+ok 4 - token fields are retained only when emitted by raw Codex events
+  ---
+  duration_ms: 0.44552
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 240.136629
