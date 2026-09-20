@@ -167,9 +167,12 @@ test('fingerprints fail closed when a Git worktree has unusable metadata', () =>
   assert.throws(() => worktreeFingerprint(corrupt));
 });
 
-test('non-Git fallback accepts Git's mount-boundary diagnostic', (t) => {
+test('non-Git fallback accepts Git\'s mount-boundary diagnostic', (t) => {
   if (process.platform === 'win32' || !fs.existsSync('/dev/shm')) return t.skip('the Git mount-boundary diagnostic is POSIX-specific');
   const root = fs.mkdtempSync('/dev/shm/keelson-git-boundary-');
+  const outsideGit = path.join('/dev', '.git');
+  const originalLstat = fs.lstatSync;
+  let inspectedOutsideGit = false;
   try {
     let stderr = '';
     try {
@@ -182,10 +185,19 @@ test('non-Git fallback accepts Git's mount-boundary diagnostic', (t) => {
       stderr = Buffer.from(error.stderr ?? '').toString('utf8');
     }
     if (!stderr.includes('any parent up to mount point')) return t.skip('this host did not stop Git discovery at /dev/shm');
+    fs.lstatSync = (target, ...args) => {
+      if (path.resolve(target) === outsideGit) {
+        inspectedOutsideGit = true;
+        return {};
+      }
+      return originalLstat(target, ...args);
+    };
     assert.match(worktreeFingerprint(root), /^[a-f0-9]{64}$/);
   } finally {
+    fs.lstatSync = originalLstat;
     fs.rmSync(root, { recursive: true, force: true });
   }
+  assert.equal(inspectedOutsideGit, false);
 });
 
 test('untracked tab names remain paths, rather than being parsed as stage metadata', (t) => {

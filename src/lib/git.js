@@ -93,6 +93,8 @@ function addGitEntries(entries, root, args, kind) {
 }
 
 function hasGitMetadata(root) {
+  const device = fs.lstatSync(path.resolve(root)).dev;
+  const crossFilesystem = process.env.GIT_DISCOVERY_ACROSS_FILESYSTEM === '1';
   for (let current = path.resolve(root);;) {
     try {
       fs.lstatSync(path.join(current, '.git'));
@@ -102,6 +104,7 @@ function hasGitMetadata(root) {
     }
     const parent = path.dirname(current);
     if (parent === current) return false;
+    if (!crossFilesystem && fs.lstatSync(parent).dev !== device) return false;
     current = parent;
   }
 }
