@@ -25,6 +25,8 @@ Go back to `change.md → Acceptance` and to the original request, not to your o
 
 For a bug fix, keep the negative check: with the fix reverted, the regression test must fail. A test that passes both ways proves nothing.
 
+For each risk lens that actually triggered during shaping, verify the corresponding obligation rather than re-running a generic checklist: security needs the relevant negative/abuse case, concurrency needs duplicate/order/failure behavior, compatibility needs old-consumer or migration coverage, accessibility needs the affected interaction check, and performance needs a measured target/baseline. If the repository already proves it, reuse that evidence; do not duplicate it.
+
 ## Tests may change; they may not be quietly weakened
 <!-- keelson: id=verify.no-silent-weakening | without: "all green" is achieved by deleting an assertion or skipping a case, and the weakening is invisible in the completion report | sunset: never -->
 
