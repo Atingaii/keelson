@@ -205,9 +205,9 @@ AND 当前 tree 上 verification 通过
 
 change 才成为 `ready`。
 
-Quick change 没有 tasks 文件完全合法。
+`tasks.md` 在所有 tier 都只是可变执行计划；它可以不存在、未全部勾选，或随实现路径重写，只要已接受的结果已经满足就不会阻止 ready。
 
-Spec change 则必须满足它真实存在的 plan/acceptance。
+Spec change 的权威是 Acceptance 契约和行为 delta，而不是 plan。
 
 如果测试绿了之后又改代码，verification 自动 stale，`ready` 也消失。
 
@@ -343,9 +343,10 @@ keelson status
 诊断/升级：
 
 ```bash
-keelson doctor
 keelson update
 ```
+
+知识维护本身是自动的：Agent 在 RECONCILE 中消费内部 health signal，大型 spec 自动分片，runtime 缓存自动回收。 `doctor` 是诊断工具，不是用户必须执行的 housekeeping 步骤。
 
 `focus`、`new`、`context`、`impact`、`check`、`land` 和少见的 `handoff` 主要由 Agent 使用。
 
