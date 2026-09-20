@@ -273,6 +273,13 @@ function removeCodeBuddyHooks(root) {
   return true;
 }
 
+function removeEmptyDir(dir) {
+  if (!exists(dir) || !fs.statSync(dir).isDirectory()) return false;
+  if (fs.readdirSync(dir).length) return false;
+  rmrf(dir);
+  return true;
+}
+
 export function removeSessionAdapter(root, target, keep = new Set()) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
   const removed = [];
@@ -281,6 +288,7 @@ export function removeSessionAdapter(root, target, keep = new Set()) {
     if (!keep.has(rel) && exists(path.join(root, rel))) {
       rmrf(path.join(root, rel));
       removed.push(rel);
+      removeEmptyDir(path.join(root, '.opencode', 'plugins'));
     }
   }
   if (p?.sessionAdapter === 'codebuddy-hooks') {
@@ -290,6 +298,7 @@ export function removeSessionAdapter(root, target, keep = new Set()) {
       removed.push(rel);
     }
     if (!keep.has(rel) && removeCodeBuddyHooks(root)) removed.push('.codebuddy/settings.json (Keelson hooks)');
+    if (!keep.has(rel)) removeEmptyDir(path.join(root, '.keelson', 'hooks'));
   }
   return removed;
 }
