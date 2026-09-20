@@ -17,7 +17,7 @@ When quick work is materially ambiguous, and for every spec change, do a compact
 3. **Missing** — information that cannot be learned from the repository; rank it by how much the answer could change the outcome, boundary, acceptance, or an expensive-to-reverse choice.
 4. **Failure if wrong** — name one likely failure pattern for this class of work: wrong problem, scope creep, compatibility break, unmeasured optimisation, unsafe migration, or another concrete risk.
 
-If no missing item is load-bearing, proceed under the project's authorizations/defaults and record any material assumption. If one is load-bearing and user-owned, ask the single highest-value question, wait for the answer, update the write-back, then re-run the audit. Do not ask a dependent second question before the first answer exists.
+Keep the audit internal except for the facts/assumptions needed in the short write-back. If no missing item is load-bearing, proceed under project authorizations/defaults. If one is load-bearing and user-owned, route it through `interview.md`, ask the single highest-value question, update the write-back, then reassess. Do not expose an audit checklist to the owner.
 
 ## Write back your understanding
 <!-- keelson: id=shape.write-back | without: agent builds its own interpretation; mismatches surface after code exists | sunset: never -->
@@ -43,23 +43,12 @@ When you must proceed without an answer, write the working assumption as `- (ass
 
 The bar is not "no unknowns in the project". It is: the next slice has a clear outcome, a boundary, and an acceptance check. Unresolved questions about later slices go under `## Open questions` with what they block, and the work they do not block continues. Example: download permissions undecided, link management list can be built, public download must not be defaulted on.
 
-## Interview (spec changes, or when the user says "grill me")
-<!-- keelson: id=shape.interview | without: architectural ambiguity is resolved silently by the agent instead of by the owner | sunset: never -->
+## Interview (only when the decision frontier requires it)
+<!-- keelson: id=shape.interview | without: architectural ambiguity is silently guessed, or every spec change turns into a mandatory questionnaire | sunset: never -->
 
-Walk the decision tree front to back: resolve the blocking decision before its dependents (outcome and scope before API and data model). Default to one highest-value question at a time. Only batch questions when the owner explicitly asks for a batch and the questions are genuinely independent; if one answer can change whether or how another should be asked, wait. Use the host's question tool when available, with 2–4 concrete options and a recommendation with its trade-off, plus free text. When the owner does not follow a term, offer a scenario, a sketch, or a small experiment instead of more vocabulary. After each answer, acknowledge in one sentence and continue. When the user says "grill me", continue until every branch is settled, then summarise the decisions; otherwise stop at the rule above.
+Use `interview.md` for the interaction protocol. A spec-sized change does **not** automatically require user questions: first resolve repository-owned facts and reversible engineering choices yourself. If the work touches data, security, concurrency, compatibility, operations, performance, UI/accessibility, or AI behavior, inspect only the triggered rows in `design-lenses.md` and turn them into decisions or evidence obligations.
 
-Open with the assumption check when the change is architectural: "What are we assuming here that, if false, changes the answer?" State your own answer before asking for theirs.
-
-<!-- guided -->
-### Question order that usually works
-1. Outcome and who it is for.
-2. Scope boundary: what is out.
-3. Existing behaviour that must not change.
-4. Data shape and lifecycle.
-5. Failure modes and their handling.
-6. Migration, rollback, compatibility.
-7. Acceptance: what the user will check.
-<!-- /guided -->
+Run the assumption check internally. Do not open with an abstract "what are we assuming?" question unless the owner truly owns that uncertainty; translate it into the concrete user-visible or risk consequence instead. Explicit "grill me" requests continue through the relevant decision tree; ordinary work stops as soon as the next safe slice is ready.
 
 ## Authorization
 <!-- keelson: id=shape.authorization | without: either every step waits for approval or the agent decides product questions and production actions by itself | sunset: never -->
