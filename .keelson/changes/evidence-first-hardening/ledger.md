@@ -72,3 +72,7 @@ The reviewer confirmed that scanning children did not reject a symbolic link at 
 
 ### Ruling: separate generated hooks from installed historical snapshots
 The earlier fixture represented `f6ce125:.keelson/hooks/`, while a new v0.3 install copies `f6ce125:hooks/`. Both now have explicit provenance and exact normalized hashes; ownership accepts only that known union. The fresh-hook regression fails on `b2ada9c`, then passes after the fix. The complete targeted migration selection passes 11 executed tests. Independent re-review accepted root/file-link preservation and independently regenerated all four skill trees, four workflows and two shims from the baseline, matching the static fixture manifest.
+
+### Dispatch: final migration ownership review → deep (gpt-5.6-terra)
+Result: pass
+Read-only review of `599ee44` found no remaining P1/P2 in this scope. It independently matched baseline-generated language/profile/workflow/shim hashes, both exact Claude hook sources and the CodeBuddy hook, and checked directory/file-link plus hidden-neighbor preservation. The static review and syntax/diff checks pass; the root's subsequent integrated suite is recorded separately.
