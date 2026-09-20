@@ -51,6 +51,8 @@ Logs can contain secrets printed by project commands. Review them before sharing
 
 Landing checks acceptance, decisions, active dependencies, contract drift and evidence. It refuses while checks are running. It snapshots the files it will change under the private runtime, then folds contracts and archives the complete evidence bundle. On an ordinary write failure it restores those files. After an interrupted process, first resolve any abandoned lock as described below; the next landing restores the transaction before refusing and asking for review and re-verification. This is recoverability, not a distributed transaction or a guarantee against storage-device failure.
 
+New journals store relative project and session paths. Recovery validates every target and required backup before removing any target. A moved Git project can recover from its moved private runtime; a legacy journal with obsolete absolute paths, an invalid journal, or a missing backup stops without changing the targets. Preserve that journal and its backups for manual recovery rather than deleting them to bypass the error.
+
 An explicit owner-authorized emergency may use:
 
 ```bash
