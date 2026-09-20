@@ -273,23 +273,23 @@ function removeCodeBuddyHooks(root) {
   return true;
 }
 
-export function removeSessionAdapter(root, target) {
+export function removeSessionAdapter(root, target, keep = new Set()) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
   const removed = [];
   if (p?.sessionAdapter === 'opencode-plugin') {
     const rel = '.opencode/plugins/keelson-session.js';
-    if (exists(path.join(root, rel))) {
+    if (!keep.has(rel) && exists(path.join(root, rel))) {
       rmrf(path.join(root, rel));
       removed.push(rel);
     }
   }
   if (p?.sessionAdapter === 'codebuddy-hooks') {
     const rel = '.keelson/hooks/codebuddy-session.mjs';
-    if (exists(path.join(root, rel))) {
+    if (!keep.has(rel) && exists(path.join(root, rel))) {
       rmrf(path.join(root, rel));
       removed.push(rel);
     }
-    if (removeCodeBuddyHooks(root)) removed.push('.codebuddy/settings.json (Keelson hooks)');
+    if (!keep.has(rel) && removeCodeBuddyHooks(root)) removed.push('.codebuddy/settings.json (Keelson hooks)');
   }
   return removed;
 }
@@ -347,7 +347,7 @@ function removeTargetSurfaces(root, p, keep = new Set()) {
     removed.push(p.rulesFile);
   }
   if (p.hooks && !keep.has('.claude/settings.json')) removeHooks(root);
-  removed.push(...removeSessionAdapter(root, p));
+  removed.push(...removeSessionAdapter(root, p, keep));
   return removed;
 }
 
