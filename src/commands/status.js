@@ -7,6 +7,7 @@ import { evaluateLifecycle } from '../lib/lifecycle.js';
 import { readSession } from '../lib/session.js';
 import { worktreeFingerprint, headSha, lastTag, foldedSince, gitStatusShort, isGitRepo } from '../lib/git.js';
 import { heading, dim, warn } from '../lib/out.js';
+import { knowledgeHealth } from '../lib/health.js';
 
 export function projectStatus(root) {
   const cfg = loadConfig(projectPaths(root).config);
@@ -47,6 +48,12 @@ export function projectStatus(root) {
       tasks: c.tasks,
     };
   });
+  const knowledgeFindings = knowledgeHealth(root, cfg, p).filter((h) => h.kind === 'budget' || h.kind === 'budget-hard');
+  const knowledge = {
+    critical: knowledgeFindings.filter((h) => h.level === 'error').length,
+    overBudget: knowledgeFindings.filter((h) => h.level === 'warn').length,
+    findings: knowledgeFindings.map((h) => ({ level: h.level, kind: h.kind, text: h.text })),
+  };
   return {
     root,
     head,
@@ -58,6 +65,7 @@ export function projectStatus(root) {
     focus,
     sessionAvailable: session.available,
     changes: rows,
+    knowledge,
     conflicts: sharedContracts(changes),
     release: tag ? { lastTag: tag, landedSince: foldedSince(root, tag) } : null,
   };
@@ -74,6 +82,9 @@ export async function status({ flags }, cwd = process.cwd()) {
   }
   heading(`Keelson — ${path.basename(root)}`);
   console.log(`${s.specs.length} capabilit${s.specs.length === 1 ? 'y' : 'ies'} in ${s.specsPath} · ${s.changes.length} active change${s.changes.length === 1 ? '' : 's'}${s.focus ? ` · focus ${s.focus}` : ''}${s.head ? ` · HEAD ${s.head}` : ''}${s.dirty ? ` · ${s.dirty} uncommitted` : ''}`);
+  if (s.knowledge.critical || s.knowledge.overBudget) {
+    console.log(dim(`knowledge pressure: ${s.knowledge.critical} hard-limit, ${s.knowledge.overBudget} over-budget · run keelson doctor`));
+  }
   console.log('');
   if (!s.changes.length) console.log(dim('No change in flight.'));
   for (const c of s.changes) {
