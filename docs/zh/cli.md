@@ -146,7 +146,7 @@ keelson handoff [name] [--by who] [--json]
 keelson validate [--json]
 ```
 
-对 `.keelson/` 和 specs 目录的结构检查。错误（退出 1）：缺少 `INTENT.md` 或 `NOW.md`；`profile` 或 `land` 无效；引用了缺失的 rule 文件；spec 目录没有 `spec.md`；重复的需求；层级或 work 状态无效；缺少 `Why`/`What`；spec 层级缺少 `How`/`Alternatives`/`Impact` 或备选少于两个；effort 标记无效；`Verify:` 条目没有命令或退出码；未知的根因类别；`.keelson/` 下任何位置出现带日期的模型 ID。警告：模板占位符、未列入索引的 rules、没有场景的需求、没有检查类型的验收项、没有 `blocks:` 的未决问题、依赖了不活动的变更、`**BREAKING**` 没有 `Rollout`、没有 `Delivers:` 的切片、没有 `tree` 的 `Verify:`、没有 `Result:` 的 `Dispatch:`、没有 `at:` 的交接、缺失的 refs 路径、`.gitignore` 没有 `.keelson/.local/`，以及以层命名的切片（`database`、`backend`、`frontend`、`ui`、`api`、`model`、`storage`、`infra` 及其变体），因为一个切片应该是一条贯穿所有层的、用户可观察的路径。
+对 `.keelson/` 和 specs 目录的结构检查。错误（退出 1）：缺少 `INTENT.md` 或 `NOW.md`；`profile` 或 `land` 无效；引用了缺失的 rule 文件；spec 目录没有 `spec.md`；重复的需求；层级或 work 状态无效；缺少 `Why`/`What`；spec 层级缺少 `How`/`Alternatives`/`Impact` 或备选少于两个；effort 标记无效；`Verify:` 条目没有命令或退出码；未知的根因类别；`.keelson/` 下任何位置出现带日期的模型 ID。警告：模板占位符、未列入索引的 rules、没有场景的需求、没有检查类型的验收项、没有 `blocks:` 的未决问题、依赖了不活动的变更、`**BREAKING**` 没有 `Rollout`、没有 `Delivers:` 的切片、没有 `tree` 的 `Verify:`、没有 `Result:` 的 `Dispatch:`、没有 `at:` 的交接、缺失的 refs 路径、`.gitignore` 没有 `.keelson/.runtime/`，以及以层命名的切片（`database`、`backend`、`frontend`、`ui`、`api`、`model`、`storage`、`infra` 及其变体），因为一个切片应该是一条贯穿所有层的、用户可观察的路径。
 
 ```text
 ! changes/demo/tasks.md: slice "Backend" is named after a layer; a slice should be one user-observable path through all layers (tracer bullet)
