@@ -159,10 +159,15 @@ export function installInstructions(root, target, { lang }) {
   return touched;
 }
 
-const CLAUDE_HOOK_COMMANDS = new Set(['keelson hook session-start', 'keelson hook prompt-state']);
+const LEGACY_CLAUDE_HOOK_COMMANDS = new Set([
+  'node "$CLAUDE_PROJECT_DIR/.keelson/hooks/session-start.mjs"',
+  'node "$CLAUDE_PROJECT_DIR/.keelson/hooks/prompt-state.mjs"',
+]);
+const CLAUDE_HOOK_COMMANDS = new Set(['keelson hook session-start', 'keelson hook prompt-state', ...LEGACY_CLAUDE_HOOK_COMMANDS]);
 const isClaudeHook = (hook) => hook?.type === 'command' && CLAUDE_HOOK_COMMANDS.has(String(hook.command));
 
 export function installHooks(root) {
+  removeHooks(root, { legacyOnly: true });
   const settingsPath = path.join(root, '.claude', 'settings.json');
   const settings = readJson(settingsPath, {}) ?? {};
   settings.hooks ??= {};
@@ -181,14 +186,14 @@ export function installHooks(root) {
   return ['.claude/settings.json'];
 }
 
-export function removeHooks(root) {
+export function removeHooks(root, { legacyOnly = false } = {}) {
   const settingsPath = path.join(root, '.claude', 'settings.json');
   const settings = readJson(settingsPath, null);
   if (!settings?.hooks) return;
   let changed = false;
   for (const ev of Object.keys(settings.hooks)) {
     const groups = settings.hooks[ev].map((g) => {
-      const hooks = (g.hooks ?? []).filter((h) => !isClaudeHook(h));
+      const hooks = (g.hooks ?? []).filter((h) => !isClaudeHook(h) || (legacyOnly && !LEGACY_CLAUDE_HOOK_COMMANDS.has(h.command)));
       if (hooks.length === (g.hooks ?? []).length) return g;
       changed = true;
       return hooks.length ? { ...g, hooks } : null;
@@ -202,6 +207,7 @@ export function removeHooks(root) {
 }
 
 const CODEBUDDY_SESSION_COMMAND = 'keelson hook codebuddy-session';
+const LEGACY_CODEBUDDY_SESSION_COMMAND = 'node "$CODEBUDDY_PROJECT_DIR/.keelson/hooks/codebuddy-session.mjs"';
 const isCodeBuddyHook = (hook) => hook?.type === 'command' && hook.command === CODEBUDDY_SESSION_COMMAND;
 
 function ensureCodeBuddyHook(settings, event, matcher = null) {
@@ -231,6 +237,7 @@ export function installSessionAdapter(root, target) {
   if (!p?.sessionAdapter || p.sessionAdapter === 'pi-env' || p.sessionAdapter === 'claude-hooks') return [];
 
   if (p.sessionAdapter === 'codebuddy-hooks') {
+    removeCodeBuddyHooks(root, { legacyOnly: true });
     const settingsPath = path.join(root, '.codebuddy', 'settings.json');
     const settings = readJson(settingsPath, {}) ?? {};
     ensureCodeBuddyHook(settings, 'SessionStart');
@@ -261,14 +268,16 @@ export function plannedSessionAdapterFiles(root, target) {
   return rows;
 }
 
-function removeCodeBuddyHooks(root) {
+function removeCodeBuddyHooks(root, { legacyOnly = false } = {}) {
   const settingsPath = path.join(root, '.codebuddy', 'settings.json');
   const settings = readJson(settingsPath, null);
   if (!settings?.hooks) return false;
   let changed = false;
   for (const event of Object.keys(settings.hooks)) {
     settings.hooks[event] = settings.hooks[event].map((g) => {
-      const hooks = (g.hooks ?? []).filter((h) => !isCodeBuddyHook(h));
+      const hooks = (g.hooks ?? []).filter((h) =>
+        !(h?.type === 'command' && h.command === LEGACY_CODEBUDDY_SESSION_COMMAND) && (legacyOnly || !isCodeBuddyHook(h)),
+      );
       if (hooks.length === (g.hooks ?? []).length) return g;
       changed = true;
       return hooks.length ? { ...g, hooks } : null;

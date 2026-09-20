@@ -24,6 +24,7 @@ function restoreV03Project(dir) {
   const fixture = path.resolve('tests/fixtures/v0.3-runtime');
   fs.cpSync(path.join(fixture, '.keelson'), path.join(dir, '.keelson'), { recursive: true });
   fs.cpSync(path.join(fixture, '.agents'), path.join(dir, '.agents'), { recursive: true });
+  fs.cpSync(path.join(fixture, '.claude'), path.join(dir, '.claude'), { recursive: true });
 }
 
 test('default installation stays within the lightweight budget and leaves ignore files alone', () => {
@@ -93,6 +94,7 @@ test('update migrates the exact real v0.3 runtime to a light Codex install', () 
   for (const rel of ['.keelson/skill', '.keelson/workflow.md', '.keelson/hooks']) assert.ok(!exists(dir, rel), rel);
   assert.match(read(dir, '.agents/skills/keelson/SKILL.md'), /keelson guide/);
   assert.equal(JSON.parse(read(dir, '.keelson/manifest.json')).vendor, false);
+  assert.equal(JSON.parse(read(dir, '.claude/settings.json')).hooks, undefined);
 });
 
 test('v0.3 migration retains an edited copied hook', () => {
@@ -153,6 +155,47 @@ test('guide uses persisted project language profile and guided setting without v
   assert.match(run(dir, ['guide', 'workflow'], { env }).stdout, /引导模式/);
   assert.doesNotMatch(run(dir, ['guide', 'build'], { env }).stdout, /<!-- guided -->/);
   assert.ok(!exists(dir, '.keelson/skill'));
+});
+
+test('update switches the language of an unchanged managed shim but protects edits', () => {
+  const dir = tmpProject({}); run(dir, ['init', '--codex', '--lang', 'en', '--no-hooks'], { env });
+  run(dir, ['update', '--lang', 'zh', '--no-hooks'], { env });
+  assert.match(read(dir, '.agents/skills/keelson/SKILL.md'), /这是发现入口/);
+  run(dir, ['update', '--lang', 'en', '--no-hooks'], { env });
+  assert.match(read(dir, '.agents/skills/keelson/SKILL.md'), /This is a discovery shim/);
+  const config = read(dir, '.keelson/config.yaml');
+  const custom = read(dir, '.agents/skills/keelson/SKILL.md') + '\nOwner instruction.\n';
+  write(dir, '.agents/skills/keelson/SKILL.md', custom);
+  const result = run(dir, ['update', '--lang', 'zh', '--no-hooks'], { env, allowFail: true });
+  assert.equal(result.code, 1);
+  assert.equal(read(dir, '.keelson/config.yaml'), config);
+  assert.equal(read(dir, '.agents/skills/keelson/SKILL.md'), custom);
+});
+
+test('v0.3 hook commands migrate or retire individually while preserving user hooks', () => {
+  for (const tool of ['claude', 'codebuddy']) {
+    const envName = tool === 'claude' ? 'CLAUDE_PROJECT_DIR' : 'CODEBUDDY_PROJECT_DIR';
+    const script = tool === 'claude' ? 'session-start' : 'codebuddy-session';
+    const old = `node "$${envName}/.keelson/hooks/${script}.mjs"`;
+    const neighbor = { type: 'command', command: `echo '${old}'`, timeout: 42 };
+    const settingsPath = `.${tool}/settings.json`;
+    const settings = { owner: 'retained', hooks: { SessionStart: [{ matcher: 'owner-matcher', hooks: [
+      { type: 'command', command: old, timeout: 10 }, neighbor,
+    ] }] } };
+    const dir = tmpProject({ [settingsPath]: JSON.stringify(settings) });
+    run(dir, ['init', `--${tool}`], { env });
+    let actual = JSON.parse(read(dir, settingsPath));
+    assert.equal(actual.owner, 'retained');
+    assert.deepEqual(actual.hooks.SessionStart[0], { matcher: 'owner-matcher', hooks: [neighbor] });
+    const commands = Object.values(actual.hooks).flatMap(groups => groups.flatMap(group => group.hooks.map(hook => hook.command)));
+    assert.ok(!commands.includes(old));
+    assert.equal(commands.filter(command => command === `keelson hook ${script}`).length, tool === 'claude' ? 1 : 3);
+    // Exercise disabling directly from the legacy registration too.
+    write(dir, settingsPath, JSON.stringify(settings));
+    run(dir, ['update', '--codex', '--no-hooks'], { env });
+    actual = JSON.parse(read(dir, settingsPath));
+    assert.deepEqual(actual, { owner: 'retained', hooks: { SessionStart: [{ matcher: 'owner-matcher', hooks: [neighbor] }] } });
+  }
 });
 
 

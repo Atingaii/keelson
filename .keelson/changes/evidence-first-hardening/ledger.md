@@ -49,3 +49,9 @@ The clean implementation at this attestation fix is frozen for fresh-install Fla
 
 ### Ruling: close existing privacy and evaluation gaps
 The draft's private-ablation requirement was still uncovered: reused empty recovery directories could remain accessible to other POSIX users. Restrict them to `0700` before copying and preserve round-trip contents. This does not change the frozen benchmark's fresh-install/code-edit path. A separate frozen D-17 supplemental test checks requirements absent from the original hidden test, with the same patch-replay test for every method and no rewriting of original scores.
+
+### Ruling: real migration and language switching
+The exact baseline fixture now includes its Claude hook settings. Three root-authored regressions failed before the repair: stale copied-script registrations, mixed-group hook migration, and changing the language of an unchanged generated shim. Only exact known old commands are retired, preserving neighboring user hooks. A manifest's prior version permits recognized generated shims in either supported language; custom text still stops before config writes. The targeted migration/preservation selection passes 8/8.
+
+### Note: integrated Codex dogfood verification
+This repository successfully ran `update --codex --no-hooks` without `--force`, removing the proven old copied runtime and refreshing the Codex discovery surface. `doctor --session` reports native `CODEX_THREAD_ID`, zero errors and zero warnings. The subsequent complete suite passes 126/126, with no skips; lint and project validation pass. Package dry-run contains 121 files (174,665 compressed bytes; 495,468 unpacked bytes) and no project `.keelson/` state. Benchmark and final remote verification remain open.

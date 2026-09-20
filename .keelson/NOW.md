@@ -2,10 +2,10 @@
 
 The 0.4 remediation is in progress on main. Signed local check records bind code and contracts; prose alone cannot authorize completion. Default installation loads guidance from the installed package, keeps machine-local runtime outside tracked project data, and never writes ignore rules. Decision records preserve ownership, prerequisites and explicit reopening history.
 
-Core verification passed 17 targeted tests, including concurrent writers, escaped-child deadlines, foreign signatures, transaction recovery and real Git index preservation. Markdown and landing tests passed 22/22 after fixing lossless sharding regressions. These are targeted results; the final whole-project check and remote CI are still pending.
+The complete integrated suite passes 126/126 after actual 0.3 migration to the Codex lightweight layout without force. Lint, project validation, package smoke checks and native Codex session diagnostics pass. Independent review and the final remote CI remain release gates.
 
 ## Remaining work
-- Finish and review installation migration without replacing modified user files; update this repository's generated integration to Codex.
+- Finish independent migration review; preserve modified user files and exact prior-generation ownership checks.
 - Complete fixed local Codex comparisons on Flask with gpt-5.6-terra, retaining environment failures and all declared metrics. Baseline dependencies come from upstream locks.
 - Run the complete test/validation/package checks, record real evidence, push main and verify remote branch cleanup and CI.
 

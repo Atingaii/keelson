@@ -137,10 +137,11 @@ function skillShimMatches(dest, content, legacyVersion) {
     (normalize(read(skill)) === content || legacyV03SkillShimMatches(dest, legacyVersion));
 }
 
-function assertSkillInstallable(root, target, { lang, version, legacyVersion, force }) {
+function assertSkillInstallable(root, target, { lang, version, legacyVersion, previousVersion, force }) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
   const dest = path.join(root, p.skillsDir, 'keelson');
-  if (exists(dest) && !skillShimMatches(dest, renderSkillShim(lang, version), legacyVersion) && !force) {
+  const priorOutput = previousVersion && managedSkillShimMatches(root, p, previousVersion);
+  if (exists(dest) && !skillShimMatches(dest, renderSkillShim(lang, version), legacyVersion) && !priorOutput && !force) {
     throw new Error('discovery shim differs from this CLI output; Keelson left it unchanged. Review it, then pass --force only if replacing the whole directory is intended.');
   }
 }
@@ -163,11 +164,11 @@ export function managedSkillShimMatches(root, target, version) {
   return ['en', 'zh'].some((lang) => skillShimMatches(dest, renderSkillShim(lang, version), version));
 }
 
-export function installSkill(root, target, { lang, version, legacyVersion = null, force = false }) {
+export function installSkill(root, target, { lang, version, legacyVersion = null, previousVersion = null, force = false }) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
   const dest = path.join(root, p.skillsDir, 'keelson');
   const content = renderSkillShim(lang, version);
-  assertSkillInstallable(root, p, { lang, version, legacyVersion, force });
+  assertSkillInstallable(root, p, { lang, version, legacyVersion, previousVersion, force });
   withLock(dest, () => replaceDirSafe(dest, (tmp) => write(path.join(tmp, 'SKILL.md'), content)));
   return path.relative(root, dest);
 }

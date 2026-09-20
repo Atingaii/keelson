@@ -1,11 +1,11 @@
 # Keelson project configuration. Every key is optional; defaults are shown.
 # paths.specs: where behaviour contracts live. refs.*: existing project material, referenced, never copied.
-# check: commands (strings, or {name, command, kind}) that prove the code works. guide: true when the owner is learning engineering.
+# check: commands (strings, or {name, command, kind}) that prove the code works. guide: learning mode. hooks: persist host hook installation.
 # budgets: soft line budgets per document type; durable truth hard-fails at 2x, while temporary change/handoff files only warn.
 # Docs: https://github.com/Atingaii/keelson/blob/main/docs/configuration.md
 version: 4
 tools:
-  - claude
+  - codex
 lang: en
 profile: lean
 default_tier: auto
@@ -17,7 +17,7 @@ check:
   - npm run lint
   - npm run test
 guide: false
-hooks: true
+hooks: false
 budgets:
   INTENT: 120
   ROADMAP: 80

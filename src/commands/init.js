@@ -111,6 +111,7 @@ export async function init({ flags }, cwd = process.cwd()) {
   if (!['lean', 'guided'].includes(cfg.profile)) throw new Error('profile must be lean or guided');
   const targets = installTargets(cfg.tools, cfg);
   const priorManaged = readManagedState(root);
+  const previousVersion = priorManaged?.packageVersion;
   const legacyVersion = priorManaged?.vendor === undefined ? priorManaged?.packageVersion : null;
 
   const project = path.basename(root);
@@ -148,7 +149,7 @@ export async function init({ flags }, cwd = process.cwd()) {
 
   heading(`Keelson ${fresh ? 'init' : 'update'} in ${root}`);
   // Refuse a protected shim before changing config or removing v0.3 runtime.
-  assertSkillsInstallable(root, targets, { lang: cfg.lang, version: PKG_VERSION, legacyVersion, force: flags.force });
+  assertSkillsInstallable(root, targets, { lang: cfg.lang, version: PKG_VERSION, legacyVersion, previousVersion, force: flags.force });
   if (retiredFromConfig.length) warn(`retired host adapters removed from config: ${retiredFromConfig.join(', ')}; use the portable agents layer or select one of: ${PLATFORM_IDS.filter((id) => id !== 'agents').join(', ')}`);
   if (retiredOverrides.length) warn(`retired platform overrides removed: ${retiredOverrides.join(', ')}`);
   if (retiredModelOverrides.length) warn(`retired model overrides removed: ${retiredModelOverrides.join(', ')}`);
@@ -210,7 +211,7 @@ export async function init({ flags }, cwd = process.cwd()) {
     const discoveryKey = `${t.instructions}|${t.skillsDir}|${t.rulesFile ?? ''}`;
     if (!discoveryInstalled.has(discoveryKey)) {
       discoveryInstalled.add(discoveryKey);
-      const skillPath = installSkill(root, t, { lang: cfg.lang, version: PKG_VERSION, legacyVersion, force: flags.force });
+      const skillPath = installSkill(root, t, { lang: cfg.lang, version: PKG_VERSION, legacyVersion, previousVersion, force: flags.force });
       const files = installInstructions(root, t, { lang: cfg.lang });
       ok(`${t.label}: discovery shim → ${skillPath}; instructions → ${files.join(', ')}${t.confidence === 'convention' ? dim(' (path by convention; run `keelson doctor` after your first session)') : ''}`);
     } else {
