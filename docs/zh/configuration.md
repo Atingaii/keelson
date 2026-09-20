@@ -67,7 +67,7 @@ effort:
 | `land` | `fold` | `fold` 在合并后删除变更目录。`keep` 把它移到 `changes/archive/` |
 | `check` | 自动探测 | `keelson check` 按顺序从项目根目录通过 shell 运行的内容。每个条目是一个命令字符串，或对象 `{name, command, kind}`，其中 `kind` 取 `test`、`lint`、`typecheck`、`build`、`fitness`、`check` 之一。对纯字符串，kind 从命令猜测。首次 init 时从 `package.json` 脚本、`pyproject.toml`、`pytest.ini`、`go.mod` 或 `Cargo.toml` 探测 |
 | `guide` | `false` | 所有者正在学习工程时设为 `true`。往 `.keelson/workflow.md` 加一行引导模式说明，往 `keelson context` 加一条提示；技能随后用场景和取舍解释，并在 spec 变更收尾时附一段简短的教学说明。`keelson init --guide` 设置它 |
-| `hooks` | `true` | 支持 hook 的已选宿主是否安装 Keelson hook。`--no-hooks` 会持久写成 `false`，之后 `update` 也不会偷偷恢复；`--hooks` 可重新开启 |
+| `hooks` | `true` | 是否安装由 Keelson 管理的 lifecycle/session hook 或 plugin。当前控制 Claude、OpenCode、CodeBuddy bridge；Pi 的 `PI_SESSION_ID` 由宿主内置，所以仍保持 native。`--no-hooks` 持久写成 `false`；`--hooks` 重新开启 |
 | `budgets` | 见下文 | 每种文档的行数预算。`keelson doctor` 报告超预算的文档并要求压缩；没有任何东西被自动重写 |
 | `context` | `""` | 打印在 `keelson context` 输出顶部的自由文本。用于放不进 INTENT.md 的事实，比如技术栈概要 |
 | `paths.specs` | `.keelson/specs` | 行为契约目录，每个能力一个 `<capability>/spec.md`。指向已有的契约目录即可复用 |
@@ -117,7 +117,7 @@ platforms:
     instructionsFormat: kiro
 ```
 
-键：`instructions`（接收发现块的文件）、`instructionsFormat`（`kiro` 写一个带 inclusion 头的独立 steering 文件，而不是带标记的块）、`skillsDir`（单文件 `keelson/SKILL.md` 发现 shim 安装到哪里）、`rulesFile` 和 `rulesFormat`（`mdc` 为带 frontmatter 的 rule 文件，`md` 为纯 Markdown）、`hooks`（只对像 Claude Code 那样运行 hook 的工具设为 `true`）。覆盖对 `init`、`update`、`doctor`、`uninstall` 和 `ablate` 生效。当一等公民宿主的旧版/本地安装使用不同的已知路径时使用它。
+键：`instructions`（接收发现块的文件）、`instructionsFormat`（`kiro` 写一个带 inclusion 头的独立 steering 文件，而不是带标记的块）、`skillsDir`（单文件 `keelson/SKILL.md` 发现 shim 安装到哪里）、`rulesFile` 和 `rulesFormat`（`mdc` 为带 frontmatter 的 rule 文件，`md` 为纯 Markdown），以及你明确覆盖某个已知本地安装时需要的宿主字段。Session adapter 内部字段由注册表维护，正常不应项目级覆盖。覆盖对 `init`、`update`、`doctor`、`uninstall` 和 `ablate` 生效。当一等公民宿主的旧版/本地安装使用不同的已知路径时使用它。
 
 ### 迁移
 
@@ -141,7 +141,7 @@ platforms:
 |---|---|---|
 | `tier` | `--tier` | `quick` 或 `spec` |
 | `created` | 日期 | 创建日期 |
-| `status` | `new`、`land --keep`、`cancel`，或代理 | work 状态：`clarifying`、`in-progress`、`blocked`、`in-review`、`integrated`、`cancelled`。显式值优先于推导值 |
+| `status` | `new`、`land --keep`、`cancel`，或代理 | work 状态：`clarifying`、`in-progress`、`blocked`、`ready`、`in-review`、`integrated`、`cancelled`。`ready` 通常由 acceptance/gate + 当前树新鲜 verification 推导；长期显式 `blocked`/`integrated`/`cancelled` 覆盖推导 |
 | `owner` | git 用户名，或 `--owner` | 谁在推动这个变更 |
 | `branch` | 当前分支，或 worktree 分支 | 工作在哪里进行 |
 | `worktree` | `--worktree` | 为该变更创建的 worktree 的相对路径 |
@@ -165,5 +165,7 @@ platforms:
 | `ANTHROPIC_MODEL`、`OPENAI_MODEL` | 由 `keelson models --detect` 报告为工具的默认模型 |
 | `ANTHROPIC_API_KEY`、`OPENAI_API_KEY`、`GEMINI_API_KEY` | 探测时记录它们是否存在。`--refresh` 用前两个查询 provider 目录 |
 | `CLAUDE_PROJECT_DIR` | 由 Claude Code 设置；hook 用它找到项目 |
+| `KEELSON_SESSION_ID` | Claude/OpenCode/CodeBuddy native bridge 注入的 opaque session identity；只用于选择 `.keelson/.runtime/sessions/<key>.json` |
+| `PI_SESSION_ID` | Pi 自动提供给 shell tool；Keelson 只在内存中哈希它来解析本地 session focus |
 | `NO_COLOR` | 关闭 CLI 彩色输出 |
 | `KEELSON_DEBUG` | 出错时打印堆栈 |
