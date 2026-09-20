@@ -86,9 +86,14 @@ Conversation 状态故意与长期 work 分开，并且只存在本机：
 
 session record 只保存例如 `change: order-search` 的指针，绝不保存 completed/cancelled。宿主原始 session id 在写磁盘前会被转换成 opaque key。
 
-Claude Code 上已经验证的 SessionStart bridge 会拿到宿主 session id，创建/刷新本地 session 文件，并通过 Claude 的环境桥导出 opaque `KEELSON_SESSION_ID`，使同一对话中后续 Keelson CLI 命令解析到同一 focus。UserPromptSubmit 只刷新 session 并注入 focused work 摘要。
+当前有四种 native session focus 实现：
 
-其他宿主若 Keelson 还没有验证稳定 identity bridge，则进入**安全降级，而不是猜测**：`keelson focus --auto` 可利用 branch match 或唯一 active change；仍有多个候选时必须显式给 change 名。无论如何，长期 change 状态都保持正确。
+- **Claude Code** —— SessionStart/UserPromptSubmit hook 把宿主 session id 哈希后，通过环境桥把 opaque `KEELSON_SESSION_ID` 传给后续 CLI。
+- **OpenCode** —— 一个项目 plugin 利用官方 tool hook 给 Bash command 前置 opaque `KEELSON_SESSION_ID`。
+- **Pi** —— 不需要额外 Keelson adapter 文件；Pi 已把 `PI_SESSION_ID` 暴露给 shell tool，Keelson 只在内存中哈希后用于本地 pointer。
+- **CodeBuddy** —— 项目 hook 能收到 `session_id`；Bash `PreToolUse` 确定性注入 Keelson identity，SessionStart/UserPromptSubmit 注入极小 focus context。
+
+Codex、Gemini CLI、Kiro CLI 在获得同等级、可验证的 deterministic bridge 前保持**安全降级，而不是猜测**。`keelson focus --auto` 仍可利用 branch 唯一匹配/唯一 active change；有歧义时必须显式给 change 名。长期 work state 始终保持正确。
 
 有 identity 时，`keelson new` 把新 work item 绑定到当前 session；`check --record`、`land`、`cancel`、`handoff` 优先使用 focused change。Land/cancel 会清除所有仍指向该长期 change 的本地 pointer。
 
