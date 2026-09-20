@@ -112,3 +112,11 @@ Remote 7bdaf7b Ubuntu Node 20/22 passes. macOS reports two importer failures bec
 - Portable importer follow-up: single-separator Python/Rust imports also need a matching branch; Git and non-Git regressions now check these plus actual non-boundary imports. Windows 7bdaf7b also exposed two test-fixture assumptions: inherited autocrlf and a tab in a filename. Patch fixtures now pin local LF behavior; the Win32-illegal filename is explicitly skipped only on Windows. The targeted Git/patch suite passes 12/12 on Linux; remote rerun remains required.
 
 - Remote integration CI at 34da3a0 passes all six Ubuntu/macOS/Windows × Node 20/22 jobs (run 35511427169). Windows raw output confirms 151 cases, 145 passes, zero failures and six explicit platform-specific skips. Original mechanical model evaluation and the covered engineering acceptance items are complete. Performance targets, declared exploratory repetitions and final delivery checks remain open.
+
+## 2026-09-20 completed first guidance exploration
+
+The frozen fa7c874 candidate passes original D-17 acceptance 3/3 and the unchanged supplemental replay 2/3. Each raw run and replay is retained; the unsuccessful first repetition is not replaced. The original 45-cell comparison summary is independently reproduced byte-for-data from its seven declared result roots. An early failure-contract regression step is declared separately in `evals/supplemental/ITERATION-2.md`, with candidate 3090c729b9631abd74013674cd883cdf5e69f8a9 frozen before any eligible model run. This is further informed exploration, not a held-out comparison or causal result.
+
+### Dispatch: fingerprint allocation review → deep (gpt-5.6-terra)
+Result: pass for 314de04; repository error routing requires repair
+The reviewer confirmed byte-equivalent v2 length framing and valid path handling after reducing allocation overhead. A subsequent optimization's repository probe could treat shared Git configuration/metadata errors as a non-Git directory; it is held from integration until that path fails closed with regression coverage. Current performance measurements retain real content and mode reads.
