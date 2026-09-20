@@ -180,50 +180,57 @@ function gitObjectDigests(root, entries) {
   return digests;
 }
 
-function framedValues(values) {
-  const fields = values.map((value) => Buffer.isBuffer(value) ? value : Buffer.from(String(value)));
-  const total = fields.reduce((sum, field) => sum + 8 + field.length, 0);
-  const framed = Buffer.allocUnsafe(total);
-  let offset = 0;
-  for (const field of fields) {
-    framed.writeUInt32BE(0, offset);
-    framed.writeUInt32BE(field.length, offset + 4);
-    offset += 8;
-    field.copy(framed, offset);
-    offset += field.length;
-  }
-  return framed;
-}
-
-function framePreparedEntry(entry, digest) {
-  if (entry.type === 'gitlink') {
-    return framedValues([entry.kind, entry.rawFile, 'gitlink', git(entry.file, ['rev-parse', '--verify', 'HEAD']) ?? 'missing']);
-  }
-  if (entry.type === 'symlink') {
-    return framedValues([entry.kind, entry.rawFile, 'symlink', contentDigest(fs.readlinkSync(entry.file, { encoding: 'buffer' }))]);
-  }
-  if (entry.type !== 'file') return framedValues([entry.kind, entry.rawFile, 'other', String(entry.mode)]);
-  return framedValues([entry.kind, entry.rawFile, 'file', String(entry.mode & 0o111), digest]);
-}
-
 function hashGitEntries(hash, root, entries) {
   const resolvePath = fingerprintPathResolver(root);
   const prepared = entries.map((entry) => prepareEntry(resolvePath, entry)).filter(Boolean);
   const regular = prepared.filter((entry) => entry.type === 'file');
   const digests = gitObjectDigests(root, regular);
-  let pending = [];
-  let pendingBytes = 0;
+  const slab = Buffer.allocUnsafe(512 * 1024);
+  const cachedStrings = new Map();
+  let offset = 0;
+  const stringBytes = (value) => {
+    let bytes = cachedStrings.get(value);
+    if (!bytes) {
+      bytes = Buffer.from(value);
+      cachedStrings.set(value, bytes);
+    }
+    return bytes;
+  };
+  const field = (value) => {
+    const bytes = Buffer.isBuffer(value) ? value : stringBytes(String(value));
+    if (offset + 8 + bytes.length > slab.length) {
+      if (offset) hash.update(slab.subarray(0, offset));
+      offset = 0;
+      if (8 + bytes.length > slab.length) {
+        updateField(hash, bytes);
+        return;
+      }
+    }
+    slab.writeUInt32BE(0, offset);
+    slab.writeUInt32BE(bytes.length, offset + 4);
+    offset += 8;
+    bytes.copy(slab, offset);
+    offset += bytes.length;
+  };
   for (const entry of prepared) {
-    const framed = framePreparedEntry(entry, digests.get(entry));
-    pending.push(framed);
-    pendingBytes += framed.length;
-    if (pendingBytes >= 512 * 1024) {
-      hash.update(Buffer.concat(pending, pendingBytes));
-      pending = [];
-      pendingBytes = 0;
+    field(entry.kind);
+    field(entry.rawFile);
+    if (entry.type === 'gitlink') {
+      field('gitlink');
+      field(git(entry.file, ['rev-parse', '--verify', 'HEAD']) ?? 'missing');
+    } else if (entry.type === 'symlink') {
+      field('symlink');
+      field(contentDigest(fs.readlinkSync(entry.file, { encoding: 'buffer' })));
+    } else if (entry.type === 'file') {
+      field('file');
+      field(entry.mode & 0o111);
+      field(digests.get(entry));
+    } else {
+      field('other');
+      field(entry.mode);
     }
   }
-  if (pendingBytes) hash.update(Buffer.concat(pending, pendingBytes));
+  if (offset) hash.update(slab.subarray(0, offset));
 }
 
 /**
