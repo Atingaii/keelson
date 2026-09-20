@@ -29,7 +29,7 @@ A spec, a rule, or a glossary line says how the system works now. When behaviour
 ## Compact: keep what is read small
 <!-- keelson: id=reconcile.compact | without: documents grow without bound; the always-on set inflates every session and stale text is read as current | sunset: never -->
 
-`config.yaml → budgets` gives each document type a line budget (INTENT, ROADMAP, NOW, GLOSSARY, spec, rule, change, handoff, and the always-on rules as a set). The budget is a **soft compaction threshold**. Durable truth has a hard ceiling at **2× the configured budget**: `validate` / `doctor` fail beyond it, and `land` preflights projected specs and NOW before writing anything. Active change/handoff files are temporary scaffolding, so they warn rather than hard-fail. Nothing is automatically summarized or rewritten; semantic compaction remains an agent/reviewer action.
+`config.yaml → budgets` gives each document type a line budget (INTENT, ROADMAP, NOW, GLOSSARY, spec, rule, change, handoff, and the always-on rules as a set). The budget is a **soft compaction threshold**. Keelson automatically reorganizes structure before hot files grow without bound: large specs become a small index plus requirement/decision shards, and runtime caches are pruned. When a single semantic unit is itself too large, the Agent automatically rewrites or decomposes it during RECONCILE and re-verifies the result. Active change/handoff files are temporary scaffolding, so they stay lightweight but do not become durable knowledge stores. The owner is involved only when compaction would change product semantics, authorization, compatibility, or another owner decision.
 
 When the soft budget is crossed, run a compaction pass on that document, choosing per paragraph:
 
@@ -47,10 +47,10 @@ When the soft budget is crossed, run a compaction pass on that document, choosin
 
 Treat knowledge shape as infrastructure, not user work. When `keelson context` exposes internal maintenance findings, resolve them in the same engineering pass without asking the owner:
 
-- **Large specs** — do not summarize away requirements. `keelson land` automatically changes a large capability from one `spec.md` into a bounded index plus `requirements/*.md` and, when needed, `decisions.md`. Total knowledge may grow; each frequently-read file stays small.
-- **Rules** — split by actual path/scope and update `rules/index.md`; merge duplicate rules and replace prose with a fitness check when deterministic.
-- **NOW / INTENT** — never shard. Rewrite them as a short current-state view; history stays in git.
-- **ADRs / decisions** — one durable decision per ADR when the project uses `refs.decisions`; the directory may grow, but do not inject every ADR into every session. Capability-local decisions may live in a bounded `decisions.md`.
+- **Large specs** — do not summarize away requirements. `keelson land` automatically changes a large capability from one `spec.md` into a bounded index plus `requirements/*.md` and `decisions/*.md`. Total knowledge may grow; each frequently-read file stays small.
+- **Rules** — split by actual path/scope and update `rules/index.md`; merge duplicate rules and replace prose with a fitness check when deterministic. If a single rule remains too broad, rewrite it automatically into the smallest invariant that preserves meaning.
+- **NOW / INTENT** — never shard. Rewrite them automatically as short current-state views; history stays in git.
+- **ADRs / decisions** — one durable decision per ADR when the project uses `refs.decisions`; the directory may grow, but do not inject every ADR into every session. Capability-local decisions are automatically sharded into `decisions/*.md`.
 - **Runtime** — session pointers and evidence logs are caches. Keelson garbage-collects old entries opportunistically from normal commands.
 
 Only involve the owner when compaction would change product semantics, authorization, compatibility, or another decision they actually own. File movement, indexing, deduplication, history removal, and cache cleanup are maintenance and happen silently.
