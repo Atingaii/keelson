@@ -429,7 +429,8 @@ test('change lifecycle: new → gates → check --record → land folds specs an
   // every gate fires
   const refused = run(dir, ['land'], { env, allowFail: true });
   assert.equal(refused.code, 1);
-  for (const re of [/task\(s\) unchecked/, /acceptance item\(s\) unchecked/, /open question/, /verification not-run/, /assumed decision/]) assert.match(refused.stderr, re);
+  for (const re of [/acceptance item\(s\) unchecked/, /open question/, /verification not-run/, /assumed decision/]) assert.match(refused.stderr, re);
+  assert.doesNotMatch(refused.stderr, /task\(s\) unchecked/);
   // finish the work
   write(dir, '.keelson/changes/add-pagination/tasks.md', '# Tasks\n\n## Slice: Paging\nDelivers: pages work\n- [x] 1. Do it (effort: light) — verify: `echo ok`\n');
   let cm = read(dir, '.keelson/changes/add-pagination/change.md').replace('- [ ] default', '- [x] default').replace(/## Open questions\n- [^\n]+\n/, '## Open questions\n- none\n');
@@ -570,7 +571,7 @@ test('sessions focus independent work items; ready is derived without a user fin
   // Landing is a lifecycle transition, not something that waits for the user to say "done",
   // and it does not wait for a stale planning checkbox either.
   const landedAlpha = run(dir, ['land'], { env: envA });
-  assert.match(landedAlpha.stderr, /tasks are planning notes, not landing gates/);
+  assert.match(landedAlpha.stdout, /tasks are planning notes, not landing gates/);
   assert.ok(!exists(dir, '.keelson/changes/alpha'));
   assert.equal(JSON.parse(run(dir, ['focus', '--json'], { env: envA }).stdout).focus, null);
 
