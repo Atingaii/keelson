@@ -130,8 +130,24 @@ test('shaping audits assumptions without turning clarification into ceremony', (
   assert.match(zhPlan, /id=plan\.assumption-routing/);
   assert.match(en, /single highest-value question/);
   assert.match(zh, /只问一个最高价值问题/);
-  assert.match(fs.readFileSync(path.join(ROOT, 'skills/keelson/templates/change.md'), 'utf8'), /Non-goal:/);
-  assert.match(fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/templates/change.md'), 'utf8'), /非目标：/);
+
+  const enInterview = fs.readFileSync(path.join(ROOT, 'skills/keelson/references/interview.md'), 'utf8');
+  const zhInterview = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/interview.md'), 'utf8');
+  const enLenses = fs.readFileSync(path.join(ROOT, 'skills/keelson/references/design-lenses.md'), 'utf8');
+  const zhLenses = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/design-lenses.md'), 'utf8');
+  assert.match(enInterview, /not sure/i);
+  assert.match(zhInterview, /不确定/);
+  for (const term of ['Security', 'Concurrency', 'accessibility', 'AI']) assert.match(enLenses, new RegExp(term, 'i'));
+  for (const term of ['安全', '并发', '可访问性', 'AI']) assert.match(zhLenses, new RegExp(term));
+  assert.doesNotMatch(enPlan, /at least two real options/i);
+  assert.doesNotMatch(zhPlan, /至少两个真实选项/);
+
+  const enChange = fs.readFileSync(path.join(ROOT, 'skills/keelson/templates/change.md'), 'utf8');
+  const zhChange = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/templates/change.md'), 'utf8');
+  assert.match(enChange, /Non-goal:/);
+  assert.match(zhChange, /非目标：/);
+  assert.doesNotMatch(enChange, /^## Alternatives$/m);
+  assert.doesNotMatch(zhChange, /^## Alternatives$/m);
 });
 
 test('skill frontmatter stamping is CRLF-safe and emits LF', () => {
