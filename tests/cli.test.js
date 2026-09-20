@@ -208,6 +208,29 @@ test('no-hooks is persistent and can be explicitly re-enabled', () => {
   run(dir, ['doctor', '--json'], { env });
 });
 
+test('hooks preference disables and restores managed OpenCode and CodeBuddy session bridges', () => {
+  const dir = tmpProject({ '.codebuddy/settings.json': JSON.stringify({ theme: 'mine' }, null, 2) + '\n' });
+
+  run(dir, ['init', '--tools', 'opencode,codebuddy', '--no-hooks'], { env });
+  assert.ok(!exists(dir, '.opencode/plugins/keelson-session.js'));
+  assert.ok(!exists(dir, '.keelson/hooks/codebuddy-session.mjs'));
+  assert.equal(JSON.parse(read(dir, '.codebuddy/settings.json')).theme, 'mine');
+
+  run(dir, ['update', '--hooks'], { env });
+  assert.ok(exists(dir, '.opencode/plugins/keelson-session.js'));
+  assert.ok(exists(dir, '.keelson/hooks/codebuddy-session.mjs'));
+  assert.match(read(dir, '.codebuddy/settings.json'), /codebuddy-session\.mjs/);
+  run(dir, ['doctor', '--json'], { env });
+
+  run(dir, ['update', '--no-hooks'], { env });
+  assert.ok(!exists(dir, '.opencode/plugins/keelson-session.js'));
+  assert.ok(!exists(dir, '.keelson/hooks/codebuddy-session.mjs'));
+  const after = JSON.parse(read(dir, '.codebuddy/settings.json'));
+  assert.equal(after.theme, 'mine');
+  assert.equal(after.hooks, undefined);
+  run(dir, ['doctor', '--json'], { env });
+});
+
 test('fresh init auto-detects only first-class hosts and otherwise uses the portable layer', async () => {
   const { chooseDetectedTools } = await import('../src/commands/init.js');
   const none = chooseDetectedTools({});
