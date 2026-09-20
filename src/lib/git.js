@@ -200,12 +200,25 @@ function hashGitEntries(hash, root, entries) {
  * Git fingerprints are SHA-256 rather than Git tree IDs. Existing 40-byte
  * Git-tree records therefore become stale and must be re-recorded.
  */
-export function worktreeFingerprint(root) {
-  if (isGitRepo(root)) {
-    const entries = [];
+function gitFingerprintEntries(root) {
+  const entries = [];
+  try {
     addGitEntries(entries, root, ['ls-files', '-s', '-z'], 'tracked');
     addGitEntries(entries, root, ['ls-files', '--others', '--exclude-standard', '-z'], 'untracked');
-    entries.sort((a, b) => Buffer.compare(a.rawFile, b.rawFile) || a.kind.localeCompare(b.kind));
+  } catch (error) {
+    // Do not pay for rev-parse in normal Git projects. The legacy fallback
+    // remains for ordinary non-Git directories; an error inside a repository
+    // still propagates rather than silently omitting inputs.
+    if (error?.status === 128 && !isGitRepo(root)) return null;
+    throw error;
+  }
+  entries.sort((a, b) => Buffer.compare(a.rawFile, b.rawFile) || a.kind.localeCompare(b.kind));
+  return entries;
+}
+
+export function worktreeFingerprint(root) {
+  const entries = gitFingerprintEntries(root);
+  if (entries) {
     const hash = crypto.createHash('sha256').update('keelson-worktree-v2\0');
     hashGitEntries(hash, root, entries);
     return hash.digest('hex');
