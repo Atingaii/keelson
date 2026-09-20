@@ -1,0 +1,105 @@
+TAP version 13
+# Subtest: legacy confirmation cannot silently settle a structured assumption
+not ok 1 - legacy confirmation cannot silently settle a structured assumption
+  ---
+  duration_ms: 3.032402
+  location: '/home/ubuntu/github/keelson/tests/decisions.test.js:7:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'done')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    evaluateLifecycle (file:///home/ubuntu/github/keelson/src/lib/lifecycle.js:52:75)
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/decisions.test.js:13:18)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    node:internal/test_runner/harness:255:12
+    node:internal/process/task_queues:140:7
+    AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    AsyncResource.runMicrotask (node:internal/process/task_queues:137:8)
+  ...
+# Subtest: decision frontier routes ownership, preserves settlement and orders dependencies
+ok 2 - decision frontier routes ownership, preserves settlement and orders dependencies
+  ---
+  duration_ms: 3841.938046
+  ...
+# Subtest: malformed decision graphs fail closed without rewriting user data
+ok 3 - malformed decision graphs fail closed without rewriting user data
+  ---
+  duration_ms: 203.364125
+  ...
+# Subtest: prose forgery and unsigned JSON cannot authorize land; real record can
+ok 4 - prose forgery and unsigned JSON cannot authorize land; real record can
+  ---
+  duration_ms: 1602.129379
+  ...
+# Subtest: code, contract, rules, config and acceptance edits invalidate evidence
+ok 5 - code, contract, rules, config and acceptance edits invalidate evidence
+  ---
+  duration_ms: 3638.698235
+  ...
+# Subtest: changed inputs during a check and explicit partial suites cannot pass completion
+ok 6 - changed inputs during a check and explicit partial suites cannot pass completion
+  ---
+  duration_ms: 947.971948
+  ...
+# Subtest: trust is explicit, command changes revoke trust, and timeout kills descendants
+ok 7 - trust is explicit, command changes revoke trust, and timeout kills descendants
+  ---
+  duration_ms: 1609.47862
+  ...
+# Subtest: force requires a reason and archives every bypass
+ok 8 - force requires a reason and archives every bypass
+  ---
+  duration_ms: 549.919688
+  ...
+# Subtest: sixteen concurrent writers retain every signed record and valid log reference
+ok 9 - sixteen concurrent writers retain every signed record and valid log reference
+  ---
+  duration_ms: 4399.113546
+  ...
+# Subtest: copied evidence requires a new local check and retains historical signatures
+ok 10 - copied evidence requires a new local check and retains historical signatures
+  ---
+  duration_ms: 1145.145916
+  ...
+# Subtest: landing cannot race an active check, even with force
+ok 11 - landing cannot race an active check, even with force
+  ---
+  duration_ms: 2208.473602
+  ...
+# Subtest: fingerprints include ignored tracked code, exclude Keelson, and preserve the real index
+ok 12 - fingerprints include ignored tracked code, exclude Keelson, and preserve the real index
+  ---
+  duration_ms: 85.681093
+  ...
+# Subtest: a project nested in Git fingerprints its own subtree
+ok 13 - a project nested in Git fingerprints its own subtree
+  ---
+  duration_ms: 65.889485
+  ...
+# Subtest: landing restores all changed targets after a mid-write failure
+ok 14 - landing restores all changed targets after a mid-write failure
+  ---
+  duration_ms: 30.415778
+  ...
+# Subtest: interrupted landing restores from its durable journal
+ok 15 - interrupted landing restores from its durable journal
+  ---
+  duration_ms: 10.652959
+  ...
+# Subtest: project data paths reject traversal and symbolic-link parents
+ok 16 - project data paths reject traversal and symbolic-link parents
+  ---
+  duration_ms: 1.531209
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 15
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 20858.626877

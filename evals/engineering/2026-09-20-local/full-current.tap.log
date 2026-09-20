@@ -1,0 +1,1308 @@
+
+> @atingaii/keelson@0.4.0 test
+> node --test
+
+TAP version 13
+# Subtest: init creates a minimal control plane; update is idempotent
+not ok 1 - init creates a minimal control plane; update is idempotent
+  ---
+  duration_ms: 565.565596
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:20:1'
+  failureType: 'testCodeFailure'
+  error: '.keelson/workflow.md'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:23:349)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    node:internal/test_runner/harness:255:12
+    node:internal/process/task_queues:140:7
+    AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    AsyncResource.runMicrotask (node:internal/process/task_queues:137:8)
+  ...
+# Subtest: claude-only init installs the portable agents layer and a refreshable human map
+not ok 2 - claude-only init installs the portable agents layer and a refreshable human map
+  ---
+  duration_ms: 397.273101
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:44:1'
+  failureType: 'testCodeFailure'
+  error: 'AGENTS.md'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:47:197)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: changing configured tools removes stale generated adapters but preserves user content
+not ok 3 - changing configured tools removes stale generated adapters but preserves user content
+  ---
+  duration_ms: 420.249404
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:59:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(exists(dir, '.keelson/hooks/session-start.mjs'))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:64:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: update removes signature-matched legacy Keelson surfaces and preserves neighboring user files
+ok 4 - update removes signature-matched legacy Keelson surfaces and preserves neighboring user files
+  ---
+  duration_ms: 415.996765
+  ...
+# Subtest: legacy hidden managed state migrates to manifest.json on update
+ok 5 - legacy hidden managed state migrates to manifest.json on update
+  ---
+  duration_ms: 1248.017881
+  ...
+# Subtest: retired host selections fail clearly and old config is migrated to portable support
+ok 6 - retired host selections fail clearly and old config is migrated to portable support
+  ---
+  duration_ms: 1542.87959
+  ...
+# Subtest: every registered platform installs around one canonical runtime and passes doctor
+not ok 7 - every registered platform installs around one canonical runtime and passes doctor
+  ---
+  duration_ms: 446.483278
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:159:1'
+  failureType: 'testCodeFailure'
+  error: 'claude: .keelson/workflow.md'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:164:115)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: doctor detects package-owned runtime and shim drift and update repairs it
+not ok 8 - doctor detects package-owned runtime and shim drift and update repairs it
+  ---
+  duration_ms: 684.519121
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:179:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/tmp/keelson-8HzK6p/.keelson/skill/references/build.md'"
+  code: 'ENOENT'
+  stack: |-
+    Object.readFileSync (node:fs:448:20)
+    read (file:///home/ubuntu/github/keelson/tests/helpers.js:38:36)
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:182:52)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: no-hooks is persistent and can be explicitly re-enabled
+not ok 9 - no-hooks is persistent and can be explicitly re-enabled
+  ---
+  duration_ms: 1186.986013
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:199:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(exists(dir, '.keelson/hooks/session-start.mjs'))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:213:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: hooks preference disables and restores managed OpenCode and CodeBuddy session bridges
+not ok 10 - hooks preference disables and restores managed OpenCode and CodeBuddy session bridges
+  ---
+  duration_ms: 1739.880629
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:218:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'degraded'
+    - 'native'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'native'
+  actual: 'degraded'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:231:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# node:internal/modules/cjs/loader:1210
+#   throw err;
+#   ^
+# Error: Cannot find module '/tmp/keelson-bQMPkb/.keelson/hooks/session-start.mjs'
+#     at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+#     at Module._load (node:internal/modules/cjs/loader:1038:27)
+#     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+#     at node:internal/main/run_main_module:28:49 {
+#   code: 'MODULE_NOT_FOUND',
+#   requireStack: []
+# }
+# Node.js v20.20.2
+# Subtest: fresh init auto-detects only first-class hosts and otherwise uses the portable layer
+ok 11 - fresh init auto-detects only first-class hosts and otherwise uses the portable layer
+  ---
+  duration_ms: 246.510099
+  ...
+# Subtest: Pi uses its native PI_SESSION_ID without installing adapter files
+not ok 12 - Pi uses its native PI_SESSION_ID without installing adapter files
+  ---
+  duration_ms: 1555.824744
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:269:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(exists(dir, '.keelson/.runtime/sessions'))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:276:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: OpenCode native plugin injects an opaque session identity into Bash
+not ok 13 - OpenCode native plugin injects an opaque session identity into Bash
+  ---
+  duration_ms: 624.343402
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:280:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(exists(dir, '.opencode/plugins/keelson-session.js'))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:283:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: CodeBuddy native hooks inject session identity and preserve unrelated settings
+not ok 14 - CodeBuddy native hooks inject session identity and preserve unrelated settings
+  ---
+  duration_ms: 711.474452
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:299:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(exists(dir, '.keelson/hooks/codebuddy-session.mjs'))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:302:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: CodeBuddy update upgrades an older Bash-only Keelson matcher in place
+not ok 15 - CodeBuddy update upgrades an older Bash-only Keelson matcher in place
+  ---
+  duration_ms: 633.028403
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:349:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot set properties of undefined (setting 'matcher')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:357:17)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: doctor detects native session adapter drift and update repairs it
+not ok 16 - doctor detects native session adapter drift and update repairs it
+  ---
+  duration_ms: 998.242939
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:373:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:378:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: guided profile keeps guided blocks; lang zh installs the Chinese skill when present
+not ok 17 - guided profile keeps guided blocks; lang zh installs the Chinese skill when present
+  ---
+  duration_ms: 623.888808
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:384:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/tmp/keelson-uqfpno/.keelson/skill/references/build.md'"
+  code: 'ENOENT'
+  stack: |-
+    Object.readFileSync (node:fs:448:20)
+    read (file:///home/ubuntu/github/keelson/tests/helpers.js:38:36)
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:387:16)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: change artifacts grow progressively instead of starting empty
+ok 18 - change artifacts grow progressively instead of starting empty
+  ---
+  duration_ms: 1697.020922
+  ...
+# Subtest: change lifecycle: new → gates → check --record → land folds specs and decisions
+ok 19 - change lifecycle: new → gates → check --record → land folds specs and decisions
+  ---
+  duration_ms: 7689.386115
+  ...
+# Subtest: land --keep archives instead of folding
+ok 20 - land --keep archives instead of folding
+  ---
+  duration_ms: 2220.221724
+  ...
+# Subtest: validate catches dated model IDs, bad tiers, missing rule files
+ok 21 - validate catches dated model IDs, bad tiers, missing rule files
+  ---
+  duration_ms: 1505.964503
+  ...
+# Subtest: validate checks OpenSpec contracts and rejects empty, duplicate, and malformed delta requirements
+ok 22 - validate checks OpenSpec contracts and rejects empty, duplicate, and malformed delta requirements
+  ---
+  duration_ms: 3369.756908
+  ...
+# Subtest: context routes rules by path
+ok 23 - context routes rules by path
+  ---
+  duration_ms: 1812.80423
+  ...
+# Subtest: check runs configured commands and reports exit codes
+ok 24 - check runs configured commands and reports exit codes
+  ---
+  duration_ms: 1174.550407
+  ...
+# Subtest: Claude hooks persist anonymous session identity and inject only focused work
+not ok 25 - Claude hooks persist anonymous session identity and inject only focused work
+  ---
+  duration_ms: 675.858927
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:570:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Command failed: node /tmp/keelson-bQMPkb/.keelson/hooks/session-start.mjs
+    node:internal/modules/cjs/loader:1210
+      throw err;
+      ^
+    
+    Error: Cannot find module '/tmp/keelson-bQMPkb/.keelson/hooks/session-start.mjs'
+        at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+        at Module._load (node:internal/modules/cjs/loader:1038:27)
+        at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+        at node:internal/main/run_main_module:28:49 {
+      code: 'MODULE_NOT_FOUND',
+      requireStack: []
+    }
+    
+    Node.js v20.20.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    Module._load (node:internal/modules/cjs/loader:1038:27)
+    Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+    node:internal/main/run_main_module:28:49 {
+    genericNodeError (node:internal/errors:984:15)
+    wrappedFn (node:internal/errors:538:14)
+    checkExecSyncError (node:child_process:891:11)
+    execFileSync (node:child_process:927:15)
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:576:16)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+  ...
+# Subtest: sessions focus independent work items; ready is derived without a user finish phrase
+ok 26 - sessions focus independent work items; ready is derived without a user finish phrase
+  ---
+  duration_ms: 9907.84427
+  ...
+# Subtest: spec changes do not invent alternatives when there is no material fork
+ok 27 - spec changes do not invent alternatives when there is no material fork
+  ---
+  duration_ms: 1945.290977
+  ...
+# Subtest: depends is a real lifecycle gate for status and land
+ok 28 - depends is a real lifecycle gate for status and land
+  ---
+  duration_ms: 1995.74176
+  ...
+# Subtest: large logical specs auto-shard without user maintenance
+ok 29 - large logical specs auto-shard without user maintenance
+  ---
+  duration_ms: 2585.568915
+  ...
+# Subtest: auto-sharding preserves pre-existing unmanaged requirements directories
+not ok 30 - auto-sharding preserves pre-existing unmanaged requirements directories
+  ---
+  duration_ms: 1945.897788
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:731:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /^requirements_dir: keelson-requirements$/m. Input:
+    
+    '# orders\n' +
+      '\n' +
+      '## Requirement: Existing\n' +
+      'old\n' +
+      '### Scenario: existing\n' +
+      '- WHEN old\n' +
+      '- THEN kept\n' +
+      '\n' +
+      '## Requirement: Added\n' +
+      '\n' +
+      'new\n' +
+      '### Scenario: added\n' +
+      '- WHEN new\n' +
+      '- THEN present\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    # orders
+    
+    ## Requirement: Existing
+    old
+    ### Scenario: existing
+    - WHEN old
+    - THEN kept
+    
+    ## Requirement: Added
+    
+    new
+    ### Scenario: added
+    - WHEN new
+    - THEN present
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:761:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: legacy sharded decision files migrate to bounded decision shards without touching neighbors
+not ok 31 - legacy sharded decision files migrate to bounded decision shards without touching neighbors
+  ---
+  duration_ms: 1996.922278
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:766:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /^decisions_dir: keelson-decisions$/m. Input:
+    
+    '# orders\n' +
+      '\n' +
+      '## Purpose\n' +
+      '\n' +
+      'Orders.\n' +
+      '\n' +
+      '## Requirement: Existing\n' +
+      '\n' +
+      'old\n' +
+      '### Scenario: existing\n' +
+      '- WHEN old\n' +
+      '- THEN kept\n' +
+      '\n' +
+      '## Decisions\n' +
+      '\n' +
+      '- orders: existing durable rationale\n' +
+      '\n' +
+      '## Requirement: Added\n' +
+      '\n' +
+      'new\n' +
+      '### Scenario: added\n' +
+      '- WHEN new\n' +
+      '- THEN present\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    # orders
+    
+    ## Purpose
+    
+    Orders.
+    
+    ## Requirement: Existing
+    
+    old
+    ### Scenario: existing
+    - WHEN old
+    - THEN kept
+    
+    ## Decisions
+    
+    - orders: existing durable rationale
+    
+    ## Requirement: Added
+    
+    new
+    ### Scenario: added
+    - WHEN new
+    - THEN present
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:811:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: hard knowledge limits fail validate and preflight land before writing specs
+ok 32 - hard knowledge limits fail validate and preflight land before writing specs
+  ---
+  duration_ms: 2209.219486
+  ...
+# Subtest: runtime sessions and evidence are garbage-collected invisibly
+not ok 33 - runtime sessions and evidence are garbage-collected invisibly
+  ---
+  duration_ms: 1193.144422
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:862:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:877:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: handoff and session hook tolerate CRLF files
+ok 34 - handoff and session hook tolerate CRLF files
+  ---
+  duration_ms: 1465.536687
+  ...
+# Subtest: ablate removes every surface and restore brings it back byte-for-byte
+ok 35 - ablate removes every surface and restore brings it back byte-for-byte
+  ---
+  duration_ms: 678.740848
+  ...
+# Subtest: ablate and restore include native OpenCode and CodeBuddy session adapters
+not ok 36 - ablate and restore include native OpenCode and CodeBuddy session adapters
+  ---
+  duration_ms: 406.896998
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:913:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/tmp/keelson-fdjhsQ/.opencode/plugins/keelson-session.js'"
+  code: 'ENOENT'
+  stack: |-
+    Object.readFileSync (node:fs:448:20)
+    read (file:///home/ubuntu/github/keelson/tests/helpers.js:38:36)
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:918:24)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: models resolves tiers and rank writes user overrides
+ok 37 - models resolves tiers and rank writes user overrides
+  ---
+  duration_ms: 952.10333
+  ...
+# Subtest: retro reads ledgers and reports metrics
+not ok 38 - retro reads ledgers and reports metrics
+  ---
+  duration_ms: 937.230333
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:945:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(j.guidance.some((g) => g.id === 'debug.reproduce-first'))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:954:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: the user-level ~/.keelson is never mistaken for a project root
+ok 39 - the user-level ~/.keelson is never mistaken for a project root
+  ---
+  duration_ms: 1.017629
+  ...
+# Subtest: top-level help separates the human golden path from agent mechanics
+ok 40 - top-level help separates the human golden path from agent mechanics
+  ---
+  duration_ms: 55.349324
+  ...
+# Subtest: per-command --help prints that command only
+ok 41 - per-command --help prints that command only
+  ---
+  duration_ms: 60.952028
+  ...
+# Subtest: init references existing project material and ignores .keelson/.runtime
+not ok 42 - init references existing project material and ignores .keelson/.runtime
+  ---
+  duration_ms: 415.416118
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:988:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /^\.keelson\/\.runtime\/$/m. Input:
+    
+    'node_modules\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    node_modules
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:999:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: update migrates a v1 config and --dry-run writes nothing
+ok 43 - update migrates a v1 config and --dry-run writes nothing
+  ---
+  duration_ms: 1138.857565
+  ...
+# Subtest: status exposes shared contracts and impact lists importers
+ok 44 - status exposes shared contracts and impact lists importers
+  ---
+  duration_ms: 1988.925439
+  ...
+# Subtest: handoff is an explicit transfer artifact and remains readable after session changes
+ok 45 - handoff is an explicit transfer artifact and remains readable after session changes
+  ---
+  duration_ms: 1476.691378
+  ...
+# Subtest: cancel archives without merging; doctor and uninstall behave
+not ok 46 - cancel archives without merging; doctor and uninstall behave
+  ---
+  duration_ms: 676.401675
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:1063:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(exists(dir, '.keelson/.runtime/sessions'))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:1069:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: breaking change without Rollout is refused at landing
+ok 47 - breaking change without Rollout is refused at landing
+  ---
+  duration_ms: 1209.55746
+  ...
+# Subtest: guide flag adds the guided line; named checks run with kinds; doctor reports knowledge health
+not ok 48 - guide flag adds the guided line; named checks run with kinds; doctor reports knowledge health
+  ---
+  duration_ms: 873.819584
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:1102:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/tmp/keelson-jUgghF/.keelson/workflow.md'"
+  code: 'ENOENT'
+  stack: |-
+    Object.readFileSync (node:fs:448:20)
+    read (file:///home/ubuntu/github/keelson/tests/helpers.js:38:36)
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:1106:16)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: init is the only step: first-class platform flags, standards-first surfaces, first-contact note; no INTENT chore
+not ok 49 - init is the only step: first-class platform flags, standards-first surfaces, first-contact note; no INTENT chore
+  ---
+  duration_ms: 444.613062
+  location: '/home/ubuntu/github/keelson/tests/cli.test.js:1128:1'
+  failureType: 'testCodeFailure'
+  error: '.keelson/workflow.md'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/cli.test.js:1134:247)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: legacy confirmation cannot silently settle a structured assumption
+ok 50 - legacy confirmation cannot silently settle a structured assumption
+  ---
+  duration_ms: 2.031886
+  ...
+# Subtest: decision frontier routes ownership, preserves settlement and orders dependencies
+ok 51 - decision frontier routes ownership, preserves settlement and orders dependencies
+  ---
+  duration_ms: 2811.756667
+  ...
+# Subtest: malformed decision graphs fail closed without rewriting user data
+ok 52 - malformed decision graphs fail closed without rewriting user data
+  ---
+  duration_ms: 219.612169
+  ...
+# Subtest: prose forgery and unsigned JSON cannot authorize land; real record can
+ok 53 - prose forgery and unsigned JSON cannot authorize land; real record can
+  ---
+  duration_ms: 1879.166664
+  ...
+# Subtest: code, contract, rules, config and acceptance edits invalidate evidence
+ok 54 - code, contract, rules, config and acceptance edits invalidate evidence
+  ---
+  duration_ms: 3662.617383
+  ...
+# Subtest: changed inputs during a check and explicit partial suites cannot pass completion
+ok 55 - changed inputs during a check and explicit partial suites cannot pass completion
+  ---
+  duration_ms: 984.70636
+  ...
+# Subtest: trust is explicit, command changes revoke trust, and timeout kills descendants
+ok 56 - trust is explicit, command changes revoke trust, and timeout kills descendants
+  ---
+  duration_ms: 1520.674178
+  ...
+# Subtest: force requires a reason and archives every bypass
+ok 57 - force requires a reason and archives every bypass
+  ---
+  duration_ms: 376.854318
+  ...
+# Subtest: sixteen concurrent writers retain every signed record and valid log reference
+ok 58 - sixteen concurrent writers retain every signed record and valid log reference
+  ---
+  duration_ms: 3991.597244
+  ...
+# Subtest: copied evidence requires a new local check and retains historical signatures
+ok 59 - copied evidence requires a new local check and retains historical signatures
+  ---
+  duration_ms: 1029.17417
+  ...
+# Subtest: landing cannot race an active check, even with force
+ok 60 - landing cannot race an active check, even with force
+  ---
+  duration_ms: 2171.157336
+  ...
+# Subtest: fingerprints include ignored tracked code, exclude Keelson, and preserve the real index
+ok 61 - fingerprints include ignored tracked code, exclude Keelson, and preserve the real index
+  ---
+  duration_ms: 85.811112
+  ...
+# Subtest: a project nested in Git fingerprints its own subtree
+ok 62 - a project nested in Git fingerprints its own subtree
+  ---
+  duration_ms: 64.03831
+  ...
+# Subtest: ** matches nested paths
+ok 63 - ** matches nested paths
+  ---
+  duration_ms: 1.759267
+  ...
+# Subtest: * stays within a segment
+ok 64 - * stays within a segment
+  ---
+  duration_ms: 0.348405
+  ...
+# Subtest: braces and ?
+ok 65 - braces and ?
+  ---
+  duration_ms: 0.294943
+  ...
+# Subtest: directory-style globs match beneath
+ok 66 - directory-style globs match beneath
+  ---
+  duration_ms: 0.29641
+  ...
+# Subtest: ** alone matches everything
+ok 67 - ** alone matches everything
+  ---
+  duration_ms: 0.214445
+  ...
+# Subtest: mergeDelta applies removed, modified, added in order
+ok 68 - mergeDelta applies removed, modified, added in order
+  ---
+  duration_ms: 4.741025
+  ...
+# Subtest: mergeDelta into an empty main creates the spec
+ok 69 - mergeDelta into an empty main creates the spec
+  ---
+  duration_ms: 0.497337
+  ...
+# Subtest: decisions extraction and folding are idempotent
+ok 70 - decisions extraction and folding are idempotent
+  ---
+  duration_ms: 1.848466
+  ...
+# Subtest: parseTasks reads state, id, effort, verify
+ok 71 - parseTasks reads state, id, effort, verify
+  ---
+  duration_ms: 3.042218
+  ...
+# Subtest: parseLedger classifies entries
+ok 72 - parseLedger classifies entries
+  ---
+  duration_ms: 1.682195
+  ...
+# Subtest: spec round-trips through parse/render
+ok 73 - spec round-trips through parse/render
+  ---
+  duration_ms: 1.499835
+  ...
+# Subtest: spec parser supports legacy and OpenSpec requirement layouts without reading fenced examples
+ok 74 - spec parser supports legacy and OpenSpec requirement layouts without reading fenced examples
+  ---
+  duration_ms: 0.698838
+  ...
+# Subtest: spec parse/render property preserves Unicode, CRLF, unknown sections, and fenced headings
+ok 75 - spec parse/render property preserves Unicode, CRLF, unknown sections, and fenced headings
+  ---
+  duration_ms: 22.71892
+  ...
+# Subtest: spec updates preserve foreign sections, frontmatter, and fenced Markdown
+ok 76 - spec updates preserve foreign sections, frontmatter, and fenced Markdown
+  ---
+  duration_ms: 3.738022
+  ...
+# Subtest: sharding keeps a source with unmanaged Markdown as a single file
+ok 77 - sharding keeps a source with unmanaged Markdown as a single file
+  ---
+  duration_ms: 0.943855
+  ...
+# Subtest: shard metadata cannot escape or traverse a symlinked capability directory
+ok 78 - shard metadata cannot escape or traverse a symlinked capability directory
+  ---
+  duration_ms: 6.451289
+  ...
+# Subtest: Unicode requirement names produce distinct readable storage slugs
+ok 79 - Unicode requirement names produce distinct readable storage slugs
+  ---
+  duration_ms: 5.025653
+  ...
+# Subtest: parseDelta reads all three sections and normalises scenario depth
+ok 80 - parseDelta reads all three sections and normalises scenario depth
+  ---
+  duration_ms: 1.359482
+  ...
+# Subtest: parseDelta ignores fenced requirements and reports malformed sections
+ok 81 - parseDelta ignores fenced requirements and reports malformed sections
+  ---
+  duration_ms: 0.639348
+  ...
+# Subtest: parseDelta flags prose-only ADDED and MODIFIED sections but permits empty no-ops
+ok 82 - parseDelta flags prose-only ADDED and MODIFIED sections but permits empty no-ops
+  ---
+  duration_ms: 0.49978
+  ...
+# Subtest: frontmatter and sections
+ok 83 - frontmatter and sections
+  ---
+  duration_ms: 0.469729
+  ...
+# Subtest: markdown parsers treat CRLF and LF as the same document
+ok 84 - markdown parsers treat CRLF and LF as the same document
+  ---
+  duration_ms: 1.886501
+  ...
+# Subtest: parseTasks keeps the title clean when prose follows the verify command
+ok 85 - parseTasks keeps the title clean when prose follows the verify command
+  ---
+  duration_ms: 0.429042
+  ...
+# Subtest: dispatch result comes only from the Result line
+ok 86 - dispatch result comes only from the Result line
+  ---
+  duration_ms: 0.61951
+  ...
+# Subtest: slices, acceptance, open questions, decision states, handoff parse; placeholders are ignored
+ok 87 - slices, acceptance, open questions, decision states, handoff parse; placeholders are ignored
+  ---
+  duration_ms: 3.458616
+  ...
+# Subtest: verify entries carry the worktree tree hash
+ok 88 - verify entries carry the worktree tree hash
+  ---
+  duration_ms: 0.381657
+  ...
+# Subtest: registry resolves claude tiers to floating aliases
+ok 89 - registry resolves claude tiers to floating aliases
+  ---
+  duration_ms: 3.373026
+  ...
+# Subtest: project config overrides registry
+ok 90 - project config overrides registry
+  ---
+  duration_ms: 0.864339
+  ...
+# Subtest: explicit wins over everything; unknown tier throws
+ok 91 - explicit wins over everything; unknown tier throws
+  ---
+  duration_ms: 0.323418
+  ...
+# Subtest: inferTierFromName only answers when unambiguous
+ok 92 - inferTierFromName only answers when unambiguous
+  ---
+  duration_ms: 0.254402
+  ...
+# Subtest: no dated model IDs in registry, skills, hooks, or docs
+ok 93 - no dated model IDs in registry, skills, hooks, or docs
+  ---
+  duration_ms: 109.76204
+  ...
+# Subtest: generated directory replacement preserves the last good copy across failure and interrupted residue
+ok 94 - generated directory replacement preserves the last good copy across failure and interrupted residue
+  ---
+  duration_ms: 2.969382
+  ...
+# Subtest: English and Chinese skills have the same files and the same guidance ids
+ok 95 - English and Chinese skills have the same files and the same guidance ids
+  ---
+  duration_ms: 2.631585
+  ...
+# Subtest: every guidance section carries without and sunset; SKILL.md stays short
+ok 96 - every guidance section carries without and sunset; SKILL.md stays short
+  ---
+  duration_ms: 3.045234
+  ...
+# Subtest: canonical skill separates five conversation intents from automatic completion
+ok 97 - canonical skill separates five conversation intents from automatic completion
+  ---
+  duration_ms: 0.543113
+  ...
+# Subtest: READMEs document the trust boundary, local workflow and reproducible comparisons
+ok 98 - READMEs document the trust boundary, local workflow and reproducible comparisons
+  ---
+  duration_ms: 0.308082
+  ...
+# Subtest: documentation home and complete user-flow guide exist in both languages
+ok 99 - documentation home and complete user-flow guide exist in both languages
+  ---
+  duration_ms: 0.353654
+  ...
+# Subtest: resident instructions are discovery-only shims into .keelson
+ok 100 - resident instructions are discovery-only shims into .keelson
+  ---
+  duration_ms: 0.290469
+  ...
+# Subtest: repository dogfood runtime exactly matches the generated lean canonical runtime and only shims outside
+not ok 101 - repository dogfood runtime exactly matches the generated lean canonical runtime and only shims outside
+  ---
+  duration_ms: 3.824189
+  location: '/home/ubuntu/github/keelson/tests/repo.test.js:110:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    .keelson/skill/SKILL.md
+    + actual - expected ... Lines skipped
+    
+      '---\n' +
+        'name: keelson\n' +
+        'description: Engineering control plane for coding work in repositories with a .keelson/ directory. Use for exploring an idea, changing code, fixing/debugging, continuing prior work, or improving recurring engineering failures. Keeps conversation sessions separate from durable work items so users can keep asking questions without having to announce when a task starts or ends.\n' +
+    +   'version: 0.3.0\n' +
+    -   'version: 0.4.0\n' +
+        '---\n' +
+        '\n' +
+        '# Keelson\n' +
+        '\n' +
+    +   'The project-local kernel is `.keelson/workflow.md`. Keelson constrains **state transitions and evidence**, not implementation taste. User and project instructions win.\n' +
+    -   'Read the installed workflow with `keelson guide workflow`; load each named reference with `keelson guide <name>` (omit `.md`). Keelson constrains **state transitions and evidence**, not implementation taste. User and project instructions win.\n' +
+        '\n' +
+        '## Classify the conversation, not the lifecycle\n' +
+    ...
+        '- If `NOW.md` says “First contact”, infer and confirm `INTENT.md`; do not inventory the whole repository into specs/rules.\n' +
+        '- Non-trivial modifying work starts from current context; shared modules get `keelson impact <files>`.\n' +
+    +   '- Ask only at the decision frontier. Run the triggered blindspot pass, then use `interview.md`: one owner-owned decision at a time, concrete scenario/options, recommended default, and `not sure` as a valid route. Never ask what repo evidence, an experiment, or agent engineering judgment can settle.\n' +
+    -   '- Ask only at the decision frontier. Run the triggered blindspot pass, then use `interview.md`: up to three independent ready owner-owned decisions per round, skipping settled answers, concrete scenario/options, recommended default, and `not sure` as a valid route. Never ask what repo evidence, an experiment, or agent engineering judgment can settle.\n' +
+        '- Route non-obvious mechanisms/architecture through `engineer.md`: reduce to facts, outcome, constraints, and invariants; state a falsifiable hypothesis; use the cheapest experiment/ablation that can discriminate; complexity must earn its keep with evidence.\n' +
+    +   '- Size only the work: trivial = direct edit; quick = lightweight change; spec = acceptance + behavior delta + plan, then approval.\n' +
+    -   '- Size only the work: trivial = direct edit; quick = lightweight change; spec = acceptance + behavior delta + plan within existing user authorization; clarify only unresolved owner choices.\n' +
+        '- Artifacts are information containers, not ceremony. Do not create empty roadmap/glossary/rule/task/ledger/handoff/spec files.\n' +
+        '- `tasks.md` is an execution plan, not completion authority. Unchecked plan items never override satisfied acceptance + fresh evidence; reconcile or remove stale tasks when the implementation path changes.\n' +
+        '- Knowledge maintenance is internal. During RECONCILE, automatically rewrite/split/dedupe pressured durable docs and let `land` auto-shard large specs; never ask the owner to maintain Keelson unless a product-semantic decision is required.\n' +
+        '- Keep **code reality**, **confirmed truth**, and **planned change** distinct. Open questions block only dependent slices.\n' +
+    +   '- Fresh `keelson check --record` evidence is required for completion claims. Never weaken acceptance to make a check pass.\n' +
+    -   '- Fresh structured `keelson check --record` evidence (review commands and use `--trust` on first execution) is required for completion claims. Never weaken acceptance to make a check pass.\n' +
+        '- A `ready` change should be landed without waiting for a special user phrase. If landing still needs an owner decision, stop on that decision only.\n' +
+    +   '- `handoff.md` is for real transfer across people/machines or deliberate ownership change; ordinary session continuity comes from durable change artifacts plus `.keelson/.runtime/sessions/`.\n' +
+    -   '- `handoff.md` is for real transfer across people/machines or deliberate ownership change; ordinary session continuity comes from durable change artifacts plus private per-machine session state.\n' +
+        '- Repeated failures graduate to the narrowest durable control: spec → scoped rule → executable fitness check; remove redundant prose afterward.\n' +
+        '- Use `light | standard | deep`; never persist dated model IDs.\n' +
+        '\n' +
+        'Users normally need only `init`, `status`, `doctor`, `update`, and `uninstall`; the agent uses the rest.\n'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: |-
+    ---
+    name: keelson
+    description: Engineering control plane for coding work in repositories with a .keelson/ directory. Use for exploring an idea, changing code, fixing/debugging, continuing prior work, or improving recurring engineering failures. Keeps conversation sessions separate from durable work items so users can keep asking questions without having to announce when a task starts or ends.
+    version: 0.4.0
+    ---
+    
+    # Keelson
+    
+    Read the installed workflow with `keelson guide workflow`; load each named reference with `keelson guide <name>` (omit `.md`). Keelson constrains **state transitions and evidence**, not implementation taste. User and project instructions win.
+    
+    ## Classify the conversation, not the lifecycle
+    
+    | Intent | Typical request | Start with |
+    |---|---|---|
+    | **Explore** | compare, explain, “what should we do?”, “stress-test this” | `discover.md` + `interview.md`; read-only until a modification is requested |
+    | **Change** | build, add, refactor, migrate, “also change…” | `shape.md` → `context.md`; load `model.md` for boundary/language questions, `engineer.md` for non-obvious technical choices, `design-lenses.md` only for triggered risks; spec-sized work adds `plan.md` |
+    | **Fix** | bug, failing test, unexpected behavior | `debug.md`, then `verify.md` |
+    | **Resume** | continue, pick this back up | `keelson focus --auto` + current context; use `handoff.md` only when a real ownership/machine transfer exists |
+    | **Improve** | repeated mistake, harness/rule/process problem, retro | `harness.md` + `reconcile.md` |
+    
+    Completion is **not** an intent and never depends on the user saying “done”. It is a state transition: when the focused change has satisfied acceptance, no blocking questions/assumptions, required rollout, and fresh verification on the current tree, it becomes `ready`. Run the Finish path (`verify.md` → `land.md` → `reconcile.md`) automatically before claiming completion.
+    
+    ## Operating rules
+    
+    - A conversation/session is only a focus pointer. Ending a window, going idle, or continuing to ask questions MUST NOT mark a change complete.
+    - `keelson new` binds the new change to the current session when session identity is available. Same-goal follow-ups stay on that change; an independent requested outcome gets a new change and focus moves.
+    - On Resume, use `keelson focus --auto`; branch match or a sole active change may be suggested. Never silently bind an ambiguous session.
+    - If `NOW.md` says “First contact”, infer and confirm `INTENT.md`; do not inventory the whole repository into specs/rules.
+    - Non-trivial modifying work starts from current context; shared modules get `keelson impact <files>`.
+    - Ask only at the decision frontier. Run the triggered blindspot pass, then use `interview.md`: up to three independent ready owner-owned decisions per round, skipping settled answers, concrete scenario/options, recommended default, and `not sure` as a valid route. Never ask what repo evidence, an experiment, or agent engineering judgment can settle.
+    - Route non-obvious mechanisms/architecture through `engineer.md`: reduce to facts, outcome, constraints, and invariants; state a falsifiable hypothesis; use the cheapest experiment/ablation that can discriminate; complexity must earn its keep with evidence.
+    - Size only the work: trivial = direct edit; quick = lightweight change; spec = acceptance + behavior delta + plan within existing user authorization; clarify only unresolved owner choices.
+    - Artifacts are information containers, not ceremony. Do not create empty roadmap/glossary/rule/task/ledger/handoff/spec files.
+    - `tasks.md` is an execution plan, not completion authority. Unchecked plan items never override satisfied acceptance + fresh evidence; reconcile or remove stale tasks when the implementation path changes.
+    - Knowledge maintenance is internal. During RECONCILE, automatically rewrite/split/dedupe pressured durable docs and let `land` auto-shard large specs; never ask the owner to maintain Keelson unless a product-semantic decision is required.
+    - Keep **code reality**, **confirmed truth**, and **planned change** distinct. Open questions block only dependent slices.
+    - Fresh structured `keelson check --record` evidence (review commands and use `--trust` on first execution) is required for completion claims. Never weaken acceptance to make a check pass.
+    - A `ready` change should be landed without waiting for a special user phrase. If landing still needs an owner decision, stop on that decision only.
+    - `handoff.md` is for real transfer across people/machines or deliberate ownership change; ordinary session continuity comes from durable change artifacts plus private per-machine session state.
+    - Repeated failures graduate to the narrowest durable control: spec → scoped rule → executable fitness check; remove redundant prose afterward.
+    - Use `light | standard | deep`; never persist dated model IDs.
+    
+    Users normally need only `init`, `status`, `doctor`, `update`, and `uninstall`; the agent uses the rest.
+    
+  actual: |-
+    ---
+    name: keelson
+    description: Engineering control plane for coding work in repositories with a .keelson/ directory. Use for exploring an idea, changing code, fixing/debugging, continuing prior work, or improving recurring engineering failures. Keeps conversation sessions separate from durable work items so users can keep asking questions without having to announce when a task starts or ends.
+    version: 0.3.0
+    ---
+    
+    # Keelson
+    
+    The project-local kernel is `.keelson/workflow.md`. Keelson constrains **state transitions and evidence**, not implementation taste. User and project instructions win.
+    
+    ## Classify the conversation, not the lifecycle
+    
+    | Intent | Typical request | Start with |
+    |---|---|---|
+    | **Explore** | compare, explain, “what should we do?”, “stress-test this” | `discover.md` + `interview.md`; read-only until a modification is requested |
+    | **Change** | build, add, refactor, migrate, “also change…” | `shape.md` → `context.md`; load `model.md` for boundary/language questions, `engineer.md` for non-obvious technical choices, `design-lenses.md` only for triggered risks; spec-sized work adds `plan.md` |
+    | **Fix** | bug, failing test, unexpected behavior | `debug.md`, then `verify.md` |
+    | **Resume** | continue, pick this back up | `keelson focus --auto` + current context; use `handoff.md` only when a real ownership/machine transfer exists |
+    | **Improve** | repeated mistake, harness/rule/process problem, retro | `harness.md` + `reconcile.md` |
+    
+    Completion is **not** an intent and never depends on the user saying “done”. It is a state transition: when the focused change has satisfied acceptance, no blocking questions/assumptions, required rollout, and fresh verification on the current tree, it becomes `ready`. Run the Finish path (`verify.md` → `land.md` → `reconcile.md`) automatically before claiming completion.
+    
+    ## Operating rules
+    
+    - A conversation/session is only a focus pointer. Ending a window, going idle, or continuing to ask questions MUST NOT mark a change complete.
+    - `keelson new` binds the new change to the current session when session identity is available. Same-goal follow-ups stay on that change; an independent requested outcome gets a new change and focus moves.
+    - On Resume, use `keelson focus --auto`; branch match or a sole active change may be suggested. Never silently bind an ambiguous session.
+    - If `NOW.md` says “First contact”, infer and confirm `INTENT.md`; do not inventory the whole repository into specs/rules.
+    - Non-trivial modifying work starts from current context; shared modules get `keelson impact <files>`.
+    - Ask only at the decision frontier. Run the triggered blindspot pass, then use `interview.md`: one owner-owned decision at a time, concrete scenario/options, recommended default, and `not sure` as a valid route. Never ask what repo evidence, an experiment, or agent engineering judgment can settle.
+    - Route non-obvious mechanisms/architecture through `engineer.md`: reduce to facts, outcome, constraints, and invariants; state a falsifiable hypothesis; use the cheapest experiment/ablation that can discriminate; complexity must earn its keep with evidence.
+    - Size only the work: trivial = direct edit; quick = lightweight change; spec = acceptance + behavior delta + plan, then approval.
+    - Artifacts are information containers, not ceremony. Do not create empty roadmap/glossary/rule/task/ledger/handoff/spec files.
+    - `tasks.md` is an execution plan, not completion authority. Unchecked plan items never override satisfied acceptance + fresh evidence; reconcile or remove stale tasks when the implementation path changes.
+    - Knowledge maintenance is internal. During RECONCILE, automatically rewrite/split/dedupe pressured durable docs and let `land` auto-shard large specs; never ask the owner to maintain Keelson unless a product-semantic decision is required.
+    - Keep **code reality**, **confirmed truth**, and **planned change** distinct. Open questions block only dependent slices.
+    - Fresh `keelson check --record` evidence is required for completion claims. Never weaken acceptance to make a check pass.
+    - A `ready` change should be landed without waiting for a special user phrase. If landing still needs an owner decision, stop on that decision only.
+    - `handoff.md` is for real transfer across people/machines or deliberate ownership change; ordinary session continuity comes from durable change artifacts plus `.keelson/.runtime/sessions/`.
+    - Repeated failures graduate to the narrowest durable control: spec → scoped rule → executable fitness check; remove redundant prose afterward.
+    - Use `light | standard | deep`; never persist dated model IDs.
+    
+    Users normally need only `init`, `status`, `doctor`, `update`, and `uninstall`; the agent uses the rest.
+    
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/repo.test.js:115:12)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: shaping audits assumptions without turning clarification into ceremony
+ok 102 - shaping audits assumptions without turning clarification into ceremony
+  ---
+  duration_ms: 3.400942
+  ...
+# Subtest: public docs keep outcome-driven readiness and automatic maintenance coherent
+not ok 103 - public docs keep outcome-driven readiness and automatic maintenance coherent
+  ---
+  duration_ms: 1.179438
+  location: '/home/ubuntu/github/keelson/tests/repo.test.js:199:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /tasks\.md.*mutable execution plan|tasks\.md.*可变执行计划/s. Input:
+    
+    '# Concepts\n' +
+      '\n' +
+      'Keelson keeps project facts, planned changes and observed results separate.\n' +
+      '\n' +
+      '| Record | Purpose | Lifetime |\n' +
+      '|---|---|---|\n' +
+      '| `INTENT.md` | Purpose, boundaries and authority | Project |\n' +
+      '| Specs and scoped rules | Confirmed behavior and recurring constraints | Project |\n' +
+      '| `changes/<name>/change.md` | Requested outcome, acceptance, impact | Change |\n' +
+      '| `decisions.json` | Owner, prerequisites, answer, basis and history | Change/archive |\n' +
+      '| `tasks.md` | Optional execution plan | Change |\n' +
+      '| `ledger.jsonl` and `evidence/` | Signed checks and their output | Change/archive |\n' +
+      '| Private session state | Which change this conversation is about | Machine/session |\n' +
+      '\n' +
+      'A session ending does not finish a change. An unchecked plan item is not by itself a completion gate. Acceptance must be satisfied, blocking decisions resolved, rollout described where needed, and a complete current check record available.\n' +
+      '\n' +
+      'A signature establishes integrity relative to a key, not truth relative to a requirement. Review whether the tests cover the requested behavior. [Verification and trust](verification.md) explains freshness, local trust and the limits of the record.\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    # Concepts
+    
+    Keelson keeps project facts, planned changes and observed results separate.
+    
+    | Record | Purpose | Lifetime |
+    |---|---|---|
+    | `INTENT.md` | Purpose, boundaries and authority | Project |
+    | Specs and scoped rules | Confirmed behavior and recurring constraints | Project |
+    | `changes/<name>/change.md` | Requested outcome, acceptance, impact | Change |
+    | `decisions.json` | Owner, prerequisites, answer, basis and history | Change/archive |
+    | `tasks.md` | Optional execution plan | Change |
+    | `ledger.jsonl` and `evidence/` | Signed checks and their output | Change/archive |
+    | Private session state | Which change this conversation is about | Machine/session |
+    
+    A session ending does not finish a change. An unchecked plan item is not by itself a completion gate. Acceptance must be satisfied, blocking decisions resolved, rollout described where needed, and a complete current check record available.
+    
+    A signature establishes integrity relative to a key, not truth relative to a requirement. Review whether the tests cover the requested behavior. [Verification and trust](verification.md) explains freshness, local trust and the limits of the record.
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/repo.test.js:203:12)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: skill frontmatter stamping is CRLF-safe and emits LF
+ok 104 - skill frontmatter stamping is CRLF-safe and emits LF
+  ---
+  duration_ms: 0.325713
+  ...
+# Subtest: platform registry exposes exactly seven first-class hosts plus the portable fallback
+not ok 105 - platform registry exposes exactly seven first-class hosts plus the portable fallback
+  ---
+  duration_ms: 0.495782
+  location: '/home/ubuntu/github/keelson/tests/repo.test.js:215:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    opencode
+    + actual - expected
+    
+    + 'degraded'
+    - 'native'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'native'
+  actual: 'degraded'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/github/keelson/tests/repo.test.js:225:70)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: first-class host discovery paths match their documented integration model
+ok 106 - first-class host discovery paths match their documented integration model
+  ---
+  duration_ms: 0.524683
+  ...
+# Subtest: model registry is bounded to the seven first-class hosts
+ok 107 - model registry is bounded to the seven first-class hosts
+  ---
+  duration_ms: 0.252494
+  ...
+# Subtest: registry tiers point at aliases that exist in the platform rank
+ok 108 - registry tiers point at aliases that exist in the platform rank
+  ---
+  duration_ms: 0.375348
+  ...
+# Subtest: config migration is pure and idempotent
+ok 109 - config migration is pure and idempotent
+  ---
+  duration_ms: 8.17632
+  ...
+# Subtest: landing restores all changed targets after a mid-write failure
+ok 110 - landing restores all changed targets after a mid-write failure
+  ---
+  duration_ms: 30.906113
+  ...
+# Subtest: interrupted landing restores from its durable journal
+ok 111 - interrupted landing restores from its durable journal
+  ---
+  duration_ms: 12.409209
+  ...
+# Subtest: project data paths reject traversal and symbolic-link parents
+ok 112 - project data paths reject traversal and symbolic-link parents
+  ---
+  duration_ms: 2.003328
+  ...
+1..112
+# tests 112
+# suites 0
+# pass 86
+# fail 26
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 91528.72103

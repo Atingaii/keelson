@@ -1,0 +1,644 @@
+
+> @atingaii/keelson@0.4.0 test
+> node --test
+
+TAP version 13
+# Subtest: ablation restricts recovery access before preserving and restoring user content
+ok 1 - ablation restricts recovery access before preserving and restoring user content
+  ---
+  duration_ms: 2069.903967
+  ...
+# Subtest: attest resolves a unique archived original name and exports stale signed evidence
+ok 2 - attest resolves a unique archived original name and exports stale signed evidence
+  ---
+  duration_ms: 1172.099409
+  ...
+# Subtest: attest prefers an active change and never aliases legacy suffixes to another original name
+ok 3 - attest prefers an active change and never aliases legacy suffixes to another original name
+  ---
+  duration_ms: 1630.98866
+  ...
+# Subtest: default installation stays within the lightweight budget and leaves ignore files alone
+ok 4 - default installation stays within the lightweight budget and leaves ignore files alone
+  ---
+  duration_ms: 3959.654843
+  ...
+# Subtest: claude-only init has no portable or vendored layer
+ok 5 - claude-only init has no portable or vendored layer
+  ---
+  duration_ms: 593.552061
+  ...
+# Subtest: switching hosts removes only managed adapters and keeps user instructions
+ok 6 - switching hosts removes only managed adapters and keeps user instructions
+  ---
+  duration_ms: 1238.228865
+  ...
+# Subtest: switching hosts retains a changed discovery shim and its neighboring files
+ok 7 - switching hosts retains a changed discovery shim and its neighboring files
+  ---
+  duration_ms: 1397.444587
+  ...
+# Subtest: Kiro upsert retains frontmatter and user content
+ok 8 - Kiro upsert retains frontmatter and user content
+  ---
+  duration_ms: 1417.174036
+  ...
+# Subtest: update migrates the exact real v0.3 runtime to a light Codex install
+ok 9 - update migrates the exact real v0.3 runtime to a light Codex install
+  ---
+  duration_ms: 720.35667
+  ...
+# Subtest: v0.3 migration retains an edited copied hook
+ok 10 - v0.3 migration retains an edited copied hook
+  ---
+  duration_ms: 735.811979
+  ...
+# Subtest: a custom v0.3 discovery shim stops migration before any write
+ok 11 - a custom v0.3 discovery shim stops migration before any write
+  ---
+  duration_ms: 276.850175
+  ...
+# Subtest: malformed host JSON fails without overwriting the user file
+ok 12 - malformed host JSON fails without overwriting the user file
+  ---
+  duration_ms: 339.045916
+  ...
+# Subtest: Codex reports native session identity only when CODEX_THREAD_ID is available
+ok 13 - Codex reports native session identity only when CODEX_THREAD_ID is available
+  ---
+  duration_ms: 3400.88185
+  ...
+# Subtest: OpenCode is honestly degraded without a copied plugin
+ok 14 - OpenCode is honestly degraded without a copied plugin
+  ---
+  duration_ms: 1499.185876
+  ...
+# Subtest: guide uses persisted project language profile and guided setting without vendoring
+ok 15 - guide uses persisted project language profile and guided setting without vendoring
+  ---
+  duration_ms: 1237.459943
+  ...
+# Subtest: update switches the language of an unchanged managed shim but protects edits
+ok 16 - update switches the language of an unchanged managed shim but protects edits
+  ---
+  duration_ms: 2553.50819
+  ...
+# Subtest: v0.3 hook commands migrate or retire individually while preserving user hooks
+ok 17 - v0.3 hook commands migrate or retire individually while preserving user hooks
+  ---
+  duration_ms: 2985.102325
+  ...
+# Subtest: unproven legacy Keelson-looking surfaces are retained with neighboring user files
+ok 18 - unproven legacy Keelson-looking surfaces are retained with neighboring user files
+  ---
+  duration_ms: 674.421238
+  ...
+# Subtest: legacy hidden managed state migrates to manifest.json on update
+ok 19 - legacy hidden managed state migrates to manifest.json on update
+  ---
+  duration_ms: 3040.369492
+  ...
+# Subtest: retired host selections fail clearly and old config is migrated to portable support
+ok 20 - retired host selections fail clearly and old config is migrated to portable support
+  ---
+  duration_ms: 3209.066682
+  ...
+# Subtest: all platforms install selected discovery only and doctor accepts default light install
+ok 21 - all platforms install selected discovery only and doctor accepts default light install
+  ---
+  duration_ms: 18596.370755
+  ...
+# Subtest: vendor is opt-in and changed guidance or discovery shims are never replaced or deleted
+ok 22 - vendor is opt-in and changed guidance or discovery shims are never replaced or deleted
+  ---
+  duration_ms: 2693.2899
+  ...
+# Subtest: no-hooks is persistent and can be explicitly re-enabled
+ok 23 - no-hooks is persistent and can be explicitly re-enabled
+  ---
+  duration_ms: 2749.449565
+  ...
+# Subtest: hooks call the installed CLI and do not copy executable scripts
+ok 24 - hooks call the installed CLI and do not copy executable scripts
+  ---
+  duration_ms: 2205.990964
+  ...
+# Subtest: removing hooks keeps user hooks in mixed Claude and CodeBuddy groups
+ok 25 - removing hooks keeps user hooks in mixed Claude and CodeBuddy groups
+  ---
+  duration_ms: 2437.923856
+  ...
+# Subtest: fresh init auto-detects only first-class hosts and otherwise uses the portable layer
+ok 26 - fresh init auto-detects only first-class hosts and otherwise uses the portable layer
+  ---
+  duration_ms: 227.567783
+  ...
+# Subtest: runtime sessions live outside the project
+ok 27 - runtime sessions live outside the project
+  ---
+  duration_ms: 1379.070075
+  ...
+# Subtest: change artifacts grow progressively instead of starting empty
+ok 28 - change artifacts grow progressively instead of starting empty
+  ---
+  duration_ms: 3157.814934
+  ...
+# Subtest: change lifecycle: new → gates → check --record → land folds specs and decisions
+ok 29 - change lifecycle: new → gates → check --record → land folds specs and decisions
+  ---
+  duration_ms: 8345.39316
+  ...
+# Subtest: land --keep archives instead of folding
+ok 30 - land --keep archives instead of folding
+  ---
+  duration_ms: 3760.207795
+  ...
+# Subtest: validate catches dated model IDs, bad tiers, missing rule files
+ok 31 - validate catches dated model IDs, bad tiers, missing rule files
+  ---
+  duration_ms: 2521.322052
+  ...
+# Subtest: validate checks OpenSpec contracts and rejects empty, duplicate, and malformed delta requirements
+ok 32 - validate checks OpenSpec contracts and rejects empty, duplicate, and malformed delta requirements
+  ---
+  duration_ms: 5596.059749
+  ...
+# Subtest: context routes rules by path
+ok 33 - context routes rules by path
+  ---
+  duration_ms: 1807.24417
+  ...
+# Subtest: check runs configured commands and reports exit codes
+ok 34 - check runs configured commands and reports exit codes
+  ---
+  duration_ms: 1226.022956
+  ...
+# Subtest: sessions focus independent work items; ready is derived without a user finish phrase
+ok 35 - sessions focus independent work items; ready is derived without a user finish phrase
+  ---
+  duration_ms: 6338.423108
+  ...
+# Subtest: spec changes do not invent alternatives when there is no material fork
+ok 36 - spec changes do not invent alternatives when there is no material fork
+  ---
+  duration_ms: 1588.833822
+  ...
+# Subtest: depends is a real lifecycle gate for status and land
+ok 37 - depends is a real lifecycle gate for status and land
+  ---
+  duration_ms: 2109.952208
+  ...
+# Subtest: large logical specs auto-shard without user maintenance
+ok 38 - large logical specs auto-shard without user maintenance
+  ---
+  duration_ms: 3484.081107
+  ...
+# Subtest: auto-sharding preserves pre-existing unmanaged requirements directories
+ok 39 - auto-sharding preserves pre-existing unmanaged requirements directories
+  ---
+  duration_ms: 2242.535044
+  ...
+# Subtest: legacy sharded decision files migrate to bounded decision shards without touching neighbors
+ok 40 - legacy sharded decision files migrate to bounded decision shards without touching neighbors
+  ---
+  duration_ms: 2306.679402
+  ...
+# Subtest: hard knowledge limits fail validate and preflight land before writing specs
+ok 41 - hard knowledge limits fail validate and preflight land before writing specs
+  ---
+  duration_ms: 3264.069201
+  ...
+# Subtest: runtime sessions live outside the project
+ok 42 - runtime sessions live outside the project
+  ---
+  duration_ms: 1752.079918
+  ...
+# Subtest: handoff and session hook tolerate CRLF files
+ok 43 - handoff and session hook tolerate CRLF files
+  ---
+  duration_ms: 2219.289559
+  ...
+# Subtest: ablate removes every surface and restore brings it back byte-for-byte
+ok 44 - ablate removes every surface and restore brings it back byte-for-byte
+  ---
+  duration_ms: 1369.443252
+  ...
+# Subtest: ablate and restore preserve zero-copy host configuration
+ok 45 - ablate and restore preserve zero-copy host configuration
+  ---
+  duration_ms: 1364.074286
+  ...
+# Subtest: models resolves tiers and rank writes user overrides
+ok 46 - models resolves tiers and rank writes user overrides
+  ---
+  duration_ms: 2200.99871
+  ...
+# Subtest: retro reads ledgers and reports metrics
+ok 47 - retro reads ledgers and reports metrics
+  ---
+  duration_ms: 1838.667656
+  ...
+# Subtest: the user-level ~/.keelson is never mistaken for a project root
+ok 48 - the user-level ~/.keelson is never mistaken for a project root
+  ---
+  duration_ms: 1.565429
+  ...
+# Subtest: top-level help separates the human golden path from agent mechanics
+ok 49 - top-level help separates the human golden path from agent mechanics
+  ---
+  duration_ms: 151.658499
+  ...
+# Subtest: per-command --help prints that command only
+ok 50 - per-command --help prints that command only
+  ---
+  duration_ms: 219.552933
+  ...
+# Subtest: init references project material without changing .gitignore
+ok 51 - init references project material without changing .gitignore
+  ---
+  duration_ms: 1081.421267
+  ...
+# Subtest: update migrates a v1 config and --dry-run writes nothing
+ok 52 - update migrates a v1 config and --dry-run writes nothing
+  ---
+  duration_ms: 2316.320198
+  ...
+# Subtest: status exposes shared contracts and impact lists importers
+ok 53 - status exposes shared contracts and impact lists importers
+  ---
+  duration_ms: 4874.828031
+  ...
+# Subtest: handoff is an explicit transfer artifact and remains readable after session changes
+ok 54 - handoff is an explicit transfer artifact and remains readable after session changes
+  ---
+  duration_ms: 3565.59849
+  ...
+# Subtest: uninstall removes owned default surfaces without requiring a vendored runtime
+ok 55 - uninstall removes owned default surfaces without requiring a vendored runtime
+  ---
+  duration_ms: 1458.846651
+  ...
+# Subtest: breaking change without Rollout is refused at landing
+ok 56 - breaking change without Rollout is refused at landing
+  ---
+  duration_ms: 1885.800308
+  ...
+# Subtest: guide flag persists and guide command renders its guided workflow
+ok 57 - guide flag persists and guide command renders its guided workflow
+  ---
+  duration_ms: 1427.454576
+  ...
+# Subtest: multi-host init creates only selected discovery shims
+ok 58 - multi-host init creates only selected discovery shims
+  ---
+  duration_ms: 948.854406
+  ...
+# Subtest: legacy confirmation cannot silently settle a structured assumption
+ok 59 - legacy confirmation cannot silently settle a structured assumption
+  ---
+  duration_ms: 6.868572
+  ...
+# Subtest: decision frontier routes ownership, preserves settlement and orders dependencies
+ok 60 - decision frontier routes ownership, preserves settlement and orders dependencies
+  ---
+  duration_ms: 8885.639839
+  ...
+# Subtest: malformed decision graphs fail closed without rewriting user data
+ok 61 - malformed decision graphs fail closed without rewriting user data
+  ---
+  duration_ms: 453.473784
+  ...
+# Subtest: prose forgery and unsigned JSON cannot authorize land; real record can
+ok 62 - prose forgery and unsigned JSON cannot authorize land; real record can
+  ---
+  duration_ms: 4571.439532
+  ...
+# Subtest: code, contract, rules, config and acceptance edits invalidate evidence
+ok 63 - code, contract, rules, config and acceptance edits invalidate evidence
+  ---
+  duration_ms: 6003.983897
+  ...
+# Subtest: changed inputs during a check and explicit partial suites cannot pass completion
+ok 64 - changed inputs during a check and explicit partial suites cannot pass completion
+  ---
+  duration_ms: 1553.210117
+  ...
+# Subtest: trust is explicit, command changes revoke trust, and timeout kills descendants
+ok 65 - trust is explicit, command changes revoke trust, and timeout kills descendants
+  ---
+  duration_ms: 1870.820624
+  ...
+# Subtest: force requires a reason and archives every bypass
+ok 66 - force requires a reason and archives every bypass
+  ---
+  duration_ms: 449.114811
+  ...
+# Subtest: deadline returns when an escaped descendant retains output pipes
+ok 67 - deadline returns when an escaped descendant retains output pipes
+  ---
+  duration_ms: 1055.835354
+  ...
+# Subtest: sixteen concurrent writers retain every signed record and valid log reference
+ok 68 - sixteen concurrent writers retain every signed record and valid log reference
+  ---
+  duration_ms: 4075.917956
+  ...
+# Subtest: copied evidence requires a new local check and retains historical signatures
+ok 69 - copied evidence requires a new local check and retains historical signatures
+  ---
+  duration_ms: 1063.512168
+  ...
+# Subtest: landing cannot race an active check, even with force
+ok 70 - landing cannot race an active check, even with force
+  ---
+  duration_ms: 2535.331855
+  ...
+# Subtest: fingerprints include ignored tracked code, exclude Keelson, and preserve the real index
+ok 71 - fingerprints include ignored tracked code, exclude Keelson, and preserve the real index
+  ---
+  duration_ms: 118.471687
+  ...
+# Subtest: a project nested in Git fingerprints its own subtree
+ok 72 - a project nested in Git fingerprints its own subtree
+  ---
+  duration_ms: 101.387062
+  ...
+# Subtest: ** matches nested paths
+ok 73 - ** matches nested paths
+  ---
+  duration_ms: 2.471184
+  ...
+# Subtest: * stays within a segment
+ok 74 - * stays within a segment
+  ---
+  duration_ms: 0.523268
+  ...
+# Subtest: braces and ?
+ok 75 - braces and ?
+  ---
+  duration_ms: 0.389551
+  ...
+# Subtest: directory-style globs match beneath
+ok 76 - directory-style globs match beneath
+  ---
+  duration_ms: 0.39488
+  ...
+# Subtest: ** alone matches everything
+ok 77 - ** alone matches everything
+  ---
+  duration_ms: 0.302701
+  ...
+# Subtest: mergeDelta applies removed, modified, added in order
+ok 78 - mergeDelta applies removed, modified, added in order
+  ---
+  duration_ms: 7.283399
+  ...
+# Subtest: mergeDelta into an empty main creates the spec
+ok 79 - mergeDelta into an empty main creates the spec
+  ---
+  duration_ms: 0.746447
+  ...
+# Subtest: decisions extraction and folding are idempotent
+ok 80 - decisions extraction and folding are idempotent
+  ---
+  duration_ms: 2.786139
+  ...
+# Subtest: parseTasks reads state, id, effort, verify
+ok 81 - parseTasks reads state, id, effort, verify
+  ---
+  duration_ms: 16.517555
+  ...
+# Subtest: parseLedger classifies entries
+ok 82 - parseLedger classifies entries
+  ---
+  duration_ms: 7.464545
+  ...
+# Subtest: spec round-trips through parse/render
+ok 83 - spec round-trips through parse/render
+  ---
+  duration_ms: 4.344505
+  ...
+# Subtest: spec parser supports legacy and OpenSpec requirement layouts without reading fenced examples
+ok 84 - spec parser supports legacy and OpenSpec requirement layouts without reading fenced examples
+  ---
+  duration_ms: 3.176817
+  ...
+# Subtest: spec parse/render property preserves Unicode, CRLF, unknown sections, and fenced headings
+ok 85 - spec parse/render property preserves Unicode, CRLF, unknown sections, and fenced headings
+  ---
+  duration_ms: 47.443954
+  ...
+# Subtest: spec updates preserve foreign sections, frontmatter, and fenced Markdown
+ok 86 - spec updates preserve foreign sections, frontmatter, and fenced Markdown
+  ---
+  duration_ms: 7.497924
+  ...
+# Subtest: sharding keeps a source with unmanaged Markdown as a single file
+ok 87 - sharding keeps a source with unmanaged Markdown as a single file
+  ---
+  duration_ms: 0.943006
+  ...
+# Subtest: sharding accepts harmless layout differences in fully managed sections
+ok 88 - sharding accepts harmless layout differences in fully managed sections
+  ---
+  duration_ms: 4.999697
+  ...
+# Subtest: shard metadata cannot escape or traverse a symlinked capability directory
+ok 89 - shard metadata cannot escape or traverse a symlinked capability directory
+  ---
+  duration_ms: 6.770931
+  ...
+# Subtest: Unicode requirement names produce distinct readable storage slugs
+ok 90 - Unicode requirement names produce distinct readable storage slugs
+  ---
+  duration_ms: 1.487033
+  ...
+# Subtest: parseDelta reads all three sections and normalises scenario depth
+ok 91 - parseDelta reads all three sections and normalises scenario depth
+  ---
+  duration_ms: 1.109916
+  ...
+# Subtest: parseDelta ignores fenced requirements and reports malformed sections
+ok 92 - parseDelta ignores fenced requirements and reports malformed sections
+  ---
+  duration_ms: 0.611171
+  ...
+# Subtest: parseDelta flags prose-only ADDED and MODIFIED sections but permits empty no-ops
+ok 93 - parseDelta flags prose-only ADDED and MODIFIED sections but permits empty no-ops
+  ---
+  duration_ms: 0.513249
+  ...
+# Subtest: frontmatter and sections
+ok 94 - frontmatter and sections
+  ---
+  duration_ms: 0.261883
+  ...
+# Subtest: markdown parsers treat CRLF and LF as the same document
+ok 95 - markdown parsers treat CRLF and LF as the same document
+  ---
+  duration_ms: 1.272575
+  ...
+# Subtest: parseTasks keeps the title clean when prose follows the verify command
+ok 96 - parseTasks keeps the title clean when prose follows the verify command
+  ---
+  duration_ms: 0.310388
+  ...
+# Subtest: dispatch result comes only from the Result line
+ok 97 - dispatch result comes only from the Result line
+  ---
+  duration_ms: 0.498039
+  ...
+# Subtest: slices, acceptance, open questions, decision states, handoff parse; placeholders are ignored
+ok 98 - slices, acceptance, open questions, decision states, handoff parse; placeholders are ignored
+  ---
+  duration_ms: 1.89631
+  ...
+# Subtest: verify entries carry the worktree tree hash
+ok 99 - verify entries carry the worktree tree hash
+  ---
+  duration_ms: 0.406899
+  ...
+# Subtest: registry resolves claude tiers to floating aliases
+ok 100 - registry resolves claude tiers to floating aliases
+  ---
+  duration_ms: 3.286633
+  ...
+# Subtest: project config overrides registry
+ok 101 - project config overrides registry
+  ---
+  duration_ms: 0.837263
+  ...
+# Subtest: explicit wins over everything; unknown tier throws
+ok 102 - explicit wins over everything; unknown tier throws
+  ---
+  duration_ms: 0.328486
+  ...
+# Subtest: inferTierFromName only answers when unambiguous
+ok 103 - inferTierFromName only answers when unambiguous
+  ---
+  duration_ms: 0.294724
+  ...
+# Subtest: no dated model IDs in registry, skills, hooks, or docs
+ok 104 - no dated model IDs in registry, skills, hooks, or docs
+  ---
+  duration_ms: 42.159966
+  ...
+# Subtest: generated directory replacement preserves the last good copy across failure and interrupted residue
+ok 105 - generated directory replacement preserves the last good copy across failure and interrupted residue
+  ---
+  duration_ms: 4.060969
+  ...
+# Subtest: English and Chinese skills have the same files and the same guidance ids
+ok 106 - English and Chinese skills have the same files and the same guidance ids
+  ---
+  duration_ms: 3.742666
+  ...
+# Subtest: every guidance section carries without and sunset; SKILL.md stays short
+ok 107 - every guidance section carries without and sunset; SKILL.md stays short
+  ---
+  duration_ms: 3.111449
+  ...
+# Subtest: canonical skill separates five conversation intents from automatic completion
+ok 108 - canonical skill separates five conversation intents from automatic completion
+  ---
+  duration_ms: 0.567437
+  ...
+# Subtest: READMEs document the trust boundary, local workflow and reproducible comparisons
+ok 109 - READMEs document the trust boundary, local workflow and reproducible comparisons
+  ---
+  duration_ms: 0.328535
+  ...
+# Subtest: documentation home and complete user-flow guide exist in both languages
+ok 110 - documentation home and complete user-flow guide exist in both languages
+  ---
+  duration_ms: 0.359424
+  ...
+# Subtest: resident instructions route to package guidance without a project runtime path
+ok 111 - resident instructions route to package guidance without a project runtime path
+  ---
+  duration_ms: 0.422052
+  ...
+# Subtest: repository dogfood uses the configured lightweight discovery shim
+ok 112 - repository dogfood uses the configured lightweight discovery shim
+  ---
+  duration_ms: 0.70889
+  ...
+# Subtest: shaping audits assumptions without turning clarification into ceremony
+ok 113 - shaping audits assumptions without turning clarification into ceremony
+  ---
+  duration_ms: 2.502302
+  ...
+# Subtest: public docs keep outcome-driven readiness and automatic maintenance coherent
+ok 114 - public docs keep outcome-driven readiness and automatic maintenance coherent
+  ---
+  duration_ms: 0.651623
+  ...
+# Subtest: skill frontmatter stamping is CRLF-safe and emits LF
+ok 115 - skill frontmatter stamping is CRLF-safe and emits LF
+  ---
+  duration_ms: 0.402018
+  ...
+# Subtest: platform registry exposes exactly seven first-class hosts plus the portable fallback
+ok 116 - platform registry exposes exactly seven first-class hosts plus the portable fallback
+  ---
+  duration_ms: 0.463419
+  ...
+# Subtest: first-class host discovery paths match their documented integration model
+ok 117 - first-class host discovery paths match their documented integration model
+  ---
+  duration_ms: 0.394768
+  ...
+# Subtest: model registry is bounded to the seven first-class hosts
+ok 118 - model registry is bounded to the seven first-class hosts
+  ---
+  duration_ms: 0.359662
+  ...
+# Subtest: registry tiers point at aliases that exist in the platform rank
+ok 119 - registry tiers point at aliases that exist in the platform rank
+  ---
+  duration_ms: 0.292733
+  ...
+# Subtest: config migration is pure and idempotent
+ok 120 - config migration is pure and idempotent
+  ---
+  duration_ms: 7.72976
+  ...
+# Subtest: landing restores all changed targets after a mid-write failure
+ok 121 - landing restores all changed targets after a mid-write failure
+  ---
+  duration_ms: 56.27537
+  ...
+# Subtest: interrupted landing restores from its durable journal
+ok 122 - interrupted landing restores from its durable journal
+  ---
+  duration_ms: 20.079333
+  ...
+# Subtest: relative recovery follows a moved Git project and leaves the old path untouched
+ok 123 - relative recovery follows a moved Git project and leaves the old path untouched
+  ---
+  duration_ms: 19.13056
+  ...
+# Subtest: moved legacy journals fail closed before touching old absolute paths
+ok 124 - moved legacy journals fail closed before touching old absolute paths
+  ---
+  duration_ms: 13.678305
+  ...
+# Subtest: invalid journal paths and missing later backups prevent every target removal
+ok 125 - invalid journal paths and missing later backups prevent every target removal
+  ---
+  duration_ms: 34.827172
+  ...
+# Subtest: project data paths reject traversal and symbolic-link parents
+ok 126 - project data paths reject traversal and symbolic-link parents
+  ---
+  duration_ms: 1.615305
+  ...
+1..126
+# tests 126
+# suites 0
+# pass 126
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 177871.424264

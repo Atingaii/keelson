@@ -1,0 +1,61 @@
+TAP version 13
+# Subtest: attest resolves a unique archived original name and exports stale signed evidence
+ok 1 - attest resolves a unique archived original name and exports stale signed evidence
+  ---
+  duration_ms: 524.490949
+  ...
+# Subtest: attest prefers an active change and never aliases legacy suffixes to another original name
+not ok 2 - attest prefers an active change and never aliases legacy suffixes to another original name
+  ---
+  duration_ms: 334.556789
+  location: '/tmp/keelson-attest-negative-jst6s6hu/tests/attest.test.js:39:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    the old implementation incorrectly exported this as tidy
+    + actual - expected
+    
+    + '{\n' +
+    +   '  "change": "tidy",\n' +
+    +   '  "verification": {\n' +
+    +   '    "state": "not-run",\n' +
+    +   '    "detail": "no structured record; run `keelson check --record`"\n' +
+    +   '  },\n' +
+    +   '  "trust": "local-machine; exported key is not an independent trust anchor",\n' +
+    +   '  "publicKey": "cancelled-name\\n",\n' +
+    +   '  "envelopes": []\n' +
+    +   '}\n'
+    - ''
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ''
+  actual: |-
+    {
+      "change": "tidy",
+      "verification": {
+        "state": "not-run",
+        "detail": "no structured record; run `keelson check --record`"
+      },
+      "trust": "local-machine; exported key is not an independent trust anchor",
+      "publicKey": "cancelled-name\n",
+      "envelopes": []
+    }
+    
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/keelson-attest-negative-jst6s6hu/tests/attest.test.js:53:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 1
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 966.875121

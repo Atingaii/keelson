@@ -1,0 +1,87 @@
+TAP version 13
+# Subtest: landing restores all changed targets after a mid-write failure
+ok 1 - landing restores all changed targets after a mid-write failure # SKIP test name does not match pattern
+  ---
+  duration_ms: 2.691524
+  ...
+# Subtest: interrupted landing restores from its durable journal
+ok 2 - interrupted landing restores from its durable journal # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.249748
+  ...
+# Subtest: relative recovery follows a moved Git project and leaves the old path untouched
+not ok 3 - relative recovery follows a moved Git project and leaves the old path untouched
+  ---
+  duration_ms: 28.364081
+  location: '/tmp/keelson-recovery-negative-4trjtul4/tests/transaction.test.js:41:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, lstat '0'"
+  code: 'ENOENT'
+  stack: |-
+    lstatSync (node:fs:1656:25)
+    getStatsSync (node:internal/fs/cp/cp-sync:120:19)
+    checkPathsSync (node:internal/fs/cp/cp-sync:72:33)
+    cpSyncFn (node:internal/fs/cp/cp-sync:58:42)
+    Object.cpSync (node:fs:3089:3)
+    restore (file:///tmp/keelson-recovery-negative-4trjtul4/src/lib/transaction.js:11:10)
+    recoverLanding (file:///tmp/keelson-recovery-negative-4trjtul4/src/lib/transaction.js:22:38)
+    TestContext.<anonymous> (file:///tmp/keelson-recovery-negative-4trjtul4/tests/transaction.test.js:54:16)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+  ...
+# Subtest: moved legacy journals fail closed before touching old absolute paths
+not ok 4 - moved legacy journals fail closed before touching old absolute paths
+  ---
+  duration_ms: 21.754957
+  location: '/tmp/keelson-recovery-negative-4trjtul4/tests/transaction.test.js:59:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /journal paths changed/. Input:
+    
+    "Error: ENOENT: no such file or directory, lstat '/tmp/keelson-plk5DM/original/.git/keelson-runtime/landing-transaction/0'"
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: "ENOENT: no such file or directory, lstat '/tmp/keelson-plk5DM/original/.git/keelson-runtime/landing-transaction/0'"
+  stack: |-
+    lstatSync (node:fs:1656:25)
+    getStatsSync (node:internal/fs/cp/cp-sync:120:19)
+    checkPathsSync (node:internal/fs/cp/cp-sync:72:33)
+    cpSyncFn (node:internal/fs/cp/cp-sync:58:42)
+    Object.cpSync (node:fs:3089:3)
+    restore (file:///tmp/keelson-recovery-negative-4trjtul4/src/lib/transaction.js:11:10)
+    recoverLanding (file:///tmp/keelson-recovery-negative-4trjtul4/src/lib/transaction.js:22:38)
+    file:///tmp/keelson-recovery-negative-4trjtul4/tests/transaction.test.js:72:23
+    getActual (node:assert:498:5)
+    Function.throws (node:assert:644:24)
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/keelson-recovery-negative-4trjtul4/tests/transaction.test.js:72:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: invalid journal paths and missing later backups prevent every target removal
+ok 5 - invalid journal paths and missing later backups prevent every target removal # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.258605
+  ...
+# Subtest: project data paths reject traversal and symbolic-link parents
+ok 6 - project data paths reject traversal and symbolic-link parents # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.244282
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 4
+# todo 0
+# duration_ms 373.972345

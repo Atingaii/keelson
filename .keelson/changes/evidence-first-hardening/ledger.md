@@ -55,3 +55,7 @@ The exact baseline fixture now includes its Claude hook settings. Three root-aut
 
 ### Note: integrated Codex dogfood verification
 This repository successfully ran `update --codex --no-hooks` without `--force`, removing the proven old copied runtime and refreshing the Codex discovery surface. `doctor --session` reports native `CODEX_THREAD_ID`, zero errors and zero warnings. The subsequent complete suite passes 126/126, with no skips; lint and project validation pass. Package dry-run contains 121 files (174,665 compressed bytes; 495,468 unpacked bytes) and no project `.keelson/` state. Benchmark and final remote verification remain open.
+
+### Dispatch: full legacy migration review → deep (gpt-5.6-terra)
+Result: fail
+Read-only review accepted exact old hook-command matching, neighboring-hook preservation, current generated-shim language switching and POSIX ablation permissions. It found incomplete legacy ownership coverage: v0.3 Chinese shims and Chinese/guided guidance were not recognized, and the known CodeBuddy copied script was missing from the retirement list. The full supported generation matrix now requires exact baseline-derived fixtures and regression coverage before release; the passing English/lean migration does not establish those variants.

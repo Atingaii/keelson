@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: prose forgery and unsigned JSON cannot authorize land; real record can
+ok 1 - prose forgery and unsigned JSON cannot authorize land; real record can
+  ---
+  duration_ms: 2779.173006
+  ...
+# Subtest: code, contract, rules, config and acceptance edits invalidate evidence
+ok 2 - code, contract, rules, config and acceptance edits invalidate evidence
+  ---
+  duration_ms: 6015.393621
+  ...
+# Subtest: changed inputs during a check and explicit partial suites cannot pass completion
+ok 3 - changed inputs during a check and explicit partial suites cannot pass completion
+  ---
+  duration_ms: 2568.565144
+  ...
+# Subtest: trust is explicit, command changes revoke trust, and timeout kills descendants
+ok 4 - trust is explicit, command changes revoke trust, and timeout kills descendants
+  ---
+  duration_ms: 3402.083897
+  ...
+# Subtest: force requires a reason and archives every bypass
+ok 5 - force requires a reason and archives every bypass
+  ---
+  duration_ms: 766.820665
+  ...
+# Subtest: sixteen concurrent writers retain every signed record and valid log reference
+ok 6 - sixteen concurrent writers retain every signed record and valid log reference
+  ---
+  duration_ms: 3940.69805
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 19602.5237

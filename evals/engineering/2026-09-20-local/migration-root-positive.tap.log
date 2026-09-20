@@ -1,0 +1,285 @@
+TAP version 13
+# Subtest: default installation stays within the lightweight budget and leaves ignore files alone
+ok 1 - default installation stays within the lightweight budget and leaves ignore files alone # SKIP test name does not match pattern
+  ---
+  duration_ms: 1.425126
+  ...
+# Subtest: claude-only init has no portable or vendored layer
+ok 2 - claude-only init has no portable or vendored layer # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.147148
+  ...
+# Subtest: switching hosts removes only managed adapters and keeps user instructions
+ok 3 - switching hosts removes only managed adapters and keeps user instructions
+  ---
+  duration_ms: 866.164899
+  ...
+# Subtest: switching hosts retains a changed discovery shim and its neighboring files
+ok 4 - switching hosts retains a changed discovery shim and its neighboring files
+  ---
+  duration_ms: 860.004147
+  ...
+# Subtest: Kiro upsert retains frontmatter and user content
+ok 5 - Kiro upsert retains frontmatter and user content # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.303481
+  ...
+# Subtest: update migrates the exact real v0.3 runtime to a light Codex install
+ok 6 - update migrates the exact real v0.3 runtime to a light Codex install
+  ---
+  duration_ms: 440.103237
+  ...
+# Subtest: v0.3 migration retains an edited copied hook
+ok 7 - v0.3 migration retains an edited copied hook
+  ---
+  duration_ms: 425.216022
+  ...
+# Subtest: a custom v0.3 discovery shim stops migration before any write
+ok 8 - a custom v0.3 discovery shim stops migration before any write
+  ---
+  duration_ms: 139.694423
+  ...
+# Subtest: malformed host JSON fails without overwriting the user file
+ok 9 - malformed host JSON fails without overwriting the user file # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.250478
+  ...
+# Subtest: Codex reports native session identity only when CODEX_THREAD_ID is available
+ok 10 - Codex reports native session identity only when CODEX_THREAD_ID is available # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.224785
+  ...
+# Subtest: OpenCode is honestly degraded without a copied plugin
+ok 11 - OpenCode is honestly degraded without a copied plugin # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.1782
+  ...
+# Subtest: guide uses persisted project language profile and guided setting without vendoring
+ok 12 - guide uses persisted project language profile and guided setting without vendoring # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.132365
+  ...
+# Subtest: update switches the language of an unchanged managed shim but protects edits
+ok 13 - update switches the language of an unchanged managed shim but protects edits
+  ---
+  duration_ms: 1323.832891
+  ...
+# Subtest: v0.3 hook commands migrate or retire individually while preserving user hooks
+ok 14 - v0.3 hook commands migrate or retire individually while preserving user hooks
+  ---
+  duration_ms: 1646.816266
+  ...
+# Subtest: unproven legacy Keelson-looking surfaces are retained with neighboring user files
+ok 15 - unproven legacy Keelson-looking surfaces are retained with neighboring user files # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.186478
+  ...
+# Subtest: legacy hidden managed state migrates to manifest.json on update
+ok 16 - legacy hidden managed state migrates to manifest.json on update # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.204053
+  ...
+# Subtest: retired host selections fail clearly and old config is migrated to portable support
+ok 17 - retired host selections fail clearly and old config is migrated to portable support # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.138777
+  ...
+# Subtest: all platforms install selected discovery only and doctor accepts default light install
+ok 18 - all platforms install selected discovery only and doctor accepts default light install # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.417208
+  ...
+# Subtest: vendor is opt-in and changed guidance or discovery shims are never replaced or deleted
+ok 19 - vendor is opt-in and changed guidance or discovery shims are never replaced or deleted # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.158684
+  ...
+# Subtest: no-hooks is persistent and can be explicitly re-enabled
+ok 20 - no-hooks is persistent and can be explicitly re-enabled # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.178969
+  ...
+# Subtest: hooks call the installed CLI and do not copy executable scripts
+ok 21 - hooks call the installed CLI and do not copy executable scripts # SKIP test name does not match pattern
+  ---
+  duration_ms: 1.127102
+  ...
+# Subtest: removing hooks keeps user hooks in mixed Claude and CodeBuddy groups
+ok 22 - removing hooks keeps user hooks in mixed Claude and CodeBuddy groups
+  ---
+  duration_ms: 1346.601918
+  ...
+# Subtest: fresh init auto-detects only first-class hosts and otherwise uses the portable layer
+ok 23 - fresh init auto-detects only first-class hosts and otherwise uses the portable layer # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.128191
+  ...
+# Subtest: runtime sessions live outside the project
+ok 24 - runtime sessions live outside the project # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.091292
+  ...
+# Subtest: change artifacts grow progressively instead of starting empty
+ok 25 - change artifacts grow progressively instead of starting empty # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.263585
+  ...
+# Subtest: change lifecycle: new → gates → check --record → land folds specs and decisions
+ok 26 - change lifecycle: new → gates → check --record → land folds specs and decisions # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.108206
+  ...
+# Subtest: land --keep archives instead of folding
+ok 27 - land --keep archives instead of folding # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.092111
+  ...
+# Subtest: validate catches dated model IDs, bad tiers, missing rule files
+ok 28 - validate catches dated model IDs, bad tiers, missing rule files # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.081245
+  ...
+# Subtest: validate checks OpenSpec contracts and rejects empty, duplicate, and malformed delta requirements
+ok 29 - validate checks OpenSpec contracts and rejects empty, duplicate, and malformed delta requirements # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.079248
+  ...
+# Subtest: context routes rules by path
+ok 30 - context routes rules by path # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.074479
+  ...
+# Subtest: check runs configured commands and reports exit codes
+ok 31 - check runs configured commands and reports exit codes # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.072576
+  ...
+# Subtest: sessions focus independent work items; ready is derived without a user finish phrase
+ok 32 - sessions focus independent work items; ready is derived without a user finish phrase # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.267585
+  ...
+# Subtest: spec changes do not invent alternatives when there is no material fork
+ok 33 - spec changes do not invent alternatives when there is no material fork # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.262588
+  ...
+# Subtest: depends is a real lifecycle gate for status and land
+ok 34 - depends is a real lifecycle gate for status and land # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.093485
+  ...
+# Subtest: large logical specs auto-shard without user maintenance
+ok 35 - large logical specs auto-shard without user maintenance # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.092468
+  ...
+# Subtest: auto-sharding preserves pre-existing unmanaged requirements directories
+ok 36 - auto-sharding preserves pre-existing unmanaged requirements directories # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.093759
+  ...
+# Subtest: legacy sharded decision files migrate to bounded decision shards without touching neighbors
+ok 37 - legacy sharded decision files migrate to bounded decision shards without touching neighbors # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.156518
+  ...
+# Subtest: hard knowledge limits fail validate and preflight land before writing specs
+ok 38 - hard knowledge limits fail validate and preflight land before writing specs # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.110903
+  ...
+# Subtest: runtime sessions live outside the project
+ok 39 - runtime sessions live outside the project # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.085331
+  ...
+# Subtest: handoff and session hook tolerate CRLF files
+ok 40 - handoff and session hook tolerate CRLF files # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.105053
+  ...
+# Subtest: ablate removes every surface and restore brings it back byte-for-byte
+ok 41 - ablate removes every surface and restore brings it back byte-for-byte # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.206236
+  ...
+# Subtest: ablate and restore preserve zero-copy host configuration
+ok 42 - ablate and restore preserve zero-copy host configuration # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.131953
+  ...
+# Subtest: models resolves tiers and rank writes user overrides
+ok 43 - models resolves tiers and rank writes user overrides # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.153295
+  ...
+# Subtest: retro reads ledgers and reports metrics
+ok 44 - retro reads ledgers and reports metrics # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.144761
+  ...
+# Subtest: the user-level ~/.keelson is never mistaken for a project root
+ok 45 - the user-level ~/.keelson is never mistaken for a project root # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.125942
+  ...
+# Subtest: top-level help separates the human golden path from agent mechanics
+ok 46 - top-level help separates the human golden path from agent mechanics # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.125794
+  ...
+# Subtest: per-command --help prints that command only
+ok 47 - per-command --help prints that command only # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.123232
+  ...
+# Subtest: init references project material without changing .gitignore
+ok 48 - init references project material without changing .gitignore # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.120399
+  ...
+# Subtest: update migrates a v1 config and --dry-run writes nothing
+ok 49 - update migrates a v1 config and --dry-run writes nothing # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.151735
+  ...
+# Subtest: status exposes shared contracts and impact lists importers
+ok 50 - status exposes shared contracts and impact lists importers # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.137092
+  ...
+# Subtest: handoff is an explicit transfer artifact and remains readable after session changes
+ok 51 - handoff is an explicit transfer artifact and remains readable after session changes # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.13149
+  ...
+# Subtest: uninstall removes owned default surfaces without requiring a vendored runtime
+ok 52 - uninstall removes owned default surfaces without requiring a vendored runtime # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.144234
+  ...
+# Subtest: breaking change without Rollout is refused at landing
+ok 53 - breaking change without Rollout is refused at landing # SKIP test name does not match pattern
+  ---
+  duration_ms: 1.671613
+  ...
+# Subtest: guide flag persists and guide command renders its guided workflow
+ok 54 - guide flag persists and guide command renders its guided workflow # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.172306
+  ...
+# Subtest: multi-host init creates only selected discovery shims
+ok 55 - multi-host init creates only selected discovery shims # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.156612
+  ...
+1..55
+# tests 55
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 47
+# todo 0
+# duration_ms 7287.846629
