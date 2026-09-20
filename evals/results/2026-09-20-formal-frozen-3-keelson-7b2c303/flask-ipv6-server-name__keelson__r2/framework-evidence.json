@@ -1,0 +1,133 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".keelson",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide\""
+    },
+    {
+      "index": 10,
+      "command": "/bin/bash -lc \"find . -maxdepth 2 -type f \\\\( -name 'README*' -o -name 'pyproject.toml' -o -name 'setup.cfg' \\\\) -print && grep -R -n -E -C 3 'SERVER_NAME|def run\\\\(' src/flask tests/test_basic.py | head -260 && find .keelson -maxdepth 3 -type f -print\""
+    },
+    {
+      "index": 11,
+      "command": "/bin/bash -lc \"find . -maxdepth 2 -type f \\\\( -name 'README*' -o -name 'pyproject.toml' -o -name 'setup.cfg' \\\\) -print && grep -R -n -E -C 3 'SERVER_NAME|def run\\\\(' src/flask tests/test_basic.py | head -260 && find .keelson -maxdepth 3 -type f -print\""
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc \"sed -n '1,220p' .keelson/INTENT.md && sed -n '700,760p' src/flask/app.py && sed -n '1870,1940p' tests/test_basic.py && sed -n '1,160p' .keelson/config.yaml && keelson new ipv6-server-name --tier quick --touches src/flask/app.py,tests/test_basic.py && keelson context --paths src/flask/app.py,tests/test_basic.py\""
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc \"sed -n '1,220p' .keelson/INTENT.md && sed -n '700,760p' src/flask/app.py && sed -n '1870,1940p' tests/test_basic.py && sed -n '1,160p' .keelson/config.yaml && keelson new ipv6-server-name --tier quick --touches src/flask/app.py,tests/test_basic.py && keelson context --paths src/flask/app.py,tests/test_basic.py\""
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"sed -n '1,180p' README.md && sed -n '1,180p' pyproject.toml && find .keelson/changes/ipv6-server-name -maxdepth 1 -type f -print -exec sed -n '1,220p' {} \\\\; && PYTHONPATH=src:.bench-pydeps python3 - <<'PY'\nimport flask\nimport werkzeug.serving\n\napp = flask.Flask(__name__)\napp.config[\\\"SERVER_NAME\\\"] = \\\"[::1]:8080\\\"\nwerkzeug.serving.run_simple = lambda host, port, *args, **kwargs: print(host, port)\napp.run()\nPY\""
+    },
+    {
+      "index": 16,
+      "command": "/bin/bash -lc \"sed -n '1,180p' README.md && sed -n '1,180p' pyproject.toml && find .keelson/changes/ipv6-server-name -maxdepth 1 -type f -print -exec sed -n '1,220p' {} \\\\; && PYTHONPATH=src:.bench-pydeps python3 - <<'PY'\nimport flask\nimport werkzeug.serving\n\napp = flask.Flask(__name__)\napp.config[\\\"SERVER_NAME\\\"] = \\\"[::1]:8080\\\"\nwerkzeug.serving.run_simple = lambda host, port, *args, **kwargs: print(host, port)\napp.run()\nPY\""
+    },
+    {
+      "index": 17,
+      "command": "/bin/bash -lc \"keelson impact src/flask/app.py tests/test_basic.py && find .keelson/changes/ipv6-server-name -maxdepth 1 -type f -printf '%f\\\\n'\""
+    },
+    {
+      "index": 18,
+      "command": "/bin/bash -lc \"keelson impact src/flask/app.py tests/test_basic.py && find .keelson/changes/ipv6-server-name -maxdepth 1 -type f -printf '%f\\\\n'\""
+    },
+    {
+      "index": 22,
+      "command": "/bin/bash -lc 'PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_basic.py -q && git diff --check && git diff -- src/flask/app.py tests/test_basic.py .keelson'"
+    },
+    {
+      "index": 23,
+      "command": "/bin/bash -lc 'PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_basic.py -q && git diff --check && git diff -- src/flask/app.py tests/test_basic.py .keelson'"
+    }
+  ],
+  "guidance_read_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide\""
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc 'keelson guide workflow && keelson guide debug && keelson guide verify && keelson status'"
+    },
+    {
+      "index": 7,
+      "command": "/bin/bash -lc 'keelson guide workflow && keelson guide debug && keelson guide verify && keelson status'"
+    },
+    {
+      "index": 10,
+      "command": "/bin/bash -lc \"find . -maxdepth 2 -type f \\\\( -name 'README*' -o -name 'pyproject.toml' -o -name 'setup.cfg' \\\\) -print && grep -R -n -E -C 3 'SERVER_NAME|def run\\\\(' src/flask tests/test_basic.py | head -260 && find .keelson -maxdepth 3 -type f -print\""
+    },
+    {
+      "index": 11,
+      "command": "/bin/bash -lc \"find . -maxdepth 2 -type f \\\\( -name 'README*' -o -name 'pyproject.toml' -o -name 'setup.cfg' \\\\) -print && grep -R -n -E -C 3 'SERVER_NAME|def run\\\\(' src/flask tests/test_basic.py | head -260 && find .keelson -maxdepth 3 -type f -print\""
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc \"sed -n '1,220p' .keelson/INTENT.md && sed -n '700,760p' src/flask/app.py && sed -n '1870,1940p' tests/test_basic.py && sed -n '1,160p' .keelson/config.yaml && keelson new ipv6-server-name --tier quick --touches src/flask/app.py,tests/test_basic.py && keelson context --paths src/flask/app.py,tests/test_basic.py\""
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc \"sed -n '1,220p' .keelson/INTENT.md && sed -n '700,760p' src/flask/app.py && sed -n '1870,1940p' tests/test_basic.py && sed -n '1,160p' .keelson/config.yaml && keelson new ipv6-server-name --tier quick --touches src/flask/app.py,tests/test_basic.py && keelson context --paths src/flask/app.py,tests/test_basic.py\""
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"sed -n '1,180p' README.md && sed -n '1,180p' pyproject.toml && find .keelson/changes/ipv6-server-name -maxdepth 1 -type f -print -exec sed -n '1,220p' {} \\\\; && PYTHONPATH=src:.bench-pydeps python3 - <<'PY'\nimport flask\nimport werkzeug.serving\n\napp = flask.Flask(__name__)\napp.config[\\\"SERVER_NAME\\\"] = \\\"[::1]:8080\\\"\nwerkzeug.serving.run_simple = lambda host, port, *args, **kwargs: print(host, port)\napp.run()\nPY\""
+    },
+    {
+      "index": 16,
+      "command": "/bin/bash -lc \"sed -n '1,180p' README.md && sed -n '1,180p' pyproject.toml && find .keelson/changes/ipv6-server-name -maxdepth 1 -type f -print -exec sed -n '1,220p' {} \\\\; && PYTHONPATH=src:.bench-pydeps python3 - <<'PY'\nimport flask\nimport werkzeug.serving\n\napp = flask.Flask(__name__)\napp.config[\\\"SERVER_NAME\\\"] = \\\"[::1]:8080\\\"\nwerkzeug.serving.run_simple = lambda host, port, *args, **kwargs: print(host, port)\napp.run()\nPY\""
+    },
+    {
+      "index": 25,
+      "command": "/bin/bash -lc 'keelson guide land && keelson guide reconcile && keelson check --trust --record \"Bracketed IPv6 SERVER_NAME parsing preserves hostname and port-zero behavior\"'"
+    },
+    {
+      "index": 26,
+      "command": "/bin/bash -lc 'keelson guide land && keelson guide reconcile && keelson check --trust --record \"Bracketed IPv6 SERVER_NAME parsing preserves hostname and port-zero behavior\"'"
+    },
+    {
+      "index": 30,
+      "command": "/bin/bash -lc 'keelson check --trust --record \"Bracketed IPv6 SERVER_NAME parsing passes the Flask basic test suite\" && keelson status'"
+    },
+    {
+      "index": 31,
+      "command": "/bin/bash -lc 'keelson check --trust --record \"Bracketed IPv6 SERVER_NAME parsing passes the Flask basic test suite\" && keelson status'"
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command that reads a project-local guidance artifact (or, for Keelson, invokes guide/ask/check/record) to establish activation. Listing paths alone is insufficient. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

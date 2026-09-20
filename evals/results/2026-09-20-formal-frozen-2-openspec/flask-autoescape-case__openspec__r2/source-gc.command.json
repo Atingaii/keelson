@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "gc",
+    "--prune=now"
+  ],
+  "cwd": "/tmp/keelson-bench-run-Jbi4Pj/worktree",
+  "exit_code": 128,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 1249
+}

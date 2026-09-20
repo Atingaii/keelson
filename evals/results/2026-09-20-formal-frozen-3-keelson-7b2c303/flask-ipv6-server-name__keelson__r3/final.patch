@@ -1,0 +1,140 @@
+diff --git a/src/flask/app.py b/src/flask/app.py
+index 7585dda..0562219 100644
+--- a/src/flask/app.py
++++ b/src/flask/app.py
+@@ -721,7 +721,11 @@ class Flask(App):
+         sn_host = sn_port = None
+ 
+         if server_name:
+-            sn_host, _, sn_port = server_name.partition(":")
++            if server_name.startswith("["):
++                sn_host, _, sn_port = server_name[1:].partition("]")
++                sn_port = sn_port.removeprefix(":")
++            else:
++                sn_host, _, sn_port = server_name.partition(":")
+ 
+         if not host:
+             if sn_host:
+diff --git a/tests/test_basic.py b/tests/test_basic.py
+index 1d9d83f..7e65fc5 100644
+--- a/tests/test_basic.py
++++ b/tests/test_basic.py
+@@ -1910,6 +1910,8 @@ def test_run_server_port(monkeypatch, app):
+         ("localhost", 0, "localhost:8080", "localhost", 0),
+         (None, None, "localhost:8080", "localhost", 8080),
+         (None, None, "localhost:0", "localhost", 0),
++        (None, None, "[::1]:8080", "::1", 8080),
++        (None, None, "[::1]:0", "::1", 0),
+     ),
+ )
+ def test_run_from_config(
+diff --git a/.keelson/changes/archive/2026-09-20-server-name-ipv6/change.md b/.keelson/changes/archive/2026-09-20-server-name-ipv6/change.md
+new file mode 100644
+index 0000000..f58e1c0
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-server-name-ipv6/change.md
+@@ -0,0 +1,37 @@
++---
++tier: quick
++created: 2026-09-20
++status: in-progress
++owner: node
++branch: HEAD
++touches: [src/flask/app.py, tests/test_basic.py]
++---
++
++# server-name-ipv6
++
++## Why
++`Flask.run` splits bracketed IPv6 `SERVER_NAME` values at their first colon,
++so it cannot derive the configured host and port.
++
++## What
++- Parse bracketed IPv6 literals separately when deriving `run` defaults.
++- Preserve hostname parsing and configured port zero behavior.
++
++## Acceptance
++- [x] `SERVER_NAME="[::1]:8080"` makes `run()` pass `::1` and `8080` to the
++  development server — check: targeted regression test.
++- [x] `SERVER_NAME="[::1]:0"` passes port `0` — check: targeted regression
++  test.
++
++## Impact
++`Flask.run` is the affected public entry point. The Flask CLI has independent
++host and port options and does not use this fallback parsing path. No request
++routing behavior changes.
++
++## Root cause
++### Root cause: implicit-assumption
++`Flask.run` assumed a `SERVER_NAME` contains at most one colon. Bracketed IPv6
++literals contain colons before their optional port delimiter.
++
++Fix: split bracketed literals at `]`, then remove the optional port separator.
++Prevention: regression coverage for IPv6 with a configured port and port zero.
+diff --git a/.keelson/changes/archive/2026-09-20-server-name-ipv6/evidence/7a81134e746a6eda685103225673c36a10c296afa146bfe1edb7116b1e15f2aa.log b/.keelson/changes/archive/2026-09-20-server-name-ipv6/evidence/7a81134e746a6eda685103225673c36a10c296afa146bfe1edb7116b1e15f2aa.log
+new file mode 100644
+index 0000000..4f38834
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-server-name-ipv6/evidence/7a81134e746a6eda685103225673c36a10c296afa146bfe1edb7116b1e15f2aa.log
+@@ -0,0 +1,6 @@
++$ PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_basic.py -q
++exit 0
++
++........................................................................ [ 53%]
++..............................................................           [100%]
++134 passed in 0.80s
+diff --git a/.keelson/changes/archive/2026-09-20-server-name-ipv6/evidence/a5291430b060745e40bd8fc1b5d760036b6fcd2fd0c3a7d7a8b5633511de8abf.log b/.keelson/changes/archive/2026-09-20-server-name-ipv6/evidence/a5291430b060745e40bd8fc1b5d760036b6fcd2fd0c3a7d7a8b5633511de8abf.log
+new file mode 100644
+index 0000000..fef305b
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-server-name-ipv6/evidence/a5291430b060745e40bd8fc1b5d760036b6fcd2fd0c3a7d7a8b5633511de8abf.log
+@@ -0,0 +1,4 @@
++$ pytest -q
++exit 127
++
++/bin/sh: 1: pytest: not found
+diff --git a/.keelson/changes/archive/2026-09-20-server-name-ipv6/evidence/keys/c1209bedf7373bc7ab73a0a7aa5abeb092f9249f3d48c8fbfbc0143b83dddb25.pem b/.keelson/changes/archive/2026-09-20-server-name-ipv6/evidence/keys/c1209bedf7373bc7ab73a0a7aa5abeb092f9249f3d48c8fbfbc0143b83dddb25.pem
+new file mode 100644
+index 0000000..fe03069
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-server-name-ipv6/evidence/keys/c1209bedf7373bc7ab73a0a7aa5abeb092f9249f3d48c8fbfbc0143b83dddb25.pem
+@@ -0,0 +1,3 @@
++-----BEGIN PUBLIC KEY-----
++MCowBQYDK2VwAyEAgmZIxmi55ql2K/acwshD9Eh/2Dpid43v+hnSPHkDeq8=
++-----END PUBLIC KEY-----
+diff --git a/.keelson/changes/archive/2026-09-20-server-name-ipv6/evidence/public-key.pem b/.keelson/changes/archive/2026-09-20-server-name-ipv6/evidence/public-key.pem
+new file mode 100644
+index 0000000..fe03069
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-server-name-ipv6/evidence/public-key.pem
+@@ -0,0 +1,3 @@
++-----BEGIN PUBLIC KEY-----
++MCowBQYDK2VwAyEAgmZIxmi55ql2K/acwshD9Eh/2Dpid43v+hnSPHkDeq8=
++-----END PUBLIC KEY-----
+diff --git a/.keelson/changes/archive/2026-09-20-server-name-ipv6/landed.json b/.keelson/changes/archive/2026-09-20-server-name-ipv6/landed.json
+new file mode 100644
+index 0000000..970c06b
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-server-name-ipv6/landed.json
+@@ -0,0 +1 @@
++{"status":"integrated","change":"server-name-ipv6","at":"2026-09-20T11:47:39.958Z","forced":false}
+diff --git a/.keelson/changes/archive/2026-09-20-server-name-ipv6/ledger.jsonl b/.keelson/changes/archive/2026-09-20-server-name-ipv6/ledger.jsonl
+new file mode 100644
+index 0000000..1440ea7
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-server-name-ipv6/ledger.jsonl
+@@ -0,0 +1,2 @@
++{"payloadType":"application/vnd.in-toto+json","payload":"eyJfdHlwZSI6Imh0dHBzOi8vaW4tdG90by5pby9TdGF0ZW1lbnQvdjEiLCJzdWJqZWN0IjpbeyJuYW1lIjoid29ya3RyZWUiLCJkaWdlc3QiOnsiZ2l0VHJlZSI6IjRkYmFiMGM0YzQyNzIzOTk4MWI3OTMyNDg5YTExMzI2ZmI2NjgyZjUifX0seyJuYW1lIjoiY29udHJhY3QiLCJkaWdlc3QiOnsic2hhMjU2IjoiMzg1OTdhYzY2YWUwNTIxM2IwZWMzODVjZTRiNmEyNjQ5YWI2YTc2NzRlYTZkODZlOTQ2N2I0MWU1MDU1OWI4MiJ9fV0sInByZWRpY2F0ZVR5cGUiOiJodHRwczovL2dpdGh1Yi5jb20vQXRpbmdhaWkva2VlbHNvbi92ZXJpZmljYXRpb24vdjEiLCJwcmVkaWNhdGUiOnsiY2xhaW0iOiJCcmFja2V0ZWQgSVB2NiBTRVJWRVJfTkFNRSBkZWZhdWx0cyBhcmUgcGFzc2VkIHRvIEZsYXNrLnJ1biBkZXZlbG9wbWVudCBzZXJ2ZXI7IGhvc3RuYW1lIGFuZCBwb3J0IHplcm8gcmVtYWluIGNvdmVyZWQuIiwic3RhcnRlZE9uIjoiMjAyNi0wOS0yMFQxMTo0NzowNy40ODZaIiwiZmluaXNoZWRPbiI6IjIwMjYtMDktMjBUMTE6NDc6MDcuNTk1WiIsInVuY2hhbmdlZCI6dHJ1ZSwiY29tcGxldGUiOnRydWUsInJ1bnMiOlt7ImNtZCI6InB5dGVzdCAtcSIsIm5hbWUiOiJweXRlc3QgLXEiLCJraW5kIjoidGVzdCIsImV4aXQiOjEyNywic2lnbmFsIjpudWxsLCJ0aW1lZE91dCI6ZmFsc2UsInRydW5jYXRlZCI6ZmFsc2UsInRlcm1pbmF0aW9uVW5jb25maXJtZWQiOmZhbHNlLCJkdXJhdGlvbk1zIjoyNCwibG9nRGlnZXN0IjoiYTUyOTE0MzBiMDYwNzQ1ZTQwYmQ4ZmMxYjVkNzYwMDM2YjZmY2QyZmQwYzNhN2Q3YThiNTYzMzUxMWRlOGFiZiJ9XSwicnVubmVyIjp7ImtlZWxzb24iOiIwLjQuMCIsImhvc3QiOiJjb2RleCIsIm1vZGVsIjpudWxsLCJhdHRyaWJ1dGlvbiI6ImNhbGxlci1zdXBwbGllZCJ9fX0=","signatures":[{"keyid":"c1209bedf7373bc7ab73a0a7aa5abeb092f9249f3d48c8fbfbc0143b83dddb25","sig":"fzXTn80vqpcAJslOHUxUhjB1EwrVuSylgSrO9R0VKFB0uT4RDpVv1ZB/ombXnn/DU7g4X0j3SfqOZcPDHT3HBA=="}]}
++{"payloadType":"application/vnd.in-toto+json","payload":"eyJfdHlwZSI6Imh0dHBzOi8vaW4tdG90by5pby9TdGF0ZW1lbnQvdjEiLCJzdWJqZWN0IjpbeyJuYW1lIjoid29ya3RyZWUiLCJkaWdlc3QiOnsiZ2l0VHJlZSI6IjRkYmFiMGM0YzQyNzIzOTk4MWI3OTMyNDg5YTExMzI2ZmI2NjgyZjUifX0seyJuYW1lIjoiY29udHJhY3QiLCJkaWdlc3QiOnsic2hhMjU2IjoiYmZiNDQ1NDY4NzRmZWFhNDc3NjI3N2EwYzE2NDNmOTY4YTBlOTExNDYxOWFhNWE4MjZlNGE1NmM3MDA4OWQ0NiJ9fV0sInByZWRpY2F0ZVR5cGUiOiJodHRwczovL2dpdGh1Yi5jb20vQXRpbmdhaWkva2VlbHNvbi92ZXJpZmljYXRpb24vdjEiLCJwcmVkaWNhdGUiOnsiY2xhaW0iOiJCcmFja2V0ZWQgSVB2NiBTRVJWRVJfTkFNRSBkZWZhdWx0cyBhcmUgcGFzc2VkIHRvIEZsYXNrLnJ1biBkZXZlbG9wbWVudCBzZXJ2ZXI7IGhvc3RuYW1lIGFuZCBwb3J0IHplcm8gcmVtYWluIGNvdmVyZWQuIiwic3RhcnRlZE9uIjoiMjAyNi0wOS0yMFQxMTo0NzoyNy4xMzJaIiwiZmluaXNoZWRPbiI6IjIwMjYtMDktMjBUMTE6NDc6MjguNTg1WiIsInVuY2hhbmdlZCI6dHJ1ZSwiY29tcGxldGUiOnRydWUsInJ1bnMiOlt7ImNtZCI6IlBZVEhPTlBBVEg9c3JjOi5iZW5jaC1weWRlcHMgcHl0aG9uMyAtbSBweXRlc3QgdGVzdHMvdGVzdF9iYXNpYy5weSAtcSIsIm5hbWUiOiJQWVRIT05QQVRIPXNyYzouYmVuY2gtcHlkZXBzIHB5dGhvbjMgLW0gcHl0ZXN0IHRlc3RzL3Rlc3RfYmFzaWMucHkgLXEiLCJraW5kIjoidGVzdCIsImV4aXQiOjAsInNpZ25hbCI6bnVsbCwidGltZWRPdXQiOmZhbHNlLCJ0cnVuY2F0ZWQiOmZhbHNlLCJ0ZXJtaW5hdGlvblVuY29uZmlybWVkIjpmYWxzZSwiZHVyYXRpb25NcyI6MTM4MiwibG9nRGlnZXN0IjoiN2E4MTEzNGU3NDZhNmVkYTY4NTEwMzIyNTY3M2MzNmExMGMyOTZhZmExNDZiZmUxZWRiNzExNmIxZTE1ZjJhYSJ9XSwicnVubmVyIjp7ImtlZWxzb24iOiIwLjQuMCIsImhvc3QiOiJjb2RleCIsIm1vZGVsIjpudWxsLCJhdHRyaWJ1dGlvbiI6ImNhbGxlci1zdXBwbGllZCJ9fX0=","signatures":[{"keyid":"c1209bedf7373bc7ab73a0a7aa5abeb092f9249f3d48c8fbfbc0143b83dddb25","sig":"kFoQlqLmYm7VWfVt1TDo7khRJk3VD5zWTDlC2+6DPC9RJmNUT8FLsUm/BU9VRub47NPDwF/IzQDc/kRdJPYxDQ=="}]}
+diff --git a/.keelson/changes/archive/2026-09-20-server-name-ipv6/ledger.md b/.keelson/changes/archive/2026-09-20-server-name-ipv6/ledger.md
+new file mode 100644
+index 0000000..963815b
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-server-name-ipv6/ledger.md
+@@ -0,0 +1,6 @@
++
++### Verify: Bracketed IPv6 SERVER_NAME defaults are passed to Flask.run development server; hostname and port zero remain covered.
++`pytest -q` exit 127 · tree 4dbab0c4c427239981b7932489a11326fb6682f5
++
++### Verify: Bracketed IPv6 SERVER_NAME defaults are passed to Flask.run development server; hostname and port zero remain covered.
++`PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_basic.py -q` exit 0 · tree 4dbab0c4c427239981b7932489a11326fb6682f5

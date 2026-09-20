@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "cat-file",
+    "-e",
+    "9368fb3f3c52d74534d14c1bef03c79c103356cd^{commit}"
+  ],
+  "cwd": "/tmp/keelson-bench-run-FecuUc/worktree",
+  "exit_code": 128,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 5
+}

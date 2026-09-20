@@ -1,0 +1,13 @@
+[
+  ".keelson/changes/archive/2026-09-20-case-insensitive-autoescape/change.md",
+  ".keelson/changes/archive/2026-09-20-case-insensitive-autoescape/evidence/3aa3b009dc713e6988ec89167d9b05a30dc15383fedfc0ec1c598520118db87b.log",
+  ".keelson/changes/archive/2026-09-20-case-insensitive-autoescape/evidence/keys/c5f1fd3b99c0dc00914da76e24b8492284eca021ad45c1eb050bf94e1be19be9.pem",
+  ".keelson/changes/archive/2026-09-20-case-insensitive-autoescape/evidence/public-key.pem",
+  ".keelson/changes/archive/2026-09-20-case-insensitive-autoescape/landed.json",
+  ".keelson/changes/archive/2026-09-20-case-insensitive-autoescape/ledger.jsonl",
+  ".keelson/changes/archive/2026-09-20-case-insensitive-autoescape/ledger.md",
+  ".keelson/changes/archive/2026-09-20-case-insensitive-autoescape/specs/templating/spec.md",
+  ".keelson/specs/templating/spec.md",
+  "src/flask/sansio/app.py",
+  "tests/test_templating.py"
+]

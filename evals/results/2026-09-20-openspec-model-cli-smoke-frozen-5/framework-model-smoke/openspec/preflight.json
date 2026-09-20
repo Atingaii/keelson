@@ -1,0 +1,10 @@
+{
+  "task": "flask-autoescape-case",
+  "method": "openspec",
+  "without_task_implementation": true,
+  "setup_exit_code": 0,
+  "codex_exit_code": 0,
+  "openspec_version_observed": true,
+  "openspec_list_observed": true,
+  "valid": true
+}

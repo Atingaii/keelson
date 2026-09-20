@@ -1,0 +1,9 @@
+{
+  "task": "flask-ipv6-server-name",
+  "method": "openspec",
+  "repetition": 3,
+  "pass": false,
+  "harness_error": "could not make upstream-fix history inaccessible to the model",
+  "elapsed_ms": 4151,
+  "worktree_retained_at": null
+}

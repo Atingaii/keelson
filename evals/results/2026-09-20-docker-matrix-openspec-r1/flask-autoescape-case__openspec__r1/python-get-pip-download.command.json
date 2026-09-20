@@ -1,0 +1,17 @@
+{
+  "command": [
+    "curl",
+    "--fail",
+    "--location",
+    "--silent",
+    "--show-error",
+    "https://bootstrap.pypa.io/get-pip.py",
+    "--output",
+    "/tmp/keelson-bench-run-GCXo5S/worktree/.bench-get-pip.py"
+  ],
+  "cwd": "/tmp/keelson-bench-run-GCXo5S/worktree",
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 346
+}

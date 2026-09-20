@@ -1,0 +1,120 @@
+diff --git a/src/flask/sansio/app.py b/src/flask/sansio/app.py
+index a734793..4d3110d 100644
+--- a/src/flask/sansio/app.py
++++ b/src/flask/sansio/app.py
+@@ -541,7 +541,7 @@ class App(Scaffold):
+         """
+         if filename is None:
+             return True
+-        return filename.endswith((".html", ".htm", ".xml", ".xhtml", ".svg"))
++        return filename.lower().endswith((".html", ".htm", ".xml", ".xhtml", ".svg"))
+ 
+     @property
+     def debug(self) -> bool:
+diff --git a/tests/test_templating.py b/tests/test_templating.py
+index 85549df..65d87f5 100644
+--- a/tests/test_templating.py
++++ b/tests/test_templating.py
+@@ -115,6 +115,19 @@ def test_escaping_without_template_filename(app, client, req_ctx):
+     assert flask.render_template("mail.txt", foo="<test>") == "<test> Mail"
+ 
+ 
++@pytest.mark.parametrize(
++    "filename",
++    ("invoice.HTML", "index.HtM", "feed.XmL", "page.XhTmL", "diagram.SvG"),
++)
++def test_select_jinja_autoescape_case_insensitive_extensions(app, filename):
++    assert app.select_jinja_autoescape(filename)
++
++
++def test_select_jinja_autoescape_unsupported_and_missing_filename(app):
++    assert not app.select_jinja_autoescape("mail.TXT")
++    assert app.select_jinja_autoescape(None)
++
++
+ def test_macros(app, req_ctx):
+     macro = flask.get_template_attribute("_macro.html", "hello")
+     assert macro("World") == "Hello World!"
+diff --git a/openspec/changes/case-insensitive-autoescape/design.md b/openspec/changes/case-insensitive-autoescape/design.md
+new file mode 100644
+index 0000000..8a45f96
+--- /dev/null
++++ b/openspec/changes/case-insensitive-autoescape/design.md
+@@ -0,0 +1,16 @@
++## Context
++
++`App.select_jinja_autoescape` currently determines the default by comparing
++the filename suffix against a fixed tuple of lowercase supported extensions.
++
++## Decision
++
++Normalize the filename only for the suffix comparison, then retain the
++existing supported-extension tuple and `None` branch. This is focused,
++preserves extension matching semantics, and avoids altering custom autoescape
++configuration.
++
++## Verification
++
++Exercise supported mixed-case extensions as well as the existing unsupported
++and `None` behavior, then run the public test command.
+diff --git a/openspec/changes/case-insensitive-autoescape/proposal.md b/openspec/changes/case-insensitive-autoescape/proposal.md
+new file mode 100644
+index 0000000..cb05e8d
+--- /dev/null
++++ b/openspec/changes/case-insensitive-autoescape/proposal.md
+@@ -0,0 +1,18 @@
++# Case-insensitive default autoescape extensions
++
++## Why
++
++Flask's default Jinja autoescape selector recognizes supported template
++extensions only when they are lowercase. Templates such as `invoice.HTML`
++therefore render with autoescaping disabled even though `invoice.html` does
++not.
++
++## What Changes
++
++- Treat the default supported Jinja template extensions case-insensitively.
++- Preserve the existing behavior for unsupported extensions and an absent
++  filename.
++
++## Impact
++
++- `App.select_jinja_autoescape` and its tests.
+diff --git a/openspec/changes/case-insensitive-autoescape/specs/template-autoescape/spec.md b/openspec/changes/case-insensitive-autoescape/specs/template-autoescape/spec.md
+new file mode 100644
+index 0000000..3864d10
+--- /dev/null
++++ b/openspec/changes/case-insensitive-autoescape/specs/template-autoescape/spec.md
+@@ -0,0 +1,20 @@
++## ADDED Requirements
++
++### Requirement: Default template-extension autoescaping is case-insensitive
++
++The default Jinja autoescape selector SHALL enable autoescaping for the
++supported `.html`, `.htm`, `.xml`, `.xhtml`, and `.svg` extensions regardless
++of the filename's letter case.
++
++#### Scenario: Mixed-case supported extension
++
++- **WHEN** the selector receives a filename ending in a supported extension
++  with uppercase or mixed-case letters
++- **THEN** it returns `True`
++
++#### Scenario: Unsupported or absent filename
++
++- **WHEN** the selector receives a filename without a supported extension
++- **THEN** it returns `False`
++- **WHEN** the selector receives `None`
++- **THEN** it returns `True`
+diff --git a/openspec/changes/case-insensitive-autoescape/tasks.md b/openspec/changes/case-insensitive-autoescape/tasks.md
+new file mode 100644
+index 0000000..0d7609b
+--- /dev/null
++++ b/openspec/changes/case-insensitive-autoescape/tasks.md
+@@ -0,0 +1,5 @@
++## 1. Implementation
++
++- [x] 1.1 Make default supported Jinja autoescape extension matching case-insensitive.
++- [x] 1.2 Add regression coverage for uppercase and mixed-case supported extensions while retaining unsupported and `None` cases.
++- [x] 1.3 Run the public test suite.

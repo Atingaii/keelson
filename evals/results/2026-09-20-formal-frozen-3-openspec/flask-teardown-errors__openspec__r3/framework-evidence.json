@@ -1,0 +1,54 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "openspec",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' .agents/skills/openspec-apply-change/SKILL.md && printf '\\\\n--- workspace ---\\\\n' && rg --files -g 'AGENTS.md' -g 'openspec/**' -g 'openspec.yaml' -g 'openspec.yml' | sed -n '1,160p'\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' .agents/skills/openspec-apply-change/SKILL.md && printf '\\\\n--- workspace ---\\\\n' && rg --files -g 'AGENTS.md' -g 'openspec/**' -g 'openspec.yaml' -g 'openspec.yml' | sed -n '1,160p'\""
+    },
+    {
+      "index": 5,
+      "command": "/bin/bash -lc \"sed -n '241,480p' .agents/skills/openspec-apply-change/SKILL.md\nopenspec list --json\""
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc \"sed -n '241,480p' .agents/skills/openspec-apply-change/SKILL.md\nopenspec list --json\""
+    },
+    {
+      "index": 8,
+      "command": "/bin/bash -lc \"find . -maxdepth 4 \\\\( -name AGENTS.md -o -path './openspec/*' \\\\) -print\nprintf '\\\\nTeardown references:\\\\n'\ngrep -RInE 'teardown_(request|appcontext)|appcontext_tearing_down|request_tearing_down|do_teardown' src/flask tests | head -240\nprintf '\\\\nGit status:\\\\n'\ngit status --short\""
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc \"find . -maxdepth 4 \\\\( -name AGENTS.md -o -path './openspec/*' \\\\) -print\nprintf '\\\\nTeardown references:\\\\n'\ngrep -RInE 'teardown_(request|appcontext)|appcontext_tearing_down|request_tearing_down|do_teardown' src/flask tests | head -240\nprintf '\\\\nGit status:\\\\n'\ngit status --short\""
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc \"grep -RInE 'python_requires|requires-python|target-version|ExceptionGroup|BaseExceptionGroup' pyproject.toml setup.cfg setup.py tox.ini .github 2>/dev/null | head -160\nsed -n '1,100p' src/flask/app.py\nsed -n '1,260p' src/flask/ctx.py\nfind openspec -maxdepth 3 -type f -not -name .gitkeep -print -exec sed -n '1,200p' {} \\\\;\""
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc \"grep -RInE 'python_requires|requires-python|target-version|ExceptionGroup|BaseExceptionGroup' pyproject.toml setup.cfg setup.py tox.ini .github 2>/dev/null | head -160\nsed -n '1,100p' src/flask/app.py\nsed -n '1,260p' src/flask/ctx.py\nfind openspec -maxdepth 3 -type f -not -name .gitkeep -print -exec sed -n '1,200p' {} \\\\;\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command naming its project-local framework root to establish activation. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

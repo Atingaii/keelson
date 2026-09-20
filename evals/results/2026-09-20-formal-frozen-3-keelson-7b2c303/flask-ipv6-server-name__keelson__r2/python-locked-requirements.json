@@ -1,0 +1,18 @@
+{
+  "lock_sha256": "22b1a704f1757d0796549ab5ed747f5f6eec1aa41b90c1804ee0c635c00381c1",
+  "packages": [
+    "pytest==9.1.1",
+    "iniconfig==2.3.0",
+    "packaging==26.2",
+    "pluggy==1.6.0",
+    "pygments==2.20.0",
+    "asgiref==3.12.1",
+    "python-dotenv==1.2.2",
+    "blinker==1.9.0",
+    "click==8.4.2",
+    "itsdangerous==2.2.0",
+    "jinja2==3.1.6",
+    "markupsafe==3.0.3",
+    "werkzeug==3.1.8"
+  ]
+}

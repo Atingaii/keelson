@@ -1,0 +1,185 @@
+diff --git a/src/flask/sansio/app.py b/src/flask/sansio/app.py
+index a734793..4d3110d 100644
+--- a/src/flask/sansio/app.py
++++ b/src/flask/sansio/app.py
+@@ -541,7 +541,7 @@ class App(Scaffold):
+         """
+         if filename is None:
+             return True
+-        return filename.endswith((".html", ".htm", ".xml", ".xhtml", ".svg"))
++        return filename.lower().endswith((".html", ".htm", ".xml", ".xhtml", ".svg"))
+ 
+     @property
+     def debug(self) -> bool:
+diff --git a/tests/test_templating.py b/tests/test_templating.py
+index 85549df..933d09c 100644
+--- a/tests/test_templating.py
++++ b/tests/test_templating.py
+@@ -115,6 +115,23 @@ def test_escaping_without_template_filename(app, client, req_ctx):
+     assert flask.render_template("mail.txt", foo="<test>") == "<test> Mail"
+ 
+ 
++@pytest.mark.parametrize(
++    "filename",
++    ("invoice.HTML", "invoice.HtM", "data.XmL", "page.XhTmL", "diagram.SvG"),
++)
++def test_autoescape_case_insensitive_extensions(app, filename):
++    assert app.select_jinja_autoescape(filename)
++
++
++@pytest.mark.parametrize("filename", ("invoice.txt", "invoice"))
++def test_autoescape_unsupported_extensions(app, filename):
++    assert not app.select_jinja_autoescape(filename)
++
++
++def test_autoescape_without_filename(app):
++    assert app.select_jinja_autoescape(None)
++
++
+ def test_macros(app, req_ctx):
+     macro = flask.get_template_attribute("_macro.html", "hello")
+     assert macro("World") == "Hello World!"
+diff --git a/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/change.md b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/change.md
+new file mode 100644
+index 0000000..dbccaeb
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/change.md
+@@ -0,0 +1,32 @@
++---
++tier: quick
++created: 2026-09-20
++status: in-progress
++owner: node
++branch: HEAD
++touches: [src/flask/sansio/app.py, tests/test_templating.py]
++---
++
++# case_insensitive_autoescape
++
++## Why
++Flask's default Jinja autoescape selector fails to recognize supported template
++extensions when their filename uses uppercase or mixed case.
++
++## What
++- Normalize the filename's case before checking the existing supported
++  extensions.
++- Add regression coverage for mixed-case supported extensions and preserve the
++  unsupported and no-filename paths.
++
++## Acceptance
++- [x] Mixed-case `.html`, `.htm`, `.xml`, `.xhtml`, and `.svg` filenames enable
++  autoescaping — check: `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_templating.py -q`
++- [x] Unsupported filenames return false and `None` returns true — check:
++  `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_templating.py -q`
++
++## Impact
++`Flask.create_jinja_environment` installs this selector as Jinja's default
++autoescape callback. The change only normalizes the filename for matching, so
++supported lowercase names retain their result and unsupported names remain
++unsupported.
+diff --git a/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/evidence/3aa3b009dc713e6988ec89167d9b05a30dc15383fedfc0ec1c598520118db87b.log b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/evidence/3aa3b009dc713e6988ec89167d9b05a30dc15383fedfc0ec1c598520118db87b.log
+new file mode 100644
+index 0000000..35406aa
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/evidence/3aa3b009dc713e6988ec89167d9b05a30dc15383fedfc0ec1c598520118db87b.log
+@@ -0,0 +1,11 @@
++$ PYTHONPATH=src:.bench-pydeps python3 -m pytest tests -q
++exit 0
++
++........................................................................ [ 14%]
++........................................................................ [ 28%]
++........................................................................ [ 43%]
++........................................................................ [ 57%]
++........................................................................ [ 72%]
++........................................................................ [ 86%]
++...................................................................      [100%]
++499 passed in 3.71s
+diff --git a/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/evidence/keys/c5f1fd3b99c0dc00914da76e24b8492284eca021ad45c1eb050bf94e1be19be9.pem b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/evidence/keys/c5f1fd3b99c0dc00914da76e24b8492284eca021ad45c1eb050bf94e1be19be9.pem
+new file mode 100644
+index 0000000..ec1bc54
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/evidence/keys/c5f1fd3b99c0dc00914da76e24b8492284eca021ad45c1eb050bf94e1be19be9.pem
+@@ -0,0 +1,3 @@
++-----BEGIN PUBLIC KEY-----
++MCowBQYDK2VwAyEAcA9B0+a5M8b101dfAUxnNBOjdBdFJAiOStSq2qVZEWc=
++-----END PUBLIC KEY-----
+diff --git a/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/evidence/public-key.pem b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/evidence/public-key.pem
+new file mode 100644
+index 0000000..ec1bc54
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/evidence/public-key.pem
+@@ -0,0 +1,3 @@
++-----BEGIN PUBLIC KEY-----
++MCowBQYDK2VwAyEAcA9B0+a5M8b101dfAUxnNBOjdBdFJAiOStSq2qVZEWc=
++-----END PUBLIC KEY-----
+diff --git a/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/landed.json b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/landed.json
+new file mode 100644
+index 0000000..c21b22b
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/landed.json
+@@ -0,0 +1 @@
++{"status":"integrated","change":"case-insensitive-autoescape","at":"2026-09-20T11:17:46.319Z","forced":false}
+diff --git a/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/ledger.jsonl b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/ledger.jsonl
+new file mode 100644
+index 0000000..67915b2
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/ledger.jsonl
+@@ -0,0 +1 @@
++{"payloadType":"application/vnd.in-toto+json","payload":"eyJfdHlwZSI6Imh0dHBzOi8vaW4tdG90by5pby9TdGF0ZW1lbnQvdjEiLCJzdWJqZWN0IjpbeyJuYW1lIjoid29ya3RyZWUiLCJkaWdlc3QiOnsiZ2l0VHJlZSI6ImFmYTFhOGE0YjM1ZmUxMzdiNDFhMDlkNWRmNGQ5ZGZlOTlmZWNlMTQifX0seyJuYW1lIjoiY29udHJhY3QiLCJkaWdlc3QiOnsic2hhMjU2IjoiMGIwMTVkNmQwNzllZDIwMmI4ZWVkMWQxMzcxNmY4YjYxZjdmYzM4ZTk0ODA3MDU4OGE5ZmEzOTUwY2Y3N2E5YSJ9fV0sInByZWRpY2F0ZVR5cGUiOiJodHRwczovL2dpdGh1Yi5jb20vQXRpbmdhaWkva2VlbHNvbi92ZXJpZmljYXRpb24vdjEiLCJwcmVkaWNhdGUiOnsiY2xhaW0iOiJEZWZhdWx0IEppbmphIGF1dG9lc2NhcGUgcmVjb2duaXplcyBzdXBwb3J0ZWQgZXh0ZW5zaW9ucyByZWdhcmRsZXNzIG9mIGZpbGVuYW1lIGNhc2UiLCJzdGFydGVkT24iOiIyMDI2LTA5LTIwVDExOjE3OjI0LjEwOFoiLCJmaW5pc2hlZE9uIjoiMjAyNi0wOS0yMFQxMToxNzoyOS4wODdaIiwidW5jaGFuZ2VkIjp0cnVlLCJjb21wbGV0ZSI6dHJ1ZSwicnVucyI6W3siY21kIjoiUFlUSE9OUEFUSD1zcmM6LmJlbmNoLXB5ZGVwcyBweXRob24zIC1tIHB5dGVzdCB0ZXN0cyAtcSIsIm5hbWUiOiJQWVRIT05QQVRIPXNyYzouYmVuY2gtcHlkZXBzIHB5dGhvbjMgLW0gcHl0ZXN0IHRlc3RzIC1xIiwia2luZCI6InRlc3QiLCJleGl0IjowLCJzaWduYWwiOm51bGwsInRpbWVkT3V0IjpmYWxzZSwidHJ1bmNhdGVkIjpmYWxzZSwidGVybWluYXRpb25VbmNvbmZpcm1lZCI6ZmFsc2UsImR1cmF0aW9uTXMiOjQ4MjcsImxvZ0RpZ2VzdCI6IjNhYTNiMDA5ZGM3MTNlNjk4OGVjODkxNjdkOWIwNWEzMGRjMTUzODNmZWRmYzBlYzFjNTk4NTIwMTE4ZGI4N2IifV0sInJ1bm5lciI6eyJrZWVsc29uIjoiMC40LjAiLCJob3N0IjoiY29kZXgiLCJtb2RlbCI6bnVsbCwiYXR0cmlidXRpb24iOiJjYWxsZXItc3VwcGxpZWQifX19","signatures":[{"keyid":"c5f1fd3b99c0dc00914da76e24b8492284eca021ad45c1eb050bf94e1be19be9","sig":"KOiMXcpZJRZBees4MHBm6NVA0FYrV0nI0nrAnPm1D82q98kAfUfE/onrzGXF7CVZw950E+VMvttv5/S8jxiUCg=="}]}
+diff --git a/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/ledger.md b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/ledger.md
+new file mode 100644
+index 0000000..f89c714
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/ledger.md
+@@ -0,0 +1,9 @@
++### Root cause: implicit-assumption
++
++The default Jinja autoescape selector compared filename suffixes case
++sensitively, implicitly assuming template extension casing was lowercase.
++Fix: normalize the filename before testing the existing supported suffixes.
++Prevention: regression tests cover each supported extension with mixed case.
++
++### Verify: Default Jinja autoescape recognizes supported extensions regardless of filename case
++`PYTHONPATH=src:.bench-pydeps python3 -m pytest tests -q` exit 0 · tree afa1a8a4b35fe137b41a09d5df4d9dfe99fece14
+diff --git a/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/specs/templating/spec.md b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/specs/templating/spec.md
+new file mode 100644
+index 0000000..a8fe1cb
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-case-insensitive-autoescape/specs/templating/spec.md
+@@ -0,0 +1,15 @@
++---
++base: new
++---
++# templating — delta
++
++## ADDED Requirements
++### Requirement: …
++The system SHALL …
++#### Scenario: …
++- WHEN …
++- THEN …
++
++## MODIFIED Requirements
++
++## REMOVED Requirements
+diff --git a/.keelson/specs/templating/spec.md b/.keelson/specs/templating/spec.md
+new file mode 100644
+index 0000000..dc8842d
+--- /dev/null
++++ b/.keelson/specs/templating/spec.md
+@@ -0,0 +1,15 @@
++# Templating
++
++## Requirements
++
++- Flask's default Jinja autoescape selector returns true for template filenames
++  ending in `.html`, `.htm`, `.xml`, `.xhtml`, or `.svg`, without regard to the
++  extension's case; it returns false for other filenames and true when no
++  filename is provided.
++
++## Requirement: …
++
++The system SHALL …
++### Scenario: …
++- WHEN …
++- THEN …

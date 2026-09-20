@@ -1,0 +1,66 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": ".trellis",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' .agents/skills/trellis-start/SKILL.md && sed -n '1,240p' .agents/skills/trellis-before-dev/SKILL.md\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' .agents/skills/trellis-start/SKILL.md && sed -n '1,240p' .agents/skills/trellis-before-dev/SKILL.md\""
+    },
+    {
+      "index": 5,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/get_context.py\npython3 ./.trellis/scripts/get_context.py --mode phase\npython3 ./.trellis/scripts/get_context.py --mode packages\ncat .trellis/spec/guides/index.md'"
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/get_context.py\npython3 ./.trellis/scripts/get_context.py --mode phase\npython3 ./.trellis/scripts/get_context.py --mode packages\ncat .trellis/spec/guides/index.md'"
+    },
+    {
+      "index": 8,
+      "command": "/bin/bash -lc \"find .trellis/spec -name index.md -print | sort\ncat .trellis/spec/backend/index.md\nfind .trellis/spec/backend -maxdepth 2 -type f -name '*.md' -print | sort\""
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc \"find .trellis/spec -name index.md -print | sort\ncat .trellis/spec/backend/index.md\nfind .trellis/spec/backend -maxdepth 2 -type f -name '*.md' -print | sort\""
+    },
+    {
+      "index": 10,
+      "command": "/bin/bash -lc \"sed -n '1,200p' .trellis/spec/backend/directory-structure.md\nsed -n '1,200p' .trellis/spec/backend/quality-guidelines.md\nsed -n '1,160p' .trellis/spec/backend/error-handling.md\nrg -n -i \\\"select_autoescape|autoescape\\\" src tests | head -160\ngit status --short\""
+    },
+    {
+      "index": 11,
+      "command": "/bin/bash -lc \"sed -n '1,200p' .trellis/spec/backend/directory-structure.md\nsed -n '1,200p' .trellis/spec/backend/quality-guidelines.md\nsed -n '1,160p' .trellis/spec/backend/error-handling.md\nrg -n -i \\\"select_autoescape|autoescape\\\" src tests | head -160\ngit status --short\""
+    },
+    {
+      "index": 24,
+      "command": "/bin/bash -lc \"sed -n '1,280p' .agents/skills/trellis-check/SKILL.md\npython3 -m pytest --version\nfind .bench-pydeps -maxdepth 2 -type f -name 'pytest*' -o -name '*pytest*' | head -40\npython3 -m ruff check src/flask/sansio/app.py tests/test_templating.py\nPYTHONPATH=src:.bench-pydeps python3 - <<'PY'\nfrom flask import Flask\n\napp = Flask(__name__)\nfor filename in (\\\"invoice.HTML\\\", \\\"page.HtM\\\", \\\"feed.XmL\\\", \\\"page.XhTmL\\\", \\\"diagram.SvG\\\", None):\n    assert app.select_jinja_autoescape(filename)\nfor filename in (\\\"template\\\", \\\"template.txt\\\"):\n    assert not app.select_jinja_autoescape(filename)\nPY\ngit diff --check\ngit status --short\""
+    },
+    {
+      "index": 25,
+      "command": "/bin/bash -lc \"sed -n '1,280p' .agents/skills/trellis-check/SKILL.md\npython3 -m pytest --version\nfind .bench-pydeps -maxdepth 2 -type f -name 'pytest*' -o -name '*pytest*' | head -40\npython3 -m ruff check src/flask/sansio/app.py tests/test_templating.py\nPYTHONPATH=src:.bench-pydeps python3 - <<'PY'\nfrom flask import Flask\n\napp = Flask(__name__)\nfor filename in (\\\"invoice.HTML\\\", \\\"page.HtM\\\", \\\"feed.XmL\\\", \\\"page.XhTmL\\\", \\\"diagram.SvG\\\", None):\n    assert app.select_jinja_autoescape(filename)\nfor filename in (\\\"template\\\", \\\"template.txt\\\"):\n    assert not app.select_jinja_autoescape(filename)\nPY\ngit diff --check\ngit status --short\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. runtime_usage_observed requires a direct raw Codex tool command and still does not establish causal effectiveness. Any direct global instruction-path read makes this run ineligible for a clean causal comparison."
+}

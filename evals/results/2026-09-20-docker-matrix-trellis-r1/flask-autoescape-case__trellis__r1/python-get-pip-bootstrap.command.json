@@ -1,0 +1,13 @@
+{
+  "command": [
+    "python3",
+    ".bench-get-pip.py",
+    "--target",
+    ".bench-pydeps"
+  ],
+  "cwd": "/tmp/keelson-bench-run-LpPaT1/worktree",
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 12039
+}

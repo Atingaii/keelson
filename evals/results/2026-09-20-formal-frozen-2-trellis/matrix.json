@@ -1,0 +1,83 @@
+[
+  {
+    "task": "flask-autoescape-case",
+    "method": "trellis",
+    "repetition": 1,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4603,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-autoescape-case",
+    "method": "trellis",
+    "repetition": 2,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4187,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-autoescape-case",
+    "method": "trellis",
+    "repetition": 3,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 5067,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-ipv6-server-name",
+    "method": "trellis",
+    "repetition": 1,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4427,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-ipv6-server-name",
+    "method": "trellis",
+    "repetition": 2,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4271,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-ipv6-server-name",
+    "method": "trellis",
+    "repetition": 3,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4002,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-teardown-errors",
+    "method": "trellis",
+    "repetition": 1,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4017,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-teardown-errors",
+    "method": "trellis",
+    "repetition": 2,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4628,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-teardown-errors",
+    "method": "trellis",
+    "repetition": 3,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4936,
+    "worktree_retained_at": null
+  }
+]

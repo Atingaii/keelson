@@ -1,0 +1,9 @@
+{
+  "status": "preprotocol-fix-smoke-not-comparable",
+  "reasons": [
+    "Run started before frozen-2 activation requirement.",
+    "Run used host-installed / non-uv.lock-pinned Python dependencies.",
+    "Run preceded baseline-history sanitization and baseline/oracle environment preflight."
+  ],
+  "retained_as": "raw exploratory evidence; never include in formal comparison"
+}

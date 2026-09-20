@@ -1,0 +1,14 @@
+FROM node:20-bookworm-slim
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends bubblewrap ca-certificates curl git python3 python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /home/node/.codex \
+    && mkdir -p /opt/codex \
+    && printf '%s\n' '#!/bin/sh' 'exec node /opt/keelson/bin/keelson.js "$@"' > /usr/local/bin/keelson \
+    && chmod 755 /usr/local/bin/keelson \
+    && chown -R node:node /home/node /opt/codex
+
+USER node
+WORKDIR /workspace

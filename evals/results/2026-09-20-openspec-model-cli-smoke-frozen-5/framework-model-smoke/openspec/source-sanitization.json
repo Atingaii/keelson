@@ -1,0 +1,10 @@
+{
+  "fetch_depth": 1,
+  "fetched_sha": "06ea505ce2b2042af26e96d35ebf159af7c0869d",
+  "baseline_ref": "refs/heads/benchmark-baseline",
+  "baseline_ref_exit_code": 0,
+  "remote_remove_exit_code": 0,
+  "gc_exit_code": 0,
+  "upstream_fix_object_inaccessible": true,
+  "remaining_remotes": []
+}

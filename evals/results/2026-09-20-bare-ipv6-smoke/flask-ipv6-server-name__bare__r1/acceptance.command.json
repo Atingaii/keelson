@@ -1,0 +1,14 @@
+{
+  "command": [
+    ".bench-venv/bin/python",
+    "-m",
+    "pytest",
+    ".bench-hidden/hidden_test.py",
+    "-q"
+  ],
+  "cwd": "/tmp/keelson-bench-run-RgyDR4/worktree",
+  "exit_code": 1,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 29
+}

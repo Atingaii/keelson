@@ -1,0 +1,107 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": ".trellis",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' .agents/skills/trellis-start/SKILL.md && sed -n '1,240p' .agents/skills/trellis-before-dev/SKILL.md\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' .agents/skills/trellis-start/SKILL.md && sed -n '1,240p' .agents/skills/trellis-before-dev/SKILL.md\""
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/get_context.py && python3 ./.trellis/scripts/get_context.py --mode phase && python3 ./.trellis/scripts/get_context.py --mode packages && cat .trellis/spec/guides/index.md'"
+    },
+    {
+      "index": 7,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/get_context.py && python3 ./.trellis/scripts/get_context.py --mode phase && python3 ./.trellis/scripts/get_context.py --mode packages && cat .trellis/spec/guides/index.md'"
+    },
+    {
+      "index": 8,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/get_context.py --mode phase --step 1.1 --platform codex && python3 ./.trellis/scripts/task.py --help && find .trellis/spec -maxdepth 4 -name index.md -print'"
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/get_context.py --mode phase --step 1.1 --platform codex && python3 ./.trellis/scripts/task.py --help && find .trellis/spec -maxdepth 4 -name index.md -print'"
+    },
+    {
+      "index": 10,
+      "command": "/bin/bash -lc \"sed -n '1,300p' .agents/skills/trellis-brainstorm/SKILL.md && cat .trellis/spec/backend/index.md && sed -n '1,220p' .trellis/spec/guides/code-reuse-thinking-guide.md\""
+    },
+    {
+      "index": 11,
+      "command": "/bin/bash -lc \"sed -n '1,300p' .agents/skills/trellis-brainstorm/SKILL.md && cat .trellis/spec/backend/index.md && sed -n '1,220p' .trellis/spec/guides/code-reuse-thinking-guide.md\""
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/task.py create \"Teardown cleanup errors\" --description \"Run every Flask teardown callback and signal before surfacing teardown errors.\" --slug teardown-cleanup-errors && TASK_PATH=$(python3 ./.trellis/scripts/task.py current 2>/dev/null || true); printf '\"'%s\\\\n' \\\"\"'$TASK_PATH\"; for f in .trellis/spec/backend/directory-structure.md .trellis/spec/backend/error-handling.md .trellis/spec/backend/quality-guidelines.md .trellis/spec/backend/logging-guidelines.md; do sed -n '\"'1,220p' \\\"\"'$f\"; done; rg -n \"teardown|teardown_request|teardown_appcontext|appcontext_tearing_down|request_tearing_down\" src/flask tests/test_appctx.py tests | head -n 300'"
+    },
+    {
+      "index": 14,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/task.py create \"Teardown cleanup errors\" --description \"Run every Flask teardown callback and signal before surfacing teardown errors.\" --slug teardown-cleanup-errors && TASK_PATH=$(python3 ./.trellis/scripts/task.py current 2>/dev/null || true); printf '\"'%s\\\\n' \\\"\"'$TASK_PATH\"; for f in .trellis/spec/backend/directory-structure.md .trellis/spec/backend/error-handling.md .trellis/spec/backend/quality-guidelines.md .trellis/spec/backend/logging-guidelines.md; do sed -n '\"'1,220p' \\\"\"'$f\"; done; rg -n \"teardown|teardown_request|teardown_appcontext|appcontext_tearing_down|request_tearing_down\" src/flask tests/test_appctx.py tests | head -n 300'"
+    },
+    {
+      "index": 19,
+      "command": "/bin/bash -lc \"sed -n '1,100p' src/flask/app.py && grep -nE \\\"requires-python|python_requires|target-version\\\" pyproject.toml setup.cfg 2>/dev/null && python3 - <<'PY'\nimport blinker, inspect\nprint(blinker.__version__ if hasattr(blinker, '__version__') else inspect.getfile(blinker))\nfrom blinker import Signal\nprint(inspect.getsource(Signal.send))\nPY\nsed -n '1,200p' .trellis/tasks/09-20-teardown-cleanup-errors/prd.md && sed -n '1,180p' .trellis/tasks/09-20-teardown-cleanup-errors/task.json\""
+    },
+    {
+      "index": 20,
+      "command": "/bin/bash -lc \"sed -n '1,100p' src/flask/app.py && grep -nE \\\"requires-python|python_requires|target-version\\\" pyproject.toml setup.cfg 2>/dev/null && python3 - <<'PY'\nimport blinker, inspect\nprint(blinker.__version__ if hasattr(blinker, '__version__') else inspect.getfile(blinker))\nfrom blinker import Signal\nprint(inspect.getsource(Signal.send))\nPY\nsed -n '1,200p' .trellis/tasks/09-20-teardown-cleanup-errors/prd.md && sed -n '1,180p' .trellis/tasks/09-20-teardown-cleanup-errors/task.json\""
+    },
+    {
+      "index": 21,
+      "command": "/bin/bash -lc \"python3 - <<'PY'\nimport inspect\nfrom blinker import Signal\nprint(inspect.getsource(Signal.send))\nprint(inspect.getsource(Signal.send_async))\nPY\npython3 ./.trellis/scripts/task.py start --help\""
+    },
+    {
+      "index": 22,
+      "command": "/bin/bash -lc \"python3 - <<'PY'\nimport inspect\nfrom blinker import Signal\nprint(inspect.getsource(Signal.send))\nprint(inspect.getsource(Signal.send_async))\nPY\npython3 ./.trellis/scripts/task.py start --help\""
+    },
+    {
+      "index": 26,
+      "command": "/bin/bash -lc \"python3 ./.trellis/scripts/task.py start .trellis/tasks/09-20-teardown-cleanup-errors --allow-empty-context && python3 ./.trellis/scripts/get_context.py --mode phase --step 2.1 --platform codex && sed -n '1,220p' .trellis/tasks/09-20-teardown-cleanup-errors/prd.md && sed -n '1,180p' .trellis/tasks/09-20-teardown-cleanup-errors/design.md && sed -n '1,180p' .trellis/tasks/09-20-teardown-cleanup-errors/implement.md\""
+    },
+    {
+      "index": 27,
+      "command": "/bin/bash -lc \"python3 ./.trellis/scripts/task.py start .trellis/tasks/09-20-teardown-cleanup-errors --allow-empty-context && python3 ./.trellis/scripts/get_context.py --mode phase --step 2.1 --platform codex && sed -n '1,220p' .trellis/tasks/09-20-teardown-cleanup-errors/prd.md && sed -n '1,180p' .trellis/tasks/09-20-teardown-cleanup-errors/design.md && sed -n '1,180p' .trellis/tasks/09-20-teardown-cleanup-errors/implement.md\""
+    },
+    {
+      "index": 46,
+      "command": "/bin/bash -lc \"sed -n '1,320p' .agents/skills/trellis-check/SKILL.md && grep -nE \\\"\\\\[tool\\\\.(ruff|mypy|pytest)|ruff|mypy|pyright\\\" pyproject.toml && git diff --check && git diff -- src/flask/app.py src/flask/ctx.py tests/test_appctx.py\""
+    },
+    {
+      "index": 47,
+      "command": "/bin/bash -lc \"sed -n '1,320p' .agents/skills/trellis-check/SKILL.md && grep -nE \\\"\\\\[tool\\\\.(ruff|mypy|pytest)|ruff|mypy|pyright\\\" pyproject.toml && git diff --check && git diff -- src/flask/app.py src/flask/ctx.py tests/test_appctx.py\""
+    },
+    {
+      "index": 54,
+      "command": "/bin/bash -lc \"sed -n '1,300p' .agents/skills/trellis-finish-work/SKILL.md && sed -n '1,260p' .agents/skills/trellis-update-spec/SKILL.md\""
+    },
+    {
+      "index": 55,
+      "command": "/bin/bash -lc \"sed -n '1,300p' .agents/skills/trellis-finish-work/SKILL.md && sed -n '1,260p' .agents/skills/trellis-update-spec/SKILL.md\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command naming its project-local framework root to establish activation. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

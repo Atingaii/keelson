@@ -1,0 +1,165 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_all_teardown_errors_survive_and_outer_context_is_restored ________
+
+args = (None,), kwargs = {}
+
+    def callback(*args, **kwargs):
+        calls.append(label)
+>       raise ValueError(label)
+E       ValueError: request-second
+
+.bench-supplemental/test_teardown_contract.py:26: ValueError
+
+During handling of the above exception, another exception occurred:
+
+    def test_all_teardown_errors_survive_and_outer_context_is_restored():
+        outer = flask.Flask("outer-context")
+        app = flask.Flask("teardown-context")
+        calls = []
+        popped_context = []
+    
+        def failing(label):
+            def callback(*args, **kwargs):
+                calls.append(label)
+                raise ValueError(label)
+    
+            return callback
+    
+        app.teardown_request(failing("request-first"))
+        app.teardown_request(failing("request-second"))
+        app.teardown_appcontext(failing("app-first"))
+        app.teardown_appcontext(failing("app-second"))
+        request_signal = failing("request-signal")
+        app_signal = failing("app-signal")
+    
+        def popped_signal(sender, **kwargs):
+            popped_context.append(flask.current_app._get_current_object())
+            calls.append("popped-signal")
+            raise ValueError("popped-signal")
+    
+        expected = [
+            "request-second",
+            "request-first",
+            "request-signal",
+            "app-second",
+            "app-first",
+            "app-signal",
+            "popped-signal",
+        ]
+        with outer.app_context():
+            flask.g.marker = "outer-value"
+            with (
+                flask.request_tearing_down.connected_to(request_signal, app),
+                flask.appcontext_tearing_down.connected_to(app_signal, app),
+                flask.appcontext_popped.connected_to(popped_signal, app),
+            ):
+                with pytest.raises(BaseExceptionGroup) as raised:
+>                   with app.test_request_context("/"):
+
+.bench-supplemental/test_teardown_contract.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/flask/ctx.py:505: in __exit__
+    self.pop(exc_value)
+src/flask/ctx.py:490: in pop
+    self.app.do_teardown_appcontext(self, exc)
+src/flask/app.py:1458: in do_teardown_appcontext
+    self.ensure_sync(func)(exc)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (None,), kwargs = {}
+
+    def callback(*args, **kwargs):
+        calls.append(label)
+>       raise ValueError(label)
+E       ValueError: app-second
+
+.bench-supplemental/test_teardown_contract.py:26: ValueError
+
+During handling of the above exception, another exception occurred:
+
+    def test_all_teardown_errors_survive_and_outer_context_is_restored():
+        outer = flask.Flask("outer-context")
+        app = flask.Flask("teardown-context")
+        calls = []
+        popped_context = []
+    
+        def failing(label):
+            def callback(*args, **kwargs):
+                calls.append(label)
+                raise ValueError(label)
+    
+            return callback
+    
+        app.teardown_request(failing("request-first"))
+        app.teardown_request(failing("request-second"))
+        app.teardown_appcontext(failing("app-first"))
+        app.teardown_appcontext(failing("app-second"))
+        request_signal = failing("request-signal")
+        app_signal = failing("app-signal")
+    
+        def popped_signal(sender, **kwargs):
+            popped_context.append(flask.current_app._get_current_object())
+            calls.append("popped-signal")
+            raise ValueError("popped-signal")
+    
+        expected = [
+            "request-second",
+            "request-first",
+            "request-signal",
+            "app-second",
+            "app-first",
+            "app-signal",
+            "popped-signal",
+        ]
+>       with outer.app_context():
+
+.bench-supplemental/test_teardown_contract.py:51: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/flask/ctx.py:505: in __exit__
+    self.pop(exc_value)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <AppContext 125413978175888 of outer-context>
+exc = ValueError('app-second')
+
+    def pop(self, exc: BaseException | None = None) -> None:
+        """Pop this context so that it is no longer the active context. Then
+        call teardown functions and signals.
+    
+        Typically, this is not used directly. Instead, use a ``with`` block
+        to manage the context.
+    
+        This context must currently be the active context, otherwise a
+        :exc:`RuntimeError` is raised. In some situations, such as streaming or
+        testing, the context may have been pushed multiple times. It will only
+        trigger cleanup once it has been popped as many times as it was pushed.
+        Until then, it will remain the active context.
+    
+        :param exc: An unhandled exception that was raised while the context was
+            active. Passed to teardown functions.
+    
+        .. versionchanged:: 0.9
+            Added the ``exc`` argument.
+        """
+        if self._cv_token is None:
+            raise RuntimeError(f"Cannot pop this context ({self!r}), it is not pushed.")
+    
+        ctx = _cv_app.get(None)
+    
+        if ctx is None or self._cv_token is None:
+            raise RuntimeError(
+                f"Cannot pop this context ({self!r}), there is no active context."
+            )
+    
+        if ctx is not self:
+>           raise RuntimeError(
+                f"Cannot pop this context ({self!r}), it is not the active"
+                f" context ({ctx!r})."
+            )
+E           RuntimeError: Cannot pop this context (<AppContext 125413978175888 of outer-context>), it is not the active context (<AppContext 125413976290576 of teardown-context, GET 'http://localhost/'>).
+
+src/flask/ctx.py:475: RuntimeError
+=========================== short test summary info ============================
+FAILED .bench-supplemental/test_teardown_contract.py::test_all_teardown_errors_survive_and_outer_context_is_restored
+1 failed in 0.23s

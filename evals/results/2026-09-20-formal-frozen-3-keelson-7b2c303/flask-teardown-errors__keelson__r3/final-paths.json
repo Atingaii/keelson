@@ -1,0 +1,14 @@
+[
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/change.md",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/236f2630394aad8523f49f017d838f6ddd92e89ba23de5fb0a24e9af9f7032a6.log",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/2970269629c4d35a3f90c96500be7e544912153cfef2195eaa1b7501a10ced16.log",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/keys/02e1ca724ab1eb2ab8254db03b3ed5423610aa4c7744f2b77b5686888ef69275.pem",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/evidence/public-key.pem",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/landed.json",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/ledger.jsonl",
+  ".keelson/changes/archive/2026-09-20-teardown-error-collection/ledger.md",
+  "src/flask/app.py",
+  "src/flask/ctx.py",
+  "tests/test_appctx.py",
+  "tests/test_reqctx.py"
+]

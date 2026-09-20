@@ -1,0 +1,18 @@
+{
+  "codex_exit_code": 125,
+  "acceptance_exit_code": 1,
+  "changed_source_files": [],
+  "source_file_threshold": 1,
+  "source_file_threshold_met": false,
+  "elapsed_ms": 2888,
+  "tokens": null,
+  "pass": false,
+  "task": "flask-ipv6-server-name",
+  "method": "bare",
+  "repetition": 1,
+  "setup_exit_code": 0,
+  "environment_exit_code": 1,
+  "setup_paths": [],
+  "final_source_paths": [],
+  "worktree_retained_at": null
+}

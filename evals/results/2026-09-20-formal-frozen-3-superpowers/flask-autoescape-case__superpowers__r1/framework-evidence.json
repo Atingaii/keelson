@@ -1,0 +1,67 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".agents/skills/superpowers",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/using-superpowers/SKILL.md && printf '\\\\n--- brainstorming ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/brainstorming/SKILL.md && printf '\\\\n--- tdd ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md && printf '\\\\n--- worktrees ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/using-git-worktrees/SKILL.md && printf '\\\\n--- verification ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/verification-before-completion/SKILL.md\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/using-superpowers/SKILL.md && printf '\\\\n--- brainstorming ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/brainstorming/SKILL.md && printf '\\\\n--- tdd ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md && printf '\\\\n--- worktrees ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/using-git-worktrees/SKILL.md && printf '\\\\n--- verification ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/verification-before-completion/SKILL.md\""
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/references/codex-tools.md; printf '\\\\n--- debugging ---\\\\n'; sed -n '1,260p' /workspace/.agents/skills/superpowers/systematic-debugging/SKILL.md; printf '\\\\n--- good tests ---\\\\n'; sed -n '1,260p' /workspace/.agents/skills/superpowers/writing-good-tests.md; printf '\\\\n--- repository state ---\\\\n'; git status --short; git log -5 --oneline; printf '\\\\n--- worktree state ---\\\\n'; git rev-parse --git-dir; git rev-parse --git-common-dir; git branch --show-current; git rev-parse --show-superproject-working-tree 2>/dev/null || true; printf '\\\\n--- autoescape references ---\\\\n'; rg -n -C 3 'autoescape|select_autoescape' src tests; printf '\\\\n--- files ---\\\\n'; rg --files -g 'AGENTS.md' -g 'CONTRIBUTING*' -g 'test*.py' | head -100\""
+    },
+    {
+      "index": 7,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/references/codex-tools.md; printf '\\\\n--- debugging ---\\\\n'; sed -n '1,260p' /workspace/.agents/skills/superpowers/systematic-debugging/SKILL.md; printf '\\\\n--- good tests ---\\\\n'; sed -n '1,260p' /workspace/.agents/skills/superpowers/writing-good-tests.md; printf '\\\\n--- repository state ---\\\\n'; git status --short; git log -5 --oneline; printf '\\\\n--- worktree state ---\\\\n'; git rev-parse --git-dir; git rev-parse --git-common-dir; git branch --show-current; git rev-parse --show-superproject-working-tree 2>/dev/null || true; printf '\\\\n--- autoescape references ---\\\\n'; rg -n -C 3 'autoescape|select_autoescape' src tests; printf '\\\\n--- files ---\\\\n'; rg --files -g 'AGENTS.md' -g 'CONTRIBUTING*' -g 'test*.py' | head -100\""
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc \"find /workspace/.agents/skills/superpowers -maxdepth 3 -type f -name 'codex-tools.md' -o -name 'writing-good-tests.md'; printf '\\\\n--- platform guide ---\\\\n'; find /workspace/.agents/skills/superpowers -type f -name 'codex-tools.md' -exec sed -n '1,240p' {} \\\\; ; printf '\\\\n--- test guide ---\\\\n'; find /workspace/.agents/skills/superpowers -type f -name 'writing-good-tests.md' -exec sed -n '1,260p' {} \\\\; ; printf '\\\\n--- relevant source/tests ---\\\\n'; grep -RIn -C 3 -E 'autoescape|select_autoescape' src tests | head -500; printf '\\\\n--- candidate test files ---\\\\n'; find tests -type f -name '*.py' | head -100; printf '\\\\n--- contribution guidance ---\\\\n'; find . -maxdepth 3 -iname 'AGENTS.md' -o -iname 'CONTRIBUTING*'\""
+    },
+    {
+      "index": 10,
+      "command": "/bin/bash -lc \"find /workspace/.agents/skills/superpowers -maxdepth 3 -type f -name 'codex-tools.md' -o -name 'writing-good-tests.md'; printf '\\\\n--- platform guide ---\\\\n'; find /workspace/.agents/skills/superpowers -type f -name 'codex-tools.md' -exec sed -n '1,240p' {} \\\\; ; printf '\\\\n--- test guide ---\\\\n'; find /workspace/.agents/skills/superpowers -type f -name 'writing-good-tests.md' -exec sed -n '1,260p' {} \\\\; ; printf '\\\\n--- relevant source/tests ---\\\\n'; grep -RIn -C 3 -E 'autoescape|select_autoescape' src tests | head -500; printf '\\\\n--- candidate test files ---\\\\n'; find tests -type f -name '*.py' | head -100; printf '\\\\n--- contribution guidance ---\\\\n'; find . -maxdepth 3 -iname 'AGENTS.md' -o -iname 'CONTRIBUTING*'\""
+    }
+  ],
+  "guidance_read_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/using-superpowers/SKILL.md && printf '\\\\n--- brainstorming ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/brainstorming/SKILL.md && printf '\\\\n--- tdd ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md && printf '\\\\n--- worktrees ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/using-git-worktrees/SKILL.md && printf '\\\\n--- verification ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/verification-before-completion/SKILL.md\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/using-superpowers/SKILL.md && printf '\\\\n--- brainstorming ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/brainstorming/SKILL.md && printf '\\\\n--- tdd ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md && printf '\\\\n--- worktrees ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/using-git-worktrees/SKILL.md && printf '\\\\n--- verification ---\\\\n' && sed -n '1,260p' /workspace/.agents/skills/superpowers/verification-before-completion/SKILL.md\""
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/references/codex-tools.md; printf '\\\\n--- debugging ---\\\\n'; sed -n '1,260p' /workspace/.agents/skills/superpowers/systematic-debugging/SKILL.md; printf '\\\\n--- good tests ---\\\\n'; sed -n '1,260p' /workspace/.agents/skills/superpowers/writing-good-tests.md; printf '\\\\n--- repository state ---\\\\n'; git status --short; git log -5 --oneline; printf '\\\\n--- worktree state ---\\\\n'; git rev-parse --git-dir; git rev-parse --git-common-dir; git branch --show-current; git rev-parse --show-superproject-working-tree 2>/dev/null || true; printf '\\\\n--- autoescape references ---\\\\n'; rg -n -C 3 'autoescape|select_autoescape' src tests; printf '\\\\n--- files ---\\\\n'; rg --files -g 'AGENTS.md' -g 'CONTRIBUTING*' -g 'test*.py' | head -100\""
+    },
+    {
+      "index": 7,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/references/codex-tools.md; printf '\\\\n--- debugging ---\\\\n'; sed -n '1,260p' /workspace/.agents/skills/superpowers/systematic-debugging/SKILL.md; printf '\\\\n--- good tests ---\\\\n'; sed -n '1,260p' /workspace/.agents/skills/superpowers/writing-good-tests.md; printf '\\\\n--- repository state ---\\\\n'; git status --short; git log -5 --oneline; printf '\\\\n--- worktree state ---\\\\n'; git rev-parse --git-dir; git rev-parse --git-common-dir; git branch --show-current; git rev-parse --show-superproject-working-tree 2>/dev/null || true; printf '\\\\n--- autoescape references ---\\\\n'; rg -n -C 3 'autoescape|select_autoescape' src tests; printf '\\\\n--- files ---\\\\n'; rg --files -g 'AGENTS.md' -g 'CONTRIBUTING*' -g 'test*.py' | head -100\""
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc \"find /workspace/.agents/skills/superpowers -maxdepth 3 -type f -name 'codex-tools.md' -o -name 'writing-good-tests.md'; printf '\\\\n--- platform guide ---\\\\n'; find /workspace/.agents/skills/superpowers -type f -name 'codex-tools.md' -exec sed -n '1,240p' {} \\\\; ; printf '\\\\n--- test guide ---\\\\n'; find /workspace/.agents/skills/superpowers -type f -name 'writing-good-tests.md' -exec sed -n '1,260p' {} \\\\; ; printf '\\\\n--- relevant source/tests ---\\\\n'; grep -RIn -C 3 -E 'autoescape|select_autoescape' src tests | head -500; printf '\\\\n--- candidate test files ---\\\\n'; find tests -type f -name '*.py' | head -100; printf '\\\\n--- contribution guidance ---\\\\n'; find . -maxdepth 3 -iname 'AGENTS.md' -o -iname 'CONTRIBUTING*'\""
+    },
+    {
+      "index": 10,
+      "command": "/bin/bash -lc \"find /workspace/.agents/skills/superpowers -maxdepth 3 -type f -name 'codex-tools.md' -o -name 'writing-good-tests.md'; printf '\\\\n--- platform guide ---\\\\n'; find /workspace/.agents/skills/superpowers -type f -name 'codex-tools.md' -exec sed -n '1,240p' {} \\\\; ; printf '\\\\n--- test guide ---\\\\n'; find /workspace/.agents/skills/superpowers -type f -name 'writing-good-tests.md' -exec sed -n '1,260p' {} \\\\; ; printf '\\\\n--- relevant source/tests ---\\\\n'; grep -RIn -C 3 -E 'autoescape|select_autoescape' src tests | head -500; printf '\\\\n--- candidate test files ---\\\\n'; find tests -type f -name '*.py' | head -100; printf '\\\\n--- contribution guidance ---\\\\n'; find . -maxdepth 3 -iname 'AGENTS.md' -o -iname 'CONTRIBUTING*'\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command that reads a project-local guidance artifact (or, for Keelson, invokes guide/ask/check/record) to establish activation. Listing paths alone is insufficient. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

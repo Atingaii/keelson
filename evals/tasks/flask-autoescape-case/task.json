@@ -1,0 +1,13 @@
+{
+  "id": "flask-autoescape-case",
+  "repository": "https://github.com/pallets/flask.git",
+  "baseline_sha": "06ea505ce2b2042af26e96d35ebf159af7c0869d",
+  "upstream_fix_sha": "9368fb3f3c52d74534d14c1bef03c79c103356cd",
+  "upstream_subject": "case-insensitive comparison",
+  "language": "python",
+  "required_source_files": 1,
+  "public_verification": [
+    "PYTHONPATH=src:.bench-pydeps python3 -m pytest tests -q"
+  ],
+  "hidden_test": "hidden_test.py"
+}

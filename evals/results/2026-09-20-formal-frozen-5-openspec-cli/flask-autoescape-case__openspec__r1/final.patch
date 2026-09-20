@@ -1,0 +1,141 @@
+diff --git a/openspec/changes/case-insensitive-template-autoescape/.openspec.yaml b/openspec/changes/case-insensitive-template-autoescape/.openspec.yaml
+new file mode 100644
+index 0000000..cbd245e
+--- /dev/null
++++ b/openspec/changes/case-insensitive-template-autoescape/.openspec.yaml
+@@ -0,0 +1,2 @@
++schema: spec-driven
++created: 2026-09-20
+diff --git a/openspec/changes/case-insensitive-template-autoescape/design.md b/openspec/changes/case-insensitive-template-autoescape/design.md
+new file mode 100644
+index 0000000..2c2b88a
+--- /dev/null
++++ b/openspec/changes/case-insensitive-template-autoescape/design.md
+@@ -0,0 +1,40 @@
++# Design
++
++## Context
++
++The default selector compares a provided template name with a fixed set of
++lowercase suffixes. See `proposal.md` for the motivation and the specification
++for the required behavior.
++
++## Goals / Non-Goals
++
++**Goals:**
++
++- Normalize a provided filename only for standard extension matching.
++- Verify every supported extension accepts a mixed-case suffix and existing
++  fallback cases are retained.
++
++**Non-Goals:**
++
++- Changing custom autoescape callbacks or Jinja configuration overrides.
++- Expanding the set of default supported extensions.
++
++## Decisions
++
++- Compare a lowercase form of a non-`None` filename with the existing suffix
++  set. This keeps the recognized extension list intact while making its casing
++  irrelevant. Alternative: enumerate uppercase variants, which is incomplete
++  and unnecessarily duplicative.
++- Test the selector directly. This isolates default policy behavior without
++  requiring template files for each casing variant.
++
++## Risks / Trade-offs
++
++- [Filename normalization affects more than the suffix] → It is used solely
++  for the existing suffix comparison; unsupported extensions still return
++  false.
++
++## Migration Plan
++
++The behavior is backward-compatible and needs no migration. Reverting the
++single comparison restores the prior behavior.
+diff --git a/openspec/changes/case-insensitive-template-autoescape/proposal.md b/openspec/changes/case-insensitive-template-autoescape/proposal.md
+new file mode 100644
+index 0000000..1b7ff06
+--- /dev/null
++++ b/openspec/changes/case-insensitive-template-autoescape/proposal.md
+@@ -0,0 +1,32 @@
++# Proposal
++
++## Why
++
++Flask's default Jinja autoescape selector only recognizes lowercase template
++extensions, causing HTML, XHTML, XML, and SVG templates with uppercase or
++mixed-case suffixes to render unescaped content.
++
++## What Changes
++
++- Recognize Flask's standard autoescaped template extensions regardless of
++  filename case.
++- Preserve the existing default for unsupported extensions and unnamed
++  templates.
++- Cover mixed-case supported extensions and unchanged non-matching behavior
++  with tests.
++
++## Capabilities
++
++### New Capabilities
++
++- `template-autoescape-selection`: Default template autoescaping behavior
++  based on template filename extensions.
++
++### Modified Capabilities
++
++- None.
++
++## Impact
++
++- Affects Flask's default Jinja autoescape selection and its templating tests.
++- No configuration, dependency, or public API changes are required.
+diff --git a/openspec/changes/case-insensitive-template-autoescape/specs/template-autoescape-selection/spec.md b/openspec/changes/case-insensitive-template-autoescape/specs/template-autoescape-selection/spec.md
+new file mode 100644
+index 0000000..d8aefca
+--- /dev/null
++++ b/openspec/changes/case-insensitive-template-autoescape/specs/template-autoescape-selection/spec.md
+@@ -0,0 +1,24 @@
++# Spec Delta
++
++## Purpose
++
++Defines predictable default escaping for supported template types regardless
++of the capitalization used in their filenames.
++
++## ADDED Requirements
++
++### Requirement: Case-insensitive standard template extension recognition
++The default template autoescape behavior SHALL enable autoescaping for template
++filenames ending in `.html`, `.htm`, `.xml`, `.xhtml`, or `.svg` regardless of
++the case of the extension characters.
++
++#### Scenario: Mixed-case supported extension
++- **WHEN** a template filename ends in a mixed-case variant of a supported
++  extension
++- **THEN** the default autoescape behavior is enabled
++
++#### Scenario: Unsupported or unnamed template
++- **WHEN** a template filename has no supported extension or no filename is
++  provided
++- **THEN** the default behavior remains unchanged: unsupported filenames are
++  not autoescaped and unnamed templates are autoescaped
+diff --git a/openspec/changes/case-insensitive-template-autoescape/tasks.md b/openspec/changes/case-insensitive-template-autoescape/tasks.md
+new file mode 100644
+index 0000000..6798669
+--- /dev/null
++++ b/openspec/changes/case-insensitive-template-autoescape/tasks.md
+@@ -0,0 +1,13 @@
++# Tasks
++
++## 1. Default autoescape selection
++
++- [ ] 1.1 Normalize template filename case during default supported-extension matching while retaining the current extension list; verify focused templating tests pass.
++
++## 2. Regression coverage
++
++- [ ] 2.1 Add selector tests for mixed-case `.html`, `.htm`, `.xml`, `.xhtml`, and `.svg` filenames plus unsupported and `None` inputs; verify the new test passes.
++
++## 3. Public verification
++
++- [ ] 3.1 Run `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests -q` and verify the public suite passes.

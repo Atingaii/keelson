@@ -1,0 +1,37 @@
+{
+  "codex_exit_code": 0,
+  "public_verification_exit_code": 0,
+  "acceptance_exit_code": 0,
+  "changed_source_files": [
+    "src/flask/sansio/app.py"
+  ],
+  "source_file_threshold": 1,
+  "source_file_threshold_met": true,
+  "elapsed_ms": 85431,
+  "tokens": {
+    "input_tokens": 128782,
+    "cached_input_tokens": 107520,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 1260,
+    "reasoning_output_tokens": 154
+  },
+  "regression_pass": true,
+  "acceptance_pass": true,
+  "pass": true,
+  "task": "flask-autoescape-case",
+  "method": "bare",
+  "repetition": 3,
+  "setup_exit_code": 0,
+  "environment_exit_code": 0,
+  "codex_elapsed_ms": 70419,
+  "setup_paths": [],
+  "final_source_paths": [
+    "src/flask/sansio/app.py"
+  ],
+  "framework_runtime_usage_observed": false,
+  "framework_activation_observed": true,
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "harness_elapsed_ms": 85431,
+  "worktree_retained_at": null
+}

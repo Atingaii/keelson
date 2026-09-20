@@ -1,0 +1,13 @@
+{
+  "id": "flask-ipv6-server-name",
+  "repository": "https://github.com/pallets/flask.git",
+  "baseline_sha": "de8429ffda8cfb54db175529e2bae72a24e1fa7e",
+  "upstream_fix_sha": "7203feabf723edae0286ae5dc64fec8ac4c91735",
+  "upstream_subject": "Fix IPv6 server name parsing",
+  "language": "python",
+  "required_source_files": 1,
+  "public_verification": [
+    "PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_basic.py -q"
+  ],
+  "hidden_test": "hidden_test.py"
+}

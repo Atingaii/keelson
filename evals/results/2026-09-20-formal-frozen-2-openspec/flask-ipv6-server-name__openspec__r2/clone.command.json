@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/pallets/flask.git",
+    "/tmp/keelson-bench-run-9vvBdI/worktree"
+  ],
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 2598
+}

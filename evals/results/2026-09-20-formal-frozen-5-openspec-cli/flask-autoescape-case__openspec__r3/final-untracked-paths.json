@@ -1,0 +1,6 @@
+[
+  "openspec/changes/case-insensitive-autoescape/.openspec.yaml",
+  "openspec/changes/case-insensitive-autoescape/proposal.md",
+  "openspec/changes/case-insensitive-autoescape/specs/jinja-autoescape-selection/spec.md",
+  "openspec/changes/case-insensitive-autoescape/tasks.md"
+]

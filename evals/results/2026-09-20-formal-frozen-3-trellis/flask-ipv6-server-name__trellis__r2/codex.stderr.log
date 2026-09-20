@@ -1,0 +1,26 @@
+Reading additional input from stdin...
+2026-09-20T11:02:32.797845Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /workspace/.trellis/tasks/09-20-ipv6-server-name-run/prd.md:
+## Goal
+
+Parse bracketed IPv6 SERVER_NAME values correctly when app.run uses defaults.
+
+## Requirements
+
+- TBD
+
+## Acceptance Criteria
+
+- [ ] TBD
+
+## Notes
+
+- Keep `prd.md` focused on requirements, constraints, and acceptance criteria.
+- Lightweight tasks can remain PRD-only.
+- For complex tasks, add `design.md` for technical design and `implement.md` for
+  execution planning before `task.py start`.
+2026-09-20T11:03:01.817747Z ERROR codex_core::tools::router: error=apply_patch verification failed: invalid patch: multiple operations target /workspace/.trellis/tasks/09-20-ipv6-server-name-run/prd.md
+2026-09-20T11:03:28.804232Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /workspace/.trellis/tasks/09-20-ipv6-server-name-run/prd.md:
+- Keep `prd.md` focused on requirements, constraints, and acceptance criteria.
+- Lightweight tasks can remain PRD-only.
+- For complex tasks, add `design.md` for technical design and `implement.md` for
+  execution planning before `task.py start`.

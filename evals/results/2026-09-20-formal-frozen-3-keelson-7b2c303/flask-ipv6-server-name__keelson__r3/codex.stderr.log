@@ -1,0 +1,3 @@
+Reading additional input from stdin...
+2026-09-20T11:45:43.167621Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /workspace/.keelson/INTENT.md:
+# server-name-ipv6

@@ -1,0 +1,67 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".agents/skills/superpowers",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/using-superpowers/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/brainstorming/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/using-git-worktrees/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/verification-before-completion/SKILL.md\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/using-superpowers/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/brainstorming/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/using-git-worktrees/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/verification-before-completion/SKILL.md\""
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc \"sed -n '240,520p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md\nsed -n '1,320p' /workspace/.agents/skills/superpowers/systematic-debugging/SKILL.md\nsed -n '1,240p' /workspace/.agents/skills/superpowers/references/codex-tools.md\nGIT_DIR=\"'$(cd \"$(git rev-parse --git-dir)\" 2>/dev/null && pwd -P)\nGIT_COMMON=$(cd \"$(git rev-parse --git-common-dir)\" 2>/dev/null && pwd -P)\nBRANCH=$(git branch --show-current)\nprintf '\"'git_dir=%s\\\\ngit_common=%s\\\\nbranch=%s\\\\nsuperproject=%s\\\\n' \\\"\"'$GIT_DIR\" \"$GIT_COMMON\" \"$BRANCH\" \"$(git rev-parse --show-superproject-working-tree 2>/dev/null)\"\ngit status --short\ngit log -3 --oneline'"
+    },
+    {
+      "index": 7,
+      "command": "/bin/bash -lc \"sed -n '240,520p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md\nsed -n '1,320p' /workspace/.agents/skills/superpowers/systematic-debugging/SKILL.md\nsed -n '1,240p' /workspace/.agents/skills/superpowers/references/codex-tools.md\nGIT_DIR=\"'$(cd \"$(git rev-parse --git-dir)\" 2>/dev/null && pwd -P)\nGIT_COMMON=$(cd \"$(git rev-parse --git-common-dir)\" 2>/dev/null && pwd -P)\nBRANCH=$(git branch --show-current)\nprintf '\"'git_dir=%s\\\\ngit_common=%s\\\\nbranch=%s\\\\nsuperproject=%s\\\\n' \\\"\"'$GIT_DIR\" \"$GIT_COMMON\" \"$BRANCH\" \"$(git rev-parse --show-superproject-working-tree 2>/dev/null)\"\ngit status --short\ngit log -3 --oneline'"
+    },
+    {
+      "index": 30,
+      "command": "/bin/bash -lc \"sed -n '1,300p' /workspace/.agents/skills/superpowers/finishing-a-development-branch/SKILL.md\ngit status --short\ngit diff --check\""
+    },
+    {
+      "index": 31,
+      "command": "/bin/bash -lc \"sed -n '1,300p' /workspace/.agents/skills/superpowers/finishing-a-development-branch/SKILL.md\ngit status --short\ngit diff --check\""
+    }
+  ],
+  "guidance_read_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/using-superpowers/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/brainstorming/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/using-git-worktrees/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/verification-before-completion/SKILL.md\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/using-superpowers/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/brainstorming/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/using-git-worktrees/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/superpowers/verification-before-completion/SKILL.md\""
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc \"sed -n '240,520p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md\nsed -n '1,320p' /workspace/.agents/skills/superpowers/systematic-debugging/SKILL.md\nsed -n '1,240p' /workspace/.agents/skills/superpowers/references/codex-tools.md\nGIT_DIR=\"'$(cd \"$(git rev-parse --git-dir)\" 2>/dev/null && pwd -P)\nGIT_COMMON=$(cd \"$(git rev-parse --git-common-dir)\" 2>/dev/null && pwd -P)\nBRANCH=$(git branch --show-current)\nprintf '\"'git_dir=%s\\\\ngit_common=%s\\\\nbranch=%s\\\\nsuperproject=%s\\\\n' \\\"\"'$GIT_DIR\" \"$GIT_COMMON\" \"$BRANCH\" \"$(git rev-parse --show-superproject-working-tree 2>/dev/null)\"\ngit status --short\ngit log -3 --oneline'"
+    },
+    {
+      "index": 7,
+      "command": "/bin/bash -lc \"sed -n '240,520p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md\nsed -n '1,320p' /workspace/.agents/skills/superpowers/systematic-debugging/SKILL.md\nsed -n '1,240p' /workspace/.agents/skills/superpowers/references/codex-tools.md\nGIT_DIR=\"'$(cd \"$(git rev-parse --git-dir)\" 2>/dev/null && pwd -P)\nGIT_COMMON=$(cd \"$(git rev-parse --git-common-dir)\" 2>/dev/null && pwd -P)\nBRANCH=$(git branch --show-current)\nprintf '\"'git_dir=%s\\\\ngit_common=%s\\\\nbranch=%s\\\\nsuperproject=%s\\\\n' \\\"\"'$GIT_DIR\" \"$GIT_COMMON\" \"$BRANCH\" \"$(git rev-parse --show-superproject-working-tree 2>/dev/null)\"\ngit status --short\ngit log -3 --oneline'"
+    },
+    {
+      "index": 30,
+      "command": "/bin/bash -lc \"sed -n '1,300p' /workspace/.agents/skills/superpowers/finishing-a-development-branch/SKILL.md\ngit status --short\ngit diff --check\""
+    },
+    {
+      "index": 31,
+      "command": "/bin/bash -lc \"sed -n '1,300p' /workspace/.agents/skills/superpowers/finishing-a-development-branch/SKILL.md\ngit status --short\ngit diff --check\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command that reads a project-local guidance artifact (or, for Keelson, invokes guide/ask/check/record) to establish activation. Listing paths alone is insufficient. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

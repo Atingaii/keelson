@@ -1,0 +1,53 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_teardown_attempts_callbacks_and_signals_after_errors ___________
+
+    def test_teardown_attempts_callbacks_and_signals_after_errors():
+        app = flask.Flask(__name__)
+        calls = []
+    
+        @app.teardown_request
+        def request_callback(exc):
+            calls.append("request-callback")
+            raise ValueError("request callback")
+    
+        @app.teardown_appcontext
+        def app_callback(exc):
+            calls.append("app-callback")
+            raise ValueError("app callback")
+    
+        @app.get("/")
+        def index():
+            return "ok"
+    
+        def request_signal(sender, exc):
+            calls.append("request-signal")
+            raise ValueError("request signal")
+    
+        def app_signal(sender, exc):
+            calls.append("app-signal")
+            raise ValueError("app signal")
+    
+        with (
+            flask.request_tearing_down.connected_to(request_signal, app),
+            flask.appcontext_tearing_down.connected_to(app_signal, app),
+        ):
+            with pytest.raises(BaseException):
+                app.test_client().get("/")
+    
+>       assert calls == [
+            "request-callback",
+            "request-signal",
+            "app-callback",
+            "app-signal",
+        ]
+E       AssertionError: assert ['request-cal...app-callback'] == ['request-cal... 'app-signal']
+E         
+E         At index 1 diff: 'app-callback' != 'request-signal'
+E         Right contains 2 more items, first extra item: 'app-callback'
+E         Use -v to get more diff
+
+.bench-hidden/hidden_test.py:38: AssertionError
+=========================== short test summary info ============================
+FAILED .bench-hidden/hidden_test.py::test_teardown_attempts_callbacks_and_signals_after_errors
+1 failed in 0.31s

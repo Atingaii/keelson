@@ -1,0 +1,5 @@
+{
+  "status": "harness-invalid-before-model",
+  "reason": "The initial history-isolation implementation removed the detached HEAD retention root before git gc; every attempt stopped before setup or Codex.",
+  "retained_as": "raw harness failure evidence; never include in formal comparison"
+}

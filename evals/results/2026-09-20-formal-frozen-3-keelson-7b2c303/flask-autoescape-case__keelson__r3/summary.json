@@ -1,0 +1,45 @@
+{
+  "codex_exit_code": 0,
+  "public_verification_exit_code": 0,
+  "acceptance_exit_code": 0,
+  "changed_source_files": [
+    "src/flask/sansio/app.py"
+  ],
+  "source_file_threshold": 1,
+  "source_file_threshold_met": true,
+  "elapsed_ms": 351338,
+  "tokens": {
+    "input_tokens": 605078,
+    "cached_input_tokens": 560128,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 7307,
+    "reasoning_output_tokens": 2129
+  },
+  "regression_pass": true,
+  "acceptance_pass": true,
+  "pass": true,
+  "task": "flask-autoescape-case",
+  "method": "keelson",
+  "repetition": 3,
+  "setup_exit_code": 0,
+  "environment_exit_code": 0,
+  "codex_elapsed_ms": 332137,
+  "setup_paths": [
+    ".agents/skills/keelson/SKILL.md",
+    ".keelson/INTENT.md",
+    ".keelson/NOW.md",
+    ".keelson/README.md",
+    ".keelson/config.yaml",
+    ".keelson/manifest.json",
+    "AGENTS.md"
+  ],
+  "final_source_paths": [
+    "src/flask/sansio/app.py"
+  ],
+  "framework_runtime_usage_observed": true,
+  "framework_activation_observed": true,
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "harness_elapsed_ms": 351338,
+  "worktree_retained_at": null
+}

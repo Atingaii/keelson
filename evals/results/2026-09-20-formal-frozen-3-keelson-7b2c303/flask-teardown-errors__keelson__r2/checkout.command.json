@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "checkout",
+    "--detach",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/tmp/keelson-bench-run-Fd939q/worktree",
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 21
+}

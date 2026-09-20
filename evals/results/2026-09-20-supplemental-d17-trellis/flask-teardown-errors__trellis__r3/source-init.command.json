@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "init",
+    "/tmp/keelson-bench-supplemental-ix423U/worktree"
+  ],
+  "cwd": "/tmp/keelson-bench-supplemental-ix423U",
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 13
+}

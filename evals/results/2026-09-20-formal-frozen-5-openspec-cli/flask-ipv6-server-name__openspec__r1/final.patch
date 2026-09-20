@@ -1,0 +1,151 @@
+diff --git a/src/flask/app.py b/src/flask/app.py
+index 7585dda..7017b1a 100644
+--- a/src/flask/app.py
++++ b/src/flask/app.py
+@@ -721,7 +721,13 @@ class Flask(App):
+         sn_host = sn_port = None
+ 
+         if server_name:
+-            sn_host, _, sn_port = server_name.partition(":")
++            if server_name.startswith("["):
++                sn_host, separator, sn_port = server_name[1:].partition("]:")
++
++                if not separator:
++                    sn_host, _, sn_port = server_name.partition(":")
++            else:
++                sn_host, _, sn_port = server_name.partition(":")
+ 
+         if not host:
+             if sn_host:
+diff --git a/tests/test_basic.py b/tests/test_basic.py
+index 1d9d83f..3d2f3ba 100644
+--- a/tests/test_basic.py
++++ b/tests/test_basic.py
+@@ -1910,6 +1910,7 @@ def test_run_server_port(monkeypatch, app):
+         ("localhost", 0, "localhost:8080", "localhost", 0),
+         (None, None, "localhost:8080", "localhost", 8080),
+         (None, None, "localhost:0", "localhost", 0),
++        (None, None, "[::1]:8080", "::1", 8080),
+     ),
+ )
+ def test_run_from_config(
+diff --git a/openspec/changes/fix-server-name-ipv6-run/.openspec.yaml b/openspec/changes/fix-server-name-ipv6-run/.openspec.yaml
+new file mode 100644
+index 0000000..cbd245e
+--- /dev/null
++++ b/openspec/changes/fix-server-name-ipv6-run/.openspec.yaml
+@@ -0,0 +1,2 @@
++schema: spec-driven
++created: 2026-09-20
+diff --git a/openspec/changes/fix-server-name-ipv6-run/design.md b/openspec/changes/fix-server-name-ipv6-run/design.md
+new file mode 100644
+index 0000000..72396be
+--- /dev/null
++++ b/openspec/changes/fix-server-name-ipv6-run/design.md
+@@ -0,0 +1,32 @@
++# Design
++
++## Context
++
++`Flask.run` currently obtains host and port defaults by splitting
++`SERVER_NAME` at the first colon. See proposal.md for motivation and the
++development-server-defaults spec for the required behavior.
++
++## Goals / Non-Goals
++
++**Goals:**
++
++- Recognize bracketed IPv6 literals with ports when deriving run defaults.
++- Retain the existing behavior for ordinary host names and port `0`.
++
++**Non-Goals:**
++
++- Changing URL routing or general `SERVER_NAME` handling outside `Flask.run`.
++
++## Decisions
++
++- Treat a value beginning with `[` as a bracketed host, splitting it at the
++  closing bracket and removing the brackets before passing the host to the
++  server. This follows the documented host:port representation and avoids
++  treating an IPv6 address's internal colons as a port separator.
++- Keep the current first-colon split for non-bracketed values, preserving
++  existing hostname behavior.
++
++## Risks / Trade-offs
++
++- [Malformed bracketed values] → Preserve the current fallback behavior unless
++  a valid closing bracket and port separator are present.
+diff --git a/openspec/changes/fix-server-name-ipv6-run/proposal.md b/openspec/changes/fix-server-name-ipv6-run/proposal.md
+new file mode 100644
+index 0000000..8d7eb09
+--- /dev/null
++++ b/openspec/changes/fix-server-name-ipv6-run/proposal.md
+@@ -0,0 +1,28 @@
++# Proposal
++
++## Why
++
++`Flask.run` splits `SERVER_NAME` at its first colon, so a bracketed IPv6
++literal is passed to the development server with an invalid host and port.
++
++## What Changes
++
++- Parse bracketed IPv6 `SERVER_NAME` values when selecting default development
++  server host and port.
++- Preserve existing hostname, explicit port, and port-zero behavior.
++
++## Capabilities
++
++### New Capabilities
++
++- `development-server-defaults`: Default host and port selection for
++  `Flask.run` from application configuration.
++
++### Modified Capabilities
++
++- None.
++
++## Impact
++
++- Affects `src/flask/app.py` and the `Flask.run` configuration tests in
++  `tests/test_basic.py`.
+diff --git a/openspec/changes/fix-server-name-ipv6-run/specs/development-server-defaults/spec.md b/openspec/changes/fix-server-name-ipv6-run/specs/development-server-defaults/spec.md
+new file mode 100644
+index 0000000..437584e
+--- /dev/null
++++ b/openspec/changes/fix-server-name-ipv6-run/specs/development-server-defaults/spec.md
+@@ -0,0 +1,18 @@
++# Spec Delta
++
++## Purpose
++
++Defines how development server defaults are selected from application
++configuration when `Flask.run` is called without a host or port.
++
++## ADDED Requirements
++
++### Requirement: Bracketed IPv6 server-name defaults
++When `SERVER_NAME` is a bracketed IPv6 literal followed by a port, `Flask.run`
++MUST use the unbracketed IPv6 address as its default host and that port as its
++default port.
++
++#### Scenario: Run with an IPv6 server name
++- **WHEN** `SERVER_NAME` is set to `[::1]:8080` and `Flask.run` receives no
++  explicit host or port
++- **THEN** the development server receives host `::1` and port `8080`
+diff --git a/openspec/changes/fix-server-name-ipv6-run/tasks.md b/openspec/changes/fix-server-name-ipv6-run/tasks.md
+new file mode 100644
+index 0000000..4e1813a
+--- /dev/null
++++ b/openspec/changes/fix-server-name-ipv6-run/tasks.md
+@@ -0,0 +1,10 @@
++# Tasks
++
++## 1. Development server defaults
++
++- [x] 1.1 Parse bracketed IPv6 `SERVER_NAME` values into an unbracketed host and port while retaining existing host parsing; verify the focused public test suite passes.
++- [x] 1.2 Add the IPv6 default-host-and-port case to the existing `Flask.run` configuration test parametrization; verify it asserts host `::1` and port `8080`.
++
++## 2. Verification
++
++- [x] 2.1 Run `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_basic.py -q` and verify the public basic test suite passes.

@@ -1,0 +1,37 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".agents/skills/superpowers",
+      "exists": true,
+      "symlink_target": "/tmp/keelson-bench-run-yZsFci/superpowers/skills"
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "excerpt": "{\"type\":\"item.started\",\"item\":{\"id\":\"item_1\",\"type\":\"command_execution\",\"command\":\"/bin/bash -lc \\\"sed -n '1,240p' /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/using-superpowers/SKILL.md && sed -n '1,260p' /home/ubuntu/.codex/.agents/vibe-coding.md\\\"\",\"aggregated_output\":\"\",\"exit_code\":null,\"status\":\"in_progress\"}}"
+    },
+    {
+      "index": 4,
+      "excerpt": "{\"type\":\"item.completed\",\"item\":{\"id\":\"item_1\",\"type\":\"command_execution\",\"command\":\"/bin/bash -lc \\\"sed -n '1,240p' /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/using-superpowers/SKILL.md && sed -n '1,260p' /home/ubuntu/.codex/.agents/vibe-coding.md\\\"\",\"aggregated_output\":\"---\\nname: using-superpowers\\ndescription: Use when starting any conversation - establishes how to find and use skills, requiring skill invocation before ANY response including clarifying questions\\n---\\n\\n<SUBAGENT-STOP>\\nIf you were dispatched as a subagent to execute a specific task, ignore this skill.\\n</SUBAGENT-STOP>\\n\\n<EXTREMELY-IMPORTANT>\\nIf you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.\\n\\nIF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.\\n\\nThis is not negotiable. You cannot rationalize your way out of this.\\n</EXTREMELY-IMPORTANT>\\n\\n## The Rule\\n\\n**Invoke relevant or requested skills BEFORE any response or action** — including clarifying questions, exploring the codebase, or checking files. If it turns out wrong for the situation, you don't have to use it.\\n\\n**Before entering plan "
+    },
+    {
+      "index": 6,
+      "excerpt": "{\"type\":\"item.started\",\"item\":{\"id\":\"item_3\",\"type\":\"command_execution\",\"command\":\"/bin/bash -lc \\\"for f in /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/references/codex-tools.md /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/systematic-debugging/SKILL.md /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/brainstorming/SKILL.md /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/test-driven-development/SKILL.md /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/using-git-worktrees/SKILL.md /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/verification-before-completion/SKILL.md; do sed -n '1,300p' \\\\\\\"\\\"'$f\\\"; done'\",\"aggregated_output\":\"\",\"exit_code\":null,\"status\":\"in_progress\"}}"
+    },
+    {
+      "index": 7,
+      "excerpt": "{\"type\":\"item.completed\",\"item\":{\"id\":\"item_3\",\"type\":\"command_execution\",\"command\":\"/bin/bash -lc \\\"for f in /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/references/codex-tools.md /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/systematic-debugging/SKILL.md /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/brainstorming/SKILL.md /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/test-driven-development/SKILL.md /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/using-git-worktrees/SKILL.md /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/verification-before-completion/SKILL.md; do sed -n '1,300p' \\\\\\\"\\\"'$f\\\"; done'\",\"aggregated_output\":\"sed: can't read /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/references/codex-tools.md: No such file or directory\\n---\\nname: systematic-debugging\\ndescription: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes\\n---\\n\\n# Systematic Debugging\\n\\n## Overview\\n\\n**Core principle:** ALWAYS find root cause before attempting fixes. Symptom fixes are failure.\\n\\n**Violating the letter of this "
+    },
+    {
+      "index": 10,
+      "excerpt": "{\"type\":\"item.started\",\"item\":{\"id\":\"item_5\",\"type\":\"command_execution\",\"command\":\"/bin/bash -lc \\\"sed -n '640,760p' src/flask/app.py; sed -n '1850,1945p' tests/test_basic.py; sed -n '1,260p' /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/test-driven-development/writing-good-tests.md; git log -6 --oneline -- src/flask/app.py tests/test_basic.py; PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_basic.py -q\\\"\",\"aggregated_output\":\"\",\"exit_code\":null,\"status\":\"in_progress\"}}"
+    },
+    {
+      "index": 11,
+      "excerpt": "{\"type\":\"item.completed\",\"item\":{\"id\":\"item_5\",\"type\":\"command_execution\",\"command\":\"/bin/bash -lc \\\"sed -n '640,760p' src/flask/app.py; sed -n '1850,1945p' tests/test_basic.py; sed -n '1,260p' /tmp/keelson-bench-run-yZsFci/worktree/.agents/skills/superpowers/test-driven-development/writing-good-tests.md; git log -6 --oneline -- src/flask/app.py tests/test_basic.py; PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_basic.py -q\\\"\",\"aggregated_output\":\"........................................................................ [ 54%]\\n............................................................             [100%]\\n132 passed in 0.98s\\n\",\"exit_code\":0,\"status\":\"completed\"}}"
+    }
+  ],
+  "runtime_usage_observed": true,
+  "note": "Artifact presence proves setup only. runtime_usage_observed requires a raw Codex event reference and still does not establish causal effectiveness."
+}

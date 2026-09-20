@@ -1,0 +1,14 @@
+{
+  "command": [
+    "git",
+    "fetch",
+    "--depth=1",
+    "origin",
+    "06ea505ce2b2042af26e96d35ebf159af7c0869d"
+  ],
+  "cwd": "/tmp/keelson-bench-run-e0Qnmn/worktree",
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 905
+}

@@ -1,0 +1,21 @@
+{
+  "paths": [
+    ".agents/skills/.openspec-target",
+    ".agents/skills/openspec-apply-change/SKILL.md",
+    ".agents/skills/openspec-archive-change/SKILL.md",
+    ".agents/skills/openspec-explore/SKILL.md",
+    ".agents/skills/openspec-propose/SKILL.md",
+    ".agents/skills/openspec-sync-specs/SKILL.md",
+    ".agents/skills/openspec-update-change/SKILL.md",
+    "openspec/changes/archive/.gitkeep",
+    "openspec/config.yaml",
+    "openspec/specs/.gitkeep"
+  ],
+  "file_count": 10,
+  "bytes": 91661,
+  "lines": 1359,
+  "top_level_paths": [
+    ".agents",
+    "openspec"
+  ]
+}

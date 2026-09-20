@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "apply",
+    "--whitespace=nowarn",
+    "evals/results/2026-09-20-formal-frozen-3-bare/flask-teardown-errors__bare__r2/final.patch"
+  ],
+  "cwd": "/tmp/keelson-bench-supplemental-R6DY97/worktree",
+  "exit_code": 128,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 5
+}

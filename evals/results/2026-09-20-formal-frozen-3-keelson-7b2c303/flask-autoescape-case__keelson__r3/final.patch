@@ -1,0 +1,141 @@
+diff --git a/src/flask/sansio/app.py b/src/flask/sansio/app.py
+index a734793..4d3110d 100644
+--- a/src/flask/sansio/app.py
++++ b/src/flask/sansio/app.py
+@@ -541,7 +541,7 @@ class App(Scaffold):
+         """
+         if filename is None:
+             return True
+-        return filename.endswith((".html", ".htm", ".xml", ".xhtml", ".svg"))
++        return filename.lower().endswith((".html", ".htm", ".xml", ".xhtml", ".svg"))
+ 
+     @property
+     def debug(self) -> bool:
+diff --git a/tests/test_templating.py b/tests/test_templating.py
+index 85549df..e60bbed 100644
+--- a/tests/test_templating.py
++++ b/tests/test_templating.py
+@@ -115,6 +115,20 @@ def test_escaping_without_template_filename(app, client, req_ctx):
+     assert flask.render_template("mail.txt", foo="<test>") == "<test> Mail"
+ 
+ 
++@pytest.mark.parametrize(
++    ("filename", "expected"),
++    [
++        (None, True),
++        ("invoice.HTML", True),
++        ("diagram.SvG", True),
++        ("mail.txt", False),
++        ("template", False),
++    ],
++)
++def test_select_jinja_autoescape(app, filename, expected):
++    assert app.select_jinja_autoescape(filename) is expected
++
++
+ def test_macros(app, req_ctx):
+     macro = flask.get_template_attribute("_macro.html", "hello")
+     assert macro("World") == "Hello World!"
+diff --git a/.keelson/changes/archive/2026-09-20-autoescape-extension-case/change.md b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/change.md
+new file mode 100644
+index 0000000..a5e6534
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/change.md
+@@ -0,0 +1,33 @@
++---
++tier: quick
++created: 2026-09-20
++status: in-progress
++owner: node
++branch: HEAD
++touches: [src/flask/sansio/app.py, tests/test_templating.py]
++---
++
++# autoescape-extension-case
++
++## Why
++`Flask.select_jinja_autoescape` only recognizes lowercase supported extensions,
++so templates such as `invoice.HTML` unexpectedly render without autoescaping.
++
++## What
++- Normalize the filename for the existing supported-extension check.
++- Add selector coverage for supported mixed-case names and retained behavior
++  for `None` and unsupported filenames.
++
++## Impact
++`Flask.select_jinja_autoescape` is supplied as Jinja's default `autoescape`
++callable by `Flask.create_jinja_environment`. This changes only its result for
++case variants of already-supported extensions; custom autoescape callables and
++all unsupported suffixes are unchanged.
++
++## Acceptance
++- [x] Supported extensions match regardless of filename case. — test:
++  `test_select_jinja_autoescape`
++- [x] `None` and filenames without supported extensions retain their prior
++  results. — test: `test_select_jinja_autoescape`
++- [x] The public test suite passes. — check:
++  `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests -q`
+diff --git a/.keelson/changes/archive/2026-09-20-autoescape-extension-case/evidence/8d3dc281a54f62d4700a745d8e80227375568e71e1fe369561e35c921f81517d.log b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/evidence/8d3dc281a54f62d4700a745d8e80227375568e71e1fe369561e35c921f81517d.log
+new file mode 100644
+index 0000000..96dbaca
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/evidence/8d3dc281a54f62d4700a745d8e80227375568e71e1fe369561e35c921f81517d.log
+@@ -0,0 +1,11 @@
++$ PYTHONPATH=src:.bench-pydeps python3 -m pytest tests -q
++exit 0
++
++........................................................................ [ 14%]
++........................................................................ [ 29%]
++........................................................................ [ 43%]
++........................................................................ [ 58%]
++........................................................................ [ 72%]
++........................................................................ [ 87%]
++................................................................         [100%]
++496 passed in 2.76s
+diff --git a/.keelson/changes/archive/2026-09-20-autoescape-extension-case/evidence/keys/80d2fbb900a6538bd24f31533052feaa1e2a2f31d7f7003cda37448a94a1fb4e.pem b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/evidence/keys/80d2fbb900a6538bd24f31533052feaa1e2a2f31d7f7003cda37448a94a1fb4e.pem
+new file mode 100644
+index 0000000..7b55497
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/evidence/keys/80d2fbb900a6538bd24f31533052feaa1e2a2f31d7f7003cda37448a94a1fb4e.pem
+@@ -0,0 +1,3 @@
++-----BEGIN PUBLIC KEY-----
++MCowBQYDK2VwAyEAgdrPWD3SUrq0N4dCZyd2IsO9jTzLxDtMe7FVtOIZBZU=
++-----END PUBLIC KEY-----
+diff --git a/.keelson/changes/archive/2026-09-20-autoescape-extension-case/evidence/public-key.pem b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/evidence/public-key.pem
+new file mode 100644
+index 0000000..7b55497
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/evidence/public-key.pem
+@@ -0,0 +1,3 @@
++-----BEGIN PUBLIC KEY-----
++MCowBQYDK2VwAyEAgdrPWD3SUrq0N4dCZyd2IsO9jTzLxDtMe7FVtOIZBZU=
++-----END PUBLIC KEY-----
+diff --git a/.keelson/changes/archive/2026-09-20-autoescape-extension-case/landed.json b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/landed.json
+new file mode 100644
+index 0000000..e203cfc
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/landed.json
+@@ -0,0 +1 @@
++{"status":"integrated","change":"autoescape-extension-case","at":"2026-09-20T11:31:06.127Z","forced":false}
+diff --git a/.keelson/changes/archive/2026-09-20-autoescape-extension-case/ledger.jsonl b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/ledger.jsonl
+new file mode 100644
+index 0000000..c20beb0
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/ledger.jsonl
+@@ -0,0 +1 @@
++{"payloadType":"application/vnd.in-toto+json","payload":"eyJfdHlwZSI6Imh0dHBzOi8vaW4tdG90by5pby9TdGF0ZW1lbnQvdjEiLCJzdWJqZWN0IjpbeyJuYW1lIjoid29ya3RyZWUiLCJkaWdlc3QiOnsiZ2l0VHJlZSI6IjA3OTBlZjdmZTA5MWE3NzQyOWMyNzBiMTExNjNmYzc2MjNlYzVmZTcifX0seyJuYW1lIjoiY29udHJhY3QiLCJkaWdlc3QiOnsic2hhMjU2IjoiYmU2YWQyOGRkNmYwZDE0NDU2MmUwOTNjMTA0OTZhN2JiMTQwZGMwY2FkOTEzZjY1MTE5ZTNhYmJkZjdiZjg2NCJ9fV0sInByZWRpY2F0ZVR5cGUiOiJodHRwczovL2dpdGh1Yi5jb20vQXRpbmdhaWkva2VlbHNvbi92ZXJpZmljYXRpb24vdjEiLCJwcmVkaWNhdGUiOnsiY2xhaW0iOiJEZWZhdWx0IGF1dG9lc2NhcGUgcmVjb2duaXplcyBzdXBwb3J0ZWQgZXh0ZW5zaW9ucyByZWdhcmRsZXNzIG9mIGZpbGVuYW1lIGNhc2U7IE5vbmUgYW5kIHVuc3VwcG9ydGVkIG5hbWVzIHJldGFpbiB0aGVpciBiZWhhdmlvci4iLCJzdGFydGVkT24iOiIyMDI2LTA5LTIwVDExOjMwOjUyLjQ0M1oiLCJmaW5pc2hlZE9uIjoiMjAyNi0wOS0yMFQxMTozMDo1Ni4wMTJaIiwidW5jaGFuZ2VkIjp0cnVlLCJjb21wbGV0ZSI6dHJ1ZSwicnVucyI6W3siY21kIjoiUFlUSE9OUEFUSD1zcmM6LmJlbmNoLXB5ZGVwcyBweXRob24zIC1tIHB5dGVzdCB0ZXN0cyAtcSIsIm5hbWUiOiJQWVRIT05QQVRIPXNyYzouYmVuY2gtcHlkZXBzIHB5dGhvbjMgLW0gcHl0ZXN0IHRlc3RzIC1xIiwia2luZCI6InRlc3QiLCJleGl0IjowLCJzaWduYWwiOm51bGwsInRpbWVkT3V0IjpmYWxzZSwidHJ1bmNhdGVkIjpmYWxzZSwidGVybWluYXRpb25VbmNvbmZpcm1lZCI6ZmFsc2UsImR1cmF0aW9uTXMiOjM1MDcsImxvZ0RpZ2VzdCI6IjhkM2RjMjgxYTU0ZjYyZDQ3MDBhNzQ1ZDhlODAyMjczNzU1NjhlNzFlMWZlMzY5NTYxZTM1YzkyMWY4MTUxN2QifV0sInJ1bm5lciI6eyJrZWVsc29uIjoiMC40LjAiLCJob3N0IjoiY29kZXgiLCJtb2RlbCI6bnVsbCwiYXR0cmlidXRpb24iOiJjYWxsZXItc3VwcGxpZWQifX19","signatures":[{"keyid":"80d2fbb900a6538bd24f31533052feaa1e2a2f31d7f7003cda37448a94a1fb4e","sig":"JIE+gKSX800HlceUMq0LZktVnlFhnRcJo35hM2KY+5Z7+cMQ40fUlRBAnMnB6FzQ/zOQWMrOjxytl0rKVE73Dw=="}]}
+diff --git a/.keelson/changes/archive/2026-09-20-autoescape-extension-case/ledger.md b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/ledger.md
+new file mode 100644
+index 0000000..be4174c
+--- /dev/null
++++ b/.keelson/changes/archive/2026-09-20-autoescape-extension-case/ledger.md
+@@ -0,0 +1,9 @@
++# Evidence ledger
++
++### Root cause: implicit-assumption
++The default selector assumed template filename extensions were lowercase.
++Fix: normalize the filename before checking the existing supported suffixes.
++Prevention: regression coverage includes mixed-case supported extensions.
++
++### Verify: Default autoescape recognizes supported extensions regardless of filename case; None and unsupported names retain their behavior.
++`PYTHONPATH=src:.bench-pydeps python3 -m pytest tests -q` exit 0 · tree 0790ef7fe091a77429c270b11163fc7623ec5fe7

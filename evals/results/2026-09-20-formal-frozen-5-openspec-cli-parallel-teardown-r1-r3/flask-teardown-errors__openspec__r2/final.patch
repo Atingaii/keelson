@@ -1,0 +1,176 @@
+diff --git a/openspec/changes/resilient-teardown-cleanup/.openspec.yaml b/openspec/changes/resilient-teardown-cleanup/.openspec.yaml
+new file mode 100644
+index 0000000..cbd245e
+--- /dev/null
++++ b/openspec/changes/resilient-teardown-cleanup/.openspec.yaml
+@@ -0,0 +1,2 @@
++schema: spec-driven
++created: 2026-09-20
+diff --git a/openspec/changes/resilient-teardown-cleanup/design.md b/openspec/changes/resilient-teardown-cleanup/design.md
+new file mode 100644
+index 0000000..7c37743
+--- /dev/null
++++ b/openspec/changes/resilient-teardown-cleanup/design.md
+@@ -0,0 +1,54 @@
++# Design
++
++## Context
++
++`Flask.do_teardown_request` and `Flask.do_teardown_appcontext` invoke callback
++lists followed by Blinker signals directly. A raised exception interrupts that
++sequence. `AppContext.pop` resets its context variable in a `finally` block,
++but an application teardown failure can currently prevent later signal work.
++
++## Goals / Non-Goals
++
++**Goals:**
++
++- Centralize collection and deferred raising of teardown failures.
++- Preserve callback ordering and continue across both callbacks and signal
++  receivers.
++- Ensure the context variable reset remains unconditional before deferred
++  errors escape.
++
++**Non-Goals:**
++
++- Change normal request dispatch or non-teardown signal error behavior.
++- Change teardown callback registration order or exception arguments.
++
++## Decisions
++
++- Introduce a small shared Flask helper that runs an iterable of cleanup
++  callables, collects `BaseException` instances, and raises after the iterable
++  is exhausted. This avoids duplicating collection rules between request and
++  application-context teardown.
++- Invoke teardown signal receivers through the same resilient mechanism rather
++  than relying on the signal's aggregate send method, because `send` stops at
++  its first receiver error. Preserve signal sender, arguments, and Flask's
++  async wrapper when invoking each receiver.
++- Use `BaseExceptionGroup` when it exists so every failure is retained. Keep a
++  compatibility fallback that raises the first error on older supported Python
++  versions.
++
++Alternatives considered: nesting `try`/`except` around each call in both
++teardown methods duplicates error policy and does not make signal receivers
++resilient; suppressing failures loses teardown diagnostics.
++
++## Risks / Trade-offs
++
++- [Signal receiver ordering is managed by Blinker] → Preserve the order
++  returned by the signal's receiver iterator and cover all receivers in tests.
++- [Teardown can now expose grouped errors] → This is the settled compatibility
++  behavior and occurs only after all cleanup completes.
++
++## Migration Plan
++
++No deployment or data migration is required. Existing applications retain
++callback ordering; applications that inspect teardown failures may receive an
++exception group on supported Python versions.
+diff --git a/openspec/changes/resilient-teardown-cleanup/proposal.md b/openspec/changes/resilient-teardown-cleanup/proposal.md
+new file mode 100644
+index 0000000..6a3d470
+--- /dev/null
++++ b/openspec/changes/resilient-teardown-cleanup/proposal.md
+@@ -0,0 +1,36 @@
++# Proposal
++
++## Why
++
++An exception from a teardown callback currently prevents later callbacks and
++the teardown signal from running, which can leave resources unclosed. Teardown
++must make a best effort to finish registered cleanup while still reporting its
++failures.
++
++## What Changes
++
++- Run every request and application-context teardown callback even if one or
++  more callbacks fail.
++- Send the corresponding teardown signal after callback failures as part of the
++  same best-effort cleanup.
++- Raise collected teardown failures only after cleanup and context restoration;
++  use an exception group where the running Python supports it.
++- Add regression tests for callback, signal, error aggregation, and
++  context-restoration behavior.
++
++## Capabilities
++
++### New Capabilities
++
++- `resilient-teardown-cleanup`: Best-effort request and application-context
++  teardown with deferred error reporting.
++
++### Modified Capabilities
++
++None.
++
++## Impact
++
++Changes `src/flask/app.py` and `src/flask/ctx.py`, with focused coverage in
++the context teardown tests. Applications may observe grouped teardown errors
++on supported Python versions after all cleanup has run.
+diff --git a/openspec/changes/resilient-teardown-cleanup/specs/resilient-teardown-cleanup/spec.md b/openspec/changes/resilient-teardown-cleanup/specs/resilient-teardown-cleanup/spec.md
+new file mode 100644
+index 0000000..ce4100b
+--- /dev/null
++++ b/openspec/changes/resilient-teardown-cleanup/specs/resilient-teardown-cleanup/spec.md
+@@ -0,0 +1,36 @@
++# Spec Delta
++
++## Purpose
++
++Ensure Flask context teardown completes registered cleanup despite individual
++cleanup failures and reports those failures only after context cleanup.
++
++## ADDED Requirements
++
++### Requirement: Teardown completes best-effort cleanup
++During request and application-context teardown, Flask MUST invoke every
++registered teardown callback in its existing order and MUST send the matching
++teardown signal even if preceding teardown callbacks or signal receivers raise.
++After all teardown work has been attempted, Flask MUST raise the collected
++teardown failures. On Python versions with exception groups, the raised error
++MUST preserve every collected failure; on older Python versions, Flask MAY
++raise the first collected failure.
++
++#### Scenario: Multiple request teardown callbacks fail
++- **WHEN** more than one request teardown callback raises during context pop
++- **THEN** later callbacks and the request teardown signal are invoked before
++  the collected teardown failures are raised
++
++#### Scenario: Application teardown signal receiver fails
++- **WHEN** an application-context teardown signal receiver raises
++- **THEN** Flask finishes attempting the signal's remaining receivers and
++  raises the collected failure after callbacks and receivers complete
++
++### Requirement: Context state is restored after teardown failure
++Flask MUST restore context-local state before a deferred teardown failure
++leaves a request or application context.
++
++#### Scenario: Context pop reports cleanup failures
++- **WHEN** teardown raises one or more deferred failures while popping a context
++- **THEN** no application or request context remains active after the error is
++  caught
+diff --git a/openspec/changes/resilient-teardown-cleanup/tasks.md b/openspec/changes/resilient-teardown-cleanup/tasks.md
+new file mode 100644
+index 0000000..54b103f
+--- /dev/null
++++ b/openspec/changes/resilient-teardown-cleanup/tasks.md
+@@ -0,0 +1,18 @@
++# Tasks
++
++## 1. Resilient teardown execution
++
++- [ ] 1.1 Add shared teardown execution that attempts all callbacks and
++  teardown signal receivers, then reports collected errors; verify focused
++  teardown tests pass.
++- [ ] 1.2 Preserve unconditional context-local restoration while deferred
++  teardown errors leave context pop; verify no app or request context remains
++  active after a teardown failure.
++
++## 2. Regression coverage
++
++- [ ] 2.1 Add tests covering multiple request and application teardown
++  callback failures, signal receiver failures, ordering, and exception-group
++  contents; verify `tests/test_appctx.py` passes.
++- [ ] 2.2 Run the provided public context test command and OpenSpec strict
++  validation; verify both complete successfully.

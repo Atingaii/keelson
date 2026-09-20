@@ -1,0 +1,99 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".agents/skills/superpowers",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc 'for f in /workspace/.agents/skills/superpowers/{using-superpowers,brainstorming,using-git-worktrees,writing-plans,test-driven-development,executing-plans,verification-before-completion}/SKILL.md; do echo \"### $f\"; sed -n '\"'1,240p' \\\"\"'$f\"; done'"
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc 'for f in /workspace/.agents/skills/superpowers/{using-superpowers,brainstorming,using-git-worktrees,writing-plans,test-driven-development,executing-plans,verification-before-completion}/SKILL.md; do echo \"### $f\"; sed -n '\"'1,240p' \\\"\"'$f\"; done'"
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc \"sed -n '1,220p' /workspace/.agents/skills/superpowers/using-superpowers/references/codex-tools.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/using-git-worktrees/SKILL.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/writing-plans/SKILL.md\""
+    },
+    {
+      "index": 7,
+      "command": "/bin/bash -lc \"sed -n '1,220p' /workspace/.agents/skills/superpowers/using-superpowers/references/codex-tools.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/using-git-worktrees/SKILL.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/writing-plans/SKILL.md\""
+    },
+    {
+      "index": 14,
+      "command": "/bin/bash -lc \"sed -n '250,540p' src/flask/ctx.py\nsed -n '1390,1480p' src/flask/app.py\nsed -n '760,850p' tests/test_basic.py\nsed -n '1,100p' tests/test_reqctx.py\nsed -n '145,195p' tests/test_signals.py\nsed -n '1,180p' tests/conftest.py\nsed -n '1,220p' /workspace/.agents/skills/superpowers/test-driven-development/writing-good-tests.md\""
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"sed -n '250,540p' src/flask/ctx.py\nsed -n '1390,1480p' src/flask/app.py\nsed -n '760,850p' tests/test_basic.py\nsed -n '1,100p' tests/test_reqctx.py\nsed -n '145,195p' tests/test_signals.py\nsed -n '1,180p' tests/conftest.py\nsed -n '1,220p' /workspace/.agents/skills/superpowers/test-driven-development/writing-good-tests.md\""
+    },
+    {
+      "index": 38,
+      "command": "/bin/bash -lc \"sed -n '1,260p' /workspace/.agents/skills/superpowers/requesting-code-review/SKILL.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/finishing-a-development-branch/SKILL.md\nPYTHONPATH=src:.bench-pydeps python3 -m ruff check src/flask/app.py src/flask/ctx.py tests/test_appctx.py\""
+    },
+    {
+      "index": 39,
+      "command": "/bin/bash -lc \"sed -n '1,260p' /workspace/.agents/skills/superpowers/requesting-code-review/SKILL.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/finishing-a-development-branch/SKILL.md\nPYTHONPATH=src:.bench-pydeps python3 -m ruff check src/flask/app.py src/flask/ctx.py tests/test_appctx.py\""
+    },
+    {
+      "index": 41,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/requesting-code-review/code-reviewer.md\ngit diff --stat\ngit diff --check\ngit rev-parse HEAD\""
+    },
+    {
+      "index": 42,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/requesting-code-review/code-reviewer.md\ngit diff --stat\ngit diff --check\ngit rev-parse HEAD\""
+    }
+  ],
+  "guidance_read_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc 'for f in /workspace/.agents/skills/superpowers/{using-superpowers,brainstorming,using-git-worktrees,writing-plans,test-driven-development,executing-plans,verification-before-completion}/SKILL.md; do echo \"### $f\"; sed -n '\"'1,240p' \\\"\"'$f\"; done'"
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc 'for f in /workspace/.agents/skills/superpowers/{using-superpowers,brainstorming,using-git-worktrees,writing-plans,test-driven-development,executing-plans,verification-before-completion}/SKILL.md; do echo \"### $f\"; sed -n '\"'1,240p' \\\"\"'$f\"; done'"
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc \"sed -n '1,220p' /workspace/.agents/skills/superpowers/using-superpowers/references/codex-tools.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/using-git-worktrees/SKILL.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/writing-plans/SKILL.md\""
+    },
+    {
+      "index": 7,
+      "command": "/bin/bash -lc \"sed -n '1,220p' /workspace/.agents/skills/superpowers/using-superpowers/references/codex-tools.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/using-git-worktrees/SKILL.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/test-driven-development/SKILL.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/writing-plans/SKILL.md\""
+    },
+    {
+      "index": 14,
+      "command": "/bin/bash -lc \"sed -n '250,540p' src/flask/ctx.py\nsed -n '1390,1480p' src/flask/app.py\nsed -n '760,850p' tests/test_basic.py\nsed -n '1,100p' tests/test_reqctx.py\nsed -n '145,195p' tests/test_signals.py\nsed -n '1,180p' tests/conftest.py\nsed -n '1,220p' /workspace/.agents/skills/superpowers/test-driven-development/writing-good-tests.md\""
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"sed -n '250,540p' src/flask/ctx.py\nsed -n '1390,1480p' src/flask/app.py\nsed -n '760,850p' tests/test_basic.py\nsed -n '1,100p' tests/test_reqctx.py\nsed -n '145,195p' tests/test_signals.py\nsed -n '1,180p' tests/conftest.py\nsed -n '1,220p' /workspace/.agents/skills/superpowers/test-driven-development/writing-good-tests.md\""
+    },
+    {
+      "index": 38,
+      "command": "/bin/bash -lc \"sed -n '1,260p' /workspace/.agents/skills/superpowers/requesting-code-review/SKILL.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/finishing-a-development-branch/SKILL.md\nPYTHONPATH=src:.bench-pydeps python3 -m ruff check src/flask/app.py src/flask/ctx.py tests/test_appctx.py\""
+    },
+    {
+      "index": 39,
+      "command": "/bin/bash -lc \"sed -n '1,260p' /workspace/.agents/skills/superpowers/requesting-code-review/SKILL.md\nsed -n '1,260p' /workspace/.agents/skills/superpowers/finishing-a-development-branch/SKILL.md\nPYTHONPATH=src:.bench-pydeps python3 -m ruff check src/flask/app.py src/flask/ctx.py tests/test_appctx.py\""
+    },
+    {
+      "index": 41,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/requesting-code-review/code-reviewer.md\ngit diff --stat\ngit diff --check\ngit rev-parse HEAD\""
+    },
+    {
+      "index": 42,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/superpowers/requesting-code-review/code-reviewer.md\ngit diff --stat\ngit diff --check\ngit rev-parse HEAD\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command that reads a project-local guidance artifact (or, for Keelson, invokes guide/ask/check/record) to establish activation. Listing paths alone is insufficient. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

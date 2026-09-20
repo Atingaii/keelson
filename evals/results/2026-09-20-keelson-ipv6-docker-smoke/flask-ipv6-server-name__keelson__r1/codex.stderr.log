@@ -1,0 +1,5 @@
+invalid argument "type=bind,src=/tmp/keelson-bench-run-tAch5T/worktree,dst=/workspace,rw" for "--mount" flag: invalid field 'rw' must be a key=value pair
+
+Usage:  docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
+
+Run 'docker run --help' for more information

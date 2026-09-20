@@ -1,0 +1,83 @@
+[
+  {
+    "task": "flask-autoescape-case",
+    "method": "openspec",
+    "repetition": 1,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4380,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-autoescape-case",
+    "method": "openspec",
+    "repetition": 2,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 3968,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-autoescape-case",
+    "method": "openspec",
+    "repetition": 3,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 5816,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-ipv6-server-name",
+    "method": "openspec",
+    "repetition": 1,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4124,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-ipv6-server-name",
+    "method": "openspec",
+    "repetition": 2,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4831,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-ipv6-server-name",
+    "method": "openspec",
+    "repetition": 3,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4151,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-teardown-errors",
+    "method": "openspec",
+    "repetition": 1,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4306,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-teardown-errors",
+    "method": "openspec",
+    "repetition": 2,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 4113,
+    "worktree_retained_at": null
+  },
+  {
+    "task": "flask-teardown-errors",
+    "method": "openspec",
+    "repetition": 3,
+    "pass": false,
+    "harness_error": "could not make upstream-fix history inaccessible to the model",
+    "elapsed_ms": 5249,
+    "worktree_retained_at": null
+  }
+]

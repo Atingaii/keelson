@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "remote",
+    "remove",
+    "origin"
+  ],
+  "cwd": "/tmp/keelson-bench-run-oIQaoI/worktree",
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 7
+}

@@ -1,0 +1,10 @@
+Reading additional input from stdin...
+2026-09-20T10:00:34.909309Z ERROR codex_core::agents_md: error trying to find AGENTS.md docs: Permission denied (os error 13) environment_id="local"
+2026-09-20T10:00:34.921173Z ERROR codex_core::session::session: failed to load skill /workspace/.agents/skills/keelson/SKILL.md: failed to read file: Permission denied (os error 13)
+2026-09-20T10:00:35.066435Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 401 Unauthorized, url: wss://api.openai.com/v1/responses
+2026-09-20T10:00:35.112337Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 401 Unauthorized, url: wss://api.openai.com/v1/responses
+2026-09-20T10:00:35.364411Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 401 Unauthorized, url: wss://api.openai.com/v1/responses
+2026-09-20T10:00:35.756512Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 401 Unauthorized, url: wss://api.openai.com/v1/responses
+2026-09-20T10:00:36.534009Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 401 Unauthorized, url: wss://api.openai.com/v1/responses
+2026-09-20T10:00:38.114774Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 401 Unauthorized, url: wss://api.openai.com/v1/responses
+2026-09-20T10:00:41.327724Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 401 Unauthorized, url: wss://api.openai.com/v1/responses

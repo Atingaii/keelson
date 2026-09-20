@@ -1,0 +1,216 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "openspec",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"pwd && rg --files -g 'AGENTS.md' -g 'SKILL.md' -g 'openspec*' -g 'pyproject.toml' -g 'tox.ini' -g 'tests/**' | sed -n '1,160p'\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"pwd && rg --files -g 'AGENTS.md' -g 'SKILL.md' -g 'openspec*' -g 'pyproject.toml' -g 'tox.ini' -g 'tests/**' | sed -n '1,160p'\""
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/openspec-propose/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/openspec-apply-change/SKILL.md && find . -name AGENTS.md -print\""
+    },
+    {
+      "index": 7,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/openspec-propose/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/openspec-apply-change/SKILL.md && find . -name AGENTS.md -print\""
+    },
+    {
+      "index": 8,
+      "command": "/bin/bash -lc \"sed -n '261,520p' /workspace/.agents/skills/openspec-apply-change/SKILL.md\nfind . -name AGENTS.md -print\nopenspec list --json\""
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc \"sed -n '261,520p' /workspace/.agents/skills/openspec-apply-change/SKILL.md\nfind . -name AGENTS.md -print\nopenspec list --json\""
+    },
+    {
+      "index": 11,
+      "command": "/bin/bash -lc \"openspec context --json\nif [ -f openspec/config.yaml ]; then sed -n '1,240p' openspec/config.yaml; elif [ -f openspec/config.yml ]; then sed -n '1,240p' openspec/config.yml; fi\nfind . -maxdepth 2 -name AGENTS.md -print\""
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc \"openspec context --json\nif [ -f openspec/config.yaml ]; then sed -n '1,240p' openspec/config.yaml; elif [ -f openspec/config.yml ]; then sed -n '1,240p' openspec/config.yml; fi\nfind . -maxdepth 2 -name AGENTS.md -print\""
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc 'openspec new change \"case-insensitive-template-autoescape\"\nopenspec status --change \"case-insensitive-template-autoescape\" --json'"
+    },
+    {
+      "index": 14,
+      "command": "/bin/bash -lc 'openspec new change \"case-insensitive-template-autoescape\"\nopenspec status --change \"case-insensitive-template-autoescape\" --json'"
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"openspec instructions proposal --change \\\"case-insensitive-template-autoescape\\\" --json\nfind src tests -type f | head -80\nfind . -maxdepth 2 -type f \\\\( -name 'AGENTS.md' -o -name 'pyproject.toml' -o -name 'tox.ini' \\\\) -print\""
+    },
+    {
+      "index": 16,
+      "command": "/bin/bash -lc \"openspec instructions proposal --change \\\"case-insensitive-template-autoescape\\\" --json\nfind src tests -type f | head -80\nfind . -maxdepth 2 -type f \\\\( -name 'AGENTS.md' -o -name 'pyproject.toml' -o -name 'tox.ini' \\\\) -print\""
+    },
+    {
+      "index": 17,
+      "command": "/bin/bash -lc \"openspec list --specs --json\nsed -n '1,260p' src/flask/templating.py\nsed -n '1,300p' tests/test_templating.py\""
+    },
+    {
+      "index": 18,
+      "command": "/bin/bash -lc \"openspec list --specs --json\nsed -n '1,260p' src/flask/templating.py\nsed -n '1,300p' tests/test_templating.py\""
+    },
+    {
+      "index": 19,
+      "command": "/bin/bash -lc \"grep -RIn \\\"select_autoescape\\\\|autoescape\\\" src/flask tests | head -100\nfind openspec -maxdepth 3 -type f -print\""
+    },
+    {
+      "index": 20,
+      "command": "/bin/bash -lc \"grep -RIn \\\"select_autoescape\\\\|autoescape\\\" src/flask tests | head -100\nfind openspec -maxdepth 3 -type f -print\""
+    },
+    {
+      "index": 21,
+      "command": "/bin/bash -lc \"sed -n '490,560p' src/flask/sansio/app.py\nsed -n '450,500p' src/flask/app.py\nopenspec instructions specs --change \\\"case-insensitive-template-autoescape\\\" --json\""
+    },
+    {
+      "index": 22,
+      "command": "/bin/bash -lc \"sed -n '490,560p' src/flask/sansio/app.py\nsed -n '450,500p' src/flask/app.py\nopenspec instructions specs --change \\\"case-insensitive-template-autoescape\\\" --json\""
+    },
+    {
+      "index": 27,
+      "command": "/bin/bash -lc 'test -f openspec/changes/case-insensitive-template-autoescape/proposal.md\nopenspec status --change \"case-insensitive-template-autoescape\" --json\nopenspec instructions specs --change \"case-insensitive-template-autoescape\" --json\nopenspec instructions design --change \"case-insensitive-template-autoescape\" --json'"
+    },
+    {
+      "index": 28,
+      "command": "/bin/bash -lc 'test -f openspec/changes/case-insensitive-template-autoescape/proposal.md\nopenspec status --change \"case-insensitive-template-autoescape\" --json\nopenspec instructions specs --change \"case-insensitive-template-autoescape\" --json\nopenspec instructions design --change \"case-insensitive-template-autoescape\" --json'"
+    },
+    {
+      "index": 29,
+      "command": "/bin/bash -lc \"sed -n '1,240p' openspec/changes/case-insensitive-template-autoescape/proposal.md\""
+    },
+    {
+      "index": 30,
+      "command": "/bin/bash -lc \"sed -n '1,240p' openspec/changes/case-insensitive-template-autoescape/proposal.md\""
+    },
+    {
+      "index": 33,
+      "command": "/bin/bash -lc 'test -f openspec/changes/case-insensitive-template-autoescape/specs/template-autoescape-selection/spec.md\ntest -f openspec/changes/case-insensitive-template-autoescape/design.md\nopenspec status --change \"case-insensitive-template-autoescape\" --json\nopenspec instructions tasks --change \"case-insensitive-template-autoescape\" --json'"
+    },
+    {
+      "index": 34,
+      "command": "/bin/bash -lc 'test -f openspec/changes/case-insensitive-template-autoescape/specs/template-autoescape-selection/spec.md\ntest -f openspec/changes/case-insensitive-template-autoescape/design.md\nopenspec status --change \"case-insensitive-template-autoescape\" --json\nopenspec instructions tasks --change \"case-insensitive-template-autoescape\" --json'"
+    },
+    {
+      "index": 35,
+      "command": "/bin/bash -lc \"sed -n '1,260p' openspec/changes/case-insensitive-template-autoescape/specs/template-autoescape-selection/spec.md\nsed -n '1,260p' openspec/changes/case-insensitive-template-autoescape/design.md\""
+    },
+    {
+      "index": 36,
+      "command": "/bin/bash -lc \"sed -n '1,260p' openspec/changes/case-insensitive-template-autoescape/specs/template-autoescape-selection/spec.md\nsed -n '1,260p' openspec/changes/case-insensitive-template-autoescape/design.md\""
+    },
+    {
+      "index": 39,
+      "command": "/bin/bash -lc 'test -f openspec/changes/case-insensitive-template-autoescape/tasks.md\nopenspec status --change \"case-insensitive-template-autoescape\"\nopenspec validate \"case-insensitive-template-autoescape\" --strict'"
+    },
+    {
+      "index": 40,
+      "command": "/bin/bash -lc 'test -f openspec/changes/case-insensitive-template-autoescape/tasks.md\nopenspec status --change \"case-insensitive-template-autoescape\"\nopenspec validate \"case-insensitive-template-autoescape\" --strict'"
+    }
+  ],
+  "guidance_read_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"pwd && rg --files -g 'AGENTS.md' -g 'SKILL.md' -g 'openspec*' -g 'pyproject.toml' -g 'tox.ini' -g 'tests/**' | sed -n '1,160p'\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"pwd && rg --files -g 'AGENTS.md' -g 'SKILL.md' -g 'openspec*' -g 'pyproject.toml' -g 'tox.ini' -g 'tests/**' | sed -n '1,160p'\""
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/openspec-propose/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/openspec-apply-change/SKILL.md && find . -name AGENTS.md -print\""
+    },
+    {
+      "index": 7,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/openspec-propose/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/openspec-apply-change/SKILL.md && find . -name AGENTS.md -print\""
+    },
+    {
+      "index": 8,
+      "command": "/bin/bash -lc \"sed -n '261,520p' /workspace/.agents/skills/openspec-apply-change/SKILL.md\nfind . -name AGENTS.md -print\nopenspec list --json\""
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc \"sed -n '261,520p' /workspace/.agents/skills/openspec-apply-change/SKILL.md\nfind . -name AGENTS.md -print\nopenspec list --json\""
+    },
+    {
+      "index": 11,
+      "command": "/bin/bash -lc \"openspec context --json\nif [ -f openspec/config.yaml ]; then sed -n '1,240p' openspec/config.yaml; elif [ -f openspec/config.yml ]; then sed -n '1,240p' openspec/config.yml; fi\nfind . -maxdepth 2 -name AGENTS.md -print\""
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc \"openspec context --json\nif [ -f openspec/config.yaml ]; then sed -n '1,240p' openspec/config.yaml; elif [ -f openspec/config.yml ]; then sed -n '1,240p' openspec/config.yml; fi\nfind . -maxdepth 2 -name AGENTS.md -print\""
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"openspec instructions proposal --change \\\"case-insensitive-template-autoescape\\\" --json\nfind src tests -type f | head -80\nfind . -maxdepth 2 -type f \\\\( -name 'AGENTS.md' -o -name 'pyproject.toml' -o -name 'tox.ini' \\\\) -print\""
+    },
+    {
+      "index": 16,
+      "command": "/bin/bash -lc \"openspec instructions proposal --change \\\"case-insensitive-template-autoescape\\\" --json\nfind src tests -type f | head -80\nfind . -maxdepth 2 -type f \\\\( -name 'AGENTS.md' -o -name 'pyproject.toml' -o -name 'tox.ini' \\\\) -print\""
+    },
+    {
+      "index": 17,
+      "command": "/bin/bash -lc \"openspec list --specs --json\nsed -n '1,260p' src/flask/templating.py\nsed -n '1,300p' tests/test_templating.py\""
+    },
+    {
+      "index": 18,
+      "command": "/bin/bash -lc \"openspec list --specs --json\nsed -n '1,260p' src/flask/templating.py\nsed -n '1,300p' tests/test_templating.py\""
+    },
+    {
+      "index": 19,
+      "command": "/bin/bash -lc \"grep -RIn \\\"select_autoescape\\\\|autoescape\\\" src/flask tests | head -100\nfind openspec -maxdepth 3 -type f -print\""
+    },
+    {
+      "index": 20,
+      "command": "/bin/bash -lc \"grep -RIn \\\"select_autoescape\\\\|autoescape\\\" src/flask tests | head -100\nfind openspec -maxdepth 3 -type f -print\""
+    },
+    {
+      "index": 21,
+      "command": "/bin/bash -lc \"sed -n '490,560p' src/flask/sansio/app.py\nsed -n '450,500p' src/flask/app.py\nopenspec instructions specs --change \\\"case-insensitive-template-autoescape\\\" --json\""
+    },
+    {
+      "index": 22,
+      "command": "/bin/bash -lc \"sed -n '490,560p' src/flask/sansio/app.py\nsed -n '450,500p' src/flask/app.py\nopenspec instructions specs --change \\\"case-insensitive-template-autoescape\\\" --json\""
+    },
+    {
+      "index": 29,
+      "command": "/bin/bash -lc \"sed -n '1,240p' openspec/changes/case-insensitive-template-autoescape/proposal.md\""
+    },
+    {
+      "index": 30,
+      "command": "/bin/bash -lc \"sed -n '1,240p' openspec/changes/case-insensitive-template-autoescape/proposal.md\""
+    },
+    {
+      "index": 35,
+      "command": "/bin/bash -lc \"sed -n '1,260p' openspec/changes/case-insensitive-template-autoescape/specs/template-autoescape-selection/spec.md\nsed -n '1,260p' openspec/changes/case-insensitive-template-autoescape/design.md\""
+    },
+    {
+      "index": 36,
+      "command": "/bin/bash -lc \"sed -n '1,260p' openspec/changes/case-insensitive-template-autoescape/specs/template-autoescape-selection/spec.md\nsed -n '1,260p' openspec/changes/case-insensitive-template-autoescape/design.md\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command that reads a project-local guidance artifact (or, for Keelson, invokes guide/ask/check/record) to establish activation. Listing paths alone is insufficient. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

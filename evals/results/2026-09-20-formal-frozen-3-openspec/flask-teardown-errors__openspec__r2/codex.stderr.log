@@ -1,0 +1,16 @@
+Reading additional input from stdin...
+2026-09-20T11:06:12.881062Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /workspace/src/flask/app.py:
+        .. versionchanged:: 0.9
+            Added the ``exc`` argument.
+        """
+
+        for name in chain(ctx.request.blueprints, (None,)):
+            if name in self.teardown_request_funcs:
+                for func in reversed(self.teardown_request_funcs[name]):
+                    self.ensure_sync(func)(exc)
+
+        request_tearing_down.send(self, _async_wrapper=self.ensure_sync, exc=exc)
+
+    def do_teardown_appcontext(
+        self, ctx: AppContext, exc: BaseException | None = None
+    ) -> None:

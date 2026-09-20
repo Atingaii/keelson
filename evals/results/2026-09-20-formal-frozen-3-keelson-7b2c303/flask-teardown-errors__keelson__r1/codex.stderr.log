@@ -1,0 +1,6 @@
+Reading additional input from stdin...
+2026-09-20T11:52:10.344829Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /workspace/.keelson/changes/exhaustive-teardown/change.md:
+## What
+- Outcome: …
+- Non-goal: … (a bullet that starts with the word BREAKING in **bold** marks a breaking change and needs a Rollout section)
+2026-09-20T11:58:38.571821Z ERROR codex_core::tools::router: error=apply_patch verification failed: invalid hunk at line 8, Unexpected line found in update hunk: '*** Update File: /workspace/tests/test_appctx.py'. Every line should start with ' ' (context line), '+' (added line), or '-' (removed line)

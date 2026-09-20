@@ -1,0 +1,3649 @@
+diff --git a/src/flask/app.py b/src/flask/app.py
+index 7585dda6..0677a123 100644
+--- a/src/flask/app.py
++++ b/src/flask/app.py
+@@ -721,7 +721,15 @@ class Flask(App):
+         sn_host = sn_port = None
+ 
+         if server_name:
+-            sn_host, _, sn_port = server_name.partition(":")
++            if server_name.startswith("["):
++                sn_host, _, sn_port = server_name[1:].partition("]")
++
++                if sn_port.startswith(":"):
++                    sn_port = sn_port[1:]
++                else:
++                    sn_port = None
++            else:
++                sn_host, _, sn_port = server_name.partition(":")
+ 
+         if not host:
+             if sn_host:
+diff --git a/tests/test_basic.py b/tests/test_basic.py
+index 1d9d83f8..3d2f3baa 100644
+--- a/tests/test_basic.py
++++ b/tests/test_basic.py
+@@ -1910,6 +1910,7 @@ def test_run_server_port(monkeypatch, app):
+         ("localhost", 0, "localhost:8080", "localhost", 0),
+         (None, None, "localhost:8080", "localhost", 8080),
+         (None, None, "localhost:0", "localhost", 0),
++        (None, None, "[::1]:8080", "::1", 8080),
+     ),
+ )
+ def test_run_from_config(
+diff --git a/src/flask/app.py b/src/flask/app.py
+new file mode 100644
+index 00000000..0677a123
+--- /dev/null
++++ b/src/flask/app.py
+@@ -0,0 +1,1633 @@
++from __future__ import annotations
++
++import collections.abc as cabc
++import inspect
++import os
++import sys
++import typing as t
++import weakref
++from datetime import timedelta
++from functools import update_wrapper
++from inspect import iscoroutinefunction
++from itertools import chain
++from types import TracebackType
++from urllib.parse import quote as _url_quote
++
++import click
++from werkzeug.datastructures import Headers
++from werkzeug.datastructures import ImmutableDict
++from werkzeug.exceptions import BadRequestKeyError
++from werkzeug.exceptions import HTTPException
++from werkzeug.exceptions import InternalServerError
++from werkzeug.routing import BuildError
++from werkzeug.routing import MapAdapter
++from werkzeug.routing import RequestRedirect
++from werkzeug.routing import RoutingException
++from werkzeug.routing import Rule
++from werkzeug.serving import is_running_from_reloader
++from werkzeug.wrappers import Response as BaseResponse
++from werkzeug.wsgi import get_host
++
++from . import cli
++from . import typing as ft
++from .ctx import AppContext
++from .globals import _cv_app
++from .globals import app_ctx
++from .globals import g
++from .globals import request
++from .globals import session
++from .helpers import _CollectErrors
++from .helpers import get_debug_flag
++from .helpers import get_flashed_messages
++from .helpers import get_load_dotenv
++from .helpers import send_from_directory
++from .sansio.app import App
++from .sessions import SecureCookieSessionInterface
++from .sessions import SessionInterface
++from .signals import appcontext_tearing_down
++from .signals import got_request_exception
++from .signals import request_finished
++from .signals import request_started
++from .signals import request_tearing_down
++from .templating import Environment
++from .wrappers import Request
++from .wrappers import Response
++
++if t.TYPE_CHECKING:  # pragma: no cover
++    from _typeshed.wsgi import StartResponse
++    from _typeshed.wsgi import WSGIEnvironment
++
++    from .testing import FlaskClient
++    from .testing import FlaskCliRunner
++    from .typing import HeadersValue
++
++T_shell_context_processor = t.TypeVar(
++    "T_shell_context_processor", bound=ft.ShellContextProcessorCallable
++)
++T_teardown = t.TypeVar("T_teardown", bound=ft.TeardownCallable)
++T_template_filter = t.TypeVar("T_template_filter", bound=ft.TemplateFilterCallable)
++T_template_global = t.TypeVar("T_template_global", bound=ft.TemplateGlobalCallable)
++T_template_test = t.TypeVar("T_template_test", bound=ft.TemplateTestCallable)
++
++
++def _make_timedelta(value: timedelta | int | None) -> timedelta | None:
++    if value is None or isinstance(value, timedelta):
++        return value
++
++    return timedelta(seconds=value)
++
++
++F = t.TypeVar("F", bound=t.Callable[..., t.Any])
++
++
++# Other methods may call the overridden method with the new ctx arg. Remove it
++# and call the method with the remaining args.
++def remove_ctx(f: F) -> F:
++    def wrapper(self: Flask, *args: t.Any, **kwargs: t.Any) -> t.Any:
++        if args and isinstance(args[0], AppContext):
++            args = args[1:]
++
++        return f(self, *args, **kwargs)
++
++    return update_wrapper(wrapper, f)  # type: ignore[return-value]
++
++
++# The overridden method may call super().base_method without the new ctx arg.
++# Add it to the args for the call.
++def add_ctx(f: F) -> F:
++    def wrapper(self: Flask, *args: t.Any, **kwargs: t.Any) -> t.Any:
++        if not args:
++            args = (app_ctx._get_current_object(),)
++        elif not isinstance(args[0], AppContext):
++            args = (app_ctx._get_current_object(), *args)
++
++        return f(self, *args, **kwargs)
++
++    return update_wrapper(wrapper, f)  # type: ignore[return-value]
++
++
++class Flask(App):
++    """The flask object implements a WSGI application and acts as the central
++    object.  It is passed the name of the module or package of the
++    application.  Once it is created it will act as a central registry for
++    the view functions, the URL rules, template configuration and much more.
++
++    The name of the package is used to resolve resources from inside the
++    package or the folder the module is contained in depending on if the
++    package parameter resolves to an actual python package (a folder with
++    an :file:`__init__.py` file inside) or a standard module (just a ``.py`` file).
++
++    For more information about resource loading, see :func:`open_resource`.
++
++    Usually you create a :class:`Flask` instance in your main module or
++    in the :file:`__init__.py` file of your package like this::
++
++        from flask import Flask
++        app = Flask(__name__)
++
++    .. admonition:: About the First Parameter
++
++        The idea of the first parameter is to give Flask an idea of what
++        belongs to your application.  This name is used to find resources
++        on the filesystem, can be used by extensions to improve debugging
++        information and a lot more.
++
++        So it's important what you provide there.  If you are using a single
++        module, `__name__` is always the correct value.  If you however are
++        using a package, it's usually recommended to hardcode the name of
++        your package there.
++
++        For example if your application is defined in :file:`yourapplication/app.py`
++        you should create it with one of the two versions below::
++
++            app = Flask('yourapplication')
++            app = Flask(__name__.split('.')[0])
++
++        Why is that?  The application will work even with `__name__`, thanks
++        to how resources are looked up.  However it will make debugging more
++        painful.  Certain extensions can make assumptions based on the
++        import name of your application.  For example the Flask-SQLAlchemy
++        extension will look for the code in your application that triggered
++        an SQL query in debug mode.  If the import name is not properly set
++        up, that debugging information is lost.  (For example it would only
++        pick up SQL queries in `yourapplication.app` and not
++        `yourapplication.views.frontend`)
++
++    .. versionadded:: 0.7
++       The `static_url_path`, `static_folder`, and `template_folder`
++       parameters were added.
++
++    .. versionadded:: 0.8
++       The `instance_path` and `instance_relative_config` parameters were
++       added.
++
++    .. versionadded:: 0.11
++       The `root_path` parameter was added.
++
++    .. versionadded:: 1.0
++       The ``host_matching`` and ``static_host`` parameters were added.
++
++    .. versionadded:: 1.0
++       The ``subdomain_matching`` parameter was added. Subdomain
++       matching needs to be enabled manually now. Setting
++       :data:`SERVER_NAME` does not implicitly enable it.
++
++    :param import_name: the name of the application package
++    :param static_url_path: can be used to specify a different path for the
++                            static files on the web.  Defaults to the name
++                            of the `static_folder` folder.
++    :param static_folder: The folder with static files that is served at
++        ``static_url_path``. Relative to the application ``root_path``
++        or an absolute path. Defaults to ``'static'``.
++    :param static_host: the host to use when adding the static route.
++        Defaults to None. Required when using ``host_matching=True``
++        with a ``static_folder`` configured.
++    :param host_matching: set ``url_map.host_matching`` attribute.
++        Defaults to False.
++    :param subdomain_matching: consider the subdomain relative to
++        :data:`SERVER_NAME` when matching routes. Defaults to False.
++    :param template_folder: the folder that contains the templates that should
++                            be used by the application.  Defaults to
++                            ``'templates'`` folder in the root path of the
++                            application.
++    :param instance_path: An alternative instance path for the application.
++                          By default the folder ``'instance'`` next to the
++                          package or module is assumed to be the instance
++                          path.
++    :param instance_relative_config: if set to ``True`` relative filenames
++                                     for loading the config are assumed to
++                                     be relative to the instance path instead
++                                     of the application root.
++    :param root_path: The path to the root of the application files.
++        This should only be set manually when it can't be detected
++        automatically, such as for namespace packages.
++    """
++
++    default_config = ImmutableDict(
++        {
++            "DEBUG": None,
++            "TESTING": False,
++            "PROPAGATE_EXCEPTIONS": None,
++            "SECRET_KEY": None,
++            "SECRET_KEY_FALLBACKS": None,
++            "PERMANENT_SESSION_LIFETIME": timedelta(days=31),
++            "USE_X_SENDFILE": False,
++            "TRUSTED_HOSTS": None,
++            "SERVER_NAME": None,
++            "APPLICATION_ROOT": "/",
++            "SESSION_COOKIE_NAME": "session",
++            "SESSION_COOKIE_DOMAIN": None,
++            "SESSION_COOKIE_PATH": None,
++            "SESSION_COOKIE_HTTPONLY": True,
++            "SESSION_COOKIE_SECURE": False,
++            "SESSION_COOKIE_PARTITIONED": False,
++            "SESSION_COOKIE_SAMESITE": None,
++            "SESSION_REFRESH_EACH_REQUEST": True,
++            "MAX_CONTENT_LENGTH": None,
++            "MAX_FORM_MEMORY_SIZE": 500_000,
++            "MAX_FORM_PARTS": 1_000,
++            "SEND_FILE_MAX_AGE_DEFAULT": None,
++            "TRAP_BAD_REQUEST_ERRORS": None,
++            "TRAP_HTTP_EXCEPTIONS": False,
++            "EXPLAIN_TEMPLATE_LOADING": False,
++            "PREFERRED_URL_SCHEME": "http",
++            "TEMPLATES_AUTO_RELOAD": None,
++            "MAX_COOKIE_SIZE": 4093,
++            "PROVIDE_AUTOMATIC_OPTIONS": True,
++        }
++    )
++
++    #: The class that is used for request objects.  See :class:`~flask.Request`
++    #: for more information.
++    request_class: type[Request] = Request
++
++    #: The class that is used for response objects.  See
++    #: :class:`~flask.Response` for more information.
++    response_class: type[Response] = Response
++
++    #: the session interface to use.  By default an instance of
++    #: :class:`~flask.sessions.SecureCookieSessionInterface` is used here.
++    #:
++    #: .. versionadded:: 0.8
++    session_interface: SessionInterface = SecureCookieSessionInterface()
++
++    def __init_subclass__(cls, **kwargs: t.Any) -> None:
++        import warnings
++
++        # These method signatures were updated to take a ctx param. Detect
++        # overridden methods in subclasses that still have the old signature.
++        # Show a deprecation warning and wrap to call with correct args.
++        for method in (
++            cls.handle_http_exception,
++            cls.handle_user_exception,
++            cls.handle_exception,
++            cls.log_exception,
++            cls.dispatch_request,
++            cls.full_dispatch_request,
++            cls.finalize_request,
++            cls.make_default_options_response,
++            cls.preprocess_request,
++            cls.process_response,
++            cls.do_teardown_request,
++            cls.do_teardown_appcontext,
++        ):
++            base_method = getattr(Flask, method.__name__)
++
++            if method is base_method:
++                # not overridden
++                continue
++
++            # get the second parameter (first is self)
++            iter_params = iter(inspect.signature(method).parameters.values())
++            next(iter_params)
++            param = next(iter_params, None)
++
++            # must have second parameter named ctx or annotated AppContext
++            if param is None or not (
++                # no annotation, match name
++                (param.annotation is inspect.Parameter.empty and param.name == "ctx")
++                or (
++                    # string annotation, access path ends with AppContext
++                    isinstance(param.annotation, str)
++                    and param.annotation.rpartition(".")[2] == "AppContext"
++                )
++                or (
++                    # class annotation
++                    inspect.isclass(param.annotation)
++                    and issubclass(param.annotation, AppContext)
++                )
++            ):
++                warnings.warn(
++                    f"The '{method.__name__}' method now takes 'ctx: AppContext'"
++                    " as the first parameter. The old signature is deprecated"
++                    " and will not be supported in Flask 4.0.",
++                    DeprecationWarning,
++                    stacklevel=2,
++                )
++                setattr(cls, method.__name__, remove_ctx(method))
++                setattr(Flask, method.__name__, add_ctx(base_method))
++
++    def __init__(
++        self,
++        import_name: str,
++        static_url_path: str | None = None,
++        static_folder: str | os.PathLike[str] | None = "static",
++        static_host: str | None = None,
++        host_matching: bool = False,
++        subdomain_matching: bool = False,
++        template_folder: str | os.PathLike[str] | None = "templates",
++        instance_path: str | None = None,
++        instance_relative_config: bool = False,
++        root_path: str | None = None,
++    ):
++        super().__init__(
++            import_name=import_name,
++            static_url_path=static_url_path,
++            static_folder=static_folder,
++            static_host=static_host,
++            host_matching=host_matching,
++            subdomain_matching=subdomain_matching,
++            template_folder=template_folder,
++            instance_path=instance_path,
++            instance_relative_config=instance_relative_config,
++            root_path=root_path,
++        )
++
++        #: The Click command group for registering CLI commands for this
++        #: object. The commands are available from the ``flask`` command
++        #: once the application has been discovered and blueprints have
++        #: been registered.
++        self.cli = cli.AppGroup()
++
++        # Set the name of the Click group in case someone wants to add
++        # the app's commands to another CLI tool.
++        self.cli.name = self.name
++
++        # Add a static route using the provided static_url_path, static_host,
++        # and static_folder if there is a configured static_folder.
++        # Note we do this without checking if static_folder exists.
++        # For one, it might be created while the server is running (e.g. during
++        # development). Also, Google App Engine stores static files somewhere
++        if self.has_static_folder:
++            assert bool(static_host) == host_matching, (
++                "Invalid static_host/host_matching combination"
++            )
++            # Use a weakref to avoid creating a reference cycle between the app
++            # and the view function (see #3761).
++            self_ref = weakref.ref(self)
++            self.add_url_rule(
++                f"{self.static_url_path}/<path:filename>",
++                endpoint="static",
++                host=static_host,
++                view_func=lambda **kw: self_ref().send_static_file(**kw),  # type: ignore
++            )
++
++    def get_send_file_max_age(self, filename: str | None) -> int | None:
++        """Used by :func:`send_file` to determine the ``max_age`` cache
++        value for a given file path if it wasn't passed.
++
++        By default, this returns :data:`SEND_FILE_MAX_AGE_DEFAULT` from
++        the configuration of :data:`~flask.current_app`. This defaults
++        to ``None``, which tells the browser to use conditional requests
++        instead of a timed cache, which is usually preferable.
++
++        Note this is a duplicate of the same method in the Flask
++        class.
++
++        .. versionchanged:: 2.0
++            The default configuration is ``None`` instead of 12 hours.
++
++        .. versionadded:: 0.9
++        """
++        value = self.config["SEND_FILE_MAX_AGE_DEFAULT"]
++
++        if value is None:
++            return None
++
++        if isinstance(value, timedelta):
++            return int(value.total_seconds())
++
++        return value  # type: ignore[no-any-return]
++
++    def send_static_file(self, filename: str) -> Response:
++        """The view function used to serve files from
++        :attr:`static_folder`. A route is automatically registered for
++        this view at :attr:`static_url_path` if :attr:`static_folder` is
++        set.
++
++        Note this is a duplicate of the same method in the Flask
++        class.
++
++        .. versionadded:: 0.5
++
++        """
++        if not self.has_static_folder:
++            raise RuntimeError("'static_folder' must be set to serve static_files.")
++
++        # send_file only knows to call get_send_file_max_age on the app,
++        # call it here so it works for blueprints too.
++        max_age = self.get_send_file_max_age(filename)
++        return send_from_directory(
++            t.cast(str, self.static_folder), filename, max_age=max_age
++        )
++
++    def open_resource(
++        self, resource: str, mode: str = "rb", encoding: str | None = None
++    ) -> t.IO[t.AnyStr]:
++        """Open a resource file relative to :attr:`root_path` for reading.
++
++        For example, if the file ``schema.sql`` is next to the file
++        ``app.py`` where the ``Flask`` app is defined, it can be opened
++        with:
++
++        .. code-block:: python
++
++            with app.open_resource("schema.sql") as f:
++                conn.executescript(f.read())
++
++        :param resource: Path to the resource relative to :attr:`root_path`.
++        :param mode: Open the file in this mode. Only reading is supported,
++            valid values are ``"r"`` (or ``"rt"``) and ``"rb"``.
++        :param encoding: Open the file with this encoding when opening in text
++            mode. This is ignored when opening in binary mode.
++
++        .. versionchanged:: 3.1
++            Added the ``encoding`` parameter.
++        """
++        if mode not in {"r", "rt", "rb"}:
++            raise ValueError("Resources can only be opened for reading.")
++
++        path = os.path.join(self.root_path, resource)
++
++        if mode == "rb":
++            return open(path, mode)  # pyright: ignore
++
++        return open(path, mode, encoding=encoding)
++
++    def open_instance_resource(
++        self, resource: str, mode: str = "rb", encoding: str | None = "utf-8"
++    ) -> t.IO[t.AnyStr]:
++        """Open a resource file relative to the application's instance folder
++        :attr:`instance_path`. Unlike :meth:`open_resource`, files in the
++        instance folder can be opened for writing.
++
++        :param resource: Path to the resource relative to :attr:`instance_path`.
++        :param mode: Open the file in this mode.
++        :param encoding: Open the file with this encoding when opening in text
++            mode. This is ignored when opening in binary mode.
++
++        .. versionchanged:: 3.1
++            Added the ``encoding`` parameter.
++        """
++        path = os.path.join(self.instance_path, resource)
++
++        if "b" in mode:
++            return open(path, mode)
++
++        return open(path, mode, encoding=encoding)
++
++    def create_jinja_environment(self) -> Environment:
++        """Create the Jinja environment based on :attr:`jinja_options`
++        and the various Jinja-related methods of the app. Changing
++        :attr:`jinja_options` after this will have no effect. Also adds
++        Flask-related globals and filters to the environment.
++
++        .. versionchanged:: 0.11
++           ``Environment.auto_reload`` set in accordance with
++           ``TEMPLATES_AUTO_RELOAD`` configuration option.
++
++        .. versionadded:: 0.5
++        """
++        options = dict(self.jinja_options)
++
++        if "autoescape" not in options:
++            options["autoescape"] = self.select_jinja_autoescape
++
++        if "auto_reload" not in options:
++            auto_reload = self.config["TEMPLATES_AUTO_RELOAD"]
++
++            if auto_reload is None:
++                auto_reload = self.debug
++
++            options["auto_reload"] = auto_reload
++
++        rv = self.jinja_environment(self, **options)
++        rv.globals.update(
++            url_for=self.url_for,
++            get_flashed_messages=get_flashed_messages,
++            config=self.config,
++            # request, session and g are normally added with the
++            # context processor for efficiency reasons but for imported
++            # templates we also want the proxies in there.
++            request=request,
++            session=session,
++            g=g,
++        )
++        rv.policies["json.dumps_function"] = self.json.dumps
++        return rv
++
++    def create_url_adapter(self, request: Request | None) -> MapAdapter | None:
++        """Creates a URL adapter for the given request. The URL adapter
++        is created at a point where the request context is not yet set
++        up so the request is passed explicitly.
++
++        .. versionchanged:: 3.1
++            If :data:`SERVER_NAME` is set, it does not restrict requests to
++            only that domain, for both ``subdomain_matching`` and
++            ``host_matching``.
++
++        .. versionchanged:: 1.0
++            :data:`SERVER_NAME` no longer implicitly enables subdomain
++            matching. Use :attr:`subdomain_matching` instead.
++
++        .. versionchanged:: 0.9
++           This can be called outside a request when the URL adapter is created
++           for an application context.
++
++        .. versionadded:: 0.6
++        """
++        if request is not None:
++            if (trusted_hosts := self.config["TRUSTED_HOSTS"]) is not None:
++                request.trusted_hosts = trusted_hosts
++
++            # Check trusted_hosts here until bind_to_environ does.
++            request.host = get_host(request.environ, request.trusted_hosts)  # pyright: ignore
++            subdomain = None
++            server_name = self.config["SERVER_NAME"]
++
++            if self.url_map.host_matching:
++                # Don't pass SERVER_NAME, otherwise it's used and the actual
++                # host is ignored, which breaks host matching.
++                server_name = None
++            elif not self.subdomain_matching:
++                # Werkzeug doesn't implement subdomain matching yet. Until then,
++                # disable it by forcing the current subdomain to the default, or
++                # the empty string.
++                subdomain = self.url_map.default_subdomain or ""
++
++            return self.url_map.bind_to_environ(
++                request.environ, server_name=server_name, subdomain=subdomain
++            )
++
++        # Need at least SERVER_NAME to match/build outside a request.
++        if self.config["SERVER_NAME"] is not None:
++            return self.url_map.bind(
++                self.config["SERVER_NAME"],
++                script_name=self.config["APPLICATION_ROOT"],
++                url_scheme=self.config["PREFERRED_URL_SCHEME"],
++            )
++
++        return None
++
++    def raise_routing_exception(self, request: Request) -> t.NoReturn:
++        """Intercept routing exceptions and possibly do something else.
++
++        In debug mode, intercept a routing redirect and replace it with
++        an error if the body will be discarded.
++
++        With modern Werkzeug this shouldn't occur, since it now uses a
++        308 status which tells the browser to resend the method and
++        body.
++
++        .. versionchanged:: 2.1
++            Don't intercept 307 and 308 redirects.
++
++        :meta private:
++        :internal:
++        """
++        if (
++            not self.debug
++            or not isinstance(request.routing_exception, RequestRedirect)
++            or request.routing_exception.code in {307, 308}
++            or request.method in {"GET", "HEAD", "OPTIONS"}
++        ):
++            raise request.routing_exception  # type: ignore[misc]
++
++        from .debughelpers import FormDataRoutingRedirect
++
++        raise FormDataRoutingRedirect(request)
++
++    def update_template_context(
++        self, ctx: AppContext, context: dict[str, t.Any]
++    ) -> None:
++        """Update the template context with some commonly used variables.
++        This injects request, session, config and g into the template
++        context as well as everything template context processors want
++        to inject.  Note that the as of Flask 0.6, the original values
++        in the context will not be overridden if a context processor
++        decides to return a value with the same key.
++
++        :param context: the context as a dictionary that is updated in place
++                        to add extra variables.
++        """
++        names: t.Iterable[str | None] = (None,)
++
++        # A template may be rendered outside a request context.
++        if ctx.has_request:
++            names = chain(names, reversed(ctx.request.blueprints))
++
++        # The values passed to render_template take precedence. Keep a
++        # copy to re-apply after all context functions.
++        orig_ctx = context.copy()
++
++        for name in names:
++            if name in self.template_context_processors:
++                for func in self.template_context_processors[name]:
++                    context.update(self.ensure_sync(func)())
++
++        context.update(orig_ctx)
++
++    def make_shell_context(self) -> dict[str, t.Any]:
++        """Returns the shell context for an interactive shell for this
++        application.  This runs all the registered shell context
++        processors.
++
++        .. versionadded:: 0.11
++        """
++        rv = {"app": self, "g": g}
++        for processor in self.shell_context_processors:
++            rv.update(processor())
++        return rv
++
++    def run(
++        self,
++        host: str | None = None,
++        port: int | None = None,
++        debug: bool | None = None,
++        load_dotenv: bool = True,
++        **options: t.Any,
++    ) -> None:
++        """Runs the application on a local development server.
++
++        Do not use ``run()`` in a production setting. It is not intended to
++        meet security and performance requirements for a production server.
++        Instead, see :doc:`/deploying/index` for WSGI server recommendations.
++
++        If the :attr:`debug` flag is set the server will automatically reload
++        for code changes and show a debugger in case an exception happened.
++
++        If you want to run the application in debug mode, but disable the
++        code execution on the interactive debugger, you can pass
++        ``use_evalex=False`` as parameter.  This will keep the debugger's
++        traceback screen active, but disable code execution.
++
++        It is not recommended to use this function for development with
++        automatic reloading as this is badly supported.  Instead you should
++        be using the :command:`flask` command line script's ``run`` support.
++
++        .. admonition:: Keep in Mind
++
++           Flask will suppress any server error with a generic error page
++           unless it is in debug mode.  As such to enable just the
++           interactive debugger without the code reloading, you have to
++           invoke :meth:`run` with ``debug=True`` and ``use_reloader=False``.
++           Setting ``use_debugger`` to ``True`` without being in debug mode
++           won't catch any exceptions because there won't be any to
++           catch.
++
++        :param host: the hostname to listen on. Set this to ``'0.0.0.0'`` to
++            have the server available externally as well. Defaults to
++            ``'127.0.0.1'`` or the host in the ``SERVER_NAME`` config variable
++            if present.
++        :param port: the port of the webserver. Defaults to ``5000`` or the
++            port defined in the ``SERVER_NAME`` config variable if present.
++        :param debug: if given, enable or disable debug mode. See
++            :attr:`debug`.
++        :param load_dotenv: Load the nearest :file:`.env` and :file:`.flaskenv`
++            files to set environment variables. Will also change the working
++            directory to the directory containing the first file found.
++        :param options: the options to be forwarded to the underlying Werkzeug
++            server. See :func:`werkzeug.serving.run_simple` for more
++            information.
++
++        .. versionchanged:: 1.0
++            If installed, python-dotenv will be used to load environment
++            variables from :file:`.env` and :file:`.flaskenv` files.
++
++            The :envvar:`FLASK_DEBUG` environment variable will override :attr:`debug`.
++
++            Threaded mode is enabled by default.
++
++        .. versionchanged:: 0.10
++            The default port is now picked from the ``SERVER_NAME``
++            variable.
++        """
++        # Ignore this call so that it doesn't start another server if
++        # the 'flask run' command is used.
++        if os.environ.get("FLASK_RUN_FROM_CLI") == "true":
++            if not is_running_from_reloader():
++                click.secho(
++                    " * Ignoring a call to 'app.run()' that would block"
++                    " the current 'flask' CLI command.\n"
++                    "   Only call 'app.run()' in an 'if __name__ =="
++                    ' "__main__"\' guard.',
++                    fg="red",
++                )
++
++            return
++
++        if get_load_dotenv(load_dotenv):
++            cli.load_dotenv()
++
++            # if set, env var overrides existing value
++            if "FLASK_DEBUG" in os.environ:
++                self.debug = get_debug_flag()
++
++        # debug passed to method overrides all other sources
++        if debug is not None:
++            self.debug = bool(debug)
++
++        server_name = self.config.get("SERVER_NAME")
++        sn_host = sn_port = None
++
++        if server_name:
++            if server_name.startswith("["):
++                sn_host, _, sn_port = server_name[1:].partition("]")
++
++                if sn_port.startswith(":"):
++                    sn_port = sn_port[1:]
++                else:
++                    sn_port = None
++            else:
++                sn_host, _, sn_port = server_name.partition(":")
++
++        if not host:
++            if sn_host:
++                host = sn_host
++            else:
++                host = "127.0.0.1"
++
++        if port or port == 0:
++            port = int(port)
++        elif sn_port:
++            port = int(sn_port)
++        else:
++            port = 5000
++
++        options.setdefault("use_reloader", self.debug)
++        options.setdefault("use_debugger", self.debug)
++        options.setdefault("threaded", True)
++
++        cli.show_server_banner(self.debug, self.name)
++
++        from werkzeug.serving import run_simple
++
++        try:
++            run_simple(t.cast(str, host), port, self, **options)
++        finally:
++            # reset the first request information if the development server
++            # reset normally.  This makes it possible to restart the server
++            # without reloader and that stuff from an interactive shell.
++            self._got_first_request = False
++
++    def test_client(self, use_cookies: bool = True, **kwargs: t.Any) -> FlaskClient:
++        """Creates a test client for this application.  For information
++        about unit testing head over to :doc:`/testing`.
++
++        Note that if you are testing for assertions or exceptions in your
++        application code, you must set ``app.testing = True`` in order for the
++        exceptions to propagate to the test client.  Otherwise, the exception
++        will be handled by the application (not visible to the test client) and
++        the only indication of an AssertionError or other exception will be a
++        500 status code response to the test client.  See the :attr:`testing`
++        attribute.  For example::
++
++            app.testing = True
++            client = app.test_client()
++
++        The test client can be used in a ``with`` block to defer the closing down
++        of the context until the end of the ``with`` block.  This is useful if
++        you want to access the context locals for testing::
++
++            with app.test_client() as c:
++                rv = c.get('/?vodka=42')
++                assert request.args['vodka'] == '42'
++
++        Additionally, you may pass optional keyword arguments that will then
++        be passed to the application's :attr:`test_client_class` constructor.
++        For example::
++
++            from flask.testing import FlaskClient
++
++            class CustomClient(FlaskClient):
++                def __init__(self, *args, **kwargs):
++                    self._authentication = kwargs.pop("authentication")
++                    super(CustomClient,self).__init__( *args, **kwargs)
++
++            app.test_client_class = CustomClient
++            client = app.test_client(authentication='Basic ....')
++
++        See :class:`~flask.testing.FlaskClient` for more information.
++
++        .. versionchanged:: 0.4
++           added support for ``with`` block usage for the client.
++
++        .. versionadded:: 0.7
++           The `use_cookies` parameter was added as well as the ability
++           to override the client to be used by setting the
++           :attr:`test_client_class` attribute.
++
++        .. versionchanged:: 0.11
++           Added `**kwargs` to support passing additional keyword arguments to
++           the constructor of :attr:`test_client_class`.
++        """
++        cls = self.test_client_class
++        if cls is None:
++            from .testing import FlaskClient as cls
++        return cls(  # type: ignore
++            self, self.response_class, use_cookies=use_cookies, **kwargs
++        )
++
++    def test_cli_runner(self, **kwargs: t.Any) -> FlaskCliRunner:
++        """Create a CLI runner for testing CLI commands.
++        See :ref:`testing-cli`.
++
++        Returns an instance of :attr:`test_cli_runner_class`, by default
++        :class:`~flask.testing.FlaskCliRunner`. The Flask app object is
++        passed as the first argument.
++
++        .. versionadded:: 1.0
++        """
++        cls = self.test_cli_runner_class
++
++        if cls is None:
++            from .testing import FlaskCliRunner as cls
++
++        return cls(self, **kwargs)  # type: ignore
++
++    def handle_http_exception(
++        self, ctx: AppContext, e: HTTPException
++    ) -> HTTPException | ft.ResponseReturnValue:
++        """Handles an HTTP exception.  By default this will invoke the
++        registered error handlers and fall back to returning the
++        exception as response.
++
++        .. versionchanged:: 1.0.3
++            ``RoutingException``, used internally for actions such as
++             slash redirects during routing, is not passed to error
++             handlers.
++
++        .. versionchanged:: 1.0
++            Exceptions are looked up by code *and* by MRO, so
++            ``HTTPException`` subclasses can be handled with a catch-all
++            handler for the base ``HTTPException``.
++
++        .. versionadded:: 0.3
++        """
++        # Proxy exceptions don't have error codes.  We want to always return
++        # those unchanged as errors
++        if e.code is None:
++            return e
++
++        # RoutingExceptions are used internally to trigger routing
++        # actions, such as slash redirects raising RequestRedirect. They
++        # are not raised or handled in user code.
++        if isinstance(e, RoutingException):
++            return e
++
++        handler = self._find_error_handler(e, ctx.request.blueprints)
++        if handler is None:
++            return e
++        return self.ensure_sync(handler)(e)  # type: ignore[no-any-return]
++
++    def handle_user_exception(
++        self, ctx: AppContext, e: Exception
++    ) -> HTTPException | ft.ResponseReturnValue:
++        """This method is called whenever an exception occurs that
++        should be handled. A special case is :class:`~werkzeug
++        .exceptions.HTTPException` which is forwarded to the
++        :meth:`handle_http_exception` method. This function will either
++        return a response value or reraise the exception with the same
++        traceback.
++
++        .. versionchanged:: 1.0
++            Key errors raised from request data like ``form`` show the
++            bad key in debug mode rather than a generic bad request
++            message.
++
++        .. versionadded:: 0.7
++        """
++        if isinstance(e, BadRequestKeyError) and (
++            self.debug or self.config["TRAP_BAD_REQUEST_ERRORS"]
++        ):
++            e.show_exception = True
++
++        if isinstance(e, HTTPException) and not self.trap_http_exception(e):
++            return self.handle_http_exception(ctx, e)
++
++        handler = self._find_error_handler(e, ctx.request.blueprints)
++
++        if handler is None:
++            raise
++
++        return self.ensure_sync(handler)(e)  # type: ignore[no-any-return]
++
++    def handle_exception(self, ctx: AppContext, e: Exception) -> Response:
++        """Handle an exception that did not have an error handler
++        associated with it, or that was raised from an error handler.
++        This always causes a 500 ``InternalServerError``.
++
++        Always sends the :data:`got_request_exception` signal.
++
++        If :data:`PROPAGATE_EXCEPTIONS` is ``True``, such as in debug
++        mode, the error will be re-raised so that the debugger can
++        display it. Otherwise, the original exception is logged, and
++        an :exc:`~werkzeug.exceptions.InternalServerError` is returned.
++
++        If an error handler is registered for ``InternalServerError`` or
++        ``500``, it will be used. For consistency, the handler will
++        always receive the ``InternalServerError``. The original
++        unhandled exception is available as ``e.original_exception``.
++
++        .. versionchanged:: 1.1.0
++            Always passes the ``InternalServerError`` instance to the
++            handler, setting ``original_exception`` to the unhandled
++            error.
++
++        .. versionchanged:: 1.1.0
++            ``after_request`` functions and other finalization is done
++            even for the default 500 response when there is no handler.
++
++        .. versionadded:: 0.3
++        """
++        exc_info = sys.exc_info()
++        got_request_exception.send(self, _async_wrapper=self.ensure_sync, exception=e)
++        propagate = self.config["PROPAGATE_EXCEPTIONS"]
++
++        if propagate is None:
++            propagate = self.testing or self.debug
++
++        if propagate:
++            # Re-raise if called with an active exception, otherwise
++            # raise the passed in exception.
++            if exc_info[1] is e:
++                raise
++
++            raise e
++
++        self.log_exception(ctx, exc_info)
++        server_error: InternalServerError | ft.ResponseReturnValue
++        server_error = InternalServerError(original_exception=e)
++        handler = self._find_error_handler(server_error, ctx.request.blueprints)
++
++        if handler is not None:
++            server_error = self.ensure_sync(handler)(server_error)
++
++        return self.finalize_request(ctx, server_error, from_error_handler=True)
++
++    def log_exception(
++        self,
++        ctx: AppContext,
++        exc_info: tuple[type, BaseException, TracebackType] | tuple[None, None, None],
++    ) -> None:
++        """Logs an exception.  This is called by :meth:`handle_exception`
++        if debugging is disabled and right before the handler is called.
++        The default implementation logs the exception as error on the
++        :attr:`logger`.
++
++        .. versionadded:: 0.8
++        """
++        self.logger.error(
++            f"Exception on {ctx.request.path} [{ctx.request.method}]", exc_info=exc_info
++        )
++
++    def dispatch_request(self, ctx: AppContext) -> ft.ResponseReturnValue:
++        """Does the request dispatching.  Matches the URL and returns the
++        return value of the view or error handler.  This does not have to
++        be a response object.  In order to convert the return value to a
++        proper response object, call :func:`make_response`.
++
++        .. versionchanged:: 0.7
++           This no longer does the exception handling, this code was
++           moved to the new :meth:`full_dispatch_request`.
++        """
++        req = ctx.request
++
++        if req.routing_exception is not None:
++            self.raise_routing_exception(req)
++        rule: Rule = req.url_rule  # type: ignore[assignment]
++        # if we provide automatic options for this URL and the
++        # request came with the OPTIONS method, reply automatically
++        if (
++            getattr(rule, "provide_automatic_options", False)
++            and req.method == "OPTIONS"
++        ):
++            return self.make_default_options_response(ctx)
++        # otherwise dispatch to the handler for that endpoint
++        view_args: dict[str, t.Any] = req.view_args  # type: ignore[assignment]
++        return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
++
++    def full_dispatch_request(self, ctx: AppContext) -> Response:
++        """Dispatches the request and on top of that performs request
++        pre and postprocessing as well as HTTP exception catching and
++        error handling.
++
++        .. versionadded:: 0.7
++        """
++        if not self._got_first_request and self.should_ignore_error is not None:
++            import warnings
++
++            warnings.warn(
++                "The 'should_ignore_error' method is deprecated and will"
++                " be removed in Flask 3.3. Handle errors as needed in"
++                " teardown handlers instead.",
++                DeprecationWarning,
++                stacklevel=1,
++            )
++
++        self._got_first_request = True
++
++        try:
++            request_started.send(self, _async_wrapper=self.ensure_sync)
++            rv = self.preprocess_request(ctx)
++            if rv is None:
++                rv = self.dispatch_request(ctx)
++        except Exception as e:
++            rv = self.handle_user_exception(ctx, e)
++        return self.finalize_request(ctx, rv)
++
++    def finalize_request(
++        self,
++        ctx: AppContext,
++        rv: ft.ResponseReturnValue | HTTPException,
++        from_error_handler: bool = False,
++    ) -> Response:
++        """Given the return value from a view function this finalizes
++        the request by converting it into a response and invoking the
++        postprocessing functions.  This is invoked for both normal
++        request dispatching as well as error handlers.
++
++        Because this means that it might be called as a result of a
++        failure a special safe mode is available which can be enabled
++        with the `from_error_handler` flag.  If enabled, failures in
++        response processing will be logged and otherwise ignored.
++
++        :internal:
++        """
++        response = self.make_response(rv)
++        try:
++            response = self.process_response(ctx, response)
++            request_finished.send(
++                self, _async_wrapper=self.ensure_sync, response=response
++            )
++        except Exception:
++            if not from_error_handler:
++                raise
++            self.logger.exception(
++                "Request finalizing failed with an error while handling an error"
++            )
++        return response
++
++    def make_default_options_response(self, ctx: AppContext) -> Response:
++        """This method is called to create the default ``OPTIONS`` response.
++        This can be changed through subclassing to change the default
++        behavior of ``OPTIONS`` responses.
++
++        .. versionadded:: 0.7
++        """
++        methods = ctx.url_adapter.allowed_methods()  # type: ignore[union-attr]
++        rv = self.response_class()
++        rv.allow.update(methods)
++        return rv
++
++    def ensure_sync(self, func: t.Callable[..., t.Any]) -> t.Callable[..., t.Any]:
++        """Ensure that the function is synchronous for WSGI workers.
++        Plain ``def`` functions are returned as-is. ``async def``
++        functions are wrapped to run and wait for the response.
++
++        Override this method to change how the app runs async views.
++
++        .. versionadded:: 2.0
++        """
++        if iscoroutinefunction(func):
++            return self.async_to_sync(func)
++
++        return func
++
++    def async_to_sync(
++        self, func: t.Callable[..., t.Coroutine[t.Any, t.Any, t.Any]]
++    ) -> t.Callable[..., t.Any]:
++        """Return a sync function that will run the coroutine function.
++
++        .. code-block:: python
++
++            result = app.async_to_sync(func)(*args, **kwargs)
++
++        Override this method to change how the app converts async code
++        to be synchronously callable.
++
++        .. versionadded:: 2.0
++        """
++        try:
++            from asgiref.sync import async_to_sync as asgiref_async_to_sync
++        except ImportError:
++            raise RuntimeError(
++                "Install Flask with the 'async' extra in order to use async views."
++            ) from None
++
++        return asgiref_async_to_sync(func)
++
++    def url_for(
++        self,
++        /,
++        endpoint: str,
++        *,
++        _anchor: str | None = None,
++        _method: str | None = None,
++        _scheme: str | None = None,
++        _external: bool | None = None,
++        **values: t.Any,
++    ) -> str:
++        """Generate a URL to the given endpoint with the given values.
++
++        This is called by :func:`flask.url_for`, and can be called
++        directly as well.
++
++        An *endpoint* is the name of a URL rule, usually added with
++        :meth:`@app.route() <route>`, and usually the same name as the
++        view function. A route defined in a :class:`~flask.Blueprint`
++        will prepend the blueprint's name separated by a ``.`` to the
++        endpoint.
++
++        In some cases, such as email messages, you want URLs to include
++        the scheme and domain, like ``https://example.com/hello``. When
++        not in an active request, URLs will be external by default, but
++        this requires setting :data:`SERVER_NAME` so Flask knows what
++        domain to use. :data:`APPLICATION_ROOT` and
++        :data:`PREFERRED_URL_SCHEME` should also be configured as
++        needed. This config is only used when not in an active request.
++
++        Functions can be decorated with :meth:`url_defaults` to modify
++        keyword arguments before the URL is built.
++
++        If building fails for some reason, such as an unknown endpoint
++        or incorrect values, the app's :meth:`handle_url_build_error`
++        method is called. If that returns a string, that is returned,
++        otherwise a :exc:`~werkzeug.routing.BuildError` is raised.
++
++        :param endpoint: The endpoint name associated with the URL to
++            generate. If this starts with a ``.``, the current blueprint
++            name (if any) will be used.
++        :param _anchor: If given, append this as ``#anchor`` to the URL.
++        :param _method: If given, generate the URL associated with this
++            method for the endpoint.
++        :param _scheme: If given, the URL will have this scheme if it
++            is external.
++        :param _external: If given, prefer the URL to be internal
++            (False) or require it to be external (True). External URLs
++            include the scheme and domain. When not in an active
++            request, URLs are external by default.
++        :param values: Values to use for the variable parts of the URL
++            rule. Unknown keys are appended as query string arguments,
++            like ``?a=b&c=d``.
++
++        .. versionadded:: 2.2
++            Moved from ``flask.url_for``, which calls this method.
++        """
++        if (ctx := _cv_app.get(None)) is not None and ctx.has_request:
++            url_adapter = ctx.url_adapter
++            blueprint_name = ctx.request.blueprint
++
++            # If the endpoint starts with "." and the request matches a
++            # blueprint, the endpoint is relative to the blueprint.
++            if endpoint[:1] == ".":
++                if blueprint_name is not None:
++                    endpoint = f"{blueprint_name}{endpoint}"
++                else:
++                    endpoint = endpoint[1:]
++
++            # When in a request, generate a URL without scheme and
++            # domain by default, unless a scheme is given.
++            if _external is None:
++                _external = _scheme is not None
++        else:
++            # If called by helpers.url_for, an app context is active,
++            # use its url_adapter. Otherwise, app.url_for was called
++            # directly, build an adapter.
++            if ctx is not None:
++                url_adapter = ctx.url_adapter
++            else:
++                url_adapter = self.create_url_adapter(None)
++
++            if url_adapter is None:
++                raise RuntimeError(
++                    "Unable to build URLs outside an active request"
++                    " without 'SERVER_NAME' configured. Also configure"
++                    " 'APPLICATION_ROOT' and 'PREFERRED_URL_SCHEME' as"
++                    " needed."
++                )
++
++            # When outside a request, generate a URL with scheme and
++            # domain by default.
++            if _external is None:
++                _external = True
++
++        # It is an error to set _scheme when _external=False, in order
++        # to avoid accidental insecure URLs.
++        if _scheme is not None and not _external:
++            raise ValueError("When specifying '_scheme', '_external' must be True.")
++
++        self.inject_url_defaults(endpoint, values)
++
++        try:
++            rv = url_adapter.build(  # type: ignore[union-attr]
++                endpoint,
++                values,
++                method=_method,
++                url_scheme=_scheme,
++                force_external=_external,
++            )
++        except BuildError as error:
++            values.update(
++                _anchor=_anchor, _method=_method, _scheme=_scheme, _external=_external
++            )
++            return self.handle_url_build_error(error, endpoint, values)
++
++        if _anchor is not None:
++            _anchor = _url_quote(_anchor, safe="%!#$&'()*+,/:;=?@")
++            rv = f"{rv}#{_anchor}"
++
++        return rv
++
++    def make_response(self, rv: ft.ResponseReturnValue) -> Response:
++        """Convert the return value from a view function to an instance of
++        :attr:`response_class`.
++
++        :param rv: the return value from the view function. The view function
++            must return a response. Returning ``None``, or the view ending
++            without returning, is not allowed. The following types are allowed
++            for ``view_rv``:
++
++            ``str``
++                A response object is created with the string encoded to UTF-8
++                as the body.
++
++            ``bytes``
++                A response object is created with the bytes as the body.
++
++            ``dict``
++                Converted to a JSON response.
++
++            ``list``
++                Converted to a JSON response.
++
++            ``generator`` or ``iterator``
++                A generator that returns ``str`` or ``bytes`` to be
++                streamed as the response.
++
++            ``tuple``
++                Either ``(body, status, headers)``, ``(body, status)``, or
++                ``(body, headers)``, where ``body`` is any of the other types
++                allowed here, ``status`` is a string or an integer, and
++                ``headers`` is a dictionary or a list of ``(key, value)``
++                tuples. If ``body`` is a :attr:`response_class` instance,
++                ``status`` overwrites the exiting value and ``headers`` are
++                extended.
++
++            :attr:`response_class`
++                The object is returned unchanged.
++
++            other :class:`~werkzeug.wrappers.Response` class
++                The object is coerced to :attr:`response_class`.
++
++            :func:`callable`
++                The function is called as a WSGI application. The result is
++                used to create a response object.
++
++        .. versionchanged:: 2.2
++            A generator will be converted to a streaming response.
++            A list will be converted to a JSON response.
++
++        .. versionchanged:: 1.1
++            A dict will be converted to a JSON response.
++
++        .. versionchanged:: 0.9
++           Previously a tuple was interpreted as the arguments for the
++           response object.
++        """
++
++        status: int | None = None
++        headers: HeadersValue | None = None
++
++        # unpack tuple returns
++        if isinstance(rv, tuple):
++            len_rv = len(rv)
++
++            # a 3-tuple is unpacked directly
++            if len_rv == 3:
++                rv, status, headers = rv  # type: ignore[misc]
++            # decide if a 2-tuple has status or headers
++            elif len_rv == 2:
++                if isinstance(rv[1], (Headers, dict, tuple, list)):
++                    rv, headers = rv  # pyright: ignore
++                else:
++                    rv, status = rv  # type: ignore[assignment,misc]
++            # other sized tuples are not allowed
++            else:
++                raise TypeError(
++                    "The view function did not return a valid response tuple."
++                    " The tuple must have the form (body, status, headers),"
++                    " (body, status), or (body, headers)."
++                )
++
++        # the body must not be None
++        if rv is None:
++            raise TypeError(
++                f"The view function for {request.endpoint!r} did not"
++                " return a valid response. The function either returned"
++                " None or ended without a return statement."
++            )
++
++        # make sure the body is an instance of the response class
++        if not isinstance(rv, self.response_class):
++            if isinstance(rv, (str, bytes, bytearray)) or isinstance(rv, cabc.Iterator):
++                # let the response class set the status and headers instead of
++                # waiting to do it manually, so that the class can handle any
++                # special logic
++                rv = self.response_class(
++                    rv,  # pyright: ignore
++                    status=status,
++                    headers=headers,  # type: ignore[arg-type]
++                )
++                status = headers = None
++            elif isinstance(rv, (dict, list)):
++                rv = self.json.response(rv)
++            elif isinstance(rv, BaseResponse) or callable(rv):
++                # evaluate a WSGI callable, or coerce a different response
++                # class to the correct type
++                try:
++                    rv = self.response_class.force_type(
++                        rv,  # type: ignore[arg-type]
++                        request.environ,
++                    )
++                except TypeError as e:
++                    raise TypeError(
++                        f"{e}\nThe view function did not return a valid"
++                        " response. The return type must be a string,"
++                        " dict, list, tuple with headers or status,"
++                        " Response instance, or WSGI callable, but it"
++                        f" was a {type(rv).__name__}."
++                    ).with_traceback(sys.exc_info()[2]) from None
++            else:
++                raise TypeError(
++                    "The view function did not return a valid"
++                    " response. The return type must be a string,"
++                    " dict, list, tuple with headers or status,"
++                    " Response instance, or WSGI callable, but it was a"
++                    f" {type(rv).__name__}."
++                )
++
++        rv = t.cast(Response, rv)
++        # prefer the status if it was provided
++        if status is not None:
++            if isinstance(status, (str, bytes, bytearray)):
++                rv.status = status
++            else:
++                rv.status_code = status
++
++        # extend existing headers with provided headers
++        if headers:
++            rv.headers.update(headers)
++
++        return rv
++
++    def preprocess_request(self, ctx: AppContext) -> ft.ResponseReturnValue | None:
++        """Called before the request is dispatched. Calls
++        :attr:`url_value_preprocessors` registered with the app and the
++        current blueprint (if any). Then calls :attr:`before_request_funcs`
++        registered with the app and the blueprint.
++
++        If any :meth:`before_request` handler returns a non-None value, the
++        value is handled as if it was the return value from the view, and
++        further request handling is stopped.
++        """
++        req = ctx.request
++        names = (None, *reversed(req.blueprints))
++
++        for name in names:
++            if name in self.url_value_preprocessors:
++                for url_func in self.url_value_preprocessors[name]:
++                    url_func(req.endpoint, req.view_args)
++
++        for name in names:
++            if name in self.before_request_funcs:
++                for before_func in self.before_request_funcs[name]:
++                    rv = self.ensure_sync(before_func)()
++
++                    if rv is not None:
++                        return rv  # type: ignore[no-any-return]
++
++        return None
++
++    def process_response(self, ctx: AppContext, response: Response) -> Response:
++        """Can be overridden in order to modify the response object
++        before it's sent to the WSGI server.  By default this will
++        call all the :meth:`after_request` decorated functions.
++
++        .. versionchanged:: 0.5
++           As of Flask 0.5 the functions registered for after request
++           execution are called in reverse order of registration.
++
++        :param response: a :attr:`response_class` object.
++        :return: a new response object or the same, has to be an
++                 instance of :attr:`response_class`.
++        """
++        for func in ctx._after_request_functions:
++            response = self.ensure_sync(func)(response)
++
++        for name in chain(ctx.request.blueprints, (None,)):
++            if name in self.after_request_funcs:
++                for func in reversed(self.after_request_funcs[name]):
++                    response = self.ensure_sync(func)(response)
++
++        if not self.session_interface.is_null_session(ctx._get_session()):
++            self.session_interface.save_session(self, ctx._get_session(), response)
++
++        return response
++
++    def do_teardown_request(
++        self, ctx: AppContext, exc: BaseException | None = None
++    ) -> None:
++        """Called after the request is dispatched and the response is finalized,
++        right before the request context is popped. Called by
++        :meth:`.AppContext.pop`.
++
++        This calls all functions decorated with :meth:`teardown_request`, and
++        :meth:`Blueprint.teardown_request` if a blueprint handled the request.
++        Finally, the :data:`request_tearing_down` signal is sent.
++
++        :param exc: An unhandled exception raised while dispatching the request.
++            Passed to each teardown function.
++
++        .. versionchanged:: 3.2
++            All callbacks are called rather than stopping on the first error.
++
++        .. versionchanged:: 0.9
++            Added the ``exc`` argument.
++        """
++        collect_errors = _CollectErrors()
++
++        for name in chain(ctx.request.blueprints, (None,)):
++            if name in self.teardown_request_funcs:
++                for func in reversed(self.teardown_request_funcs[name]):
++                    with collect_errors:
++                        self.ensure_sync(func)(exc)
++
++        with collect_errors:
++            request_tearing_down.send(self, _async_wrapper=self.ensure_sync, exc=exc)
++
++        collect_errors.raise_any("Errors during request teardown")
++
++    def do_teardown_appcontext(
++        self, ctx: AppContext, exc: BaseException | None = None
++    ) -> None:
++        """Called right before the application context is popped. Called by
++        :meth:`.AppContext.pop`.
++
++        This calls all functions decorated with :meth:`teardown_appcontext`.
++        Then the :data:`appcontext_tearing_down` signal is sent.
++
++        :param exc: An unhandled exception raised while the context was active.
++            Passed to each teardown function.
++
++        .. versionchanged:: 3.2
++            All callbacks are called rather than stopping on the first error.
++
++        .. versionadded:: 0.9
++        """
++        collect_errors = _CollectErrors()
++
++        for func in reversed(self.teardown_appcontext_funcs):
++            with collect_errors:
++                self.ensure_sync(func)(exc)
++
++        with collect_errors:
++            appcontext_tearing_down.send(self, _async_wrapper=self.ensure_sync, exc=exc)
++
++        collect_errors.raise_any("Errors during app teardown")
++
++    def app_context(self) -> AppContext:
++        """Create an :class:`.AppContext`. When the context is pushed,
++        :data:`.current_app` and :data:`.g` become available.
++
++        A context is automatically pushed when handling each request, and when
++        running any ``flask`` CLI command. Use this as a ``with`` block to
++        manually push a context outside of those situations, such as during
++        setup or testing.
++
++        .. code-block:: python
++
++            with app.app_context():
++                init_db()
++
++        See :doc:`/appcontext`.
++
++        .. versionadded:: 0.9
++        """
++        return AppContext(self)
++
++    def request_context(self, environ: WSGIEnvironment) -> AppContext:
++        """Create an :class:`.AppContext` with request information representing
++        the given WSGI environment. A context is automatically pushed when
++        handling each request. When the context is pushed, :data:`.request`,
++        :data:`.session`, :data:`g:, and :data:`.current_app` become available.
++
++        This method should not be used in your own code. Creating a valid WSGI
++        environ is not trivial. Use :meth:`test_request_context` to correctly
++        create a WSGI environ and request context instead.
++
++        See :doc:`/appcontext`.
++
++        :param environ: A WSGI environment.
++        """
++        return AppContext.from_environ(self, environ)
++
++    def test_request_context(self, *args: t.Any, **kwargs: t.Any) -> AppContext:
++        """Create an :class:`.AppContext` with request information created from
++        the given arguments. When the context is pushed, :data:`.request`,
++        :data:`.session`, :data:`g:, and :data:`.current_app` become available.
++
++        This is useful during testing to run a function that uses request data
++        without dispatching a full request. Use this as a ``with`` block to push
++        a context.
++
++        .. code-block:: python
++
++            with app.test_request_context(...):
++                generate_report()
++
++        See :doc:`/appcontext`.
++
++        Takes the same arguments as Werkzeug's
++        :class:`~werkzeug.test.EnvironBuilder`, with some defaults from
++        the application. See the linked Werkzeug docs for most of the
++        available arguments. Flask-specific behavior is listed here.
++
++        :param path: URL path being requested.
++        :param base_url: Base URL where the app is being served, which
++            ``path`` is relative to. If not given, built from
++            :data:`PREFERRED_URL_SCHEME`, ``subdomain``, :data:`SERVER_NAME`,
++            and :data:`APPLICATION_ROOT`.
++        :param subdomain: Subdomain name to prepend to :data:`SERVER_NAME`.
++        :param url_scheme: Scheme to use instead of
++            :data:`PREFERRED_URL_SCHEME`.
++        :param data: The request body text or bytes,or a dict of form data.
++        :param json: If given, this is serialized as JSON and passed as
++            ``data``. Also defaults ``content_type`` to
++            ``application/json``.
++        :param args: Other positional arguments passed to
++            :class:`~werkzeug.test.EnvironBuilder`.
++        :param kwargs: Other keyword arguments passed to
++            :class:`~werkzeug.test.EnvironBuilder`.
++        """
++        from .testing import EnvironBuilder
++
++        builder = EnvironBuilder(self, *args, **kwargs)
++
++        try:
++            environ = builder.get_environ()
++        finally:
++            builder.close()
++
++        return self.request_context(environ)
++
++    def wsgi_app(
++        self, environ: WSGIEnvironment, start_response: StartResponse
++    ) -> cabc.Iterable[bytes]:
++        """The actual WSGI application. This is not implemented in
++        :meth:`__call__` so that middlewares can be applied without
++        losing a reference to the app object. Instead of doing this::
++
++            app = MyMiddleware(app)
++
++        It's a better idea to do this instead::
++
++            app.wsgi_app = MyMiddleware(app.wsgi_app)
++
++        Then you still have the original application object around and
++        can continue to call methods on it.
++
++        .. versionchanged:: 0.7
++            Teardown events for the request and app contexts are called
++            even if an unhandled error occurs. Other events may not be
++            called depending on when an error occurs during dispatch.
++
++        :param environ: A WSGI environment.
++        :param start_response: A callable accepting a status code,
++            a list of headers, and an optional exception context to
++            start the response.
++        """
++        ctx = self.request_context(environ)
++        error: BaseException | None = None
++        try:
++            try:
++                ctx.push()
++                response = self.full_dispatch_request(ctx)
++            except Exception as e:
++                error = e
++                response = self.handle_exception(ctx, e)
++            except:
++                error = sys.exc_info()[1]
++                raise
++            return response(environ, start_response)
++        finally:
++            if "werkzeug.debug.preserve_context" in environ:
++                environ["werkzeug.debug.preserve_context"](ctx)
++
++            if (
++                error is not None
++                and self.should_ignore_error is not None
++                and self.should_ignore_error(error)
++            ):
++                error = None
++
++            ctx.pop(error)
++
++    def __call__(
++        self, environ: WSGIEnvironment, start_response: StartResponse
++    ) -> cabc.Iterable[bytes]:
++        """The WSGI server calls the Flask application object as the
++        WSGI application. This calls :meth:`wsgi_app`, which can be
++        wrapped to apply middleware.
++        """
++        return self.wsgi_app(environ, start_response)
+diff --git a/tests/test_basic.py b/tests/test_basic.py
+new file mode 100644
+index 00000000..3d2f3baa
+--- /dev/null
++++ b/tests/test_basic.py
+@@ -0,0 +1,1971 @@
++import gc
++import importlib.metadata
++import re
++import typing as t
++import uuid
++import weakref
++from contextlib import nullcontext
++from datetime import datetime
++from datetime import timezone
++from platform import python_implementation
++
++import pytest
++import werkzeug.serving
++from markupsafe import Markup
++from werkzeug.exceptions import BadRequest
++from werkzeug.exceptions import Forbidden
++from werkzeug.exceptions import NotFound
++from werkzeug.http import parse_date
++from werkzeug.routing import BuildError
++from werkzeug.routing import RequestRedirect
++
++import flask
++from flask.globals import app_ctx
++from flask.testing import FlaskClient
++
++require_cpython_gc = pytest.mark.skipif(
++    python_implementation() != "CPython",
++    reason="Requires CPython GC behavior",
++)
++
++
++def test_options_work(app, client):
++    @app.route("/", methods=["GET", "POST"])
++    def index():
++        return "Hello World"
++
++    rv = client.open("/", method="OPTIONS")
++    assert sorted(rv.allow) == ["GET", "HEAD", "OPTIONS", "POST"]
++    assert rv.data == b""
++
++
++def test_options_on_multiple_rules(app, client):
++    @app.route("/", methods=["GET", "POST"])
++    def index():
++        return "Hello World"
++
++    @app.route("/", methods=["PUT"])
++    def index_put():
++        return "Aha!"
++
++    rv = client.open("/", method="OPTIONS")
++    assert sorted(rv.allow) == ["GET", "HEAD", "OPTIONS", "POST", "PUT"]
++
++
++@pytest.mark.parametrize("method", ["get", "post", "put", "delete", "patch"])
++def test_method_route(app, client, method):
++    method_route = getattr(app, method)
++    client_method = getattr(client, method)
++
++    @method_route("/")
++    def hello():
++        return "Hello"
++
++    assert client_method("/").data == b"Hello"
++
++
++def test_method_route_no_methods(app):
++    with pytest.raises(TypeError):
++        app.get("/", methods=["GET", "POST"])
++
++
++def test_provide_automatic_options_attr_disable(
++    app: flask.Flask, client: FlaskClient
++) -> None:
++    """Automatic options can be disabled by the view func attribute."""
++
++    def index():
++        return "Hello World!"
++
++    index.provide_automatic_options = False
++    app.add_url_rule("/", view_func=index)
++    rv = client.options()
++    assert rv.status_code == 405
++
++
++def test_provide_automatic_options_attr_enable(
++    app: flask.Flask, client: FlaskClient
++) -> None:
++    """When default automatic options is disabled in config, it can still be
++    enabled by the view function attribute.
++    """
++    app.config["PROVIDE_AUTOMATIC_OPTIONS"] = False
++
++    def index():
++        return "Hello World!"
++
++    index.provide_automatic_options = True
++    app.add_url_rule("/", view_func=index)
++    rv = client.options()
++    assert rv.allow == {"GET", "HEAD", "OPTIONS"}
++
++
++def test_provide_automatic_options_arg_disable(
++    app: flask.Flask, client: FlaskClient
++) -> None:
++    """Automatic options can be disabled by the route argument."""
++
++    @app.get("/", provide_automatic_options=False)
++    def index():
++        return "Hello World!"
++
++    rv = client.options()
++    assert rv.status_code == 405
++
++
++def test_provide_automatic_options_method_disable(
++    app: flask.Flask, client: FlaskClient
++) -> None:
++    """Automatic options is ignored if the route handles options."""
++
++    @app.route("/", methods=["OPTIONS"])
++    def index():
++        return "", {"X-Test": "test"}
++
++    rv = client.options()
++    assert rv.headers["X-Test"] == "test"
++
++
++def test_request_dispatching(app, client):
++    @app.route("/")
++    def index():
++        return flask.request.method
++
++    @app.route("/more", methods=["GET", "POST"])
++    def more():
++        return flask.request.method
++
++    assert client.get("/").data == b"GET"
++    rv = client.post("/")
++    assert rv.status_code == 405
++    assert sorted(rv.allow) == ["GET", "HEAD", "OPTIONS"]
++    rv = client.head("/")
++    assert rv.status_code == 200
++    assert not rv.data  # head truncates
++    assert client.post("/more").data == b"POST"
++    assert client.get("/more").data == b"GET"
++    rv = client.delete("/more")
++    assert rv.status_code == 405
++    assert sorted(rv.allow) == ["GET", "HEAD", "OPTIONS", "POST"]
++
++
++def test_disallow_string_for_allowed_methods(app):
++    with pytest.raises(TypeError):
++        app.add_url_rule("/", methods="GET POST", endpoint="test")
++
++
++def test_url_mapping(app, client):
++    random_uuid4 = "7eb41166-9ebf-4d26-b771-ea3f54f8b383"
++
++    def index():
++        return flask.request.method
++
++    def more():
++        return flask.request.method
++
++    def options():
++        return random_uuid4
++
++    app.add_url_rule("/", "index", index)
++    app.add_url_rule("/more", "more", more, methods=["GET", "POST"])
++
++    # Issue 1288: Test that automatic options are not added
++    #             when non-uppercase 'options' in methods
++    app.add_url_rule("/options", "options", options, methods=["options"])
++
++    assert client.get("/").data == b"GET"
++    rv = client.post("/")
++    assert rv.status_code == 405
++    assert sorted(rv.allow) == ["GET", "HEAD", "OPTIONS"]
++    rv = client.head("/")
++    assert rv.status_code == 200
++    assert not rv.data  # head truncates
++    assert client.post("/more").data == b"POST"
++    assert client.get("/more").data == b"GET"
++    rv = client.delete("/more")
++    assert rv.status_code == 405
++    assert sorted(rv.allow) == ["GET", "HEAD", "OPTIONS", "POST"]
++    rv = client.open("/options", method="OPTIONS")
++    assert rv.status_code == 200
++    assert random_uuid4 in rv.data.decode("utf-8")
++
++
++def test_werkzeug_routing(app, client):
++    from werkzeug.routing import Rule
++    from werkzeug.routing import Submount
++
++    app.url_map.add(
++        Submount("/foo", [Rule("/bar", endpoint="bar"), Rule("/", endpoint="index")])
++    )
++
++    def bar():
++        return "bar"
++
++    def index():
++        return "index"
++
++    app.view_functions["bar"] = bar
++    app.view_functions["index"] = index
++
++    assert client.get("/foo/").data == b"index"
++    assert client.get("/foo/bar").data == b"bar"
++
++
++def test_endpoint_decorator(app, client):
++    from werkzeug.routing import Rule
++    from werkzeug.routing import Submount
++
++    app.url_map.add(
++        Submount("/foo", [Rule("/bar", endpoint="bar"), Rule("/", endpoint="index")])
++    )
++
++    @app.endpoint("bar")
++    def bar():
++        return "bar"
++
++    @app.endpoint("index")
++    def index():
++        return "index"
++
++    assert client.get("/foo/").data == b"index"
++    assert client.get("/foo/bar").data == b"bar"
++
++
++def test_session_accessed(app: flask.Flask, client: FlaskClient) -> None:
++    @app.post("/")
++    def do_set():
++        flask.session["value"] = flask.request.form["value"]
++        return "value set"
++
++    @app.get("/")
++    def do_get():
++        return flask.session.get("value", "None")
++
++    @app.get("/nothing")
++    def do_nothing() -> str:
++        return ""
++
++    with client:
++        rv = client.get("/nothing")
++        assert "cookie" not in rv.vary
++        assert not app_ctx._session.accessed
++        assert not app_ctx._session.modified
++
++    with client:
++        rv = client.post(data={"value": "42"})
++        assert rv.text == "value set"
++        assert "cookie" in rv.vary
++        assert app_ctx._session.accessed
++        assert app_ctx._session.modified
++
++    with client:
++        rv = client.get()
++        assert rv.text == "42"
++        assert "cookie" in rv.vary
++        assert app_ctx._session.accessed
++        assert not app_ctx._session.modified
++
++    with client:
++        rv = client.get("/nothing")
++        assert rv.text == ""
++        assert "cookie" not in rv.vary
++        assert not app_ctx._session.accessed
++        assert not app_ctx._session.modified
++
++
++def test_session_path(app, client):
++    app.config.update(APPLICATION_ROOT="/foo")
++
++    @app.route("/")
++    def index():
++        flask.session["testing"] = 42
++        return "Hello World"
++
++    rv = client.get("/", "http://example.com:8080/foo")
++    assert "path=/foo" in rv.headers["set-cookie"].lower()
++
++
++def test_session_using_application_root(app, client):
++    class PrefixPathMiddleware:
++        def __init__(self, app, prefix):
++            self.app = app
++            self.prefix = prefix
++
++        def __call__(self, environ, start_response):
++            environ["SCRIPT_NAME"] = self.prefix
++            return self.app(environ, start_response)
++
++    app.wsgi_app = PrefixPathMiddleware(app.wsgi_app, "/bar")
++    app.config.update(APPLICATION_ROOT="/bar")
++
++    @app.route("/")
++    def index():
++        flask.session["testing"] = 42
++        return "Hello World"
++
++    rv = client.get("/", "http://example.com:8080/")
++    assert "path=/bar" in rv.headers["set-cookie"].lower()
++
++
++def test_session_using_session_settings(app, client):
++    app.config.update(
++        SERVER_NAME="www.example.com:8080",
++        APPLICATION_ROOT="/test",
++        SESSION_COOKIE_DOMAIN=".example.com",
++        SESSION_COOKIE_HTTPONLY=False,
++        SESSION_COOKIE_SECURE=True,
++        SESSION_COOKIE_PARTITIONED=True,
++        SESSION_COOKIE_SAMESITE="Lax",
++        SESSION_COOKIE_PATH="/",
++    )
++
++    @app.route("/")
++    def index():
++        flask.session["testing"] = 42
++        return "Hello World"
++
++    @app.route("/clear")
++    def clear():
++        flask.session.pop("testing", None)
++        return "Goodbye World"
++
++    rv = client.get("/", "http://www.example.com:8080/test/")
++    cookie = rv.headers["set-cookie"].lower()
++    # or condition for Werkzeug < 2.3
++    assert "domain=example.com" in cookie or "domain=.example.com" in cookie
++    assert "path=/" in cookie
++    assert "secure" in cookie
++    assert "httponly" not in cookie
++    assert "samesite" in cookie
++    assert "partitioned" in cookie
++
++    rv = client.get("/clear", "http://www.example.com:8080/test/")
++    cookie = rv.headers["set-cookie"].lower()
++    assert "session=;" in cookie
++    # or condition for Werkzeug < 2.3
++    assert "domain=example.com" in cookie or "domain=.example.com" in cookie
++    assert "path=/" in cookie
++    assert "secure" in cookie
++    assert "samesite" in cookie
++    assert "partitioned" in cookie
++
++
++def test_session_using_samesite_attribute(app, client):
++    @app.route("/")
++    def index():
++        flask.session["testing"] = 42
++        return "Hello World"
++
++    app.config.update(SESSION_COOKIE_SAMESITE="invalid")
++
++    with pytest.raises(ValueError):
++        client.get("/")
++
++    app.config.update(SESSION_COOKIE_SAMESITE=None)
++    rv = client.get("/")
++    cookie = rv.headers["set-cookie"].lower()
++    assert "samesite" not in cookie
++
++    app.config.update(SESSION_COOKIE_SAMESITE="Strict")
++    rv = client.get("/")
++    cookie = rv.headers["set-cookie"].lower()
++    assert "samesite=strict" in cookie
++
++    app.config.update(SESSION_COOKIE_SAMESITE="Lax")
++    rv = client.get("/")
++    cookie = rv.headers["set-cookie"].lower()
++    assert "samesite=lax" in cookie
++
++
++def test_missing_session(app):
++    app.secret_key = None
++
++    def expect_exception(f, *args, **kwargs):
++        e = pytest.raises(RuntimeError, f, *args, **kwargs)
++        assert e.value.args and "session is unavailable" in e.value.args[0]
++
++    with app.test_request_context():
++        assert flask.session.get("missing_key") is None
++        expect_exception(flask.session.__setitem__, "foo", 42)
++        expect_exception(flask.session.pop, "foo")
++
++
++def test_session_secret_key_fallbacks(app, client) -> None:
++    @app.post("/")
++    def set_session() -> str:
++        flask.session["a"] = 1
++        return ""
++
++    @app.get("/")
++    def get_session() -> dict[str, t.Any]:
++        return dict(flask.session)
++
++    # Set session with initial secret key, and two valid expiring keys
++    app.secret_key, app.config["SECRET_KEY_FALLBACKS"] = (
++        "0 key",
++        ["-1 key", "-2 key"],
++    )
++    client.post()
++    assert client.get().json == {"a": 1}
++    # Change secret key, session can't be loaded and appears empty
++    app.secret_key = "? key"
++    assert client.get().json == {}
++    # Rotate the valid keys, session can be loaded
++    app.secret_key, app.config["SECRET_KEY_FALLBACKS"] = (
++        "+1 key",
++        ["0 key", "-1 key"],
++    )
++    assert client.get().json == {"a": 1}
++
++
++def test_session_expiration(app, client):
++    permanent = True
++
++    @app.route("/")
++    def index():
++        flask.session["test"] = 42
++        flask.session.permanent = permanent
++        return ""
++
++    @app.route("/test")
++    def test():
++        return str(flask.session.permanent)
++
++    rv = client.get("/")
++    assert "set-cookie" in rv.headers
++    match = re.search(r"(?i)\bexpires=([^;]+)", rv.headers["set-cookie"])
++    expires = parse_date(match.group())
++    expected = datetime.now(timezone.utc) + app.permanent_session_lifetime
++    assert expires.year == expected.year
++    assert expires.month == expected.month
++    assert expires.day == expected.day
++
++    rv = client.get("/test")
++    assert rv.data == b"True"
++
++    permanent = False
++    rv = client.get("/")
++    assert "set-cookie" in rv.headers
++    match = re.search(r"\bexpires=([^;]+)", rv.headers["set-cookie"])
++    assert match is None
++
++
++def test_session_stored_last(app, client):
++    @app.after_request
++    def modify_session(response):
++        flask.session["foo"] = 42
++        return response
++
++    @app.route("/")
++    def dump_session_contents():
++        return repr(flask.session.get("foo"))
++
++    assert client.get("/").data == b"None"
++    assert client.get("/").data == b"42"
++
++
++def test_session_special_types(app, client):
++    now = datetime.now(timezone.utc).replace(microsecond=0)
++    the_uuid = uuid.uuid4()
++
++    @app.route("/")
++    def dump_session_contents():
++        flask.session["t"] = (1, 2, 3)
++        flask.session["b"] = b"\xff"
++        flask.session["m"] = Markup("<html>")
++        flask.session["u"] = the_uuid
++        flask.session["d"] = now
++        flask.session["t_tag"] = {" t": "not-a-tuple"}
++        flask.session["di_t_tag"] = {" t__": "not-a-tuple"}
++        flask.session["di_tag"] = {" di": "not-a-dict"}
++        return "", 204
++
++    with client:
++        client.get("/")
++        s = flask.session
++        assert s["t"] == (1, 2, 3)
++        assert type(s["b"]) is bytes  # noqa: E721
++        assert s["b"] == b"\xff"
++        assert type(s["m"]) is Markup  # noqa: E721
++        assert s["m"] == Markup("<html>")
++        assert s["u"] == the_uuid
++        assert s["d"] == now
++        assert s["t_tag"] == {" t": "not-a-tuple"}
++        assert s["di_t_tag"] == {" t__": "not-a-tuple"}
++        assert s["di_tag"] == {" di": "not-a-dict"}
++
++
++def test_session_cookie_setting(app):
++    is_permanent = True
++
++    @app.route("/bump")
++    def bump():
++        rv = flask.session["foo"] = flask.session.get("foo", 0) + 1
++        flask.session.permanent = is_permanent
++        return str(rv)
++
++    @app.route("/read")
++    def read():
++        return str(flask.session.get("foo", 0))
++
++    def run_test(expect_header):
++        with app.test_client() as c:
++            assert c.get("/bump").data == b"1"
++            assert c.get("/bump").data == b"2"
++            assert c.get("/bump").data == b"3"
++
++            rv = c.get("/read")
++            set_cookie = rv.headers.get("set-cookie")
++            assert (set_cookie is not None) == expect_header
++            assert rv.data == b"3"
++
++    is_permanent = True
++    app.config["SESSION_REFRESH_EACH_REQUEST"] = True
++    run_test(expect_header=True)
++
++    is_permanent = True
++    app.config["SESSION_REFRESH_EACH_REQUEST"] = False
++    run_test(expect_header=False)
++
++    is_permanent = False
++    app.config["SESSION_REFRESH_EACH_REQUEST"] = True
++    run_test(expect_header=False)
++
++    is_permanent = False
++    app.config["SESSION_REFRESH_EACH_REQUEST"] = False
++    run_test(expect_header=False)
++
++
++def test_session_vary_cookie(app, client):
++    @app.route("/set")
++    def set_session():
++        flask.session["test"] = "test"
++        return ""
++
++    @app.route("/get")
++    def get():
++        return flask.session.get("test")
++
++    @app.route("/getitem")
++    def getitem():
++        return flask.session["test"]
++
++    @app.route("/setdefault")
++    def setdefault():
++        return flask.session.setdefault("test", "default")
++
++    @app.route("/clear")
++    def clear():
++        flask.session.clear()
++        return ""
++
++    @app.route("/vary-cookie-header-set")
++    def vary_cookie_header_set():
++        response = flask.Response()
++        response.vary.add("Cookie")
++        flask.session["test"] = "test"
++        return response
++
++    @app.route("/vary-header-set")
++    def vary_header_set():
++        response = flask.Response()
++        response.vary.update(("Accept-Encoding", "Accept-Language"))
++        flask.session["test"] = "test"
++        return response
++
++    @app.route("/no-vary-header")
++    def no_vary_header():
++        return ""
++
++    def expect(path, header_value="Cookie"):
++        rv = client.get(path)
++
++        if header_value:
++            # The 'Vary' key should exist in the headers only once.
++            assert len(rv.headers.get_all("Vary")) == 1
++            assert rv.headers["Vary"] == header_value
++        else:
++            assert "Vary" not in rv.headers
++
++    expect("/set")
++    expect("/get")
++    expect("/getitem")
++    expect("/setdefault")
++    expect("/clear")
++    expect("/vary-cookie-header-set")
++    expect("/vary-header-set", "Accept-Encoding, Accept-Language, Cookie")
++    expect("/no-vary-header", None)
++
++
++def test_session_refresh_vary(app, client):
++    @app.get("/login")
++    def login():
++        flask.session["user_id"] = 1
++        flask.session.permanent = True
++        return ""
++
++    @app.get("/ignored")
++    def ignored():
++        return ""
++
++    rv = client.get("/login")
++    assert rv.headers["Vary"] == "Cookie"
++    rv = client.get("/ignored")
++    assert rv.headers["Vary"] == "Cookie"
++
++
++def test_flashes(app, req_ctx):
++    assert not flask.session.modified
++    flask.flash("Zap")
++    flask.session.modified = False
++    flask.flash("Zip")
++    assert flask.session.modified
++    assert list(flask.get_flashed_messages()) == ["Zap", "Zip"]
++
++
++def test_extended_flashing(app):
++    # Be sure app.testing=True below, else tests can fail silently.
++    #
++    # Specifically, if app.testing is not set to True, the AssertionErrors
++    # in the view functions will cause a 500 response to the test client
++    # instead of propagating exceptions.
++
++    @app.route("/")
++    def index():
++        flask.flash("Hello World")
++        flask.flash("Hello World", "error")
++        flask.flash(Markup("<em>Testing</em>"), "warning")
++        return ""
++
++    @app.route("/test/")
++    def test():
++        messages = flask.get_flashed_messages()
++        assert list(messages) == [
++            "Hello World",
++            "Hello World",
++            Markup("<em>Testing</em>"),
++        ]
++        return ""
++
++    @app.route("/test_with_categories/")
++    def test_with_categories():
++        messages = flask.get_flashed_messages(with_categories=True)
++        assert len(messages) == 3
++        assert list(messages) == [
++            ("message", "Hello World"),
++            ("error", "Hello World"),
++            ("warning", Markup("<em>Testing</em>")),
++        ]
++        return ""
++
++    @app.route("/test_filter/")
++    def test_filter():
++        messages = flask.get_flashed_messages(
++            category_filter=["message"], with_categories=True
++        )
++        assert list(messages) == [("message", "Hello World")]
++        return ""
++
++    @app.route("/test_filters/")
++    def test_filters():
++        messages = flask.get_flashed_messages(
++            category_filter=["message", "warning"], with_categories=True
++        )
++        assert list(messages) == [
++            ("message", "Hello World"),
++            ("warning", Markup("<em>Testing</em>")),
++        ]
++        return ""
++
++    @app.route("/test_filters_without_returning_categories/")
++    def test_filters2():
++        messages = flask.get_flashed_messages(category_filter=["message", "warning"])
++        assert len(messages) == 2
++        assert messages[0] == "Hello World"
++        assert messages[1] == Markup("<em>Testing</em>")
++        return ""
++
++    # Create new test client on each test to clean flashed messages.
++
++    client = app.test_client()
++    client.get("/")
++    client.get("/test_with_categories/")
++
++    client = app.test_client()
++    client.get("/")
++    client.get("/test_filter/")
++
++    client = app.test_client()
++    client.get("/")
++    client.get("/test_filters/")
++
++    client = app.test_client()
++    client.get("/")
++    client.get("/test_filters_without_returning_categories/")
++
++
++def test_request_processing(app, client):
++    evts = []
++
++    @app.before_request
++    def before_request():
++        evts.append("before")
++
++    @app.after_request
++    def after_request(response):
++        response.data += b"|after"
++        evts.append("after")
++        return response
++
++    @app.route("/")
++    def index():
++        assert "before" in evts
++        assert "after" not in evts
++        return "request"
++
++    assert "after" not in evts
++    rv = client.get("/").data
++    assert "after" in evts
++    assert rv == b"request|after"
++
++
++def test_request_preprocessing_early_return(app, client):
++    evts = []
++
++    @app.before_request
++    def before_request1():
++        evts.append(1)
++
++    @app.before_request
++    def before_request2():
++        evts.append(2)
++        return "hello"
++
++    @app.before_request
++    def before_request3():
++        evts.append(3)
++        return "bye"
++
++    @app.route("/")
++    def index():
++        evts.append("index")
++        return "damnit"
++
++    rv = client.get("/").data.strip()
++    assert rv == b"hello"
++    assert evts == [1, 2]
++
++
++def test_after_request_processing(app, client):
++    @app.route("/")
++    def index():
++        @flask.after_this_request
++        def foo(response):
++            response.headers["X-Foo"] = "a header"
++            return response
++
++        return "Test"
++
++    resp = client.get("/")
++    assert resp.status_code == 200
++    assert resp.headers["X-Foo"] == "a header"
++
++
++def test_teardown_request_handler(app, client):
++    called = []
++
++    @app.teardown_request
++    def teardown_request(exc):
++        called.append(True)
++        return "Ignored"
++
++    @app.route("/")
++    def root():
++        return "Response"
++
++    rv = client.get("/")
++    assert rv.status_code == 200
++    assert b"Response" in rv.data
++    assert len(called) == 1
++
++
++def test_teardown_request_handler_debug_mode(app, client):
++    called = []
++
++    @app.teardown_request
++    def teardown_request(exc):
++        called.append(True)
++        return "Ignored"
++
++    @app.route("/")
++    def root():
++        return "Response"
++
++    rv = client.get("/")
++    assert rv.status_code == 200
++    assert b"Response" in rv.data
++    assert len(called) == 1
++
++
++def test_teardown_request_handler_error(app, client):
++    called = []
++    app.testing = False
++
++    @app.teardown_request
++    def teardown_request1(exc):
++        assert type(exc) is ZeroDivisionError
++        called.append(True)
++        # This raises a new error and blows away sys.exc_info(), so we can
++        # test that all teardown_requests get passed the same original
++        # exception.
++        try:
++            raise TypeError()
++        except Exception:
++            pass
++
++    @app.teardown_request
++    def teardown_request2(exc):
++        assert type(exc) is ZeroDivisionError
++        called.append(True)
++        # This raises a new error and blows away sys.exc_info(), so we can
++        # test that all teardown_requests get passed the same original
++        # exception.
++        try:
++            raise TypeError()
++        except Exception:
++            pass
++
++    @app.route("/")
++    def fails():
++        raise ZeroDivisionError
++
++    rv = client.get("/")
++    assert rv.status_code == 500
++    assert b"Internal Server Error" in rv.data
++    assert len(called) == 2
++
++
++def test_before_after_request_order(app, client):
++    called = []
++
++    @app.before_request
++    def before1():
++        called.append(1)
++
++    @app.before_request
++    def before2():
++        called.append(2)
++
++    @app.after_request
++    def after1(response):
++        called.append(4)
++        return response
++
++    @app.after_request
++    def after2(response):
++        called.append(3)
++        return response
++
++    @app.teardown_request
++    def finish1(exc):
++        called.append(6)
++
++    @app.teardown_request
++    def finish2(exc):
++        called.append(5)
++
++    @app.route("/")
++    def index():
++        return "42"
++
++    rv = client.get("/")
++    assert rv.data == b"42"
++    assert called == [1, 2, 3, 4, 5, 6]
++
++
++def test_error_handling(app, client):
++    app.testing = False
++
++    @app.errorhandler(404)
++    def not_found(e):
++        return "not found", 404
++
++    @app.errorhandler(500)
++    def internal_server_error(e):
++        return "internal server error", 500
++
++    @app.errorhandler(Forbidden)
++    def forbidden(e):
++        return "forbidden", 403
++
++    @app.route("/")
++    def index():
++        flask.abort(404)
++
++    @app.route("/error")
++    def error():
++        raise ZeroDivisionError
++
++    @app.route("/forbidden")
++    def error2():
++        flask.abort(403)
++
++    rv = client.get("/")
++    assert rv.status_code == 404
++    assert rv.data == b"not found"
++    rv = client.get("/error")
++    assert rv.status_code == 500
++    assert b"internal server error" == rv.data
++    rv = client.get("/forbidden")
++    assert rv.status_code == 403
++    assert b"forbidden" == rv.data
++
++
++def test_error_handling_processing(app, client):
++    app.testing = False
++
++    @app.errorhandler(500)
++    def internal_server_error(e):
++        return "internal server error", 500
++
++    @app.route("/")
++    def broken_func():
++        raise ZeroDivisionError
++
++    @app.after_request
++    def after_request(resp):
++        resp.mimetype = "text/x-special"
++        return resp
++
++    resp = client.get("/")
++    assert resp.mimetype == "text/x-special"
++    assert resp.data == b"internal server error"
++
++
++def test_baseexception_error_handling(app, client):
++    app.testing = False
++
++    @app.route("/")
++    def broken_func():
++        raise KeyboardInterrupt()
++
++    with pytest.raises(KeyboardInterrupt):
++        client.get("/")
++
++
++def test_before_request_and_routing_errors(app, client):
++    @app.before_request
++    def attach_something():
++        flask.g.something = "value"
++
++    @app.errorhandler(404)
++    def return_something(error):
++        return flask.g.something, 404
++
++    rv = client.get("/")
++    assert rv.status_code == 404
++    assert rv.data == b"value"
++
++
++def test_user_error_handling(app, client):
++    class MyException(Exception):
++        pass
++
++    @app.errorhandler(MyException)
++    def handle_my_exception(e):
++        assert isinstance(e, MyException)
++        return "42"
++
++    @app.route("/")
++    def index():
++        raise MyException()
++
++    assert client.get("/").data == b"42"
++
++
++def test_http_error_subclass_handling(app, client):
++    class ForbiddenSubclass(Forbidden):
++        pass
++
++    @app.errorhandler(ForbiddenSubclass)
++    def handle_forbidden_subclass(e):
++        assert isinstance(e, ForbiddenSubclass)
++        return "banana"
++
++    @app.errorhandler(403)
++    def handle_403(e):
++        assert not isinstance(e, ForbiddenSubclass)
++        assert isinstance(e, Forbidden)
++        return "apple"
++
++    @app.route("/1")
++    def index1():
++        raise ForbiddenSubclass()
++
++    @app.route("/2")
++    def index2():
++        flask.abort(403)
++
++    @app.route("/3")
++    def index3():
++        raise Forbidden()
++
++    assert client.get("/1").data == b"banana"
++    assert client.get("/2").data == b"apple"
++    assert client.get("/3").data == b"apple"
++
++
++def test_errorhandler_precedence(app, client):
++    class E1(Exception):
++        pass
++
++    class E2(Exception):
++        pass
++
++    class E3(E1, E2):
++        pass
++
++    @app.errorhandler(E2)
++    def handle_e2(e):
++        return "E2"
++
++    @app.errorhandler(Exception)
++    def handle_exception(e):
++        return "Exception"
++
++    @app.route("/E1")
++    def raise_e1():
++        raise E1
++
++    @app.route("/E3")
++    def raise_e3():
++        raise E3
++
++    rv = client.get("/E1")
++    assert rv.data == b"Exception"
++
++    rv = client.get("/E3")
++    assert rv.data == b"E2"
++
++
++@pytest.mark.parametrize(
++    ("debug", "trap", "expect_key", "expect_abort"),
++    [(False, None, True, True), (True, None, False, True), (False, True, False, False)],
++)
++def test_trap_bad_request_key_error(app, client, debug, trap, expect_key, expect_abort):
++    app.config["DEBUG"] = debug
++    app.config["TRAP_BAD_REQUEST_ERRORS"] = trap
++
++    @app.route("/key")
++    def fail():
++        flask.request.form["missing_key"]
++
++    @app.route("/abort")
++    def allow_abort():
++        flask.abort(400)
++
++    if expect_key:
++        rv = client.get("/key")
++        assert rv.status_code == 400
++        assert b"missing_key" not in rv.data
++    else:
++        with pytest.raises(KeyError) as exc_info:
++            client.get("/key")
++
++        assert exc_info.errisinstance(BadRequest)
++        assert "missing_key" in exc_info.value.get_description()
++
++    if expect_abort:
++        rv = client.get("/abort")
++        assert rv.status_code == 400
++    else:
++        with pytest.raises(BadRequest):
++            client.get("/abort")
++
++
++def test_trapping_of_all_http_exceptions(app, client):
++    app.config["TRAP_HTTP_EXCEPTIONS"] = True
++
++    @app.route("/fail")
++    def fail():
++        flask.abort(404)
++
++    with pytest.raises(NotFound):
++        client.get("/fail")
++
++
++def test_error_handler_after_processor_error(app, client):
++    app.testing = False
++
++    @app.before_request
++    def before_request():
++        if _trigger == "before":
++            raise ZeroDivisionError
++
++    @app.after_request
++    def after_request(response):
++        if _trigger == "after":
++            raise ZeroDivisionError
++
++        return response
++
++    @app.route("/")
++    def index():
++        return "Foo"
++
++    @app.errorhandler(500)
++    def internal_server_error(e):
++        return "Hello Server Error", 500
++
++    for _trigger in "before", "after":
++        rv = client.get("/")
++        assert rv.status_code == 500
++        assert rv.data == b"Hello Server Error"
++
++
++def test_enctype_debug_helper(app, client):
++    from flask.debughelpers import DebugFilesKeyError
++
++    app.debug = True
++
++    @app.route("/fail", methods=["POST"])
++    def index():
++        return flask.request.files["foo"].filename
++
++    with pytest.raises(DebugFilesKeyError) as e:
++        client.post("/fail", data={"foo": "index.txt"})
++    assert "no file contents were transmitted" in str(e.value)
++    assert "This was submitted: 'index.txt'" in str(e.value)
++
++
++def test_response_types(app, client):
++    @app.route("/text")
++    def from_text():
++        return "Hällo Wörld"
++
++    @app.route("/bytes")
++    def from_bytes():
++        return "Hällo Wörld".encode()
++
++    @app.route("/full_tuple")
++    def from_full_tuple():
++        return (
++            "Meh",
++            400,
++            {"X-Foo": "Testing", "Content-Type": "text/plain; charset=utf-8"},
++        )
++
++    @app.route("/text_headers")
++    def from_text_headers():
++        return "Hello", {"X-Foo": "Test", "Content-Type": "text/plain; charset=utf-8"}
++
++    @app.route("/text_status")
++    def from_text_status():
++        return "Hi, status!", 400
++
++    @app.route("/response_headers")
++    def from_response_headers():
++        return (
++            flask.Response(
++                "Hello world", 404, {"Content-Type": "text/html", "X-Foo": "Baz"}
++            ),
++            {"Content-Type": "text/plain", "X-Foo": "Bar", "X-Bar": "Foo"},
++        )
++
++    @app.route("/response_status")
++    def from_response_status():
++        return app.response_class("Hello world", 400), 500
++
++    @app.route("/wsgi")
++    def from_wsgi():
++        return NotFound()
++
++    @app.route("/dict")
++    def from_dict():
++        return {"foo": "bar"}, 201
++
++    @app.route("/list")
++    def from_list():
++        return ["foo", "bar"], 201
++
++    assert client.get("/text").data == "Hällo Wörld".encode()
++    assert client.get("/bytes").data == "Hällo Wörld".encode()
++
++    rv = client.get("/full_tuple")
++    assert rv.data == b"Meh"
++    assert rv.headers["X-Foo"] == "Testing"
++    assert rv.status_code == 400
++    assert rv.mimetype == "text/plain"
++
++    rv = client.get("/text_headers")
++    assert rv.data == b"Hello"
++    assert rv.headers["X-Foo"] == "Test"
++    assert rv.status_code == 200
++    assert rv.mimetype == "text/plain"
++
++    rv = client.get("/text_status")
++    assert rv.data == b"Hi, status!"
++    assert rv.status_code == 400
++    assert rv.mimetype == "text/html"
++
++    rv = client.get("/response_headers")
++    assert rv.data == b"Hello world"
++    assert rv.content_type == "text/plain"
++    assert rv.headers.getlist("X-Foo") == ["Bar"]
++    assert rv.headers["X-Bar"] == "Foo"
++    assert rv.status_code == 404
++
++    rv = client.get("/response_status")
++    assert rv.data == b"Hello world"
++    assert rv.status_code == 500
++
++    rv = client.get("/wsgi")
++    assert b"Not Found" in rv.data
++    assert rv.status_code == 404
++
++    rv = client.get("/dict")
++    assert rv.json == {"foo": "bar"}
++    assert rv.status_code == 201
++
++    rv = client.get("/list")
++    assert rv.json == ["foo", "bar"]
++    assert rv.status_code == 201
++
++
++def test_response_type_errors():
++    app = flask.Flask(__name__)
++    app.testing = True
++
++    @app.route("/none")
++    def from_none():
++        pass
++
++    @app.route("/small_tuple")
++    def from_small_tuple():
++        return ("Hello",)
++
++    @app.route("/large_tuple")
++    def from_large_tuple():
++        return "Hello", 234, {"X-Foo": "Bar"}, "???"
++
++    @app.route("/bad_type")
++    def from_bad_type():
++        return True
++
++    @app.route("/bad_wsgi")
++    def from_bad_wsgi():
++        return lambda: None
++
++    c = app.test_client()
++
++    with pytest.raises(TypeError) as e:
++        c.get("/none")
++
++    assert "returned None" in str(e.value)
++    assert "from_none" in str(e.value)
++
++    with pytest.raises(TypeError) as e:
++        c.get("/small_tuple")
++
++    assert "tuple must have the form" in str(e.value)
++
++    with pytest.raises(TypeError):
++        c.get("/large_tuple")
++
++    with pytest.raises(TypeError) as e:
++        c.get("/bad_type")
++
++    assert "it was a bool" in str(e.value)
++
++    with pytest.raises(TypeError):
++        c.get("/bad_wsgi")
++
++
++def test_make_response(app, req_ctx):
++    rv = flask.make_response()
++    assert rv.status_code == 200
++    assert rv.data == b""
++    assert rv.mimetype == "text/html"
++
++    rv = flask.make_response("Awesome")
++    assert rv.status_code == 200
++    assert rv.data == b"Awesome"
++    assert rv.mimetype == "text/html"
++
++    rv = flask.make_response("W00t", 404)
++    assert rv.status_code == 404
++    assert rv.data == b"W00t"
++    assert rv.mimetype == "text/html"
++
++    rv = flask.make_response(c for c in "Hello")
++    assert rv.status_code == 200
++    assert rv.data == b"Hello"
++    assert rv.mimetype == "text/html"
++
++
++def test_make_response_with_response_instance(app, req_ctx):
++    rv = flask.make_response(flask.jsonify({"msg": "W00t"}), 400)
++    assert rv.status_code == 400
++    assert rv.data == b'{"msg":"W00t"}\n'
++    assert rv.mimetype == "application/json"
++
++    rv = flask.make_response(flask.Response(""), 400)
++    assert rv.status_code == 400
++    assert rv.data == b""
++    assert rv.mimetype == "text/html"
++
++    rv = flask.make_response(
++        flask.Response("", headers={"Content-Type": "text/html"}),
++        400,
++        [("X-Foo", "bar")],
++    )
++    assert rv.status_code == 400
++    assert rv.headers["Content-Type"] == "text/html"
++    assert rv.headers["X-Foo"] == "bar"
++
++
++@pytest.mark.parametrize("compact", [True, False])
++def test_jsonify_no_prettyprint(app, compact):
++    app.json.compact = compact
++    rv = app.json.response({"msg": {"submsg": "W00t"}, "msg2": "foobar"})
++    data = rv.data.strip()
++    assert (b" " not in data) is compact
++    assert (b"\n" not in data) is compact
++
++
++def test_jsonify_mimetype(app, req_ctx):
++    app.json.mimetype = "application/vnd.api+json"
++    msg = {"msg": {"submsg": "W00t"}}
++    rv = flask.make_response(flask.jsonify(msg), 200)
++    assert rv.mimetype == "application/vnd.api+json"
++
++
++def test_json_dump_dataclass(app, req_ctx):
++    from dataclasses import make_dataclass
++
++    Data = make_dataclass("Data", [("name", str)])
++    value = app.json.dumps(Data("Flask"))
++    value = app.json.loads(value)
++    assert value == {"name": "Flask"}
++
++
++def test_jsonify_args_and_kwargs_check(app, req_ctx):
++    with pytest.raises(TypeError) as e:
++        flask.jsonify("fake args", kwargs="fake")
++    assert "args or kwargs" in str(e.value)
++
++
++def test_url_generation(app, req_ctx):
++    @app.route("/hello/<name>", methods=["POST"])
++    def hello():
++        pass
++
++    assert flask.url_for("hello", name="test x") == "/hello/test%20x"
++    assert (
++        flask.url_for("hello", name="test x", _external=True)
++        == "http://localhost/hello/test%20x"
++    )
++
++
++def test_build_error_handler(app):
++    # Test base case, a URL which results in a BuildError.
++    with app.test_request_context():
++        pytest.raises(BuildError, flask.url_for, "spam")
++
++    # Verify the error is re-raised if not the current exception.
++    try:
++        with app.test_request_context():
++            flask.url_for("spam")
++    except BuildError as err:
++        error = err
++    try:
++        raise RuntimeError("Test case where BuildError is not current.")
++    except RuntimeError:
++        pytest.raises(BuildError, app.handle_url_build_error, error, "spam", {})
++
++    # Test a custom handler.
++    def handler(error, endpoint, values):
++        # Just a test.
++        return "/test_handler/"
++
++    app.url_build_error_handlers.append(handler)
++    with app.test_request_context():
++        assert flask.url_for("spam") == "/test_handler/"
++
++
++def test_build_error_handler_reraise(app):
++    # Test a custom handler which reraises the BuildError
++    def handler_raises_build_error(error, endpoint, values):
++        raise error
++
++    app.url_build_error_handlers.append(handler_raises_build_error)
++
++    with app.test_request_context():
++        pytest.raises(BuildError, flask.url_for, "not.existing")
++
++
++def test_url_for_passes_special_values_to_build_error_handler(app):
++    @app.url_build_error_handlers.append
++    def handler(error, endpoint, values):
++        assert values == {
++            "_external": False,
++            "_anchor": None,
++            "_method": None,
++            "_scheme": None,
++        }
++        return "handled"
++
++    with app.test_request_context():
++        flask.url_for("/")
++
++
++def test_static_files(app, client):
++    with client.get("/static/index.html") as rv:
++        assert rv.status_code == 200
++        assert rv.data.strip() == b"<h1>Hello World!</h1>"
++        with app.test_request_context():
++            assert (
++                flask.url_for("static", filename="index.html") == "/static/index.html"
++            )
++
++
++def test_static_url_path():
++    app = flask.Flask(__name__, static_url_path="/foo")
++    app.testing = True
++
++    with app.test_client().get("/foo/index.html") as rv:
++        assert rv.status_code == 200
++
++    with app.test_request_context():
++        assert flask.url_for("static", filename="index.html") == "/foo/index.html"
++
++
++def test_static_url_path_with_ending_slash():
++    app = flask.Flask(__name__, static_url_path="/foo/")
++    app.testing = True
++
++    with app.test_client().get("/foo/index.html") as rv:
++        assert rv.status_code == 200
++
++    with app.test_request_context():
++        assert flask.url_for("static", filename="index.html") == "/foo/index.html"
++
++
++def test_static_url_empty_path(app):
++    app = flask.Flask(__name__, static_folder="", static_url_path="")
++
++    with app.test_client().open("/static/index.html", method="GET") as rv:
++        assert rv.status_code == 200
++
++
++def test_static_url_empty_path_default(app):
++    app = flask.Flask(__name__, static_folder="")
++
++    with app.test_client().open("/static/index.html", method="GET") as rv:
++        assert rv.status_code == 200
++
++
++def test_static_folder_with_pathlib_path(app):
++    from pathlib import Path
++
++    app = flask.Flask(__name__, static_folder=Path("static"))
++
++    with app.test_client().open("/static/index.html", method="GET") as rv:
++        assert rv.status_code == 200
++
++
++def test_static_folder_with_ending_slash():
++    app = flask.Flask(__name__, static_folder="static/")
++
++    @app.route("/<path:path>")
++    def catch_all(path):
++        return path
++
++    rv = app.test_client().get("/catch/all")
++    assert rv.data == b"catch/all"
++
++
++def test_static_route_with_host_matching():
++    app = flask.Flask(__name__, host_matching=True, static_host="example.com")
++    c = app.test_client()
++
++    with c.get("http://example.com/static/index.html") as rv:
++        assert rv.status_code == 200
++
++    with app.test_request_context():
++        rv = flask.url_for("static", filename="index.html", _external=True)
++        assert rv == "http://example.com/static/index.html"
++    # Providing static_host without host_matching=True should error.
++    with pytest.raises(AssertionError):
++        flask.Flask(__name__, static_host="example.com")
++    # Providing host_matching=True with static_folder
++    # but without static_host should error.
++    with pytest.raises(AssertionError):
++        flask.Flask(__name__, host_matching=True)
++    # Providing host_matching=True without static_host
++    # but with static_folder=None should not error.
++    flask.Flask(__name__, host_matching=True, static_folder=None)
++
++
++def test_request_locals():
++    assert repr(flask.g) == "<LocalProxy unbound>"
++    assert not flask.g
++
++
++werkzeug_3_2 = importlib.metadata.version("werkzeug") >= "3.2."
++
++
++@pytest.mark.parametrize(
++    ("subdomain_matching", "host_matching", "expect_subdomain", "expect_host"),
++    [
++        (False, False, "default", "default"),
++        (True, False, "abc", "<invalid>"),
++        (False, True, "abc", "default"),
++    ],
++)
++def test_server_name_matching(
++    subdomain_matching: bool,
++    host_matching: bool,
++    expect_subdomain: str,
++    expect_host: str,
++) -> None:
++    app = flask.Flask(
++        __name__,
++        subdomain_matching=subdomain_matching,
++        host_matching=host_matching,
++        static_host="example.test" if host_matching else None,
++    )
++    app.config["SERVER_NAME"] = "example.test"
++
++    @app.route("/", defaults={"name": "default"}, host="<name>")
++    @app.route("/", subdomain="<name>", host="<name>.example.test")
++    def index(name: str) -> str:
++        return name
++
++    client = app.test_client()
++
++    r = client.get(base_url="http://example.test")
++    assert r.text == "default"
++
++    r = client.get(base_url="http://abc.example.test")
++    assert r.text == expect_subdomain
++
++    with pytest.warns() if subdomain_matching else nullcontext():
++        r = client.get(base_url="http://xyz.other.test")
++
++        if werkzeug_3_2:
++            assert r.text == "default"
++        else:
++            assert r.text == expect_host
++
++
++def test_server_name_subdomain():
++    app = flask.Flask(__name__, subdomain_matching=True)
++    client = app.test_client()
++
++    @app.route("/")
++    def index():
++        return "default"
++
++    @app.route("/", subdomain="foo")
++    def subdomain():
++        return "subdomain"
++
++    app.config["SERVER_NAME"] = "dev.local:5000"
++    rv = client.get("/")
++    assert rv.data == b"default"
++
++    rv = client.get("/", "http://dev.local:5000")
++    assert rv.data == b"default"
++
++    rv = client.get("/", "https://dev.local:5000")
++    assert rv.data == b"default"
++
++    app.config["SERVER_NAME"] = "dev.local:443"
++    rv = client.get("/", "https://dev.local")
++
++    # Werkzeug 1.0 fixes matching https scheme with 443 port
++    if rv.status_code != 404:
++        assert rv.data == b"default"
++
++    app.config["SERVER_NAME"] = "dev.local"
++    rv = client.get("/", "https://dev.local")
++    assert rv.data == b"default"
++
++    with pytest.warns(match="Current server name"):
++        rv = client.get("/", "http://foo.localhost")
++
++    if werkzeug_3_2:
++        assert rv.status_code == 200
++    else:
++        assert rv.status_code == 404
++
++    rv = client.get("/", "http://foo.dev.local")
++    assert rv.data == b"subdomain"
++
++
++@pytest.mark.parametrize("key", ["TESTING", "PROPAGATE_EXCEPTIONS", "DEBUG", None])
++def test_exception_propagation(app, client, key):
++    app.testing = False
++
++    @app.route("/")
++    def index():
++        raise ZeroDivisionError
++
++    if key is not None:
++        app.config[key] = True
++
++        with pytest.raises(ZeroDivisionError):
++            client.get("/")
++    else:
++        assert client.get("/").status_code == 500
++
++
++@pytest.mark.parametrize("debug", [True, False])
++@pytest.mark.parametrize("use_debugger", [True, False])
++@pytest.mark.parametrize("use_reloader", [True, False])
++@pytest.mark.parametrize("propagate_exceptions", [None, True, False])
++def test_werkzeug_passthrough_errors(
++    monkeypatch, debug, use_debugger, use_reloader, propagate_exceptions, app
++):
++    rv = {}
++
++    # Mocks werkzeug.serving.run_simple method
++    def run_simple_mock(*args, **kwargs):
++        rv["passthrough_errors"] = kwargs.get("passthrough_errors")
++
++    monkeypatch.setattr(werkzeug.serving, "run_simple", run_simple_mock)
++    app.config["PROPAGATE_EXCEPTIONS"] = propagate_exceptions
++    app.run(debug=debug, use_debugger=use_debugger, use_reloader=use_reloader)
++
++
++def test_url_processors(app, client):
++    @app.url_defaults
++    def add_language_code(endpoint, values):
++        if flask.g.lang_code is not None and app.url_map.is_endpoint_expecting(
++            endpoint, "lang_code"
++        ):
++            values.setdefault("lang_code", flask.g.lang_code)
++
++    @app.url_value_preprocessor
++    def pull_lang_code(endpoint, values):
++        flask.g.lang_code = values.pop("lang_code", None)
++
++    @app.route("/<lang_code>/")
++    def index():
++        return flask.url_for("about")
++
++    @app.route("/<lang_code>/about")
++    def about():
++        return flask.url_for("something_else")
++
++    @app.route("/foo")
++    def something_else():
++        return flask.url_for("about", lang_code="en")
++
++    assert client.get("/de/").data == b"/de/about"
++    assert client.get("/de/about").data == b"/foo"
++    assert client.get("/foo").data == b"/en/about"
++
++
++def test_inject_blueprint_url_defaults(app):
++    bp = flask.Blueprint("foo", __name__, template_folder="template")
++
++    @bp.url_defaults
++    def bp_defaults(endpoint, values):
++        values["page"] = "login"
++
++    @bp.route("/<page>")
++    def view(page):
++        pass
++
++    app.register_blueprint(bp)
++
++    values = dict()
++    app.inject_url_defaults("foo.view", values)
++    expected = dict(page="login")
++    assert values == expected
++
++    with app.test_request_context("/somepage"):
++        url = flask.url_for("foo.view")
++    expected = "/login"
++    assert url == expected
++
++
++def test_nonascii_pathinfo(app, client):
++    @app.route("/киртест")
++    def index():
++        return "Hello World!"
++
++    rv = client.get("/киртест")
++    assert rv.data == b"Hello World!"
++
++
++def test_no_setup_after_first_request(app, client):
++    app.debug = True
++
++    @app.route("/")
++    def index():
++        return "Awesome"
++
++    assert client.get("/").data == b"Awesome"
++
++    with pytest.raises(AssertionError) as exc_info:
++        app.add_url_rule("/foo", endpoint="late")
++
++    assert "setup method 'add_url_rule'" in str(exc_info.value)
++
++
++def test_routing_redirect_debugging(monkeypatch, app, client):
++    app.config["DEBUG"] = True
++
++    @app.route("/user/", methods=["GET", "POST"])
++    def user():
++        return flask.request.form["status"]
++
++    # default redirect code preserves form data
++    rv = client.post("/user", data={"status": "success"}, follow_redirects=True)
++    assert rv.data == b"success"
++
++    # 301 and 302 raise error
++    monkeypatch.setattr(RequestRedirect, "code", 301)
++
++    with client, pytest.raises(AssertionError) as exc_info:
++        client.post("/user", data={"status": "error"}, follow_redirects=True)
++
++    assert "canonical URL 'http://localhost/user/'" in str(exc_info.value)
++
++
++def test_route_decorator_custom_endpoint(app, client):
++    app.debug = True
++
++    @app.route("/foo/")
++    def foo():
++        return flask.request.endpoint
++
++    @app.route("/bar/", endpoint="bar")
++    def for_bar():
++        return flask.request.endpoint
++
++    @app.route("/bar/123", endpoint="123")
++    def for_bar_foo():
++        return flask.request.endpoint
++
++    with app.test_request_context():
++        assert flask.url_for("foo") == "/foo/"
++        assert flask.url_for("bar") == "/bar/"
++        assert flask.url_for("123") == "/bar/123"
++
++    assert client.get("/foo/").data == b"foo"
++    assert client.get("/bar/").data == b"bar"
++    assert client.get("/bar/123").data == b"123"
++
++
++def test_get_method_on_g(app_ctx):
++    assert flask.g.get("x") is None
++    assert flask.g.get("x", 11) == 11
++    flask.g.x = 42
++    assert flask.g.get("x") == 42
++    assert flask.g.x == 42
++
++
++def test_g_iteration_protocol(app_ctx):
++    flask.g.foo = 23
++    flask.g.bar = 42
++    assert "foo" in flask.g
++    assert "foos" not in flask.g
++    assert sorted(flask.g) == ["bar", "foo"]
++
++
++def test_subdomain_basic_support():
++    app = flask.Flask(__name__, subdomain_matching=True)
++    app.config["SERVER_NAME"] = "localhost.localdomain"
++    client = app.test_client()
++
++    @app.route("/")
++    def normal_index():
++        return "normal index"
++
++    @app.route("/", subdomain="test")
++    def test_index():
++        return "test index"
++
++    rv = client.get("/", "http://localhost.localdomain/")
++    assert rv.data == b"normal index"
++
++    rv = client.get("/", "http://test.localhost.localdomain/")
++    assert rv.data == b"test index"
++
++
++def test_subdomain_matching():
++    app = flask.Flask(__name__, subdomain_matching=True)
++    client = app.test_client()
++    app.config["SERVER_NAME"] = "localhost.localdomain"
++
++    @app.route("/", subdomain="<user>")
++    def index(user):
++        return f"index for {user}"
++
++    rv = client.get("/", "http://mitsuhiko.localhost.localdomain/")
++    assert rv.data == b"index for mitsuhiko"
++
++
++def test_subdomain_matching_with_ports():
++    app = flask.Flask(__name__, subdomain_matching=True)
++    app.config["SERVER_NAME"] = "localhost.localdomain:3000"
++    client = app.test_client()
++
++    @app.route("/", subdomain="<user>")
++    def index(user):
++        return f"index for {user}"
++
++    rv = client.get("/", "http://mitsuhiko.localhost.localdomain:3000/")
++    assert rv.data == b"index for mitsuhiko"
++
++
++@pytest.mark.parametrize("matching", (False, True))
++def test_subdomain_matching_other_name(matching):
++    app = flask.Flask(__name__, subdomain_matching=matching)
++    app.config["SERVER_NAME"] = "localhost.localdomain:3000"
++    client = app.test_client()
++
++    @app.route("/")
++    def index():
++        return "", 204
++
++    with pytest.warns(match="Current server name") if matching else nullcontext():
++        # ip address can't match name, but will fall back to default
++        rv = client.get("/", "http://127.0.0.1:3000/")
++
++    if werkzeug_3_2:
++        assert rv.status_code == 204
++    else:
++        assert rv.status_code == 404 if matching else 204
++
++    # allow all subdomains if matching is disabled
++    rv = client.get("/", "http://www.localhost.localdomain:3000/")
++    assert rv.status_code == 404 if matching else 204
++
++
++def test_multi_route_rules(app, client):
++    @app.route("/")
++    @app.route("/<test>/")
++    def index(test="a"):
++        return test
++
++    rv = client.open("/")
++    assert rv.data == b"a"
++    rv = client.open("/b/")
++    assert rv.data == b"b"
++
++
++def test_multi_route_class_views(app, client):
++    class View:
++        def __init__(self, app):
++            app.add_url_rule("/", "index", self.index)
++            app.add_url_rule("/<test>/", "index", self.index)
++
++        def index(self, test="a"):
++            return test
++
++    _ = View(app)
++    rv = client.open("/")
++    assert rv.data == b"a"
++    rv = client.open("/b/")
++    assert rv.data == b"b"
++
++
++def test_run_defaults(monkeypatch, app):
++    rv = {}
++
++    # Mocks werkzeug.serving.run_simple method
++    def run_simple_mock(*args, **kwargs):
++        rv["result"] = "running..."
++
++    monkeypatch.setattr(werkzeug.serving, "run_simple", run_simple_mock)
++    app.run()
++    assert rv["result"] == "running..."
++
++
++def test_run_server_port(monkeypatch, app):
++    rv = {}
++
++    # Mocks werkzeug.serving.run_simple method
++    def run_simple_mock(hostname, port, application, *args, **kwargs):
++        rv["result"] = f"running on {hostname}:{port} ..."
++
++    monkeypatch.setattr(werkzeug.serving, "run_simple", run_simple_mock)
++    hostname, port = "localhost", 8000
++    app.run(hostname, port, debug=True)
++    assert rv["result"] == f"running on {hostname}:{port} ..."
++
++
++@pytest.mark.parametrize(
++    "host,port,server_name,expect_host,expect_port",
++    (
++        (None, None, "pocoo.org:8080", "pocoo.org", 8080),
++        ("localhost", None, "pocoo.org:8080", "localhost", 8080),
++        (None, 80, "pocoo.org:8080", "pocoo.org", 80),
++        ("localhost", 80, "pocoo.org:8080", "localhost", 80),
++        ("localhost", 0, "localhost:8080", "localhost", 0),
++        (None, None, "localhost:8080", "localhost", 8080),
++        (None, None, "localhost:0", "localhost", 0),
++        (None, None, "[::1]:8080", "::1", 8080),
++    ),
++)
++def test_run_from_config(
++    monkeypatch, host, port, server_name, expect_host, expect_port, app
++):
++    def run_simple_mock(hostname, port, *args, **kwargs):
++        assert hostname == expect_host
++        assert port == expect_port
++
++    monkeypatch.setattr(werkzeug.serving, "run_simple", run_simple_mock)
++    app.config["SERVER_NAME"] = server_name
++    app.run(host, port)
++
++
++def test_max_cookie_size(app, client, recwarn):
++    app.config["MAX_COOKIE_SIZE"] = 100
++
++    # outside app context, default to Werkzeug static value,
++    # which is also the default config
++    response = flask.Response()
++    default = flask.Flask.default_config["MAX_COOKIE_SIZE"]
++    assert response.max_cookie_size == default
++
++    # inside app context, use app config
++    with app.app_context():
++        assert flask.Response().max_cookie_size == 100
++
++    @app.route("/")
++    def index():
++        r = flask.Response("", status=204)
++        r.set_cookie("foo", "bar" * 100)
++        return r
++
++    client.get("/")
++    assert len(recwarn) == 1
++    w = recwarn.pop()
++    assert "cookie is too large" in str(w.message)
++
++    app.config["MAX_COOKIE_SIZE"] = 0
++
++    client.get("/")
++    assert len(recwarn) == 0
++
++
++@require_cpython_gc
++def test_app_freed_on_zero_refcount():
++    # A Flask instance should not create a reference cycle that prevents CPython
++    # from freeing it when all external references to it are released (see #3761).
++    gc.disable()
++    try:
++        app = flask.Flask(__name__)
++        assert app.view_functions["static"]
++        weak = weakref.ref(app)
++        assert weak() is not None
++        del app
++        assert weak() is None
++    finally:
++        gc.enable()

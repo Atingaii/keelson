@@ -1,0 +1,54 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "openspec",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/openspec-propose/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/openspec-apply-change/SKILL.md\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/openspec-propose/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/openspec-apply-change/SKILL.md\""
+    },
+    {
+      "index": 5,
+      "command": "/bin/bash -lc 'openspec list --json && openspec context --json'"
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc 'openspec list --json && openspec context --json'"
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc \"sed -n '708,760p' src/flask/app.py && sed -n '1875,1930p' tests/test_basic.py && find openspec -maxdepth 3 -type f -print | sort | sed -n '1,120p' && find .agents -maxdepth 3 -type f -print | sort | sed -n '1,80p'\""
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc \"sed -n '708,760p' src/flask/app.py && sed -n '1875,1930p' tests/test_basic.py && find openspec -maxdepth 3 -type f -print | sort | sed -n '1,120p' && find .agents -maxdepth 3 -type f -print | sort | sed -n '1,80p'\""
+    },
+    {
+      "index": 14,
+      "command": "/bin/bash -lc \"sed -n '1,100p' src/flask/app.py; grep -RIn 'urlsplit\\\\|url_parse' src/flask tests | head -50; sed -n '1,160p' openspec/config.yaml; git diff -- src/flask/app.py tests/test_basic.py\""
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"sed -n '1,100p' src/flask/app.py; grep -RIn 'urlsplit\\\\|url_parse' src/flask tests | head -50; sed -n '1,160p' openspec/config.yaml; git diff -- src/flask/app.py tests/test_basic.py\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command naming its project-local framework root to establish activation. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

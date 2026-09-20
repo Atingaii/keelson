@@ -1,0 +1,13 @@
+{
+  "command": [
+    "python3",
+    "-m",
+    "venv",
+    ".bench-venv"
+  ],
+  "cwd": "/tmp/keelson-bench-run-lMfLIo/worktree",
+  "exit_code": 1,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 132
+}

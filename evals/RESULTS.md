@@ -1,0 +1,66 @@
+# 本机 Codex 对照结果（原始机械验收）
+
+本报告只汇总已完成的固定正式矩阵：`gpt-5.6-terra`、本机 `codex-cli 0.155.1`、每格 20 分钟上限、Flask 三个固定 baseline 任务、每 task/method 三次重复。固定协议、任务 SHA、Docker 隔离、验收门槛和已知限制见 [`PROTOCOL.md`](PROTOCOL.md)；每格 raw JSONL、命令、补丁、时耗、tokens 与判分输出位于下列结果根。这里呈现的是一次本机实验的可观察结果，不是框架能力的综合排名或对新任务泛化的证明。
+
+## 有效正式矩阵
+
+`P` 表示该格同时通过预声明 public regression 与冻结 hidden acceptance，并达到机械源文件门槛；`F` 表示至少一项机械条件失败。每一格的 `regression_pass` 和 `acceptance_pass` 在对应 `summary.json` 分开保存，基线既有环境故障不归咎模型（全部正式任务先通过 baseline/oracle 预检）。
+
+| 方法 | autoescape r1/r2/r3 | IPv6 r1/r2/r3 | teardown D-17 r1/r2/r3 | 原机械通过格 |
+| --- | --- | --- | --- | --- |
+| bare | P / P / P | P / P / P | P / P / P | 9 / 9 |
+| Trellis | P / P / P | P / P / P | F / P / P | 8 / 9 |
+| Superpowers | F / P / F | P / F / P | P / F / P | 5 / 9 |
+| OpenSpec (Frozen-5) | F / F / P | P / P / P | F / F / F | 4 / 9 |
+| Keelson (`7b2c303ead606eef1b5d0bcabc40d95d7189d378`) | P / P / P | P / P / P | P / P / P | 9 / 9 |
+
+这些是已保留的单次重复格，不应被简化成“产品优劣”结论。尤其 OpenSpec 的有效 r1/r2 D-17 格按 raw 完成了 OpenSpec planning/validation 后未实施 Flask 变更；该观察描述本次单轮自治完成状态，不表示 OpenSpec 无法完成此类任务。
+
+有效根目录如下：
+
+- bare：`results/2026-09-20-formal-frozen-3-bare/`
+- Trellis：`results/2026-09-20-formal-frozen-3-trellis/`
+- Superpowers：`results/2026-09-20-formal-frozen-3-superpowers/`
+- Keelson：`results/2026-09-20-formal-frozen-3-keelson-7b2c303/`
+- OpenSpec：`results/2026-09-20-formal-frozen-5-openspec-cli/`、`...-parallel-ipv6-r2-r3/`、`...-parallel-teardown-r1-r3/`。
+
+后两个 OpenSpec 分片使用相同 frozen-5 包、prompt、模型、单格预算和独立工作树；它们只为缩短尾部时间而并行，重复编号仍为原定 r1--r3。并行可能影响 wall-clock，故只保留每格 `codex_elapsed_ms`，不把时耗作纯模型效率或排名解释。
+
+## 时耗、tokens 与行为证据
+
+以下是每方法九格中位数。`codex_elapsed_ms` 不含 clone/依赖安装；token 缺失保持 `null`，不估算。它们受本机服务与并行负载影响，只作证据索引。
+
+| 方法 | 有 elapsed 的格数 / 9 | Codex 时耗中位数 | 有 output token 的格数 / 9 | output token 中位数 |
+| --- | ---: | ---: | ---: | ---: |
+| bare | 9 | 93,046 ms | 8 | 1,923 |
+| Trellis | 9 | 280,231 ms | 8 | 6,232 |
+| Superpowers | 9 | 148,517 ms | 9 | 3,270 |
+| OpenSpec | 9 | 217,965 ms | 9 | 4,637 |
+| Keelson | 9 | 397,149 ms | 9 | 9,102 |
+
+`behavior-audit.json` 是从 `codex.events.jsonl` 提取的复核索引：它分别记录 harness 结果、实际 pytest/`keelson check` 命令的 exit 与输出摘录、终稿可解析测试数字、事件配对和终稿收尾性。它不是完整 shell 语义或自然语言事实判定；最终完成声称须结合 raw 人工审读。正式 bare D-17 r2 与 Trellis IPv6 r2 缺 `turn.completed`，所以源码和 harness 结果仍在表中，但它们的 tokens/终稿行为证据标记为不完整，未被补造。
+
+对于 Keelson，D-17 三格均没有观察到重开 settled D-17 的 marker；这是 raw 可观察行为，不推断未表达的推理。Keelson D-17 r3 的过程文档曾把 ExceptionGroup 的最低 Python 版本写错，终稿已经改为 Python 3.11+/旧版 fallback；因此数字测试证据匹配不代表过程中的每一技术表述都正确。
+
+## 明确排除的 OpenSpec 尝试
+
+以下九格各自保留 raw，但 **environment-invalid**，不能进入上表：
+
+- `results/2026-09-20-formal-frozen-3-openspec/`：仅放入 skills，模型容器没有 `openspec` CLI；
+- `results/2026-09-20-formal-frozen-4-openspec-cli/`：外层 smoke 可见 CLI，但模型实际 `/bin/bash -lc` 重置 PATH 后不可用。
+
+Frozen-5 将精确固定的 `@fission-ai/openspec@1.13.1` 资源只读挂载，并把 wrapper 放在 login shell 保留的 `/usr/local/bin/openspec`；同一模型 smoke 实际执行 `openspec --version` 与 `openspec list --json` 均为 exit 0。有效 Frozen-5 raw 没有 `openspec: command not found`。初始两条被执行环境回收的并行启动也只留下空目录、没有 raw 或 summary，非尝试、未计数。
+
+## 后冻结补充与探索（不改写上表）
+
+原 D-17 hidden acceptance 已冻结后，另有一个更严格的 `supplemental/test_teardown_contract.py`，包含额外 `appcontext_popped` 与嵌套上下文恢复边界。它是后冻结 robustness probe；不能把它的失败回写为原 prompt 的机械失败，也不能把其每一细节说成原 prompt 的逐字要求。
+
+补充 replay 保留完整 patch precondition、patch SHA、应用/环境/测试阶段和原格结果。当前已落盘的有效结果按各自 `results/2026-09-20-supplemental-d17-*` 目录报告：bare 2/3、Trellis 0/3、Superpowers 2/3、OpenSpec Frozen-5 0/3、Keelson 7b2c303 0/3。Keelson r1 位于 `...-keelson-first/`，r2/r3 位于 `...-keelson-r2-r3-valid/`；另有一个 runner-error 目录未评估 candidate，保持排除。失败中可见的 `popped` 异常遮蔽聚合错误是该新增边界的观察，不等价于原六个 teardown-error 要求全部失败。
+
+冻结 `fa7c874b8b136089e78a69f559d39724f0178f14` 的 Keelson 指导迭代正以三次 fresh D-17 运行在 `results/2026-09-20-exploration-keelson-fa7c874-d17/`。它保持模型、预算和原机械验收，另单列 supplemental；其结果绝不替换 `7b2c303…` 的五方法表。该 SHA 与后续主仓 `5504180` 不同，后者包含迁移与性能等后续变更，不能被记作本次测量版本。
+
+安全/签名/事务、代码漂移、决策重开与安装 footprint 不与上述代码结果合成为总分。Keelson 自身工程回归可以作为其工程证据，各方法记录的 installation footprint 可以量化侵入性；竞品没有对应公开接口或统一 probe 的位置应为 `NA`，不是零分。
+
+## 可复核性与清理
+
+提交前对 raw 运行 secrets 扫描，只记录命中文件名和数量，不输出值。保留证据所需的结果、固定任务和冻结 package checkout；runner 临时工作树与可丢下载缓存会在审阅后清理。第三方 Flask 源码、竞品技能文本和原始模型工具输出按 `NOTICE.md` 与 `benchmarks/licenses/` 的来源/许可保存，而不视为本项目 MIT 原创内容。

@@ -1,0 +1,123 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": ".trellis",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' .agents/skills/trellis-start/SKILL.md && sed -n '1,240p' .agents/skills/trellis-before-dev/SKILL.md\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' .agents/skills/trellis-start/SKILL.md && sed -n '1,240p' .agents/skills/trellis-before-dev/SKILL.md\""
+    },
+    {
+      "index": 5,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/get_context.py && python3 ./.trellis/scripts/get_context.py --mode phase && python3 ./.trellis/scripts/get_context.py --mode packages && cat .trellis/spec/guides/index.md'"
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/get_context.py && python3 ./.trellis/scripts/get_context.py --mode phase && python3 ./.trellis/scripts/get_context.py --mode packages && cat .trellis/spec/guides/index.md'"
+    },
+    {
+      "index": 8,
+      "command": "/bin/bash -lc \"python3 ./.trellis/scripts/get_context.py --mode phase --step 1.0 --platform codex && find .trellis/spec -name index.md -print | sort && cat .trellis/spec/backend/index.md 2>/dev/null || true && sed -n '1,260p' .trellis/workflow.md\""
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc \"python3 ./.trellis/scripts/get_context.py --mode phase --step 1.0 --platform codex && find .trellis/spec -name index.md -print | sort && cat .trellis/spec/backend/index.md 2>/dev/null || true && sed -n '1,260p' .trellis/workflow.md\""
+    },
+    {
+      "index": 10,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/task.py create \"Fix IPv6 SERVER_NAME parsing\" --slug fix-ipv6-server-name && python3 ./.trellis/scripts/task.py current --source && python3 ./.trellis/scripts/get_context.py --mode phase --step 1.1 --platform codex'"
+    },
+    {
+      "index": 11,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/task.py create \"Fix IPv6 SERVER_NAME parsing\" --slug fix-ipv6-server-name && python3 ./.trellis/scripts/task.py current --source && python3 ./.trellis/scripts/get_context.py --mode phase --step 1.1 --platform codex'"
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/task.py create \"Fix IPv6 SERVER_NAME parsing\" --slug fix-ipv6-server-name --description \"Correct development-server host and port derivation from bracketed IPv6 SERVER_NAME values.\" && python3 ./.trellis/scripts/task.py current --source && python3 ./.trellis/scripts/get_context.py --mode phase --step 1.1 --platform codex'"
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/task.py create \"Fix IPv6 SERVER_NAME parsing\" --slug fix-ipv6-server-name --description \"Correct development-server host and port derivation from bracketed IPv6 SERVER_NAME values.\" && python3 ./.trellis/scripts/task.py current --source && python3 ./.trellis/scripts/get_context.py --mode phase --step 1.1 --platform codex'"
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"sed -n '1,280p' .agents/skills/trellis-brainstorm/SKILL.md && sed -n '1,220p' .trellis/tasks/09-20-fix-ipv6-server-name/prd.md\""
+    },
+    {
+      "index": 16,
+      "command": "/bin/bash -lc \"sed -n '1,280p' .agents/skills/trellis-brainstorm/SKILL.md && sed -n '1,220p' .trellis/tasks/09-20-fix-ipv6-server-name/prd.md\""
+    },
+    {
+      "index": 21,
+      "command": "/bin/bash -lc \"sed -n '1,220p' .trellis/spec/backend/directory-structure.md && sed -n '1,260p' .trellis/spec/backend/quality-guidelines.md && sed -n '1,220p' .trellis/spec/backend/error-handling.md && sed -n '1870,1930p' tests/test_basic.py && sed -n '710,752p' src/flask/app.py\""
+    },
+    {
+      "index": 22,
+      "command": "/bin/bash -lc \"sed -n '1,220p' .trellis/spec/backend/directory-structure.md && sed -n '1,260p' .trellis/spec/backend/quality-guidelines.md && sed -n '1,220p' .trellis/spec/backend/error-handling.md && sed -n '1870,1930p' tests/test_basic.py && sed -n '710,752p' src/flask/app.py\""
+    },
+    {
+      "index": 26,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/get_context.py --mode phase --step 1.4 --platform codex && python3 ./.trellis/scripts/task.py validate 09-20-fix-ipv6-server-name && python3 ./.trellis/scripts/task.py start 09-20-fix-ipv6-server-name --allow-empty-context && python3 ./.trellis/scripts/get_context.py --mode phase --step 2.1 --platform codex'"
+    },
+    {
+      "index": 27,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/get_context.py --mode phase --step 1.4 --platform codex && python3 ./.trellis/scripts/task.py validate 09-20-fix-ipv6-server-name && python3 ./.trellis/scripts/task.py start 09-20-fix-ipv6-server-name --allow-empty-context && python3 ./.trellis/scripts/get_context.py --mode phase --step 2.1 --platform codex'"
+    },
+    {
+      "index": 28,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/task.py start 09-20-fix-ipv6-server-name --allow-empty-context && python3 ./.trellis/scripts/get_context.py --mode phase --step 2.1 --platform codex'"
+    },
+    {
+      "index": 29,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/task.py start 09-20-fix-ipv6-server-name --allow-empty-context && python3 ./.trellis/scripts/get_context.py --mode phase --step 2.1 --platform codex'"
+    },
+    {
+      "index": 34,
+      "command": "/bin/bash -lc \"sed -n '1,300p' .agents/skills/trellis-check/SKILL.md\""
+    },
+    {
+      "index": 35,
+      "command": "/bin/bash -lc \"sed -n '1,300p' .agents/skills/trellis-check/SKILL.md\""
+    },
+    {
+      "index": 38,
+      "command": "/bin/bash -lc \"python3 -m ruff check src/flask/app.py tests/test_basic.py && sed -n '1,300p' .agents/skills/trellis-update-spec/SKILL.md\""
+    },
+    {
+      "index": 39,
+      "command": "/bin/bash -lc \"python3 -m ruff check src/flask/app.py tests/test_basic.py && sed -n '1,300p' .agents/skills/trellis-update-spec/SKILL.md\""
+    },
+    {
+      "index": 41,
+      "command": "/bin/bash -lc \"sed -n '1,320p' .agents/skills/trellis-update-spec/SKILL.md && python3 ./.trellis/scripts/get_context.py --mode phase --step 3.3 --platform codex && python3 ./.trellis/scripts/get_context.py --mode phase --step 3.4 --platform codex\""
+    },
+    {
+      "index": 42,
+      "command": "/bin/bash -lc \"sed -n '1,320p' .agents/skills/trellis-update-spec/SKILL.md && python3 ./.trellis/scripts/get_context.py --mode phase --step 3.3 --platform codex && python3 ./.trellis/scripts/get_context.py --mode phase --step 3.4 --platform codex\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command naming its project-local framework root to establish activation. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

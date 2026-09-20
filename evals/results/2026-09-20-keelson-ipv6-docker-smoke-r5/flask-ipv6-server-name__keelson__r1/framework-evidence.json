@@ -1,0 +1,34 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".keelson",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' .keelson/workflow.md && sed -n '1,240p' .keelson/skill/SKILL.md\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' .keelson/workflow.md && sed -n '1,240p' .keelson/skill/SKILL.md\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. runtime_usage_observed requires a direct raw Codex tool command and still does not establish causal effectiveness. Any direct global instruction-path read makes this run ineligible for a clean causal comparison."
+}

@@ -1,0 +1,54 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "openspec",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/openspec-apply-change/SKILL.md && printf '\\\\n--- workspace ---\\\\n' && rg --files -g 'AGENTS.md' -g 'openspec/**' -g 'pyproject.toml' -g 'tox.ini' -g 'pytest.ini' | sed -n '1,200p'\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/openspec-apply-change/SKILL.md && printf '\\\\n--- workspace ---\\\\n' && rg --files -g 'AGENTS.md' -g 'openspec/**' -g 'pyproject.toml' -g 'tox.ini' -g 'pytest.ini' | sed -n '1,200p'\""
+    },
+    {
+      "index": 5,
+      "command": "/bin/bash -lc 'openspec list --json'"
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc 'openspec list --json'"
+    },
+    {
+      "index": 8,
+      "command": "/bin/bash -lc \"find . -path './.git' -prune -o -path './.agents' -prune -o \\\\( -name AGENTS.md -o -path './openspec/*' -o -name tasks.md \\\\) -print | sed -n '1,240p'\nprintf '\\\\nTop-level directories:\\\\n'\nfind . -maxdepth 2 -type d -not -path './.git*' -print | sed -n '1,120p'\""
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc \"find . -path './.git' -prune -o -path './.agents' -prune -o \\\\( -name AGENTS.md -o -path './openspec/*' -o -name tasks.md \\\\) -print | sed -n '1,240p'\nprintf '\\\\nTop-level directories:\\\\n'\nfind . -maxdepth 2 -type d -not -path './.git*' -print | sed -n '1,120p'\""
+    },
+    {
+      "index": 10,
+      "command": "/bin/bash -lc \"find openspec -type f -maxdepth 6 -print -exec sed -n '1,240p' {} \\\\;\nprintf '\\\\nGit state:\\\\n'\ngit status --short\ngit branch --show-current\nprintf '\\\\nRelevant references:\\\\n'\ngrep -RInE 'teardown_(appcontext|request)|appcontext_tearing_down|request_tearing_down|do_teardown' src/flask tests | sed -n '1,260p'\""
+    },
+    {
+      "index": 11,
+      "command": "/bin/bash -lc \"find openspec -type f -maxdepth 6 -print -exec sed -n '1,240p' {} \\\\;\nprintf '\\\\nGit state:\\\\n'\ngit status --short\ngit branch --show-current\nprintf '\\\\nRelevant references:\\\\n'\ngrep -RInE 'teardown_(appcontext|request)|appcontext_tearing_down|request_tearing_down|do_teardown' src/flask tests | sed -n '1,260p'\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command naming its project-local framework root to establish activation. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

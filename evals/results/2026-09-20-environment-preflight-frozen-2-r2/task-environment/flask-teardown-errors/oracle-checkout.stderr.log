@@ -1,0 +1,2 @@
+Previous HEAD position was 7b008869 fix typing
+HEAD is now at fbb6f0bc all teardown callbacks are called despite errors

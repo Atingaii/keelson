@@ -1,0 +1,5 @@
+{
+  "status": "environment-invalid",
+  "reason": "Invalid formal attempt: the OpenSpec CLI smoke used sh -c, but Codex command executions use /bin/bash -lc, whose login-shell PATH did not contain openspec. Raw events show openspec command-not-found. This attempt is retained and excluded.",
+  "corrected_by": "future rerun after bash-login CLI smoke"
+}

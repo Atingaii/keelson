@@ -1,0 +1,43 @@
+{
+  "protocol": "frozen-4",
+  "started_at": "2026-09-20T11:33:05.396Z",
+  "codex_cli": "codex-cli 0.155.1",
+  "model": "gpt-5.6-terra",
+  "prompt_clarification": "Installed framework CLI commands may load their own pinned package resources when invoked; unrelated user-level guidance remains prohibited. Applied after the initial bare/OpenSpec/Trellis frozen-3 runs; their saved effective prompts remain authoritative.",
+  "openspec": {
+    "package": "@fission-ai/openspec@1.13.1",
+    "integrity": "sha512-UHJSV2n6ohjfRaJLvi526avOohFS/orCjM+7JPgvDzuEJbCCkykKfP2fp3gcsvthDLeWolMRT5JAE08MSPnr8Q==",
+    "docker_cli_runtime": "/opt/openspec/node_modules/.bin/openspec",
+    "runtime_smoke": "command -v openspec && openspec --version && openspec --help"
+  },
+  "trellis": {
+    "package": "@mindfoldhq/trellis@0.6.17",
+    "integrity": "sha512-u65OJbzR3OBzFWybX/uzBXaZdzn+71Afaknodu0GUcFIrTyp3ZegK9rHNeTX0guHow35WXkqDVuyrhn8vVzSQg=="
+  },
+  "superpowers": {
+    "repository": "https://github.com/obra/superpowers.git",
+    "sha": "5bf4e78011075bcfc0dc295f0724994cd123ee71"
+  },
+  "methods": [
+    "openspec"
+  ],
+  "repetitions": 3,
+  "locked_test_dependency_source": "the task baseline uv.lock; selected Flask tests-group and pytest runtime packages are exact version pins",
+  "verify_environment_only": false,
+  "verify_method_only": null,
+  "isolation": {
+    "codex_flags": [
+      "--ephemeral",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--sandbox danger-full-access (inside Docker boundary)"
+    ],
+    "mode": "docker",
+    "bwrap_available": false,
+    "docker_image": "keelson-bench-codex-isolation:0.155.1",
+    "docker_available": true,
+    "direct_global_instruction_read_invalidates_comparison": true
+  },
+  "keelson": null,
+  "protocol_amendment": "Frozen-4 corrects the prior Docker OpenSpec CLI absence. Each cell provisions the pinned CLI read-only at /opt/openspec and requires the recorded CLI smoke before Codex starts. The retained frozen-3 OpenSpec attempt is environment-invalid and excluded."
+}

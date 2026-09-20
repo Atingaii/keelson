@@ -1,0 +1,165 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".keelson",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 8,
+      "command": "/bin/bash -lc 'keelson status && keelson context && rg --files .keelson | sort && git status --short && rg -n \"teardown_(request|appcontext)|appcontext_tearing_down|request_tearing_down|do_teardown\" src/flask tests'"
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc 'keelson status && keelson context && rg --files .keelson | sort && git status --short && rg -n \"teardown_(request|appcontext)|appcontext_tearing_down|request_tearing_down|do_teardown\" src/flask tests'"
+    },
+    {
+      "index": 14,
+      "command": "/bin/bash -lc \"find .keelson -maxdepth 2 -type f -print -exec sed -n '1,220p' {} \\\\; && keelson impact src/flask/app.py src/flask/ctx.py tests/test_appctx.py tests/test_reqctx.py\""
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"find .keelson -maxdepth 2 -type f -print -exec sed -n '1,220p' {} \\\\; && keelson impact src/flask/app.py src/flask/ctx.py tests/test_appctx.py tests/test_reqctx.py\""
+    },
+    {
+      "index": 18,
+      "command": "/bin/bash -lc \"keelson new teardown-error-collection --tier quick --touches 'src/flask/app.py,src/flask/ctx.py,tests/test_appctx.py,tests/test_reqctx.py' && keelson context --paths src/flask/app.py,src/flask/ctx.py,tests/test_appctx.py,tests/test_reqctx.py && sed -n '1,115p' src/flask/app.py && sed -n '1,220p' .keelson/changes/teardown-error-collection/change.md && find .keelson/changes/teardown-error-collection -maxdepth 2 -type f -print\""
+    },
+    {
+      "index": 19,
+      "command": "/bin/bash -lc \"keelson new teardown-error-collection --tier quick --touches 'src/flask/app.py,src/flask/ctx.py,tests/test_appctx.py,tests/test_reqctx.py' && keelson context --paths src/flask/app.py,src/flask/ctx.py,tests/test_appctx.py,tests/test_reqctx.py && sed -n '1,115p' src/flask/app.py && sed -n '1,220p' .keelson/changes/teardown-error-collection/change.md && find .keelson/changes/teardown-error-collection -maxdepth 2 -type f -print\""
+    },
+    {
+      "index": 20,
+      "command": "/bin/bash -lc \"grep -nE '\"'^class (AppContext|RequestContext)'\"' src/flask/ctx.py && sed -n '220,340p' src/flask/ctx.py && sed -n '1,180p' .agents/skills/keelson/SKILL.md\""
+    },
+    {
+      "index": 21,
+      "command": "/bin/bash -lc \"grep -nE '\"'^class (AppContext|RequestContext)'\"' src/flask/ctx.py && sed -n '220,340p' src/flask/ctx.py && sed -n '1,180p' .agents/skills/keelson/SKILL.md\""
+    },
+    {
+      "index": 22,
+      "command": "/bin/bash -lc \"sed -n '1,110p' src/flask/ctx.py && sed -n '1,180p' .keelson/changes/teardown-error-collection/change.md\""
+    },
+    {
+      "index": 23,
+      "command": "/bin/bash -lc \"sed -n '1,110p' src/flask/ctx.py && sed -n '1,180p' .keelson/changes/teardown-error-collection/change.md\""
+    },
+    {
+      "index": 41,
+      "command": "/bin/bash -lc 'git diff --check && git diff -- src/flask/app.py src/flask/ctx.py tests/test_appctx.py tests/test_reqctx.py .keelson/INTENT.md .keelson/NOW.md .keelson/changes/teardown-error-collection/change.md && git status --short'"
+    },
+    {
+      "index": 42,
+      "command": "/bin/bash -lc 'git diff --check && git diff -- src/flask/app.py src/flask/ctx.py tests/test_appctx.py tests/test_reqctx.py .keelson/INTENT.md .keelson/NOW.md .keelson/changes/teardown-error-collection/change.md && git status --short'"
+    },
+    {
+      "index": 58,
+      "command": "/bin/bash -lc \"sed -n '1,160p' .keelson/rules/index.md && sed -n '1,160p' .keelson/changes/archive/2026-09-20-teardown-error-collection/change.md && keelson validate && git diff --check && git diff -- src/flask/app.py src/flask/ctx.py tests/test_appctx.py tests/test_reqctx.py && git status --short\""
+    },
+    {
+      "index": 59,
+      "command": "/bin/bash -lc \"sed -n '1,160p' .keelson/rules/index.md && sed -n '1,160p' .keelson/changes/archive/2026-09-20-teardown-error-collection/change.md && keelson validate && git diff --check && git diff -- src/flask/app.py src/flask/ctx.py tests/test_appctx.py tests/test_reqctx.py && git status --short\""
+    }
+  ],
+  "guidance_read_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc 'keelson guide'"
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc 'keelson guide'"
+    },
+    {
+      "index": 5,
+      "command": "/bin/bash -lc 'keelson guide workflow && keelson guide shape && keelson guide context && keelson guide engineer && keelson guide verify && keelson guide land && keelson guide reconcile'"
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc 'keelson guide workflow && keelson guide shape && keelson guide context && keelson guide engineer && keelson guide verify && keelson guide land && keelson guide reconcile'"
+    },
+    {
+      "index": 14,
+      "command": "/bin/bash -lc \"find .keelson -maxdepth 2 -type f -print -exec sed -n '1,220p' {} \\\\; && keelson impact src/flask/app.py src/flask/ctx.py tests/test_appctx.py tests/test_reqctx.py\""
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"find .keelson -maxdepth 2 -type f -print -exec sed -n '1,220p' {} \\\\; && keelson impact src/flask/app.py src/flask/ctx.py tests/test_appctx.py tests/test_reqctx.py\""
+    },
+    {
+      "index": 18,
+      "command": "/bin/bash -lc \"keelson new teardown-error-collection --tier quick --touches 'src/flask/app.py,src/flask/ctx.py,tests/test_appctx.py,tests/test_reqctx.py' && keelson context --paths src/flask/app.py,src/flask/ctx.py,tests/test_appctx.py,tests/test_reqctx.py && sed -n '1,115p' src/flask/app.py && sed -n '1,220p' .keelson/changes/teardown-error-collection/change.md && find .keelson/changes/teardown-error-collection -maxdepth 2 -type f -print\""
+    },
+    {
+      "index": 19,
+      "command": "/bin/bash -lc \"keelson new teardown-error-collection --tier quick --touches 'src/flask/app.py,src/flask/ctx.py,tests/test_appctx.py,tests/test_reqctx.py' && keelson context --paths src/flask/app.py,src/flask/ctx.py,tests/test_appctx.py,tests/test_reqctx.py && sed -n '1,115p' src/flask/app.py && sed -n '1,220p' .keelson/changes/teardown-error-collection/change.md && find .keelson/changes/teardown-error-collection -maxdepth 2 -type f -print\""
+    },
+    {
+      "index": 20,
+      "command": "/bin/bash -lc \"grep -nE '\"'^class (AppContext|RequestContext)'\"' src/flask/ctx.py && sed -n '220,340p' src/flask/ctx.py && sed -n '1,180p' .agents/skills/keelson/SKILL.md\""
+    },
+    {
+      "index": 21,
+      "command": "/bin/bash -lc \"grep -nE '\"'^class (AppContext|RequestContext)'\"' src/flask/ctx.py && sed -n '220,340p' src/flask/ctx.py && sed -n '1,180p' .agents/skills/keelson/SKILL.md\""
+    },
+    {
+      "index": 22,
+      "command": "/bin/bash -lc \"sed -n '1,110p' src/flask/ctx.py && sed -n '1,180p' .keelson/changes/teardown-error-collection/change.md\""
+    },
+    {
+      "index": 23,
+      "command": "/bin/bash -lc \"sed -n '1,110p' src/flask/ctx.py && sed -n '1,180p' .keelson/changes/teardown-error-collection/change.md\""
+    },
+    {
+      "index": 45,
+      "command": "/bin/bash -lc 'keelson check --trust --record \"Teardown callbacks and signals continue after failures, aggregate errors, and restore context-local state.\"'"
+    },
+    {
+      "index": 46,
+      "command": "/bin/bash -lc 'keelson check --trust --record \"Teardown callbacks and signals continue after failures, aggregate errors, and restore context-local state.\"'"
+    },
+    {
+      "index": 49,
+      "command": "/bin/bash -lc 'git diff --check && keelson check --record \"Teardown callbacks and signals continue after failures, aggregate errors, and restore context-local state.\" && keelson validate && keelson status'"
+    },
+    {
+      "index": 50,
+      "command": "/bin/bash -lc 'git diff --check && keelson check --record \"Teardown callbacks and signals continue after failures, aggregate errors, and restore context-local state.\" && keelson validate && keelson status'"
+    },
+    {
+      "index": 54,
+      "command": "/bin/bash -lc 'git diff --check && keelson check --record \"Teardown callbacks and signals continue after failures, aggregate errors, and restore context-local state.\" && keelson validate && keelson land teardown-error-collection --now \"Teardown error aggregation is implemented and fully verified.\" && keelson status'"
+    },
+    {
+      "index": 55,
+      "command": "/bin/bash -lc 'git diff --check && keelson check --record \"Teardown callbacks and signals continue after failures, aggregate errors, and restore context-local state.\" && keelson validate && keelson land teardown-error-collection --now \"Teardown error aggregation is implemented and fully verified.\" && keelson status'"
+    },
+    {
+      "index": 58,
+      "command": "/bin/bash -lc \"sed -n '1,160p' .keelson/rules/index.md && sed -n '1,160p' .keelson/changes/archive/2026-09-20-teardown-error-collection/change.md && keelson validate && git diff --check && git diff -- src/flask/app.py src/flask/ctx.py tests/test_appctx.py tests/test_reqctx.py && git status --short\""
+    },
+    {
+      "index": 59,
+      "command": "/bin/bash -lc \"sed -n '1,160p' .keelson/rules/index.md && sed -n '1,160p' .keelson/changes/archive/2026-09-20-teardown-error-collection/change.md && keelson validate && git diff --check && git diff -- src/flask/app.py src/flask/ctx.py tests/test_appctx.py tests/test_reqctx.py && git status --short\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command that reads a project-local guidance artifact (or, for Keelson, invokes guide/ask/check/record) to establish activation. Listing paths alone is insufficient. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

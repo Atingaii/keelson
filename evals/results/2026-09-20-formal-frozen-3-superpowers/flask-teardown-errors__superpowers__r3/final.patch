@@ -1,0 +1,328 @@
+diff --git a/src/flask/app.py b/src/flask/app.py
+index 9a6fdd4..72ef034 100644
+--- a/src/flask/app.py
++++ b/src/flask/app.py
+@@ -31,6 +31,8 @@ from werkzeug.wsgi import get_host
+ from . import cli
+ from . import typing as ft
+ from .ctx import AppContext
++from .ctx import _call_teardown_callbacks
++from .ctx import _raise_teardown_errors
+ from .globals import _cv_app
+ from .globals import app_ctx
+ from .globals import g
+@@ -1433,12 +1435,13 @@ class Flask(App):
+         .. versionchanged:: 0.9
+             Added the ``exc`` argument.
+         """
+-        for name in chain(ctx.request.blueprints, (None,)):
+-            if name in self.teardown_request_funcs:
+-                for func in reversed(self.teardown_request_funcs[name]):
+-                    self.ensure_sync(func)(exc)
+-
+-        request_tearing_down.send(self, _async_wrapper=self.ensure_sync, exc=exc)
++        functions = (
++            func
++            for name in chain(ctx.request.blueprints, (None,))
++            if name in self.teardown_request_funcs
++            for func in reversed(self.teardown_request_funcs[name])
++        )
++        self._call_teardown_functions(functions, request_tearing_down, exc)
+ 
+     def do_teardown_appcontext(
+         self, ctx: AppContext, exc: BaseException | None = None
+@@ -1454,10 +1457,31 @@ class Flask(App):
+ 
+         .. versionadded:: 0.9
+         """
+-        for func in reversed(self.teardown_appcontext_funcs):
+-            self.ensure_sync(func)(exc)
++        self._call_teardown_functions(
++            reversed(self.teardown_appcontext_funcs), appcontext_tearing_down, exc
++        )
++
++    def _call_teardown_functions(
++        self,
++        functions: t.Iterable[ft.TeardownCallable],
++        signal: t.Any,
++        exc: BaseException | None,
++    ) -> None:
++        """Run teardown functions and signal receivers, collecting errors."""
++        errors = _call_teardown_callbacks(
++            (lambda func=func: self.ensure_sync(func)(exc) for func in functions)
++        )
++
++        if not signal.is_muted:
++            _call_teardown_callbacks(
++                (
++                    lambda receiver=receiver: self.ensure_sync(receiver)(self, exc=exc)
++                    for receiver in signal.receivers_for(self)
++                ),
++                errors,
++            )
+ 
+-        appcontext_tearing_down.send(self, _async_wrapper=self.ensure_sync, exc=exc)
++        _raise_teardown_errors(errors)
+ 
+     def app_context(self) -> AppContext:
+         """Create an :class:`.AppContext`. When the context is pushed,
+diff --git a/src/flask/ctx.py b/src/flask/ctx.py
+index 8876efd..589f5e3 100644
+--- a/src/flask/ctx.py
++++ b/src/flask/ctx.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ 
+ import contextvars
++import sys
+ import typing as t
+ from functools import update_wrapper
+ from types import TracebackType
+@@ -26,6 +27,32 @@ if t.TYPE_CHECKING:
+ _sentinel = object()
+ 
+ 
++def _call_teardown_callbacks(
++    callbacks: t.Iterable[t.Callable[[], t.Any]],
++    errors: list[BaseException] | None = None,
++) -> list[BaseException]:
++    if errors is None:
++        errors = []
++
++    for callback in callbacks:
++        try:
++            callback()
++        except BaseException as e:
++            errors.append(e)
++
++    return errors
++
++
++def _raise_teardown_errors(errors: list[BaseException]) -> None:
++    if not errors:
++        return
++
++    if sys.version_info >= (3, 11):
++        raise BaseExceptionGroup("errors occurred during teardown", errors)
++
++    raise errors[0]
++
++
+ class _AppCtxGlobals:
+     """A plain object. Used as a namespace for storing data during an
+     application context.
+@@ -482,15 +509,32 @@ class AppContext:
+         if self._push_count > 0:
+             return
+ 
++        errors: list[BaseException] = []
++
+         try:
+             if self._request is not None:
+-                self.app.do_teardown_request(self, exc)
+-                self._request.close()
++                _call_teardown_callbacks(
++                    (lambda: self.app.do_teardown_request(self, exc),), errors
++                )
++                _call_teardown_callbacks((self._request.close,), errors)
+         finally:
+-            self.app.do_teardown_appcontext(self, exc)
+-            _cv_app.reset(self._cv_token)
+-            self._cv_token = None
+-            appcontext_popped.send(self.app, _async_wrapper=self.app.ensure_sync)
++            try:
++                _call_teardown_callbacks(
++                    (lambda: self.app.do_teardown_appcontext(self, exc),), errors
++                )
++            finally:
++                _cv_app.reset(self._cv_token)
++                self._cv_token = None
++                _call_teardown_callbacks(
++                    (
++                        lambda: appcontext_popped.send(
++                            self.app, _async_wrapper=self.app.ensure_sync
++                        ),
++                    ),
++                    errors,
++                )
++
++        _raise_teardown_errors(errors)
+ 
+     def __enter__(self) -> te.Self:
+         self.push()
+diff --git a/tests/test_appctx.py b/tests/test_appctx.py
+index a537b05..4d3c1a2 100644
+--- a/tests/test_appctx.py
++++ b/tests/test_appctx.py
+@@ -1,9 +1,37 @@
++import sys
++
+ import pytest
+ 
+ import flask
++from flask.globals import _cv_app
+ from flask.globals import app_ctx
+ 
+ 
++def _teardown_error_types(error):
++    if sys.version_info >= (3, 11):
++        assert isinstance(error, BaseExceptionGroup)
++        errors = error.exceptions
++    else:
++        errors = (error,)
++
++    types = set()
++
++    for item in errors:
++        if sys.version_info >= (3, 11) and isinstance(item, BaseExceptionGroup):
++            types.update(_teardown_error_types(item))
++        else:
++            types.add(type(item))
++
++    return types
++
++
++def _expected_teardown_error_types():
++    if sys.version_info >= (3, 11):
++        return {KeyError, LookupError, TypeError, ValueError}
++
++    return {KeyError}
++
++
+ def test_basic_url_generation(app):
+     app.config["SERVER_NAME"] = "localhost"
+     app.config["PREFERRED_URL_SCHEME"] = "https"
+@@ -40,6 +68,133 @@ def test_app_context_provides_current_app(app):
+     assert not flask.current_app
+ 
+ 
++def test_request_teardown_runs_all_callbacks_and_signal_receivers_after_errors(app):
++    called = []
++
++    @app.teardown_request
++    def first_callback(exc):
++        called.append("first callback")
++        raise LookupError
++
++    @app.teardown_request
++    def second_callback(exc):
++        called.append("second callback")
++        raise KeyError
++
++    def first_receiver(sender, exc):
++        called.append("first receiver")
++        raise TypeError
++
++    def second_receiver(sender, exc):
++        called.append("second receiver")
++        raise ValueError
++
++    flask.request_tearing_down.connect(first_receiver, app)
++    flask.request_tearing_down.connect(second_receiver, app)
++    try:
++        with pytest.raises(BaseException) as info:
++            with app.test_request_context():
++                pass
++    finally:
++        flask.request_tearing_down.disconnect(first_receiver, app)
++        flask.request_tearing_down.disconnect(second_receiver, app)
++
++    assert called[:2] == ["second callback", "first callback"]
++    assert set(called[2:]) == {"first receiver", "second receiver"}
++    assert _teardown_error_types(info.value) == _expected_teardown_error_types()
++    assert not flask.current_app
++
++
++def test_appcontext_teardown_runs_all_callbacks_and_signal_receivers_after_errors(app):
++    called = []
++
++    @app.teardown_appcontext
++    def first_callback(exc):
++        called.append("first callback")
++        raise LookupError
++
++    @app.teardown_appcontext
++    def second_callback(exc):
++        called.append("second callback")
++        raise KeyError
++
++    def first_receiver(sender, exc):
++        called.append("first receiver")
++        raise TypeError
++
++    def second_receiver(sender, exc):
++        called.append("second receiver")
++        raise ValueError
++
++    ctx = app.app_context()
++    flask.appcontext_tearing_down.connect(first_receiver, app)
++    flask.appcontext_tearing_down.connect(second_receiver, app)
++    try:
++        with pytest.raises(BaseException) as info:
++            with ctx:
++                pass
++
++        assert not flask.current_app
++    finally:
++        flask.appcontext_tearing_down.disconnect(first_receiver, app)
++        flask.appcontext_tearing_down.disconnect(second_receiver, app)
++
++        if ctx._cv_token is not None:
++            _cv_app.reset(ctx._cv_token)
++            ctx._cv_token = None
++
++    assert called[:2] == ["second callback", "first callback"]
++    assert set(called[2:]) == {"first receiver", "second receiver"}
++    assert _teardown_error_types(info.value) == _expected_teardown_error_types()
++
++
++def test_request_teardown_errors_do_not_stop_appcontext_teardown(app):
++    called = []
++
++    @app.teardown_request
++    def request_callback(exc):
++        raise KeyError
++
++    @app.teardown_appcontext
++    def appcontext_callback(exc):
++        called.append("appcontext callback")
++        raise LookupError
++
++    with pytest.raises(BaseException) as info:
++        with app.test_request_context():
++            pass
++
++    assert called == ["appcontext callback"]
++    if sys.version_info >= (3, 11):
++        assert _teardown_error_types(info.value) == {KeyError, LookupError}
++    else:
++        assert _teardown_error_types(info.value) == {KeyError}
++    assert not flask.current_app
++
++
++def test_appcontext_popped_error_does_not_mask_teardown_errors(app):
++    @app.teardown_appcontext
++    def teardown_callback(exc):
++        raise ValueError
++
++    def popped_receiver(sender):
++        raise LookupError
++
++    flask.appcontext_popped.connect(popped_receiver, app)
++    try:
++        with pytest.raises(BaseException) as info:
++            with app.app_context():
++                pass
++    finally:
++        flask.appcontext_popped.disconnect(popped_receiver, app)
++
++    if sys.version_info >= (3, 11):
++        assert _teardown_error_types(info.value) == {LookupError, ValueError}
++    else:
++        assert _teardown_error_types(info.value) == {ValueError}
++    assert not flask.current_app
++
++
+ def test_app_tearing_down(app):
+     cleanup_stuff = []
+ 

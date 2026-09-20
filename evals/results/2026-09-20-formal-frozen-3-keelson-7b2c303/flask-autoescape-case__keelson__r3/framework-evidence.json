@@ -1,0 +1,125 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".keelson",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 5,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide workflow\""
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide workflow\""
+    },
+    {
+      "index": 17,
+      "command": "/bin/bash -lc \"sed -n '1,260p' .keelson/changes/autoescape-extension-case/change.md; sed -n '1,220p' .keelson/changes/autoescape-extension-case/ledger.md 2>/dev/null || true; grep -n -C 4 -E 'escaping|autoescape|jinja' tests/test_templating.py; grep -RIn --include='*.py' 'select_jinja_autoescape' . --exclude-dir=.bench-pydeps --exclude-dir=.git\""
+    },
+    {
+      "index": 18,
+      "command": "/bin/bash -lc \"sed -n '1,260p' .keelson/changes/autoescape-extension-case/change.md; sed -n '1,220p' .keelson/changes/autoescape-extension-case/ledger.md 2>/dev/null || true; grep -n -C 4 -E 'escaping|autoescape|jinja' tests/test_templating.py; grep -RIn --include='*.py' 'select_jinja_autoescape' . --exclude-dir=.bench-pydeps --exclude-dir=.git\""
+    },
+    {
+      "index": 19,
+      "command": "/bin/bash -lc \"find .keelson -maxdepth 3 -type f -print | sort; sed -n '1,240p' .keelson/config.yaml 2>/dev/null || true; sed -n '1,120p' .keelson/changes/autoescape-extension-case/tasks.md 2>/dev/null || true\""
+    },
+    {
+      "index": 20,
+      "command": "/bin/bash -lc \"find .keelson -maxdepth 3 -type f -print | sort; sed -n '1,240p' .keelson/config.yaml 2>/dev/null || true; sed -n '1,120p' .keelson/changes/autoescape-extension-case/tasks.md 2>/dev/null || true\""
+    },
+    {
+      "index": 21,
+      "command": "/bin/bash -lc \"sed -n '104,132p' tests/test_templating.py; sed -n '1,120p' .keelson/INTENT.md; sed -n '1,120p' .keelson/NOW.md\""
+    },
+    {
+      "index": 22,
+      "command": "/bin/bash -lc \"sed -n '104,132p' tests/test_templating.py; sed -n '1,120p' .keelson/INTENT.md; sed -n '1,120p' .keelson/NOW.md\""
+    }
+  ],
+  "guidance_read_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc 'keelson guide'"
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc 'keelson guide'"
+    },
+    {
+      "index": 5,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide workflow\""
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/keelson/SKILL.md && keelson guide workflow\""
+    },
+    {
+      "index": 8,
+      "command": "/bin/bash -lc 'keelson status && keelson guide debug && keelson guide verify && keelson guide land && keelson guide reconcile'"
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc 'keelson status && keelson guide debug && keelson guide verify && keelson guide land && keelson guide reconcile'"
+    },
+    {
+      "index": 10,
+      "command": "/bin/bash -lc 'keelson guide shape && keelson guide context && keelson guide model && keelson context && git status --short && rg -n \"select_autoescape|autoescape\" src tests | head -160'"
+    },
+    {
+      "index": 11,
+      "command": "/bin/bash -lc 'keelson guide shape && keelson guide context && keelson guide model && keelson context && git status --short && rg -n \"select_autoescape|autoescape\" src tests | head -160'"
+    },
+    {
+      "index": 17,
+      "command": "/bin/bash -lc \"sed -n '1,260p' .keelson/changes/autoescape-extension-case/change.md; sed -n '1,220p' .keelson/changes/autoescape-extension-case/ledger.md 2>/dev/null || true; grep -n -C 4 -E 'escaping|autoescape|jinja' tests/test_templating.py; grep -RIn --include='*.py' 'select_jinja_autoescape' . --exclude-dir=.bench-pydeps --exclude-dir=.git\""
+    },
+    {
+      "index": 18,
+      "command": "/bin/bash -lc \"sed -n '1,260p' .keelson/changes/autoescape-extension-case/change.md; sed -n '1,220p' .keelson/changes/autoescape-extension-case/ledger.md 2>/dev/null || true; grep -n -C 4 -E 'escaping|autoescape|jinja' tests/test_templating.py; grep -RIn --include='*.py' 'select_jinja_autoescape' . --exclude-dir=.bench-pydeps --exclude-dir=.git\""
+    },
+    {
+      "index": 19,
+      "command": "/bin/bash -lc \"find .keelson -maxdepth 3 -type f -print | sort; sed -n '1,240p' .keelson/config.yaml 2>/dev/null || true; sed -n '1,120p' .keelson/changes/autoescape-extension-case/tasks.md 2>/dev/null || true\""
+    },
+    {
+      "index": 20,
+      "command": "/bin/bash -lc \"find .keelson -maxdepth 3 -type f -print | sort; sed -n '1,240p' .keelson/config.yaml 2>/dev/null || true; sed -n '1,120p' .keelson/changes/autoescape-extension-case/tasks.md 2>/dev/null || true\""
+    },
+    {
+      "index": 21,
+      "command": "/bin/bash -lc \"sed -n '104,132p' tests/test_templating.py; sed -n '1,120p' .keelson/INTENT.md; sed -n '1,120p' .keelson/NOW.md\""
+    },
+    {
+      "index": 22,
+      "command": "/bin/bash -lc \"sed -n '104,132p' tests/test_templating.py; sed -n '1,120p' .keelson/INTENT.md; sed -n '1,120p' .keelson/NOW.md\""
+    },
+    {
+      "index": 35,
+      "command": "/bin/bash -lc 'keelson check --trust --record \"Default autoescape recognizes supported extensions regardless of filename case; None and unsupported names retain their behavior.\"'"
+    },
+    {
+      "index": 36,
+      "command": "/bin/bash -lc 'keelson check --trust --record \"Default autoescape recognizes supported extensions regardless of filename case; None and unsupported names retain their behavior.\"'"
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command that reads a project-local guidance artifact (or, for Keelson, invokes guide/ask/check/record) to establish activation. Listing paths alone is insufficient. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

@@ -1,0 +1,112 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "openspec",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/openspec-propose/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/openspec-apply-change/SKILL.md\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/openspec-propose/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/openspec-apply-change/SKILL.md\""
+    },
+    {
+      "index": 5,
+      "command": "/bin/bash -lc 'openspec list --json'"
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc 'openspec list --json'"
+    },
+    {
+      "index": 7,
+      "command": "/bin/bash -lc \"rg --files -g 'openspec*' -g 'package.json' -g 'pyproject.toml' -g 'setup.cfg' -g 'tox.ini' -g 'AGENTS.md' -g 'CONTRIBUTING*' | sed -n '1,160p'\""
+    },
+    {
+      "index": 8,
+      "command": "/bin/bash -lc \"rg --files -g 'openspec*' -g 'package.json' -g 'pyproject.toml' -g 'setup.cfg' -g 'tox.ini' -g 'AGENTS.md' -g 'CONTRIBUTING*' | sed -n '1,160p'\""
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc \"find openspec -maxdepth 4 -type f -print | sort; sed -n '1,220p' src/flask/sansio/app.py; grep -RIn \\\"autoescape\\\\|select_autoescape\\\" tests src/flask | head -120\""
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc \"find openspec -maxdepth 4 -type f -print | sort; sed -n '1,220p' src/flask/sansio/app.py; grep -RIn \\\"autoescape\\\\|select_autoescape\\\" tests src/flask | head -120\""
+    },
+    {
+      "index": 14,
+      "command": "/bin/bash -lc \"sed -n '500,555p' src/flask/sansio/app.py; grep -n \\\"select_jinja_autoescape\\\\|autoescape\\\" tests/test_templating.py; sed -n '1,180p' openspec/config.yaml; find .agents -maxdepth 3 -type f -print | head -80; git status --short\""
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"sed -n '500,555p' src/flask/sansio/app.py; grep -n \\\"select_jinja_autoescape\\\\|autoescape\\\" tests/test_templating.py; sed -n '1,180p' openspec/config.yaml; find .agents -maxdepth 3 -type f -print | head -80; git status --short\""
+    },
+    {
+      "index": 19,
+      "command": "/bin/bash -lc \"sed -n '1,260p' tests/test_templating.py; git diff -- openspec/changes/case-insensitive-autoescape\""
+    },
+    {
+      "index": 20,
+      "command": "/bin/bash -lc \"sed -n '1,260p' tests/test_templating.py; git diff -- openspec/changes/case-insensitive-autoescape\""
+    }
+  ],
+  "guidance_read_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/openspec-propose/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/openspec-apply-change/SKILL.md\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' /workspace/.agents/skills/openspec-propose/SKILL.md && sed -n '1,260p' /workspace/.agents/skills/openspec-apply-change/SKILL.md\""
+    },
+    {
+      "index": 7,
+      "command": "/bin/bash -lc \"rg --files -g 'openspec*' -g 'package.json' -g 'pyproject.toml' -g 'setup.cfg' -g 'tox.ini' -g 'AGENTS.md' -g 'CONTRIBUTING*' | sed -n '1,160p'\""
+    },
+    {
+      "index": 8,
+      "command": "/bin/bash -lc \"rg --files -g 'openspec*' -g 'package.json' -g 'pyproject.toml' -g 'setup.cfg' -g 'tox.ini' -g 'AGENTS.md' -g 'CONTRIBUTING*' | sed -n '1,160p'\""
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc \"find openspec -maxdepth 4 -type f -print | sort; sed -n '1,220p' src/flask/sansio/app.py; grep -RIn \\\"autoescape\\\\|select_autoescape\\\" tests src/flask | head -120\""
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc \"find openspec -maxdepth 4 -type f -print | sort; sed -n '1,220p' src/flask/sansio/app.py; grep -RIn \\\"autoescape\\\\|select_autoescape\\\" tests src/flask | head -120\""
+    },
+    {
+      "index": 14,
+      "command": "/bin/bash -lc \"sed -n '500,555p' src/flask/sansio/app.py; grep -n \\\"select_jinja_autoescape\\\\|autoescape\\\" tests/test_templating.py; sed -n '1,180p' openspec/config.yaml; find .agents -maxdepth 3 -type f -print | head -80; git status --short\""
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"sed -n '500,555p' src/flask/sansio/app.py; grep -n \\\"select_jinja_autoescape\\\\|autoescape\\\" tests/test_templating.py; sed -n '1,180p' openspec/config.yaml; find .agents -maxdepth 3 -type f -print | head -80; git status --short\""
+    },
+    {
+      "index": 19,
+      "command": "/bin/bash -lc \"sed -n '1,260p' tests/test_templating.py; git diff -- openspec/changes/case-insensitive-autoescape\""
+    },
+    {
+      "index": 20,
+      "command": "/bin/bash -lc \"sed -n '1,260p' tests/test_templating.py; git diff -- openspec/changes/case-insensitive-autoescape\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command that reads a project-local guidance artifact (or, for Keelson, invokes guide/ask/check/record) to establish activation. Listing paths alone is insufficient. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

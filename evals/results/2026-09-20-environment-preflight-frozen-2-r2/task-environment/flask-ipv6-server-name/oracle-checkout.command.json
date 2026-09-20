@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "checkout",
+    "--detach",
+    "7203feabf723edae0286ae5dc64fec8ac4c91735"
+  ],
+  "cwd": "/tmp/keelson-bench-preflight-4Hl0RR/worktree",
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 632
+}

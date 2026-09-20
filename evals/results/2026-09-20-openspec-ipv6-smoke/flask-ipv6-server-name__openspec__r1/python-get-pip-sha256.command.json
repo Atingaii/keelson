@@ -1,0 +1,11 @@
+{
+  "command": [
+    "sha256sum",
+    "/tmp/keelson-bench-run-lMfLIo/worktree/.bench-get-pip.py"
+  ],
+  "cwd": "/tmp/keelson-bench-run-lMfLIo/worktree",
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 87
+}

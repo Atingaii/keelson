@@ -1,0 +1,319 @@
+EEEEEEEEEEEEEEE                                                          [100%]
+==================================== ERRORS ====================================
+_________________ ERROR at setup of test_basic_url_generation __________________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+__________ ERROR at setup of test_url_generation_requires_server_name __________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+_________ ERROR at setup of test_url_generation_without_context_fails __________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+___________ ERROR at setup of test_request_context_means_app_context ___________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+___________ ERROR at setup of test_app_context_provides_current_app ____________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+___________________ ERROR at setup of test_app_tearing_down ____________________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+__________ ERROR at setup of test_app_teardown_continues_after_errors __________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+_______ ERROR at setup of test_app_tearing_down_with_previous_exception ________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+_ ERROR at setup of test_app_tearing_down_with_handled_exception_by_except_block _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+_ ERROR at setup of test_app_tearing_down_with_handled_exception_by_app_handler _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+_______ ERROR at setup of test_app_tearing_down_with_unhandled_exception _______
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+________________ ERROR at setup of test_app_ctx_globals_methods ________________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+_____________ ERROR at setup of test_custom_app_ctx_globals_class ______________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+___________________ ERROR at setup of test_context_refcounts ___________________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+_______________________ ERROR at setup of test_clean_pop _______________________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _standard_os_environ():
+        """Set up ``os.environ`` at the start of the test session to have
+        standard values. Returns a list of operations that is used by
+        :func:`._reset_os_environ` after each test.
+        """
+        mp = monkeypatch.MonkeyPatch()
+        out = (
+>           (os.environ, "FLASK_ENV_FILE", monkeypatch.notset),
+                                           ^^^^^^^^^^^^^^^^^^
+            (os.environ, "FLASK_APP", monkeypatch.notset),
+            (os.environ, "FLASK_DEBUG", monkeypatch.notset),
+            (os.environ, "FLASK_RUN_FROM_CLI", monkeypatch.notset),
+            (os.environ, "WERKZEUG_RUN_MAIN", monkeypatch.notset),
+        )
+E       AttributeError: module '_pytest.monkeypatch' has no attribute 'notset'
+
+tests/conftest.py:19: AttributeError
+=========================== short test summary info ============================
+ERROR tests/test_appctx.py::test_basic_url_generation - AttributeError: modul...
+ERROR tests/test_appctx.py::test_url_generation_requires_server_name - Attrib...
+ERROR tests/test_appctx.py::test_url_generation_without_context_fails - Attri...
+ERROR tests/test_appctx.py::test_request_context_means_app_context - Attribut...
+ERROR tests/test_appctx.py::test_app_context_provides_current_app - Attribute...
+ERROR tests/test_appctx.py::test_app_tearing_down - AttributeError: module '_...
+ERROR tests/test_appctx.py::test_app_teardown_continues_after_errors - Attrib...
+ERROR tests/test_appctx.py::test_app_tearing_down_with_previous_exception - A...
+ERROR tests/test_appctx.py::test_app_tearing_down_with_handled_exception_by_except_block
+ERROR tests/test_appctx.py::test_app_tearing_down_with_handled_exception_by_app_handler
+ERROR tests/test_appctx.py::test_app_tearing_down_with_unhandled_exception - ...
+ERROR tests/test_appctx.py::test_app_ctx_globals_methods - AttributeError: mo...
+ERROR tests/test_appctx.py::test_custom_app_ctx_globals_class - AttributeErro...
+ERROR tests/test_appctx.py::test_context_refcounts - AttributeError: module '...
+ERROR tests/test_appctx.py::test_clean_pop - AttributeError: module '_pytest....
+15 errors in 0.11s

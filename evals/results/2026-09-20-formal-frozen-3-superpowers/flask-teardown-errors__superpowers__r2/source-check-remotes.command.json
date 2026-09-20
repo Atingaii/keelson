@@ -1,0 +1,11 @@
+{
+  "command": [
+    "git",
+    "remote"
+  ],
+  "cwd": "/tmp/keelson-bench-run-64Plqj/worktree",
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 8
+}

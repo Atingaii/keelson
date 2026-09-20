@@ -1,0 +1,8 @@
+{
+  "command": [],
+  "cwd": "/tmp/keelson-bench-run-RgyDR4/worktree",
+  "exit_code": 125,
+  "signal": null,
+  "error": "precondition failed",
+  "elapsed_ms": 0
+}

@@ -1,0 +1,885 @@
+{
+  "cells": 9,
+  "clarification_marker_cells": 0,
+  "clarification_marker_count": 0,
+  "d17_cells": 3,
+  "d17_reopen_marker_cells": 0,
+  "d17_reopen_marker_count": 0,
+  "verification_command_cells": 6,
+  "final_verification_statement_cells": 5,
+  "final_message_closing_summary_cells": 5,
+  "final_message_nonclosing_or_missing_cells": 4,
+  "cells_with_incomplete_event_capture": 0,
+  "final_test_count_claims_with_no_matching_command_output": 0,
+  "limitation": "Counts are an observable raw-event audit, not a claim about unexpressed agent reasoning. Mechanical harness outcomes, observed test executions, numeric test-count claims, and capture completeness are reported separately.",
+  "rows": [
+    {
+      "task": "flask-autoescape-case",
+      "method": "superpowers",
+      "repetition": 1,
+      "raw_event_file": "codex.events.jsonl",
+      "agent_message_count": 5,
+      "final_agent_message": "Please approve the short design above so I can implement and verify the focused change.",
+      "final_message_coverage": "non-closing-or-partial",
+      "event_capture": {
+        "turn_completed_observed": true,
+        "started_without_completed": [],
+        "completed_without_started": [
+          {
+            "id": "item_0",
+            "type": "agent_message",
+            "indexes": [
+              2
+            ]
+          },
+          {
+            "id": "item_2",
+            "type": "agent_message",
+            "indexes": [
+              5
+            ]
+          },
+          {
+            "id": "item_4",
+            "type": "agent_message",
+            "indexes": [
+              8
+            ]
+          },
+          {
+            "id": "item_7",
+            "type": "agent_message",
+            "indexes": [
+              13
+            ]
+          },
+          {
+            "id": "item_8",
+            "type": "agent_message",
+            "indexes": [
+              14
+            ]
+          }
+        ],
+        "item_id_gaps": [],
+        "evidence_capture_complete": true
+      },
+      "verification_command_exit_zero_count": 0,
+      "verification_command_passed_counts_observed": [],
+      "final_message_claimed_test_counts": [],
+      "final_message_claimed_test_counts_match_observed_command_output": null,
+      "final_message_mentions_verification": false,
+      "final_claims_verification_pass_observed": false,
+      "harness_regression_pass": true,
+      "harness_acceptance_pass": false,
+      "harness_mechanical_pass": false,
+      "settled_decision": null,
+      "limitation": "This records observable phrases and commands in raw Codex events. Harness public and hidden outcomes, observed model test commands, and model test-count claims are intentionally separate. Command output can establish only the emitted command and its captured result, not unlogged work or causal reasoning. Missing terminal events or item gaps make behavior/token evidence incomplete without altering the independently replayable patch and harness outcome.",
+      "verification_command_count": 0,
+      "clarification_marker_count": 0,
+      "settled_decision_reopen_marker_count": 0
+    },
+    {
+      "task": "flask-autoescape-case",
+      "method": "superpowers",
+      "repetition": 2,
+      "raw_event_file": "codex.events.jsonl",
+      "agent_message_count": 6,
+      "final_agent_message": "Changed default Jinja autoescape matching to lowercase the non-`None` filename before checking supported extensions. Added coverage for mixed-case `.html`, `.htm`, `.xml`, `.xhtml`, and `.svg`, plus unsupported names and `None`.\n\nVerification commands run:\n\n```bash\nPYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_templating.py -q\ngit diff --check\nPYTHONPATH=src:.bench-pydeps python3 -m pytest tests -q\n```\n\nFull public suite: 499 passed.",
+      "final_message_coverage": "closing-summary-observed",
+      "event_capture": {
+        "turn_completed_observed": true,
+        "started_without_completed": [],
+        "completed_without_started": [
+          {
+            "id": "item_0",
+            "type": "agent_message",
+            "indexes": [
+              2
+            ]
+          },
+          {
+            "id": "item_3",
+            "type": "agent_message",
+            "indexes": [
+              7
+            ]
+          },
+          {
+            "id": "item_7",
+            "type": "agent_message",
+            "indexes": [
+              14
+            ]
+          },
+          {
+            "id": "item_10",
+            "type": "agent_message",
+            "indexes": [
+              19
+            ]
+          },
+          {
+            "id": "item_13",
+            "type": "agent_message",
+            "indexes": [
+              24
+            ]
+          },
+          {
+            "id": "item_15",
+            "type": "agent_message",
+            "indexes": [
+              27
+            ]
+          }
+        ],
+        "item_id_gaps": [],
+        "evidence_capture_complete": true
+      },
+      "verification_command_exit_zero_count": 3,
+      "verification_command_passed_counts_observed": [
+        32,
+        34,
+        40,
+        499
+      ],
+      "final_message_claimed_test_counts": [
+        499
+      ],
+      "final_message_claimed_test_counts_match_observed_command_output": true,
+      "final_message_mentions_verification": true,
+      "final_claims_verification_pass_observed": true,
+      "harness_regression_pass": true,
+      "harness_acceptance_pass": true,
+      "harness_mechanical_pass": true,
+      "settled_decision": null,
+      "limitation": "This records observable phrases and commands in raw Codex events. Harness public and hidden outcomes, observed model test commands, and model test-count claims are intentionally separate. Command output can establish only the emitted command and its captured result, not unlogged work or causal reasoning. Missing terminal events or item gaps make behavior/token evidence incomplete without altering the independently replayable patch and harness outcome.",
+      "verification_command_count": 4,
+      "clarification_marker_count": 0,
+      "settled_decision_reopen_marker_count": 0
+    },
+    {
+      "task": "flask-autoescape-case",
+      "method": "superpowers",
+      "repetition": 3,
+      "raw_event_file": "codex.events.jsonl",
+      "agent_message_count": 5,
+      "final_agent_message": "Root cause and focused design are ready above. Please approve the design so I can implement and verify it.",
+      "final_message_coverage": "non-closing-or-partial",
+      "event_capture": {
+        "turn_completed_observed": true,
+        "started_without_completed": [],
+        "completed_without_started": [
+          {
+            "id": "item_0",
+            "type": "agent_message",
+            "indexes": [
+              2
+            ]
+          },
+          {
+            "id": "item_2",
+            "type": "agent_message",
+            "indexes": [
+              5
+            ]
+          },
+          {
+            "id": "item_4",
+            "type": "agent_message",
+            "indexes": [
+              8
+            ]
+          },
+          {
+            "id": "item_9",
+            "type": "agent_message",
+            "indexes": [
+              17
+            ]
+          },
+          {
+            "id": "item_10",
+            "type": "agent_message",
+            "indexes": [
+              18
+            ]
+          }
+        ],
+        "item_id_gaps": [],
+        "evidence_capture_complete": true
+      },
+      "verification_command_exit_zero_count": 0,
+      "verification_command_passed_counts_observed": [],
+      "final_message_claimed_test_counts": [],
+      "final_message_claimed_test_counts_match_observed_command_output": null,
+      "final_message_mentions_verification": false,
+      "final_claims_verification_pass_observed": false,
+      "harness_regression_pass": true,
+      "harness_acceptance_pass": false,
+      "harness_mechanical_pass": false,
+      "settled_decision": null,
+      "limitation": "This records observable phrases and commands in raw Codex events. Harness public and hidden outcomes, observed model test commands, and model test-count claims are intentionally separate. Command output can establish only the emitted command and its captured result, not unlogged work or causal reasoning. Missing terminal events or item gaps make behavior/token evidence incomplete without altering the independently replayable patch and harness outcome.",
+      "verification_command_count": 0,
+      "clarification_marker_count": 0,
+      "settled_decision_reopen_marker_count": 0
+    },
+    {
+      "task": "flask-ipv6-server-name",
+      "method": "superpowers",
+      "repetition": 1,
+      "raw_event_file": "codex.events.jsonl",
+      "agent_message_count": 15,
+      "final_agent_message": "Implemented the IPv6 `SERVER_NAME` fix.\n\n- `app.run()` now parses bracketed IPv6 literals, passing `[::1]:8080` as host `::1`, port `8080`.\n- Preserved hostname parsing and explicit port `0`.\n- Added coverage for IPv6 with and without an explicit port.\n\nVerification run:\n\n```bash\nPYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_basic.py::test_run_from_config -q\nPYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_basic.py -q\nPYTHONPATH=src:.bench-pydeps python3 -m pytest -q\ngit diff --check\n```\n\nFinal full suite: `494 passed`.",
+      "final_message_coverage": "closing-summary-observed",
+      "event_capture": {
+        "turn_completed_observed": true,
+        "started_without_completed": [],
+        "completed_without_started": [
+          {
+            "id": "item_0",
+            "type": "agent_message",
+            "indexes": [
+              2
+            ]
+          },
+          {
+            "id": "item_2",
+            "type": "agent_message",
+            "indexes": [
+              5
+            ]
+          },
+          {
+            "id": "item_4",
+            "type": "agent_message",
+            "indexes": [
+              8
+            ]
+          },
+          {
+            "id": "item_6",
+            "type": "agent_message",
+            "indexes": [
+              11
+            ]
+          },
+          {
+            "id": "item_8",
+            "type": "agent_message",
+            "indexes": [
+              14
+            ]
+          },
+          {
+            "id": "item_12",
+            "type": "agent_message",
+            "indexes": [
+              21
+            ]
+          },
+          {
+            "id": "item_15",
+            "type": "agent_message",
+            "indexes": [
+              26
+            ]
+          },
+          {
+            "id": "item_18",
+            "type": "agent_message",
+            "indexes": [
+              31
+            ]
+          },
+          {
+            "id": "item_20",
+            "type": "agent_message",
+            "indexes": [
+              34
+            ]
+          },
+          {
+            "id": "item_23",
+            "type": "agent_message",
+            "indexes": [
+              39
+            ]
+          },
+          {
+            "id": "item_25",
+            "type": "agent_message",
+            "indexes": [
+              42
+            ]
+          },
+          {
+            "id": "item_29",
+            "type": "agent_message",
+            "indexes": [
+              49
+            ]
+          },
+          {
+            "id": "item_31",
+            "type": "agent_message",
+            "indexes": [
+              52
+            ]
+          },
+          {
+            "id": "item_33",
+            "type": "agent_message",
+            "indexes": [
+              55
+            ]
+          },
+          {
+            "id": "item_35",
+            "type": "agent_message",
+            "indexes": [
+              58
+            ]
+          }
+        ],
+        "item_id_gaps": [],
+        "evidence_capture_complete": true
+      },
+      "verification_command_exit_zero_count": 4,
+      "verification_command_passed_counts_observed": [
+        132,
+        7,
+        8,
+        133,
+        8,
+        9,
+        134,
+        494,
+        494
+      ],
+      "final_message_claimed_test_counts": [
+        494
+      ],
+      "final_message_claimed_test_counts_match_observed_command_output": true,
+      "final_message_mentions_verification": true,
+      "final_claims_verification_pass_observed": false,
+      "harness_regression_pass": true,
+      "harness_acceptance_pass": true,
+      "harness_mechanical_pass": true,
+      "settled_decision": null,
+      "limitation": "This records observable phrases and commands in raw Codex events. Harness public and hidden outcomes, observed model test commands, and model test-count claims are intentionally separate. Command output can establish only the emitted command and its captured result, not unlogged work or causal reasoning. Missing terminal events or item gaps make behavior/token evidence incomplete without altering the independently replayable patch and harness outcome.",
+      "verification_command_count": 6,
+      "clarification_marker_count": 0,
+      "settled_decision_reopen_marker_count": 0
+    },
+    {
+      "task": "flask-ipv6-server-name",
+      "method": "superpowers",
+      "repetition": 2,
+      "raw_event_file": "codex.events.jsonl",
+      "agent_message_count": 4,
+      "final_agent_message": "I’ve identified the focused change and am awaiting the required bounded-workflow design approval before editing.",
+      "final_message_coverage": "non-closing-or-partial",
+      "event_capture": {
+        "turn_completed_observed": true,
+        "started_without_completed": [],
+        "completed_without_started": [
+          {
+            "id": "item_0",
+            "type": "agent_message",
+            "indexes": [
+              2
+            ]
+          },
+          {
+            "id": "item_2",
+            "type": "agent_message",
+            "indexes": [
+              5
+            ]
+          },
+          {
+            "id": "item_6",
+            "type": "agent_message",
+            "indexes": [
+              12
+            ]
+          },
+          {
+            "id": "item_7",
+            "type": "agent_message",
+            "indexes": [
+              13
+            ]
+          }
+        ],
+        "item_id_gaps": [],
+        "evidence_capture_complete": true
+      },
+      "verification_command_exit_zero_count": 0,
+      "verification_command_passed_counts_observed": [],
+      "final_message_claimed_test_counts": [],
+      "final_message_claimed_test_counts_match_observed_command_output": null,
+      "final_message_mentions_verification": false,
+      "final_claims_verification_pass_observed": false,
+      "harness_regression_pass": true,
+      "harness_acceptance_pass": false,
+      "harness_mechanical_pass": false,
+      "settled_decision": null,
+      "limitation": "This records observable phrases and commands in raw Codex events. Harness public and hidden outcomes, observed model test commands, and model test-count claims are intentionally separate. Command output can establish only the emitted command and its captured result, not unlogged work or causal reasoning. Missing terminal events or item gaps make behavior/token evidence incomplete without altering the independently replayable patch and harness outcome.",
+      "verification_command_count": 0,
+      "clarification_marker_count": 0,
+      "settled_decision_reopen_marker_count": 0
+    },
+    {
+      "task": "flask-ipv6-server-name",
+      "method": "superpowers",
+      "repetition": 3,
+      "raw_event_file": "codex.events.jsonl",
+      "agent_message_count": 10,
+      "final_agent_message": "Implemented the IPv6 `SERVER_NAME` parsing fix.\n\n- `app.run()` now parses `[::1]:8080` as host `::1`, port `8080`.\n- Added regression coverage alongside existing hostname and port-zero cases.\n\nVerification run:\n\n```bash\nPYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_basic.py::test_run_from_config -q\nPYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_basic.py -q\nPYTHONPATH=src:.bench-pydeps python3 -m pytest -q\ngit diff --check\n```\n\nResults: focused test passed (8), public test file passed (133), full suite passed (493). I also attempted `python3 -m ruff check src/flask/app.py tests/test_basic.py`, but Ruff is not installed in the provisioned environment.\n\nThe detached harness checkout remains uncommitted; only `src/flask/app.py` and `tests/test_basic.py` were changed.",
+      "final_message_coverage": "closing-summary-observed",
+      "event_capture": {
+        "turn_completed_observed": true,
+        "started_without_completed": [],
+        "completed_without_started": [
+          {
+            "id": "item_0",
+            "type": "agent_message",
+            "indexes": [
+              2
+            ]
+          },
+          {
+            "id": "item_2",
+            "type": "agent_message",
+            "indexes": [
+              5
+            ]
+          },
+          {
+            "id": "item_4",
+            "type": "agent_message",
+            "indexes": [
+              8
+            ]
+          },
+          {
+            "id": "item_6",
+            "type": "agent_message",
+            "indexes": [
+              11
+            ]
+          },
+          {
+            "id": "item_9",
+            "type": "agent_message",
+            "indexes": [
+              16
+            ]
+          },
+          {
+            "id": "item_12",
+            "type": "agent_message",
+            "indexes": [
+              21
+            ]
+          },
+          {
+            "id": "item_15",
+            "type": "agent_message",
+            "indexes": [
+              26
+            ]
+          },
+          {
+            "id": "item_17",
+            "type": "agent_message",
+            "indexes": [
+              29
+            ]
+          },
+          {
+            "id": "item_19",
+            "type": "agent_message",
+            "indexes": [
+              32
+            ]
+          },
+          {
+            "id": "item_21",
+            "type": "agent_message",
+            "indexes": [
+              35
+            ]
+          }
+        ],
+        "item_id_gaps": [],
+        "evidence_capture_complete": true
+      },
+      "verification_command_exit_zero_count": 4,
+      "verification_command_passed_counts_observed": [
+        132,
+        7,
+        8,
+        133,
+        493,
+        493
+      ],
+      "final_message_claimed_test_counts": [
+        8,
+        133,
+        493
+      ],
+      "final_message_claimed_test_counts_match_observed_command_output": true,
+      "final_message_mentions_verification": true,
+      "final_claims_verification_pass_observed": true,
+      "harness_regression_pass": true,
+      "harness_acceptance_pass": true,
+      "harness_mechanical_pass": true,
+      "settled_decision": null,
+      "limitation": "This records observable phrases and commands in raw Codex events. Harness public and hidden outcomes, observed model test commands, and model test-count claims are intentionally separate. Command output can establish only the emitted command and its captured result, not unlogged work or causal reasoning. Missing terminal events or item gaps make behavior/token evidence incomplete without altering the independently replayable patch and harness outcome.",
+      "verification_command_count": 5,
+      "clarification_marker_count": 0,
+      "settled_decision_reopen_marker_count": 0
+    },
+    {
+      "task": "flask-teardown-errors",
+      "method": "superpowers",
+      "repetition": 1,
+      "raw_event_file": "codex.events.jsonl",
+      "agent_message_count": 13,
+      "final_agent_message": "Implemented D-17.\n\n- Added shared teardown callback/signal runner that continues after failures and aggregates errors with `BaseExceptionGroup` on Python 3.11+ (first error on older Python).\n- `AppContext.pop` shares collection across request teardown, app-context teardown, request close, and `appcontext_popped`, resetting context-local state before raising.\n- Added regression coverage for callbacks/signals after failures, grouped errors, and context reset.\n\nVerification run:\n\n```bash\ngit diff --check\nPYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q\nPYTHONPATH=src:.bench-pydeps python3 -m pytest -q\n```\n\nResults: `15 passed`; full suite `495 passed`.",
+      "final_message_coverage": "closing-summary-observed",
+      "event_capture": {
+        "turn_completed_observed": true,
+        "started_without_completed": [],
+        "completed_without_started": [
+          {
+            "id": "item_0",
+            "type": "agent_message",
+            "indexes": [
+              2
+            ]
+          },
+          {
+            "id": "item_3",
+            "type": "agent_message",
+            "indexes": [
+              7
+            ]
+          },
+          {
+            "id": "item_5",
+            "type": "agent_message",
+            "indexes": [
+              10
+            ]
+          },
+          {
+            "id": "item_8",
+            "type": "agent_message",
+            "indexes": [
+              15
+            ]
+          },
+          {
+            "id": "item_13",
+            "type": "agent_message",
+            "indexes": [
+              24
+            ]
+          },
+          {
+            "id": "item_17",
+            "type": "agent_message",
+            "indexes": [
+              31
+            ]
+          },
+          {
+            "id": "item_20",
+            "type": "agent_message",
+            "indexes": [
+              36
+            ]
+          },
+          {
+            "id": "item_23",
+            "type": "agent_message",
+            "indexes": [
+              41
+            ]
+          },
+          {
+            "id": "item_25",
+            "type": "agent_message",
+            "indexes": [
+              44
+            ]
+          },
+          {
+            "id": "item_27",
+            "type": "agent_message",
+            "indexes": [
+              47
+            ]
+          },
+          {
+            "id": "item_29",
+            "type": "agent_message",
+            "indexes": [
+              50
+            ]
+          },
+          {
+            "id": "item_35",
+            "type": "agent_message",
+            "indexes": [
+              61
+            ]
+          },
+          {
+            "id": "item_40",
+            "type": "agent_message",
+            "indexes": [
+              70
+            ]
+          }
+        ],
+        "item_id_gaps": [],
+        "evidence_capture_complete": true
+      },
+      "verification_command_exit_zero_count": 6,
+      "verification_command_passed_counts_observed": [
+        1,
+        21,
+        15,
+        21,
+        495,
+        1,
+        15,
+        495,
+        15,
+        495
+      ],
+      "final_message_claimed_test_counts": [
+        15,
+        495
+      ],
+      "final_message_claimed_test_counts_match_observed_command_output": true,
+      "final_message_mentions_verification": true,
+      "final_claims_verification_pass_observed": false,
+      "harness_regression_pass": true,
+      "harness_acceptance_pass": true,
+      "harness_mechanical_pass": true,
+      "settled_decision": "D-17",
+      "limitation": "This records observable phrases and commands in raw Codex events. Harness public and hidden outcomes, observed model test commands, and model test-count claims are intentionally separate. Command output can establish only the emitted command and its captured result, not unlogged work or causal reasoning. Missing terminal events or item gaps make behavior/token evidence incomplete without altering the independently replayable patch and harness outcome.",
+      "verification_command_count": 8,
+      "clarification_marker_count": 0,
+      "settled_decision_reopen_marker_count": 0
+    },
+    {
+      "task": "flask-teardown-errors",
+      "method": "superpowers",
+      "repetition": 2,
+      "raw_event_file": "codex.events.jsonl",
+      "agent_message_count": 5,
+      "final_agent_message": "Awaiting approval of the bounded design before implementation, per the requested Superpowers workflow.",
+      "final_message_coverage": "non-closing-or-partial",
+      "event_capture": {
+        "turn_completed_observed": true,
+        "started_without_completed": [],
+        "completed_without_started": [
+          {
+            "id": "item_1",
+            "type": "agent_message",
+            "indexes": [
+              4
+            ]
+          },
+          {
+            "id": "item_3",
+            "type": "agent_message",
+            "indexes": [
+              7
+            ]
+          },
+          {
+            "id": "item_5",
+            "type": "agent_message",
+            "indexes": [
+              10
+            ]
+          },
+          {
+            "id": "item_8",
+            "type": "agent_message",
+            "indexes": [
+              15
+            ]
+          },
+          {
+            "id": "item_9",
+            "type": "agent_message",
+            "indexes": [
+              16
+            ]
+          }
+        ],
+        "item_id_gaps": [],
+        "evidence_capture_complete": true
+      },
+      "verification_command_exit_zero_count": 1,
+      "verification_command_passed_counts_observed": [
+        14
+      ],
+      "final_message_claimed_test_counts": [],
+      "final_message_claimed_test_counts_match_observed_command_output": null,
+      "final_message_mentions_verification": false,
+      "final_claims_verification_pass_observed": false,
+      "harness_regression_pass": true,
+      "harness_acceptance_pass": false,
+      "harness_mechanical_pass": false,
+      "settled_decision": "D-17",
+      "limitation": "This records observable phrases and commands in raw Codex events. Harness public and hidden outcomes, observed model test commands, and model test-count claims are intentionally separate. Command output can establish only the emitted command and its captured result, not unlogged work or causal reasoning. Missing terminal events or item gaps make behavior/token evidence incomplete without altering the independently replayable patch and harness outcome.",
+      "verification_command_count": 1,
+      "clarification_marker_count": 0,
+      "settled_decision_reopen_marker_count": 0
+    },
+    {
+      "task": "flask-teardown-errors",
+      "method": "superpowers",
+      "repetition": 3,
+      "raw_event_file": "codex.events.jsonl",
+      "agent_message_count": 13,
+      "final_agent_message": "Implemented D-17 teardown behavior.\n\n- Added shared teardown error collection and ExceptionGroup re-raising on Python 3.11+.\n- Request/app teardown callbacks and teardown signal receivers now all run despite earlier errors.\n- `AppContext.pop` continues request and app cleanup, restores context-local state, then re-raises collected errors.\n- Protected collected teardown errors from being masked by `appcontext_popped`.\n- Added regression coverage for callbacks, signal receivers, cross-phase cleanup, error grouping, and context restoration.\n\nVerification run:\n\n- `PYTHONPATH=src:.bench-pydeps python3 -m pytest tests/test_appctx.py -q` — 18 passed\n- `PYTHONPATH=src:.bench-pydeps python3 -m pytest -q` — 498 passed\n- `git diff --check` — passed\n- Attempted `PYTHONPATH=src:.bench-pydeps python3 -m ruff check src/flask/app.py src/flask/ctx.py tests/test_appctx.py`; Ruff is not installed in this environment.",
+      "final_message_coverage": "closing-summary-observed",
+      "event_capture": {
+        "turn_completed_observed": true,
+        "started_without_completed": [],
+        "completed_without_started": [
+          {
+            "id": "item_0",
+            "type": "agent_message",
+            "indexes": [
+              2
+            ]
+          },
+          {
+            "id": "item_2",
+            "type": "agent_message",
+            "indexes": [
+              5
+            ]
+          },
+          {
+            "id": "item_4",
+            "type": "agent_message",
+            "indexes": [
+              8
+            ]
+          },
+          {
+            "id": "item_6",
+            "type": "agent_message",
+            "indexes": [
+              11
+            ]
+          },
+          {
+            "id": "item_11",
+            "type": "agent_message",
+            "indexes": [
+              20
+            ]
+          },
+          {
+            "id": "item_14",
+            "type": "agent_message",
+            "indexes": [
+              25
+            ]
+          },
+          {
+            "id": "item_18",
+            "type": "agent_message",
+            "indexes": [
+              32
+            ]
+          },
+          {
+            "id": "item_21",
+            "type": "agent_message",
+            "indexes": [
+              37
+            ]
+          },
+          {
+            "id": "item_23",
+            "type": "agent_message",
+            "indexes": [
+              40
+            ]
+          },
+          {
+            "id": "item_26",
+            "type": "agent_message",
+            "indexes": [
+              45
+            ]
+          },
+          {
+            "id": "item_28",
+            "type": "agent_message",
+            "indexes": [
+              48
+            ]
+          },
+          {
+            "id": "item_31",
+            "type": "agent_message",
+            "indexes": [
+              53
+            ]
+          },
+          {
+            "id": "item_33",
+            "type": "agent_message",
+            "indexes": [
+              56
+            ]
+          }
+        ],
+        "item_id_gaps": [],
+        "evidence_capture_complete": true
+      },
+      "verification_command_exit_zero_count": 4,
+      "verification_command_passed_counts_observed": [
+        14,
+        13,
+        14,
+        16,
+        496,
+        18,
+        498
+      ],
+      "final_message_claimed_test_counts": [
+        18,
+        498
+      ],
+      "final_message_claimed_test_counts_match_observed_command_output": true,
+      "final_message_mentions_verification": true,
+      "final_claims_verification_pass_observed": true,
+      "harness_regression_pass": true,
+      "harness_acceptance_pass": true,
+      "harness_mechanical_pass": true,
+      "settled_decision": "D-17",
+      "limitation": "This records observable phrases and commands in raw Codex events. Harness public and hidden outcomes, observed model test commands, and model test-count claims are intentionally separate. Command output can establish only the emitted command and its captured result, not unlogged work or causal reasoning. Missing terminal events or item gaps make behavior/token evidence incomplete without altering the independently replayable patch and harness outcome.",
+      "verification_command_count": 6,
+      "clarification_marker_count": 0,
+      "settled_decision_reopen_marker_count": 0
+    }
+  ]
+}

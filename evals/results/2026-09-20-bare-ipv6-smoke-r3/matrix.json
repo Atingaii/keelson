@@ -1,0 +1,30 @@
+[
+  {
+    "codex_exit_code": 0,
+    "acceptance_exit_code": 0,
+    "changed_source_files": [
+      "src/flask/app.py"
+    ],
+    "source_file_threshold": 1,
+    "source_file_threshold_met": true,
+    "elapsed_ms": 69613,
+    "tokens": {
+      "input_tokens": 87059,
+      "cached_input_tokens": 74496,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 1283,
+      "reasoning_output_tokens": 437
+    },
+    "pass": true,
+    "task": "flask-ipv6-server-name",
+    "method": "bare",
+    "repetition": 1,
+    "setup_exit_code": 0,
+    "environment_exit_code": 0,
+    "setup_paths": [],
+    "final_source_paths": [
+      "src/flask/app.py"
+    ],
+    "worktree_retained_at": null
+  }
+]

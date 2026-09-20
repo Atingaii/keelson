@@ -1,0 +1,35 @@
+{
+  "codex_exit_code": 0,
+  "acceptance_exit_code": 0,
+  "changed_source_files": [
+    "src/flask/app.py",
+    "src/flask/ctx.py"
+  ],
+  "source_file_threshold": 2,
+  "source_file_threshold_met": true,
+  "elapsed_ms": 416718,
+  "tokens": {
+    "input_tokens": 562880,
+    "cached_input_tokens": 509184,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 9813,
+    "reasoning_output_tokens": 4829
+  },
+  "pass": true,
+  "task": "flask-teardown-errors",
+  "method": "bare",
+  "repetition": 1,
+  "setup_exit_code": 0,
+  "environment_exit_code": 0,
+  "public_verification_exit_code": 1,
+  "codex_elapsed_ms": 398792,
+  "setup_paths": [],
+  "final_source_paths": [
+    "src/flask/app.py",
+    "src/flask/ctx.py"
+  ],
+  "framework_runtime_usage_observed": false,
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "worktree_retained_at": null
+}

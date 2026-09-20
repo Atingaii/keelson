@@ -1,0 +1,11 @@
+{
+  "command": [
+    "git",
+    "init",
+    "/tmp/keelson-bench-run-WbrOX0/worktree"
+  ],
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "elapsed_ms": 7
+}

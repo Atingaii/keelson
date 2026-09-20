@@ -1,0 +1,83 @@
+{
+  "installed_artifacts": [
+    {
+      "path": ".agents/skills",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": ".trellis",
+      "exists": true,
+      "symlink_target": null
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "symlink_target": null
+    }
+  ],
+  "runtime_references": [
+    {
+      "index": 3,
+      "command": "/bin/bash -lc \"sed -n '1,240p' .agents/skills/trellis-start/SKILL.md\""
+    },
+    {
+      "index": 4,
+      "command": "/bin/bash -lc \"sed -n '1,240p' .agents/skills/trellis-start/SKILL.md\""
+    },
+    {
+      "index": 5,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/get_context.py && python3 ./.trellis/scripts/get_context.py --mode phase && python3 ./.trellis/scripts/get_context.py --mode packages && cat .trellis/spec/guides/index.md'"
+    },
+    {
+      "index": 6,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/get_context.py && python3 ./.trellis/scripts/get_context.py --mode phase && python3 ./.trellis/scripts/get_context.py --mode packages && cat .trellis/spec/guides/index.md'"
+    },
+    {
+      "index": 8,
+      "command": "/bin/bash -lc \"find .trellis/spec -name index.md -print | sort && python3 ./.trellis/scripts/get_context.py --mode phase --step 1.0 --platform codex && sed -n '1,260p' .trellis/workflow.md && find .trellis/tasks -maxdepth 2 -type f -name prd.md -print\""
+    },
+    {
+      "index": 9,
+      "command": "/bin/bash -lc \"find .trellis/spec -name index.md -print | sort && python3 ./.trellis/scripts/get_context.py --mode phase --step 1.0 --platform codex && sed -n '1,260p' .trellis/workflow.md && find .trellis/tasks -maxdepth 2 -type f -name prd.md -print\""
+    },
+    {
+      "index": 10,
+      "command": "/bin/bash -lc \"sed -n '1,300p' .agents/skills/trellis-brainstorm/SKILL.md && printf '\\\\n--- BACKEND INDEX ---\\\\n' && cat .trellis/spec/backend/index.md && printf '\\\\n--- CODE REUSE GUIDE ---\\\\n' && cat .trellis/spec/guides/code-reuse-thinking-guide.md\""
+    },
+    {
+      "index": 11,
+      "command": "/bin/bash -lc \"sed -n '1,300p' .agents/skills/trellis-brainstorm/SKILL.md && printf '\\\\n--- BACKEND INDEX ---\\\\n' && cat .trellis/spec/backend/index.md && printf '\\\\n--- CODE REUSE GUIDE ---\\\\n' && cat .trellis/spec/guides/code-reuse-thinking-guide.md\""
+    },
+    {
+      "index": 12,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/task.py create \"Teardown error aggregation\" --description \"Ensure Flask teardown callbacks and signals all run before teardown errors are raised.\" --slug teardown-error-aggregation && python3 ./.trellis/scripts/task.py current --source && python3 ./.trellis/scripts/get_context.py --mode phase --step 1.1 --platform codex'"
+    },
+    {
+      "index": 13,
+      "command": "/bin/bash -lc 'python3 ./.trellis/scripts/task.py create \"Teardown error aggregation\" --description \"Ensure Flask teardown callbacks and signals all run before teardown errors are raised.\" --slug teardown-error-aggregation && python3 ./.trellis/scripts/task.py current --source && python3 ./.trellis/scripts/get_context.py --mode phase --step 1.1 --platform codex'"
+    },
+    {
+      "index": 14,
+      "command": "/bin/bash -lc \"rg -n -C 5 \\\"teardown_(request|appcontext)|request_tearing_down|appcontext_tearing_down|do_teardown\\\" src/flask tests && sed -n '1,260p' .trellis/tasks/09-20-teardown-error-aggregation/prd.md && find .trellis/spec/backend -maxdepth 1 -type f -name '*.md' -not -name index.md -print -exec sed -n '1,160p' {} \\\\;\""
+    },
+    {
+      "index": 15,
+      "command": "/bin/bash -lc \"rg -n -C 5 \\\"teardown_(request|appcontext)|request_tearing_down|appcontext_tearing_down|do_teardown\\\" src/flask tests && sed -n '1,260p' .trellis/tasks/09-20-teardown-error-aggregation/prd.md && find .trellis/spec/backend -maxdepth 1 -type f -name '*.md' -not -name index.md -print -exec sed -n '1,160p' {} \\\\;\""
+    },
+    {
+      "index": 16,
+      "command": "/bin/bash -lc \"grep -RIn -C 5 -E 'teardown_(request|appcontext)|request_tearing_down|appcontext_tearing_down|do_teardown' src/flask tests; sed -n '1,260p' .trellis/tasks/09-20-teardown-error-aggregation/prd.md; find .trellis/spec/backend -maxdepth 1 -type f -name '*.md' -not -name index.md -print -exec sed -n '1,160p' {} \\\\;\""
+    },
+    {
+      "index": 17,
+      "command": "/bin/bash -lc \"grep -RIn -C 5 -E 'teardown_(request|appcontext)|request_tearing_down|appcontext_tearing_down|do_teardown' src/flask tests; sed -n '1,260p' .trellis/tasks/09-20-teardown-error-aggregation/prd.md; find .trellis/spec/backend -maxdepth 1 -type f -name '*.md' -not -name index.md -print -exec sed -n '1,160p' {} \\\\;\""
+    }
+  ],
+  "runtime_usage_observed": true,
+  "activation_observed": true,
+  "global_instruction_references": [],
+  "global_instruction_contamination_observed": false,
+  "comparison_eligible": true,
+  "note": "Artifact presence proves setup only. A non-bare treatment requires a direct raw Codex tool command naming its project-local framework root to establish activation. This does not establish causal effectiveness. Any direct global instruction-path read makes a run ineligible for a clean causal comparison."
+}

@@ -1,0 +1,45 @@
+{
+  "complete": true,
+  "rows": [
+    {
+      "original_evidence": "/home/ubuntu/github/keelson-bench/evals/results/2026-09-20-formal-frozen-5-openspec-cli-parallel-teardown-r1-r3/flask-teardown-errors__openspec__r1",
+      "task": "flask-teardown-errors",
+      "method": "openspec",
+      "repetition": 1,
+      "original_comparison_eligible": true,
+      "original_pass": false,
+      "candidate_patch_sha256": "6a92907aa349dd215815638991be8c60dee3e4931b4797d78e823935fe3e36de",
+      "stage": "supplemental-verification",
+      "environment_valid": true,
+      "supplemental_exit_code": 1,
+      "pass": false
+    },
+    {
+      "original_evidence": "/home/ubuntu/github/keelson-bench/evals/results/2026-09-20-formal-frozen-5-openspec-cli-parallel-teardown-r1-r3/flask-teardown-errors__openspec__r2",
+      "task": "flask-teardown-errors",
+      "method": "openspec",
+      "repetition": 2,
+      "original_comparison_eligible": true,
+      "original_pass": false,
+      "candidate_patch_sha256": "bce775c13759ec278e58b147f0ec5bfd212ebdecd74c9082bbbc0bfeba709e8e",
+      "stage": "supplemental-verification",
+      "environment_valid": true,
+      "supplemental_exit_code": 1,
+      "pass": false
+    },
+    {
+      "original_evidence": "/home/ubuntu/github/keelson-bench/evals/results/2026-09-20-formal-frozen-5-openspec-cli-parallel-teardown-r1-r3/flask-teardown-errors__openspec__r3",
+      "task": "flask-teardown-errors",
+      "method": "openspec",
+      "repetition": 3,
+      "original_comparison_eligible": true,
+      "original_pass": false,
+      "candidate_patch_sha256": "61888b566cc24274a7fa0598296d0a4bf853fa718b1cbe4eb44d08b0d96f7151",
+      "stage": "supplemental-verification",
+      "environment_valid": true,
+      "supplemental_exit_code": 1,
+      "pass": false
+    }
+  ],
+  "all_pass": false
+}
