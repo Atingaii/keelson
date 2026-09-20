@@ -25,3 +25,15 @@ ranking. A higher score alone cannot establish that the guidance caused the
 improvement; stochastic model variation and concurrent execution remain
 alternative explanations. Any further change requires another declared
 iteration and preservation of this one.
+
+## Retrospective package-scope clarification
+
+After all three outcomes, a package diff audit confirmed that frozen
+`fa7c874b8b136089e78a69f559d39724f0178f14` also includes intervening
+ablation, initialization and platform ownership/migration repairs relative to
+the original `7b2c303` package (`src/commands/ablate.js`, `init.js`,
+`src/platforms/integration.js`, `runtime.js`). Its two verification-guidance
+files are therefore not the whole package difference. The unchanged prompts,
+budgets, acceptance and recorded scores remain valid observations of those
+frozen packages, but cannot isolate a guidance effect. This clarification was
+not part of the pre-run declaration and does not alter any outcome.

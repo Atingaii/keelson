@@ -75,6 +75,8 @@ Frozen-5 将精确固定的 `@fission-ai/openspec@1.13.1` 资源只读挂载，�
 
 安全/签名/事务、代码漂移、决策重开与安装 footprint 不与上述代码结果合成为总分。Keelson 自身工程回归可以作为其工程证据，各方法记录的 installation footprint 可以量化侵入性；竞品没有对应公开接口或统一 probe 的位置应为 `NA`，不是零分。
 
+补充的 package diff 审计发现，`fa7c874` 相对 `7b2c303` 还包含 ablation、初始化及平台所有权/迁移修复；第二轮候选 `3090c72` 相对 `fa7c874` 也包含 Windows 写入/锁、真实内容指纹、运行目录查找和 importer 修复。因此两轮都是冻结完整产品版本的探索，不是只改变指引的因果消融。分别在 [`ITERATION.md`](supplemental/ITERATION.md) 与 [`ITERATION-2.md`](supplemental/ITERATION-2.md) 记明补充披露的时点；它们不修改历史分数或正在运行的条件。
+
 ## 可复核性与清理
 
 提交前对 raw 运行 secrets 扫描，只记录命中文件名和数量，不输出值。保留证据所需的结果、固定任务和冻结 package checkout；runner 临时工作树与可丢下载缓存会在审阅后清理。第三方 Flask 源码、竞品技能文本和原始模型工具输出按 [`../benchmarks/NOTICE.md`](../benchmarks/NOTICE.md) 与 [`../benchmarks/licenses/`](../benchmarks/licenses/) 的来源/许可保存，而不视为本项目 MIT 原创内容。
