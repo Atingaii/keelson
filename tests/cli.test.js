@@ -1080,6 +1080,7 @@ test('init is the only step: first-class platform flags, standards-first surface
   for (const f of ['.cursor/skills/keelson', '.cursor/rules/keelson.mdc', '.kiro/steering/keelson.md']) assert.ok(!exists(dir, f), `standards-first init should not create ${f}`);
   assert.match(read(dir, '.keelson/NOW.md'), /^First contact with /m);
   assert.match(read(dir, '.keelson/NOW.md'), /Do not inventory the whole repository/);
+  assert.doesNotMatch(read(dir, '.keelson/NOW.md'), /intent has not been confirmed|owner confirms it/i);
   assert.match(read(dir, '.keelson/config.yaml'), /- kiro/);
   const v = JSON.parse(run(dir, ['validate', '--json'], { env }).stdout);
   assert.ok(!v.warnings.some((w) => /placeholder/.test(w)), 'no INTENT placeholder nag before first contact');
