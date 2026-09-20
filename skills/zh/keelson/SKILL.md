@@ -11,8 +11,8 @@ description: 面向含 .keelson/ 目录项目的工程控制层。用于探索�
 
 | 意图 | 常见请求 | 首先读取 |
 |---|---|---|
-| **Explore** | 比较、解释、“应该怎么做”、“grill me” | `discover.md` + `shape.md`；明确要求修改之前保持只读 |
-| **Change** | 构建、新增、重构、迁移、“再顺便改……” | `shape.md` → `context.md`；spec 级再加 `plan.md`，随后 `build.md` |
+| **Explore** | 比较、解释、“应该怎么做”、“grill me” | `discover.md` + `interview.md`；明确要求修改之前保持只读 |
+| **Change** | 构建、新增、重构、迁移、“再顺便改……” | `shape.md` → `context.md`；只有风险触发时才读 `design-lenses.md`；spec 级再加 `plan.md` |
 | **Fix** | bug、测试失败、异常行为 | `debug.md`，随后 `verify.md` |
 | **Resume** | 继续、接着做 | `keelson focus --auto` + 当前上下文；只有真正跨人/跨机器交接时才读 `handoff.md` |
 | **Improve** | 重复错误、Harness/rule/流程问题、retro | `harness.md` + `reconcile.md` |
@@ -26,6 +26,7 @@ description: 面向含 .keelson/ 目录项目的工程控制层。用于探索�
 - Resume 时先用 `keelson focus --auto`；可以根据 branch 或唯一活动 change 给出候选，但存在歧义时绝不静默绑定。
 - `NOW.md` 为 First contact 时，只推断并确认 `INTENT.md`；不要盘点整个仓库生成 specs/rules。
 - 非平凡修改先读取当前上下文；改共享模块前运行 `keelson impact <files>`。
+- 只在 decision frontier 提问。按 `interview.md` 一次解决一个真正属于所有者的决定：先讲场景，再给推荐默认值；“不确定”是合法路由。仓库、证据或 Agent 工程判断能解决的事绝不问用户。
 - 只给工作本身定大小：trivial 直接改；quick 轻量 change；spec 先写验收、行为 delta 和计划，再等批准。
 - 工件是信息容器，不是仪式。不要创建空 roadmap/glossary/rule/task/ledger/handoff/spec。
 - `tasks.md` 只是执行计划，不拥有“完成”判定权。只要 acceptance 与新鲜证据已经满足，未勾选的旧计划不能覆盖这个事实；实现路径变化时应重写或删除过时任务。
