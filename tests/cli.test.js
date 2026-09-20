@@ -339,6 +339,30 @@ test('CodeBuddy native hooks inject session identity and preserve unrelated sett
   assert.equal(after.hooks.PreToolUse, undefined);
 });
 
+test('CodeBuddy update upgrades an older Bash-only Keelson matcher in place', () => {
+  const dir = tmpProject({});
+  run(dir, ['init', '--tools', 'codebuddy'], { env });
+  const settingsPath = '.codebuddy/settings.json';
+  const settings = JSON.parse(read(dir, settingsPath));
+  const group = settings.hooks.PreToolUse.find((g) =>
+    (g.hooks ?? []).some((h) => String(h.command ?? '').includes('codebuddy-session.mjs'))
+  );
+  group.matcher = 'Bash';
+  write(dir, settingsPath, JSON.stringify(settings, null, 2) + '\n');
+
+  let doc = run(dir, ['doctor', '--json'], { env, allowFail: true });
+  assert.equal(doc.code, 1);
+  assert.match(doc.stdout + doc.stderr, /Bash\|PowerShell PreToolUse session hook not registered/);
+
+  run(dir, ['update'], { env });
+  const updated = JSON.parse(read(dir, settingsPath));
+  const upgraded = updated.hooks.PreToolUse.find((g) =>
+    (g.hooks ?? []).some((h) => String(h.command ?? '').includes('codebuddy-session.mjs'))
+  );
+  assert.equal(upgraded.matcher, 'Bash|PowerShell');
+  run(dir, ['doctor', '--json'], { env });
+});
+
 test('doctor detects native session adapter drift and update repairs it', () => {
   const dir = tmpProject({});
   run(dir, ['init', '--tools', 'opencode'], { env });
@@ -837,7 +861,7 @@ test('init is the only step: first-class platform flags, standards-first surface
   assert.ok(list.find((p) => p.id === 'kiro').configured);
   for (const id of ['claude', 'opencode', 'pi', 'codebuddy']) {
     assert.equal(list.find((p) => p.id === id).sessionFocus, 'native', id);
-    assert.equal(list.find((p) => p.id === id).effectiveSessionFocus, id === 'pi' || list.find((p) => p.id === id).configured ? 'native' : 'native', id);
+    assert.equal(list.find((p) => p.id === id).effectiveSessionFocus, 'native', id);
   }
   for (const id of ['codex', 'gemini', 'kiro']) assert.equal(list.find((p) => p.id === id).sessionFocus, 'degraded', id);
   run(dir, ['uninstall'], { env });
