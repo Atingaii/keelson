@@ -2,14 +2,14 @@
 
 # 常见问题
 
-**没有 hook 也能用吗？**
-能。Hook 只在 Claude Code 上存在，而且只注入状态。没有 hook 时，发现块把代理指向 `.keelson/workflow.md`，其中 ORIENT 会要求它在非平凡工作前运行 `keelson context --paths <files>`；`NOW.md` 和每个变更的 `handoff.md` 保存接续状态。如果在 Claude Code 上也想这样，给 `init` 传 `--no-hooks`。
+**没有 hook/plugin 也能用吗？**
+能。Discovery 和长期 change state 从不依赖 session adapter。当前 native focus 分别使用 Claude hooks、一个 OpenCode 项目 plugin、Pi 内置 `PI_SESSION_ID`、CodeBuddy hooks。`--no-hooks` 会关闭 Keelson 管理的 hook/plugin bridge，因此 Claude/OpenCode/CodeBuddy 安全降级为 candidate/显式选择；Pi 因宿主内置 session env 仍然 native。普通续接依赖长期 change + 本地 focus/candidate，`handoff.md` 只用于明确换人/换机器。
 
 **支持哪些工具？**
 官方一等公民只有 7 个 CLI：Claude Code、Codex CLI、OpenCode、Pi、Gemini CLI、Kiro CLI、CodeBuddy CLI。每个适配器都使用真实验证或宿主官方文档明确的发现路径，并指向同一份 `.keelson/` 真源。每个项目仍安装通用 `AGENTS.md` + `.agents/skills/` 层，供其他兼容标准的 Agent 使用。`keelson init` 只自动探测这 7 个一等公民；也可以用 `keelson init --claude --codex` 等显式选择。
 
-**我必须在聊天里敲命令吗？**
-不必。你像以前一样和代理对话。CLI 由代理自己运行。"grill me"、"status"、"hand off"、"land it"、"retro" 这些短语在技能里有定义好的含义，但没有一个是必须的。
+**我必须在聊天里敲命令，或者告诉它“任务完成”吗？**
+不必。正常对话即可。Agent 自己运行 CLI、在可能时绑定/恢复 session focus，并根据 acceptance/gate + 当前树新鲜 verification 自动推导 `ready`。你不需要说“开始任务”“结束任务”“今天做完了”。
 
 **很小的改动会怎样？**
 什么都不发生。trivial 变更（样式、错字、行为不变的单文件修复）不建变更目录、不写回。代理直接做。
@@ -54,10 +54,10 @@
 没有。`verify` reference 要求与代码匹配且覆盖验收清单的证据。`guided` profile 加了一条说明：delta spec 里有场景时建议先写测试，问题是视觉性的或涉及未知 API 时建议先做原型。`lean` profile 把方法留给代理。
 
 **它消耗多少 token？**
-发现块不到 10 行。`.keelson/workflow.md` 是非平凡任务读取的紧凑执行内核。会话启动 hook 最多打印约 1,500 个字符一次；每个提示词那一行几十个 token，空闲时为空。canonical 技能一次只读一个 reference，每个 30 到 90 行。Rules 只在 glob 匹配时才读。此外不注入任何东西。
+发现块不到 10 行，canonical Skill 按需读取 references。Native session adapter 只注入极小的 focus/candidate 提示：Claude/CodeBuddy 在生命周期事件里注入，OpenCode/Pi 主要通过 shell identity 工作，不额外重复大段 prose。Rules 只在 glob 匹配时读；Keelson 不会每轮重放整个工作历史。
 
 **代理不理它怎么办？**
-运行 `keelson doctor`。它先检查 canonical `.keelson/workflow.md` 和 `.keelson/skill/`，再检查每个配置宿主的发现 shim 是否指向这份运行时、版本是否匹配，以及需要时 hook 是否已注册。`keelson update` 重新生成这一切。如果代理把变更大小判错了，说"按 spec 处理"或"直接做"。
+运行 `keelson doctor`。它会检查 canonical runtime、discovery shim、manifest、启用的 native session adapter 文件/注册、stale session pointer 与项目 validation。`keelson update` 修复 Keelson 自己拥有的 drift。变更大小判断错时，直接说“按 spec 处理”或“直接做”。
 
 **怎么把它去掉？**
 `keelson uninstall` 移除生成的运行时/集成表面（`.keelson/workflow.md`、`.keelson/skill/`、宿主发现 shim、hook、本地状态），但保留 `.keelson/` 中的项目事实；加 `--purge` 连整个 `.keelson/` 一起移除。临时对照的话，`keelson ablate` 暂存每个表面，`keelson restore` 逐字节恢复。
