@@ -24,6 +24,7 @@ const TARGETS_MS = {
   impact: 500,
   validate: 1000,
   checkEstimatedOverhead: 200,
+  checkWithRecordEstimatedOverhead: 200,
   land: 2000,
   init: 3000,
 };
@@ -102,8 +103,10 @@ function benchmark(name, invoke, { before = () => {}, after = () => {} } = {}) {
 }
 
 function main() {
-  const priorAttempts = readPriorAttempts();
+  const priorResult = readPriorResult();
+  const priorAttempts = Array.isArray(priorResult?.attempts) ? priorResult.attempts : [];
   const startedAt = new Date().toISOString();
+  const loadAverageAtStart = os.loadavg();
   const attemptId = `${startedAt.replace(/[:.]/g, '-')}-${process.pid}`;
   const groups = {};
   const persistPartial = (status, error = null) => {
@@ -225,6 +228,14 @@ function main() {
       },
     });
     groups.checkWithRecord = checkWithRecord;
+    const checkWithRecordEstimatedOverheadSamples = checkWithRecord.samples.map((sample, index) => rounded(Math.max(0, sample - checkCommandBaseline.samples[index])));
+    const checkWithRecordEstimatedOverhead = {
+      samples: checkWithRecordEstimatedOverheadSamples,
+      summary: roundedSummary(checkWithRecordEstimatedOverheadSamples),
+      method: 'paired end-to-end `keelson check --trust --record --change <fresh-change> --quiet` wall time minus a direct shell execution of the identical no-op command, clamped at zero',
+      limitation: 'This is an estimate: record creation also has change-directory writes. The direct baseline cannot perfectly reproduce the CLI process, shell, scheduler, filesystem-cache, or child-process interactions. End-to-end check samples remain authoritative.',
+    };
+    groups.checkWithRecordEstimatedOverhead = checkWithRecordEstimatedOverhead;
     persistPartial('running');
     const land = benchmark('land', () => cli(project, ['land', currentLandName, '--keep']), {
       before(label) {
@@ -245,6 +256,7 @@ function main() {
       impact: impactWithoutSignedRecord,
       validate: validateWithoutSignedRecord,
       checkEstimatedOverhead,
+      checkWithRecordEstimatedOverhead,
       land,
       init,
     }).map(([name, result]) => [name, result.summary.p95]));
@@ -262,6 +274,7 @@ function main() {
         samples: SAMPLES,
         warmups: WARMUPS,
         percentile: 'nearest-rank: sorted[ceil(n * 0.95) - 1]',
+        checkOverheadMethod: 'paired end-to-end check wall time minus the same no-op shell command, measured separately for no-record and fresh-record paths',
         fixture: 'fresh local Git repository with 5,000 tracked one-line JavaScript files; each init sample receives an independent local clone',
         isolation: 'temporary project, temporary HOME/USERPROFILE/XDG_CACHE_HOME, and temporary Git runtime only; all are removed after the run',
         unsignedPath: 'status/context/ask/impact/validate first run against one active quick change with no signed ledger; status still fingerprints all 5,000 tracked files',
@@ -274,6 +287,8 @@ function main() {
         arch: process.arch,
         cpuModel: cpu.model ?? null,
         cpuCores: os.cpus().length,
+        loadAverageAtStart,
+        loadAverageAtEnd: os.loadavg(),
         totalMemoryBytes: os.totalmem(),
         git: capture('git', ['--version']),
         revision: capture('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD']),
@@ -289,6 +304,7 @@ function main() {
         checkEndToEnd: 'keelson check --trust --quiet (no record)',
         checkCommandBaseline: CHECK_COMMAND,
         checkWithRecord: 'keelson check --trust --record --change bench-check-<sample> --quiet',
+        checkWithRecordEstimatedOverhead: 'paired fresh-record check wall time minus direct no-op shell command',
         land: 'keelson land bench-land-<sample> --keep',
       },
       targets,
@@ -305,10 +321,31 @@ function main() {
         'These are local measurements, not CI gates or universal performance claims.',
         'All command timing includes a fresh Node CLI process and command output capture; fixture creation, cloning, warm-up, and land evidence preparation are excluded from the corresponding measured command.',
         'The target status/context p95 values use the signed-record group. The no-signed-record group is retained as a distinct raw observation and is never presented as proof of the signed path.',
-        'The host may have unrelated processes running. This result reports observed wall time under that load; it does not claim an idle-host lower bound.',
+        `The host may have unrelated processes running. Load average was ${loadAverageAtStart.join(', ')} at start and ${os.loadavg().join(', ')} at result emission; this result reports observed wall time under that load and does not claim an idle-host lower bound.`,
+        'Both no-record and fresh-record check overhead estimates have independent <200 ms targets; neither replaces its end-to-end samples.',
         'No Git-status filename cache is used; every CLI invocation observes the complete tracked fixture.',
       ],
     };
+    const priorIterations = Array.isArray(priorResult?.iterations)
+      ? priorResult.iterations
+      : priorResult?.rawWallTimesMs && priorResult?.targets
+        ? [{
+          id: 'frozen-baseline',
+          generatedAt: priorResult.generatedAt,
+          environment: priorResult.environment,
+          targets: priorResult.targets,
+          rawWallTimesMs: priorResult.rawWallTimesMs,
+          notes: priorResult.notes,
+        }]
+        : [];
+    result.iterations = [...priorIterations, {
+      id: attemptId,
+      generatedAt: result.generatedAt,
+      environment: result.environment,
+      targets: result.targets,
+      rawWallTimesMs: result.rawWallTimesMs,
+      notes: result.notes,
+    }];
     fs.mkdirSync(path.dirname(OUTPUT), { recursive: true });
     fs.writeFileSync(OUTPUT, `${JSON.stringify(result, null, 2)}\n`);
     printSummary(result);
@@ -320,12 +357,11 @@ function main() {
   }
 }
 
-function readPriorAttempts() {
+function readPriorResult() {
   try {
-    const prior = JSON.parse(fs.readFileSync(OUTPUT, 'utf8'));
-    return Array.isArray(prior.attempts) ? prior.attempts : [];
+    return JSON.parse(fs.readFileSync(OUTPUT, 'utf8'));
   } catch {
-    return [];
+    return null;
   }
 }
 

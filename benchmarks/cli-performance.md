@@ -20,13 +20,14 @@ The measured commands and p95 targets are:
 | `ask frontier` | < 300 ms |
 | `impact` | < 500 ms |
 | `validate` | < 1,000 ms |
-| `check` estimated Keelson overhead | < 200 ms |
+| `check` estimated Keelson overhead (no record) | < 200 ms |
+| `check --record` estimated Keelson overhead (fresh record) | < 200 ms |
 | `land --keep` | < 2,000 ms |
 | `init --no-hooks` | < 3,000 ms |
 
 The initial `status`, `context`, `ask`, `impact`, and `validate` group has one active quick change but no signed ledger. It is retained as a distinct raw observation. `status` still computes the full worktree fingerprint over the 5,000 tracked files; the difference is the absence of a ledger for lifecycle verification. After it, the benchmark creates one complete local signed check record outside timing and samples a separate fresh-signed-record `status`/`context` group. The published status and context target verdicts use that signed-record group, never the no-record group.
 
-`check` uses the fixed no-op command `node -e "process.exit(0)"`. Its result retains no-record end-to-end samples, fresh `--record` samples, and a same-command shell baseline. The reported target overhead is a paired, nonnegative subtraction of the no-record end-to-end and direct command wall times. It cannot strictly remove scheduler, shell, child-process, process-startup, signature, or filesystem-cache effects, so both end-to-end paths remain the authoritative measurements.
+`check` uses the fixed no-op command `node -e "process.exit(0)"`. Its result retains no-record end-to-end samples, fresh `--record` samples, and a same-command shell baseline. The reported no-record and fresh-record target overheads are each paired, nonnegative subtractions of their respective end-to-end and direct command wall times. It cannot strictly remove scheduler, shell, child-process, process-startup, signature, or filesystem-cache effects, so both end-to-end paths remain the authoritative measurements. The fresh-record estimate is independently assessed against the same <200 ms target; it is not an informational extra.
 
 Every land sample is prepared outside the timer with an accepted quick change and a locally signed, complete no-op check. The timed operation is therefore the actual normal `land --keep` gate and archive path, rather than a forced or unsigned shortcut. The script does not use a Git-status filename cache; it deliberately measures every CLI invocation against the full tracked fixture.
 
