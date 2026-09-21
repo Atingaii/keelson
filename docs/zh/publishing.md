@@ -18,6 +18,8 @@ keelson init --codex --lang zh
 
 ## 维护者发布
 
+每次完成项目更新，包括 README 修改，都发布新版本，让 npm 用户拿到当前文档和 CLI。稳定版使用 `latest` 标签，并在发布后核对。Git 提交使用项目作者身份 `Atingaii`；npm 发布账号仍为 `zyaiting`。
+
 1. 使用 `zyaiting` npm 账号，或已获得该包发布权限的账号。验证邮箱并启用双重验证，在自己的终端登录：
 
    ```bash
@@ -25,7 +27,7 @@ keelson init --codex --lang zh
    npm whoami --registry=https://registry.npmjs.org/
    ```
 
-2. 更新版本号、锁文件、对应技能版本及 `CHANGELOG.md`。已发布的包名与版本组合不可复用。审阅改动及打包内容：
+2. 更新版本号、锁文件及 `CHANGELOG.md`；安装时的技能版本由包版本写入。已发布的包名与版本组合不可复用。审阅改动及打包内容：
 
    ```bash
    npm ci
@@ -37,8 +39,8 @@ keelson init --codex --lang zh
 3. 获得负责人的发布授权后，执行发布并完成 npm 的认证提示：
 
    ```bash
-   npm publish --access public
-   npm view @zyaiting/keelson version
+   npm publish --access public --tag latest
+   npm view @zyaiting/keelson@latest version
    ```
 
    现有 `prepublishOnly` 会运行测试套件，失败会停止发布。npm 会先[扫描新发布的包](https://github.blog/changelog/2026-07-28-npm-publish-time-malware-scanning-and-dual-use-metadata/)，因此发布成功后可能仍需等待几分钟才能安装。等待并核验准确版本、验证全新安装后，再宣布可用；不要为解决这段延迟而重复发布同一版本。不要将密码、token 或恢复码发到聊天或 issue。

@@ -18,6 +18,8 @@ To upgrade, run `npm install -g @zyaiting/keelson@latest`, then `keelson update`
 
 ## Maintainer release
 
+Publish a new version for each completed project update, including README changes, so npm users receive the current documentation as well as the CLI. Use the `latest` tag for stable releases and verify it after publishing. Git commits use the project author's identity, `Atingaii`; the npm publishing account remains `zyaiting`.
+
 1. Use the `zyaiting` npm account or an account granted publishing access. Verify the account email and enable two-factor authentication. Log in from your own terminal:
 
    ```bash
@@ -25,7 +27,7 @@ To upgrade, run `npm install -g @zyaiting/keelson@latest`, then `keelson update`
    npm whoami --registry=https://registry.npmjs.org/
    ```
 
-2. Update the version, lockfile, matching skill metadata and `CHANGELOG.md`. Published name/version combinations cannot be reused. Review the diff and package contents:
+2. Update the version, lockfile and `CHANGELOG.md`; installed skill metadata is stamped from the package version. Published name/version combinations cannot be reused. Review the diff and package contents:
 
    ```bash
    npm ci
@@ -37,8 +39,8 @@ To upgrade, run `npm install -g @zyaiting/keelson@latest`, then `keelson update`
 3. With the owner's release approval, publish and complete npm's authentication prompt:
 
    ```bash
-   npm publish --access public
-   npm view @zyaiting/keelson version
+   npm publish --access public --tag latest
+   npm view @zyaiting/keelson@latest version
    ```
 
    `prepublishOnly` runs the existing test suite; a failure stops publication. npm [scans newly published packages](https://github.blog/changelog/2026-07-28-npm-publish-time-malware-scanning-and-dual-use-metadata/) before making them installable, so a successful publish can precede package availability by several minutes. Wait and verify the exact version and a clean installation before announcing availability; do not republish the same version to resolve this delay. Keep passwords, tokens and recovery codes out of chat and issues.

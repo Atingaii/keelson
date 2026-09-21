@@ -2,6 +2,15 @@
 
 Notable changes to Keelson, organized by version.
 
+## [0.4.1] - 2026-09-21
+
+### Changed
+
+- Explain Keelson through four everyday development problems, connecting its workflow to behaviour-driven development, shared domain language, decision records, short feedback loops and usability heuristics.
+- Align both READMEs with public npm installation, add a live version badge and use links that work on GitHub and npm.
+- Document publishing each completed update, including README changes, under a new version with the `latest` tag.
+- Normalize the project's Ubuntu commit identity to Atingaii with a Git mailmap; subsequent commits use Atingaii directly.
+
 ## [0.4.0] - 2026-09-20
 
 First public npm release as `@zyaiting/keelson`. Install with `npm install -g @zyaiting/keelson`.
@@ -89,6 +98,7 @@ Initial release.
 - `lean` and `guided` skill profiles; English and Chinese skills and docs.
 - Guidance annotations with sunset conditions, read by `keelson retro`.
 
+[0.4.1]: https://www.npmjs.com/package/@zyaiting/keelson/v/0.4.1
 [0.4.0]: https://www.npmjs.com/package/@zyaiting/keelson/v/0.4.0
 [0.3.0]: https://github.com/Atingaii/keelson/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Atingaii/keelson/compare/v0.1.0...v0.2.0
