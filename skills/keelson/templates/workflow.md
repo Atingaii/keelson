@@ -12,6 +12,7 @@ Every modifying request follows **ORIENT → BOUND → BUILD → SENSE → RECON
 - Ending a session, going idle, compaction, or closing the window changes only session runtime state. It never completes, cancels, or lands durable work.
 - `handoff.md` is reserved for real transfer across people/machines or deliberate ownership change. Normal new sessions reconstruct from change/task/ledger state and optional session focus.
 - Create artifacts lazily. Empty documents are not progress.
+- When creating or maintaining project memory, automatically load `writing.md`; lead with its useful state/outcome and next action where relevant, with links to complete detail and evidence.
 - Repeated failure classes become scoped rules or executable fitness checks; shrink prose after automation carries the invariant.
 - First contact derives `INTENT.md` from repository evidence; ask the owner only if an unresolved project boundary is load-bearing for current work. Specs/rules grow only when real work exposes durable truth.
 

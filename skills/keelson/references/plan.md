@@ -12,11 +12,11 @@ If the project has an issue tracker (`config.yaml → refs.tasks`), it stays the
 ## change.md
 <!-- keelson: id=plan.change-md | without: the reasons for a change and its rejected alternatives live only in chat and are lost | sunset: never -->
 
-Sections, in order. Quick changes need only **Why**, **What**, and **Acceptance**.
+Sections, in order. Quick changes need only **What**, **Why**, and **Acceptance**.
 
-- **Why** — the problem or opportunity in 1–3 sentences. Should stand on its own without the solution.
-- **What** — bullet list of changes. A bullet that starts with **BREAKING** marks a breaking change; it needs a **Rollout** section (compatibility window, migration, rollback), and `keelson land` checks for it.
-- **How** — technical approach, the parts a reviewer would want to know. Not a task list.
+- **What** — the user-observable outcome and non-goals first, then the changes. A bullet that starts with **BREAKING** marks a breaking change; it needs a **Rollout** section (compatibility window, migration, rollback), and `keelson land` checks for it.
+- **Why** — who encounters what problem in which situation, in 1–3 sentences. It should stand on its own without the solution.
+- **How** — technical approach, next bounded action and its result; link `tasks.md` for detailed steps.
 - **Alternatives** — only when a material fork actually exists. Record the strongest credible alternative and why it loses. If the project already has a clear precedent and no real fork exists, say `follows <existing pattern>` instead of inventing options to satisfy a template.
 - **Impact** — what you found by reading, not the diff file list. See `context.md`.
 - **Acceptance** — one checkbox per criterion, each with how it is checked: `— test: name`, `— check: \`cmd\``, `— manual: how`, or `— review: what`. This is the map from request to evidence. Any triggered `design-lenses.md` risk that matters to correctness becomes an acceptance/evidence case, not extra prose.
@@ -26,6 +26,8 @@ Sections, in order. Quick changes need only **Why**, **What**, and **Acceptance*
 
 ## Route the audit into existing artifacts
 <!-- keelson: id=plan.assumption-routing | without: clarification creates a new diary document, or critical assumptions stay only in chat and disappear across sessions | sunset: never -->
+
+Follow the continuity rules in `interview.md`: keep the original request, interview answers and delivery in the same change. Where a decision tree exists, reference relevant decision IDs in acceptance and related slices. Keep the basis once in `decisions.json`, with concrete behavior in acceptance and deltas; do not copy the whole discussion.
 
 The assumption audit is conversational scratch, not another permanent document. Persist only what changes future work:
 
@@ -99,7 +101,7 @@ Floors from `config.yaml → effort`: reviewers are never below `standard`; plan
 ## When requirements change mid-way
 <!-- keelson: id=plan.requirement-change | without: "ok" in chat is the only record; the plan, acceptance, and decisions still describe the old requirement | sunset: never -->
 
-Update `change.md` (What, Acceptance, Decisions), the delta spec, and the affected slice in the same turn the owner changes their mind. If the change is now a different change, `keelson cancel` the old one with a reason and start fresh.
+When a premise changes, follow `interview.md` to inspect dependencies and reopen affected decisions while retaining unrelated answers; the CLI does not automatically reopen descendants or rewrite prose. Update `change.md` (What, Acceptance, Decisions), the delta spec, and the affected slice in the same turn the owner changes their mind. If the change is now a different change, `keelson cancel` the old one with a reason and start fresh.
 
 ## ledger.md
 

@@ -12,11 +12,11 @@
 ## change.md
 <!-- keelson: id=plan.change-md | without: 变更的理由和被否决的备选只存在于聊天里，然后丢失 | sunset: never -->
 
-各段按顺序如下。quick 变更只需要 **Why**、**What** 和 **Acceptance**。
+各段按顺序如下。quick 变更只需要 **What**、**Why** 和 **Acceptance**。
 
-- **Why** — 用 1 到 3 句话写问题或机会。去掉方案也应能独立成立。
-- **What** — 变更的要点列表。以 **BREAKING** 开头的条目标记破坏性变更；它需要一个 **Rollout** 段（兼容窗口、迁移、回滚），`keelson land` 会检查。
-- **How** — 技术方案，写评审者想知道的部分。不是任务清单。
+- **What** — 先写用户可观察的结果与非目标，再列变更要点。以 **BREAKING** 开头的条目标记破坏性变更；它需要一个 **Rollout** 段（兼容窗口、迁移、回滚），`keelson land` 会检查。
+- **Why** — 用 1 到 3 句话写谁在什么情境下遇到什么问题。去掉方案也应能独立成立。
+- **How** — 技术方案、下一个有界动作及其结果；详细步骤链接 `tasks.md`。
 - **Alternatives** — 只有真正存在重要分叉时才写。记录最强的真实备选以及它为什么输。如果项目已有清晰惯例、根本没有真实分叉，就写 `follows <existing pattern>` 并指出依据，不要为了模板硬造两个选项。
 - **Impact** — 你靠阅读发现的，而不是 diff 的文件列表。见 `context.md`。
 - **Acceptance** — 每条验收标准一个复选框，各自写明怎么检查：`— test: name`、`— check: \`cmd\``、`— manual: how` 或 `— review: what`。这是从请求到证据的映射。`design-lenses.md` 触发且真正影响正确性的风险，要变成 acceptance/evidence 场景，而不是多写一篇散文。
@@ -26,6 +26,8 @@
 
 ## 把审计结果路由到已有工件
 <!-- keelson: id=plan.assumption-routing | without: clarification creates a new diary document, or critical assumptions stay only in chat and disappear across sessions | sunset: never -->
+
+按 `interview.md` 的贯通规则，将原始请求、访谈答案和后续交付保留在同一个 change。决策树存在时，验收与相关切片引用相应的决定 ID；理由在 `decisions.json` 中保留一次，具体行为写入验收与 delta，避免重复抄写。
 
 假设审计只是对话中的临时工作区，不再新建一份永久文档。只有会影响未来工作的内容才沉淀：
 
@@ -99,7 +101,7 @@ Delivers: every access path refuses a revoked or expired link
 ## 需求中途变化时
 <!-- keelson: id=plan.requirement-change | without: 聊天里的一句"好的"是唯一记录；计划、验收和决策仍然描述旧需求 | sunset: never -->
 
-负责人改主意的同一轮里，更新 `change.md`（What、Acceptance、Decisions）、delta spec 和受影响的切片。如果它已经变成另一个变更，用 `keelson cancel` 带理由取消旧的，重新开始。
+前提改变时，按 `interview.md` 检查依赖关系并重开受影响的决定，保留无关答案；CLI 不会自动重开后代或重写正文。负责人改主意的同一轮里，更新 `change.md`（What、Acceptance、Decisions）、delta spec 和受影响的切片。如果它已经变成另一个变更，用 `keelson cancel` 带理由取消旧的，重新开始。
 
 ## ledger.md
 

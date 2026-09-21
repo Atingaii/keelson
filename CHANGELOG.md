@@ -2,6 +2,17 @@
 
 Notable changes to Keelson, organized by version.
 
+## [0.5.1] - 2026-09-21
+
+### Changed
+
+- Ground automatic discovery in the user’s actual purpose, distinguish goals from proposed mechanisms, and adapt question rounds to consequential unresolved decisions without a fixed quota.
+- Carry answers through the same change into acceptance, implementation and independent review; explicitly revisit affected downstream choices when a premise changes.
+
+- Automatically apply readable-memory guidance when agents create or reconcile project documents: useful state first, bounded actions, small groups and links to complete detail.
+- Update both language mirrors of change, task, current-state and handoff templates; first-contact notes now surface the next action early and honor the selected language.
+- Preserve full acceptance, decision frontiers and signed evidence while reducing reading load; existing project facts survive integration updates.
+
 ## [0.5.0] - 2026-09-21
 
 ### Added

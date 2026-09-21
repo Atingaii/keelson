@@ -2,6 +2,8 @@
 
 落地一个变更并不是它的终点。两道工序让项目知识保持真实且精简：回写把新的稳定事实写回当前真相，压缩把不再属于那里的东西移走。它们都是 RECONCILE 中 Agent 的内部职责，不是所有者需要主动请求的 housekeeping；`keelson doctor` 只保留为诊断视图。
 
+更新供人阅读的文档时应用 `writing.md`：先表达当前含义，未完成工作给出具体下一步，完整细节放在其所属文件。原始签名记录与证据保持原样。
+
 ## 回写：每个新事实去哪里？
 <!-- keelson: id=reconcile.route | without: 变更产生的事实留在 change.md 和聊天里；specs、rules 和术语表描述的还是上个季度的系统 | sunset: never -->
 
@@ -51,7 +53,7 @@
 - **Rules** —— 按真实路径/作用域拆分并更新 `rules/index.md`；合并重复规则，能确定性检查的散文规则改为 fitness check。单条 rule 仍过宽时，自动重写成保留语义的最小不变量。
 - **NOW / INTENT** —— 永远不拆分，自动重写成短小的当前状态；历史留给 git。
 - **ADR / decisions** —— 项目使用 `refs.decisions` 时，一个长期决策一个 ADR；目录可以持续增加，但不要在每个会话全量注入 ADR。capability 局部决策自动拆成 `decisions/*.md`。
-- **Runtime** —— session pointer 和 evidence log 都是缓存；Keelson 会在正常命令中顺手回收旧数据。
+- **Runtime** —— 清理符合回收条件的本机会话与临时运行缓存；变更目录和归档中的签名记录、公开密钥及 evidence log 是持久证据，不做摘要替换或缓存清理。
 
 只有压缩会改变产品语义、授权、兼容性或其他真正属于所有者的决策时才询问用户。移动文件、更新索引、去重、删除历史叙述和缓存清理都属于内部维护，静默完成。
 

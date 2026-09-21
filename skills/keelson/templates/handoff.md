@@ -6,7 +6,12 @@ by: {{by}}
 
 # Handoff — {{name}}
 
-A current-state summary for whoever continues, human or agent. Overwrite it; do not append a diary.
+Current state: … (what works and what remains; link the owning change or evidence for detail)
+
+Name one bounded action for the next executor and how to check it. If complete, say so without inventing more work.
+
+## Next step
+…
 
 ## Goal and confirmed decisions
 …
@@ -19,9 +24,6 @@ A current-state summary for whoever continues, human or agent. Overwrite it; do 
 
 ## Ruled out
 - … (assumptions or approaches rejected, with the evidence)
-
-## Next step
-…
 
 ## Verification
 - last `Verify:` … (command, exit code, tree); what has not been checked yet

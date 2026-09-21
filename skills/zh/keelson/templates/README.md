@@ -58,3 +58,5 @@ Agent 从 `keelson guide workflow` 和 `keelson guide` 开始，再按需读取�
 ## 人类阅读原则
 
 优先写现在时的当前真相。Keelson 会让高频文件保持有界、自动分片大型 spec，并把内部压缩任务交给 Agent。人不需要执行 housekeeping 命令，也不需要理解底层存储布局才能继续工作。
+
+文档先呈现当前事实、结果或下一步，细节链接到其所属文件。Agent 创建与更新时自动读取 `keelson guide writing`；完整需求、未决决定及原始验证证据始终保留。

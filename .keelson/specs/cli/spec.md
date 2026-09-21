@@ -101,14 +101,19 @@ Check --record SHALL bind full code and acceptance-input fingerprints, exact com
 - cli: Ordinary requests automatically activate applicable discovery, design and delivery guidance. User wording need not name a skill or workflow mode; task consequences determine interview depth.
 - cli: Automatic routing preserves existing authorization and settled decisions. It guides the host agent; instruction delivery is not proof of equivalent agent effectiveness.
 - cli: Execution enforcement is host-specific: Claude Code and CodeBuddy file tools and Codex apply_patch have native gates when their hooks are enabled and trusted; other hosts follow shared CLI guidance. Neither context injection nor a completed registered graph proves exhaustive discovery or independent-review effectiveness.
+
+- cli: Purpose discovery asks only consequential unresolved owner choices and carries their answers through acceptance, implementation and review on the same change; semantic dependency revisions remain an explicit agent responsibility.
 ## Requirement: Durable decision frontier
 
-Decision records SHALL preserve ownership, dependencies, settlement basis and reopening history. The frontier SHALL expose at most three independent ready user-owned questions and separate agent/reality investigations.
+Decision records SHALL preserve ownership, dependencies, settlement basis and reopening history. By default the frontier SHALL expose at most three independent ready user-owned questions, preserve additional ready decisions in `remaining`, and separate agent/reality investigations. `--all` SHALL expose the complete ready user frontier; `--limit 1` SHALL support a single consequential gap. A display limit SHALL NOT imply that undisplayed decisions are settled.
 
 ### Scenario: Settled question
 - WHEN an agent resumes after D17 was settled
 - THEN D17 remains answered until explicitly reopened with a reason
 
+### Scenario: Complex ready frontier
+- WHEN more than three user decisions are ready and the agent requests `--all`
+- THEN every ready user decision is returned in the same frontier
 ## Requirement: Bounded execution and serialized reconciliation
 
 Checks SHALL use closed stdin, finite deadlines and output caps, and record every completed result. Landing and cancellation SHALL not race active checks.
@@ -212,3 +217,23 @@ Initialization and update SHALL support Claude Code, Codex and CodeBuddy through
 ### Scenario: Multiple hosts in one repository
 - WHEN an owner initializes all three hosts and later disables hooks
 - THEN each host has its own discovery entry and protocol adapter, and disabling removes only Keelson registrations while preserving project knowledge and user hooks
+
+## Requirement: Purpose discovery continues into delivery
+
+Packaged interview guidance SHALL distinguish the requested mechanism from the desired observable outcome, investigate facts before asking and ask only material unresolved owner decisions in dependency order. It SHALL use a single question for one consequential gap, or the complete relevant ready frontier for connected uncertainty, without a fixed question quota. Questions SHALL use concrete outcomes, a grounded recommendation and its main trade-off.
+
+### Scenario: Requested solution has an uncertain purpose
+- WHEN the owner requests a mechanism but evidence does not establish the underlying problem or success criterion
+- THEN guidance investigates available facts, uses a concrete scenario or discriminating question to clarify the desired outcome, and compares the simplest sufficient solution without overriding an explicit constraint
+
+### Scenario: Settled interview drives implementation and review
+- WHEN the current request authorizes changes and material decisions are settled
+- THEN guidance records their basis on the same active change, maps relevant decision IDs to scope, acceptance and implementation slices, loads implementation context after start, and directs independent review to verify the original purpose and decisions
+
+### Scenario: Upstream purpose changes
+- WHEN a later answer changes a premise used by settled downstream work
+- THEN guidance explains and reopens affected decisions, updates scope, acceptance, deltas and tasks, retains unrelated answers and obtains a fresh start receipt before dependent edits
+
+### Scenario: Clear small request
+- WHEN the outcome, acceptance and constraints are already established
+- THEN guidance proceeds without extra questions or a mandatory interview document

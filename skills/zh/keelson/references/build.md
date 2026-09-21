@@ -9,6 +9,8 @@
 
 编辑前读取 `keelson context --phase implement`。它包含当前规范、delta、相关规则、决定和检查命令；`context.json` 可为 `implement`/`check` 阶段额外声明项目内相对路径。新涉及的路径应纳入上下文路由。spec 变更将用户原始要求和实质补充保留在 `request.md`，让评审者看到真正的目标，不用实现总结替代。
 
+开始每个切片前，核对其可观察结果与已确认目的、相关决定 ID 和验收条件；缺少映射时先修正文档。实现发现新事实推翻前提时，回到同一变更重开受影响决定、更新计划并重新 start，不能沿旧答案继续。
+
 Claude Code、Codex 和 CodeBuddy 提供受支持文件工具的原生门禁与会话上下文 hook；Codex 需要宿主信任 hooks。shell/MCP 写入及其他宿主由 Agent 遵循同一协议。该机制不是沙箱，也不能证明用户已经授权。
 
 

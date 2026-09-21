@@ -58,3 +58,5 @@ Temporary change files fold or archive when work lands. Empty optional artifacts
 ## Human reading rule
 
 Prefer present-tense current truth. Keelson keeps high-frequency files bounded, auto-shards large specs, and routes internal compaction work to the agent. A person should not need to run housekeeping commands or understand the storage layout to keep working.
+
+Documents lead with their current fact, outcome or next action, with links to the owning detail. Agents automatically load `keelson guide writing` when creating or updating them; full requirements, unresolved decisions and original verification evidence remain available.

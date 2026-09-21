@@ -21,6 +21,8 @@ Checks in `config.yaml → check` may be plain strings or `{name, command, kind}
 
 Go back to `change.md → Acceptance` and to the original request, not to your own summary of it. For each acceptance item, name the test, command, manual check, or review that covers it, and tick it only when that check has actually run. For each requirement or scenario in the delta spec, name the covering check. Anything uncovered is either checked now or written down as a gap under `NOW.md → Blocked / uncertain`. Then read the diff against the matched rules and the affected specs; a rule violation is a defect even when every test is green.
 
+Trace the original purpose → confirmed decisions → acceptance behavior → actual evidence, including respect for non-goals. A screen existing or a check passing does not establish the purpose: if the owner needs to discover exceptions, demonstrate that exceptions can be found, not just that a page opens. After an upstream answer changes, verify that related acceptance and slices changed with it.
+
 For a bug fix, keep the negative check: with the fix reverted, the regression test must fail. A test that passes both ways proves nothing.
 
 For each risk lens that actually triggered during shaping, verify the corresponding obligation rather than re-running a generic checklist: security needs the relevant negative/abuse case, concurrency needs duplicate/order/failure behavior, compatibility needs old-consumer or migration coverage, accessibility needs the affected interaction check, and performance needs a measured target/baseline. If the repository already proves it, reuse that evidence; do not duplicate it.

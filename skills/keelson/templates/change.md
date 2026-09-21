@@ -6,16 +6,16 @@ status: clarifying
 
 # {{title}}
 
-## Why
-…
-
 ## What
 - Outcome: …
 - Non-goal: …
 - … (a bullet that starts with the word BREAKING in bold marks a breaking change and needs a Rollout section)
 
+## Why
+… (who encounters what problem in which situation; independent of the proposed solution)
+
 ## How
-…
+… (next bounded action, affected files and observable result; link tasks.md when a detailed plan is needed)
 
 ## Impact
 - … (callers, other entry points, data, permissions, compatibility; `keelson impact <files>` gives hints, reading gives the answer)

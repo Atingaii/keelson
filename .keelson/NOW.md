@@ -1,15 +1,19 @@
 # Now
 
-The current implementation provides local signed check records, durable decisions, session focus and lightweight host integration. Completion requires fresh evidence tied to the code and acceptance inputs.
+Version 0.5.1 connects purpose discovery to decisions, acceptance, implementation and independent review in the same change. Current-state documents now surface the next action and link complete supporting evidence. The package passed local installation and source-byte comparison; configured lint and all 174 tests passed.
 
-Frontend design now has bilingual action briefs and focused guidance for review, visual craft, interaction, adaptation and browser iteration. CLI help and installed reference discovery are concise; product documentation is consolidated. Repository branches are limited to main. Legacy migration fixtures are preserved as exact compatibility inputs.
+## Next
+Publish `@zyaiting/keelson@0.5.1` from the verified archive after the landing commit is pushed. npm identity currently needs fresh authentication (`whoami` returned 401).
 
-Ordinary requests now route automatically through discovery, engineering, UI/UX, implementation, verification and project memory. Discovery depth follows unresolved decisions and their consequences; no special interview wording or mode is required. Both READMEs omit the demo GIFs. Version 0.5.0 adds agent-operated start gates, declared implement/check context, complete decision rounds and safe runtime upgrades. Claude Code and CodeBuddy file tools and Codex apply_patch enforce the start receipt when hooks are active. All three restore workflow context; Codex requires host hook trust. Other hosts use CLI guidance.
+## Current capabilities
+- Ordinary requests automatically route through discovery, engineering, UI/UX, implementation, verification and project memory. Clear work proceeds directly; consequential uncertainty determines question depth. Revised premises require reviewing affected decisions.
+- Start receipts gate supported file edits, phase packs declare implement/check context, and signed verification records bind code and acceptance inputs. Complete ready frontiers and settled answers survive session changes.
+- Bilingual frontend guidance covers review, visual craft, interaction, adaptation and browser iteration. Default installation stays small; guidance copies require `--vendor`. Integration updates preserve user facts, and migration fixtures remain exact compatibility inputs.
 
 ## Verification boundaries
-Codex session identity has been exercised locally. Other hosts have declared adapter capabilities and fixture coverage; live host behavior must be verified in the host. Design guidance is executed by the coding agent using the project's available browser tools. A printed brief is not a completed visual review.
+Codex session identity has been exercised locally. Claude Code, Codex and CodeBuddy have adapter fixture coverage; live behavior must be verified in the host. Hooks require host support and trust, including Codex hook approval. Shell/MCP writers follow agent guidance. A loaded instruction or printed design brief is not proof of an effective interview, completed implementation or visual review.
 
 ## Distribution
-Public distribution uses @zyaiting/keelson; version 0.4.0 established anonymous installation, initialization, packaged guidance and integration update. Both READMEs explain npm installation and connect everyday development problems to the engineering practices Keelson applies.
+The source version is in `package.json`; public availability is verified independently on npm. Both READMEs document npm usage and the engineering principles behind the workflow. Repository branches are limited to main.
 
-The owner requests a new npm version for each completed update, including README changes, with latest verified against the public registry. The current source version is in package.json; npm availability must be checked independently. Releases are manual: do not push a matching Git tag because the existing tag workflow would attempt duplicate publication. Git-derived release status therefore differs from npm availability. Keep remote CI skipped as requested. Commits use Atingaii's identity; .mailmap normalizes the earlier Ubuntu identity without rewriting shared history.
+The owner requests npm latest for every completed update. Releases are manual: do not push a matching Git tag, which would trigger duplicate publication; Git-derived release status therefore differs from npm availability. Skip remote CI as requested. Commits use Atingaii; `.mailmap` normalizes the earlier Ubuntu identity without rewriting shared history.

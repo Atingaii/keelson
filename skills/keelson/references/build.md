@@ -9,6 +9,8 @@ For modifying work, create the smallest useful change, record concrete acceptanc
 
 Read `keelson context --phase implement` before editing. The pack contains current and delta specs, relevant rules, decisions and checks; `context.json` can declare additional project-relative files per `implement`/`check` phase. Add newly affected paths to context routing. For spec work, retain the owner's original request and material follow-ups in `request.md` so the reviewer sees the actual requested outcome. Do not replace it with your implementation summary.
 
+Before each slice, compare its observable result with the confirmed purpose, relevant decision IDs and acceptance. Repair a missing mapping first. If implementation reveals facts that overturn a premise, reopen affected decisions in this same change, update the plan and start again before continuing dependent work.
+
 Claude Code, Codex and CodeBuddy have native gates for supported file-editing tools and hooks for session context. Codex requires trusted hooks. Shell/MCP writers and other hosts must follow this same protocol through the agent. This is not a sandbox or proof of user authorization.
 
 

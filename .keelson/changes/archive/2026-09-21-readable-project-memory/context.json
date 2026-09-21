@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "implement": [
+    ".keelson/INTENT.md",
+    ".keelson/changes/readable-project-memory/request.md",
+    ".keelson/changes/readable-project-memory/change.md",
+    ".keelson/specs/project-layout/spec.md",
+    ".keelson/rules/general.md",
+    ".keelson/rules/src.md",
+    ".keelson/rules/skills.md"
+  ],
+  "check": [
+    ".keelson/INTENT.md",
+    ".keelson/changes/readable-project-memory/request.md",
+    ".keelson/changes/readable-project-memory/change.md",
+    ".keelson/specs/project-layout/spec.md",
+    ".keelson/rules/general.md",
+    ".keelson/rules/src.md",
+    ".keelson/rules/skills.md"
+  ]
+}

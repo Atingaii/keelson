@@ -140,6 +140,7 @@ The agent SHALL be able to find every rule that applies to a path from `rules/in
 - project-layout: signed changes always archive, including logs and public keys; disposable unsigned scaffolding may fold.
 - project-layout: existing architecture documents and ADRs remain authoritative through references.
 
+- project-layout: Human-facing project memory uses small current-state views with links to complete contracts and evidence; concise presentation never truncates durable information.
 ## Requirement: Markdown and path integrity
 
 Recognized requirement edits SHALL preserve frontmatter, fenced examples and unknown sections. Sharding SHALL avoid deleting unowned files or following paths outside the capability.
@@ -147,3 +148,15 @@ Recognized requirement edits SHALL preserve frontmatter, fenced examples and unk
 ### Scenario: Unowned content
 - WHEN a requirement changes in a document with custom sections
 - THEN custom content remains; if safe sharding is unavailable, budget validation reports the issue without discarding content
+
+## Requirement: Readable durable project memory
+
+Packaged guidance SHALL automatically shape human-facing project memory around its current purpose, state and actionable continuation, while retaining complete requirements, owner decisions and original verification evidence. Both language/profile variants SHALL provide the same behavior. Existing project facts SHALL survive integration updates.
+
+### Scenario: Returning to an unfinished change
+- WHEN an agent writes or refreshes NOW, tasks or a handoff
+- THEN it identifies the current state and a concrete next action or blocker, links supporting detail and does not invent work after completion
+
+### Scenario: Concise presentation of complex work
+- WHEN more than five requirements or ready owner decisions matter
+- THEN guidance groups them while preserving all relevant items and the complete ready frontier

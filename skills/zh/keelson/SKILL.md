@@ -35,6 +35,7 @@ description: 面向含 .keelson/ 目录项目的工程工作流。普通的想�
 - 只给工作本身定大小：trivial 走最小 quick 变更；quick 轻量 change；spec 先写验收、行为 delta 和计划，在用户已有授权内推进；只澄清尚未解决的所有者决策。
 - 修改产品文件前，自动对当前变更运行 `keelson start`，再加载 `keelson context --phase implement`；出现新关键决定后，确定答案再重新启动。用户无需运行这些命令。
 - 工件是信息容器，不是仪式。不要创建空 roadmap/glossary/rule/task/ledger/handoff/spec。
+- 创建或更新项目记忆时，自动加载 `writing.md`：先呈现有用的状态或结果，写清具体下一步，完整契约与证据保持可查。
 - `tasks.md` 只是执行计划，不拥有“完成”判定权。只要 acceptance 与新鲜证据已经满足，未勾选的旧计划不能覆盖这个事实；实现路径变化时应重写或删除过时任务。
 - 知识维护属于 Keelson 内部职责。RECONCILE 时自动重写、拆分、去重超压的长期文档，大 spec 由 `land` 自动分片；除非涉及产品语义决策，否则绝不要求用户维护 Keelson。
 - 始终区分**代码现实、已确认真相、计划变更**；未决问题只阻塞依赖它的切片。

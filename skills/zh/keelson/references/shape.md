@@ -10,6 +10,8 @@
 
 先读能回答问题的东西：代码、测试、`INTENT.md`、`ROADMAP.md`、specs、命中的 `rules/`，以及 `config.yaml` 里 `refs` 列出的文档。spec 的 `Decisions` 段或 `INTENT.md` 里已经记录的决策就是定论，不要再问。只有关于意图、优先级和取舍的问题才属于用户。
 
+
+按 `interview.md` 先区分用户想获得的结果与提出的实现手段；用仓库事实和具体使用情境判断目的是否已明确，只有会改变当前方案的缺口才追问。
 ## 提问前先做假设审计
 <!-- keelson: id=shape.assumption-audit | without: the agent solves a plausible but wrong problem, attributes invented beliefs to the owner, or asks a questionnaire before reading the repository | sunset: never -->
 

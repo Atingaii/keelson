@@ -2,6 +2,8 @@
 
 Landing a change is not the end of it. Two passes keep the project's knowledge true and small: reconcile writes new stable facts back into current truth, and compact removes what no longer belongs there. These are normal internal Agent duties during RECONCILE, not housekeeping the owner has to request; `keelson doctor` remains a diagnostic view.
 
+Apply `writing.md` to each human-facing document you update: current meaning first, a concrete next action for unfinished work, complete detail in its owning file. Raw signed records and evidence are retained unchanged.
+
 ## Reconcile: where does each new fact go?
 <!-- keelson: id=reconcile.route | without: the change's facts stay in change.md and chat; the specs, rules, and glossary describe last quarter's system | sunset: never -->
 
@@ -51,7 +53,7 @@ Treat knowledge shape as infrastructure, not user work. When `keelson context` e
 - **Rules** — split by actual path/scope and update `rules/index.md`; merge duplicate rules and replace prose with a fitness check when deterministic. If a single rule remains too broad, rewrite it automatically into the smallest invariant that preserves meaning.
 - **NOW / INTENT** — never shard. Rewrite them automatically as short current-state views; history stays in git.
 - **ADRs / decisions** — one durable decision per ADR when the project uses `refs.decisions`; the directory may grow, but do not inject every ADR into every session. Capability-local decisions are automatically sharded into `decisions/*.md`.
-- **Runtime** — session pointers and evidence logs are caches. Keelson garbage-collects old entries opportunistically from normal commands.
+- **Runtime** — prune eligible local session and temporary runtime caches. Signed records, public keys and evidence logs in change directories or archives are durable evidence; do not summarize them away or treat them as disposable caches.
 
 Only involve the owner when compaction would change product semantics, authorization, compatibility, or another decision they actually own. File movement, indexing, deduplication, history removal, and cache cleanup are maintenance and happen silently.
 

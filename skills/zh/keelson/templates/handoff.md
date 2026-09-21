@@ -6,7 +6,12 @@ by: {{by}}
 
 # Handoff — {{name}}
 
-给接手的人或代理看的当前状态摘要。整份覆盖；不要追加日记。
+当前状态：…（完成了什么、还差什么；详细依据链接到对应 change 或 evidence）
+
+写一个接手者可以执行的有界动作，并说明完成检查；已完成则明确说明，不编造新任务。
+
+## Next step
+…
 
 ## Goal and confirmed decisions
 …
@@ -19,9 +24,6 @@ by: {{by}}
 
 ## Ruled out
 - …（已否决的假设或方案，附证据）
-
-## Next step
-…
 
 ## Verification
 - last `Verify:` …（命令、退出码、tree）；还没检查什么

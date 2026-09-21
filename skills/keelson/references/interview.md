@@ -15,6 +15,15 @@ Trigger on missing decisions and consequences, not keywords or task size alone. 
 
 Discovery does not expand authorization: an exploratory conversation stays read-only, while an authorized change resumes implementation as soon as its relevant decisions are resolved. An explicit request for broader review can widen the review boundary, but is never required to activate discovery.
 
+## Find the purpose before choosing the mechanism
+<!-- keelson: id=interview.purpose | without: the interview optimizes the requested feature while the underlying user problem and success criterion remain untested | sunset: never -->
+
+Start from evidence: who is trying to do what, in which situation, what prevents it today, what observable improvement would count as success, and which constraints are fixed? Fill what the request and repository already establish. These are reasoning prompts, not five mandatory questions.
+
+Separate an explicit requirement from a proposed means. “Add a dashboard” may serve faster decisions, exception detection or reporting; those imply different products. When the purpose is unclear, ask for one concrete recent situation or a comparison that distinguishes these outcomes. Check the causal claim: would the simpler existing flow achieve the same result, and what would still be missing if the proposed mechanism were removed? Treat your interpretation as a hypothesis with a source, not the owner's hidden intent. Respect a mechanism the owner explicitly requires; explain a conflict before proposing a change.
+
+Use engineering principles only where they change a decision: an observable acceptance scenario for success, a domain term or invariant for boundaries, measurement for a performance claim, reversibility for commitment, and the smallest end-to-end slice to test the chosen direction. Do not turn this into a theory lecture, a technology questionnaire or an endless sequence of “why?” questions. Stop pursuing the cause when the next design decision and its evidence path are clear.
+
 ## Question protocol: earn the interruption
 <!-- keelson: id=interview.protocol | without: the agent asks unnecessary questions, hands implementation choices to the owner, or interrupts without knowing what the answer changes | sunset: never -->
 
@@ -41,6 +50,8 @@ A blindspot does **not** automatically become a question. Route it to an existin
 
 Read existing decisions before asking. When the current request authorizes project writes, use `ask add`, `settle`, `assume`, and `frontier` to persist ownership, dependencies, answers and basis on its active change. Never repeat a settled answer without new evidence and `ask reopen <id> --reason`. During read-only exploration, even if an active change exists, keep new answers in the conversation; transfer durable results only when implementation or persistence is authorized.
 
+Build the ready frontier from consequential unresolved choices, not from every possible question. Combine duplicate formulations of the same decision, resolve facts first, and defer genuinely independent future work with its unresolved state preserved. If a round feels large, inspect for an unresolved upstream purpose that would make several downstream questions premature. Keep distinct material choices separate. There is no minimum or maximum interview length: ask zero when ready, one for a single gap, and the relevant ready layer when choices interact. Do not trade away an unresolved permission, acceptance or commitment just to keep the round short.
+
 For a simple gap, ask one highest-value ready owner decision (`ask frontier --limit 1`). For connected uncertainty, ask the **whole ready owner frontier in one round** (`ask frontier --all`), grouped by topic with a recommendation and reason for each question. If the host caps questions, bundle them in one supported text question or deliver same-round batches; do not move to dependent questions until the round's prerequisites are settled. A recommendation is not an answer: wait for the owner's response unless existing authorization explicitly delegates the choice. Repository/reality-owned facts are investigated, never put to the owner. Irreversible decisions require settlement, not assumptions. Prefer a concrete scenario and recognition over recall:
 
 - describe the situation in the owner’s language;
@@ -59,22 +70,15 @@ Do not make the owner remember earlier context to answer. Briefly restate the fa
 ## Make the question scannable
 <!-- keelson: id=interview.presentation | without: the right question is buried in prose, recommendations are mistaken for requirements, or the owner cannot see the choices at a glance | sunset: never -->
 
-Keep the owner-visible interaction compact. Use this shape when options are useful:
+Keep the owner-visible interaction compact. Start a round with the current understanding and what the answers unlock. Number questions so the owner can answer briefly; in a single-question round, a number is optional.
 
-**Decision:** <one plain-language question>
+**Decision:** <one plain-language question tied to the current situation>
+- A. <observable outcome>; B. <meaningfully different outcome>.
+- **Recommended:** A, because <decisive reason>; <main trade-off when material>.
 
-- A. <observable outcome>  
-  **Engineering:** <data model / permission / API / operational consequence if material>
-- B. <observable outcome>  
-  **Engineering:** <material implementation consequence>
-- C. <observable outcome, only if genuinely distinct>  
-  **Engineering:** <material implementation consequence>
-- Not sure — use your recommendation
+Add another option only when it changes the result; accept free text or an explicit “use your recommendation” when legitimate. A neutral example or short open question is better when you lack grounds to recommend. “I don't know” alone is not delegation. **Implementation direction:** add one sentence only when a concrete engineering consequence helps the owner choose; do not repeat the same explanation under every option.
 
-**Recommended:** <choice>, because <one decisive reason>.  
-**Implementation direction:** <reuse the current stack; name the likely concrete components only when they are supported by the repository or genuinely differ by option>.
-
-Add a one-sentence “Why now” only when the relevance is not obvious. Do not expose the internal lens checklist, scoring, or chain of reasoning. If the owner asks for an explanation, answer it in normal chat before asking again.
+The owner may reply “agree with the recommendations except 2…”. Apply that to the explicitly presented choices only; an unanswered item stays open. Do not expose internal lens checklists or reasoning. If the owner asks for an explanation, answer it before asking again. Use `writing.md` for the durable result, without imposing a five-question cap on the ready frontier.
 
 ## Show enough implementation consequence
 <!-- keelson: id=interview.implementation | without: the owner understands the product choice but cannot tell what it means for the actual system, or technology names are presented without architectural context | sunset: never -->
@@ -122,6 +126,25 @@ Treat uncertainty as information:
 - **User asks for explanation instead of answering** → explain first in normal chat; do not immediately re-ask the same card/question.
 
 Never turn “I don’t know which technology” into a technology poll. Translate it into the product property or operational constraint that would make the technology choice matter.
+
+## Carry answers into the same delivery flow
+<!-- keelson: id=interview.continuity | without: discovery ends as a chat summary while implementation and review proceed from a different goal or lose the owner's decisions | sunset: never -->
+
+Within write authorization, keep follow-ups on the same change. Preserve the original request and material additions in `request.md`; record structured choices with stable IDs, dependencies, answers and basis in `decisions.json`. No separate interview report or user-operated handoff is required. For a short clear change, its existing What/Acceptance/Decisions fields suffice; do not manufacture questions to populate a tree.
+
+Map each consequential answer to the artifact it changes:
+
+| Answer establishes | Write or update |
+|---|---|
+| Actual problem, actor, desired improvement | `change.md → Why` and `What`; refine `INTENT.md` only if it changes a project-wide fact |
+| Scope, non-goal or rejected alternative | `What` and `Decisions`; explicitly deferred work goes to the tracker/roadmap |
+| Observable behavior or invariant | `Acceptance` and the relevant delta scenario; cite the decision ID where useful |
+| Engineering consequence | `How`, the affected task/slice and its verification path |
+| Unresolved premise or changed answer | The existing decision and affected dependent decisions, open questions and acceptance; explain each reopening |
+
+Use short references such as “D-visibility → owner-only access scenario → create/list slice → access check”, not a duplicate traceability document. Store long supporting evidence once and declare its path in `context.json` for implement/check when needed. Before starting, compare the recorded outcome with the original request, check material branches and the full registered frontier, then run `start` and load `context --phase implement` automatically. A planning change invalidates the old receipt.
+
+If an upstream answer changes, inspect every dependent settled choice; reopen the affected ones with a reason and update acceptance, deltas and tasks before dependent edits. The CLI does not automatically reopen descendant decisions or rewrite prose. Preserve unrelated answers. Independent review loads `context --phase check` and verifies purpose → decision → behavior → evidence, including excluded scope. After landing, promote stable behavior and rationale through `reconcile.md`; future conversations reuse them.
 
 ## Read back, persist the result, and stop
 <!-- keelson: id=interview.stop | without: answers stay trapped in chat, the same decision is asked again, or ordinary work becomes an endless interview | sunset: never -->

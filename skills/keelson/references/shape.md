@@ -10,6 +10,8 @@ For interface work, load `frontend.md`; visual and interaction acceptance follow
 
 Read what answers the question: the code, tests, `INTENT.md`, `ROADMAP.md`, the specs, the matched `rules/`, and the documents listed under `refs` in `config.yaml`. A decision already recorded in a spec's `Decisions` section or in `INTENT.md` is settled; do not ask it again. Only questions about intent, priorities, and trade-offs belong to the user.
 
+Use `interview.md` to separate the desired outcome from the proposed mechanism. Check repository evidence and a concrete usage situation to establish whether the purpose is already clear; ask only about gaps that change the current path.
+
 ## Assumption audit before questions
 <!-- keelson: id=shape.assumption-audit | without: the agent solves a plausible but wrong problem, attributes invented beliefs to the owner, or asks a questionnaire before reading the repository | sunset: never -->
 

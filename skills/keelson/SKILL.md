@@ -35,6 +35,7 @@ Route from the requested outcome and repository evidence, not special vocabulary
 - Size only the work: trivial = minimal quick change; quick = lightweight change; spec = acceptance + behavior delta + plan within existing user authorization; clarify only unresolved owner choices.
 - Before product edits, automatically run `keelson start` for the focused change, then load `keelson context --phase implement`; after new material decisions, restart only once they are settled. Users need not run these commands.
 - Artifacts are information containers, not ceremony. Do not create empty roadmap/glossary/rule/task/ledger/handoff/spec files.
+- When creating or updating project memory, load `writing.md`: put the useful state/outcome first, make the next action concrete, and keep full contracts and evidence accessible.
 - `tasks.md` is an execution plan, not completion authority. Unchecked plan items never override satisfied acceptance + fresh evidence; reconcile or remove stale tasks when the implementation path changes.
 - Knowledge maintenance is internal. During RECONCILE, automatically rewrite/split/dedupe pressured durable docs and let `land` auto-shard large specs; never ask the owner to maintain Keelson unless a product-semantic decision is required.
 - Keep **code reality**, **confirmed truth**, and **planned change** distinct. Open questions block only dependent slices.

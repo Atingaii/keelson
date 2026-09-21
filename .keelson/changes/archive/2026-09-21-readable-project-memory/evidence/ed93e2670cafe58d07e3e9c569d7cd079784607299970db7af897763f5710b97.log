@@ -1,0 +1,7 @@
+$ npm run lint
+exit 0
+
+
+> @zyaiting/keelson@0.5.1 lint
+> node scripts/check-syntax.js
+

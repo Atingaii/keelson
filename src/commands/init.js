@@ -273,22 +273,16 @@ function hasCode(root) {
 
 function writeOnboardNote(p, project, cfg, existingCode) {
   const refs = Object.entries(cfg.refs ?? {}).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`);
-  const intent = `Draft \`.keelson/INTENT.md\` from what the repository already shows (README, package manifest, directory layout${existingCode ? ', and the code' : ''}): why it exists, its boundaries, hard constraints, and a first Authorizations section. Treat repository-backed facts as established. Do not ask for blanket approval; only ask one owner question if a missing project boundary is load-bearing for the current work.`;
-  const grow = existingCode
-    ? ' Do not inventory the whole repository into specs or rules. As the first real task touches a capability or stable engineering invariant, create only the spec/rule needed to preserve that truth across future sessions.'
-    : '';
-  write(
-    p.now,
-    `# Now
-
-First contact with ${project}: Keelson was just initialised. Project intent will be derived from repository evidence as part of the first real task.
-
-## Context
-Existing documents${refs.length ? ` (${refs.join(', ')})` : ''} are referenced, never copied. INTENT.md may be refined silently when evidence is clear; owner input is needed only for a load-bearing boundary the repository cannot answer.
-
-## Next
-${intent}${grow} Do this before, or together with, the first non-trivial thing the owner asks for. Then rewrite this file to the actual current state.
-`,
-  );
+  const zh = cfg.lang === 'zh';
+  const state = zh
+    ? `First contact：${project} 已初始化。首个实际任务中，Agent 将依据仓库补全项目目的。`
+    : `First contact with ${project}: initialised. The agent will establish project intent during the first real task.`;
+  const next = zh
+    ? `从 README、包配置、目录结构${existingCode ? '和代码' : ''}提取事实，补全 \`.keelson/INTENT.md\` 的目的、边界、硬约束与 Authorizations；随后把本文件更新为实际进度。`
+    : `Use the README, package manifest, directory layout${existingCode ? ' and code' : ''} to fill \`.keelson/INTENT.md\` with purpose, boundaries, hard constraints and Authorizations. Then update this file to the actual progress.`;
+  const context = zh
+    ? `- 在首个非琐碎任务之前或同时完成；由 Agent 执行，无需用户操作工作流。\n- 仓库可证实的事实直接采用；只有影响当前工作的关键边界缺失时才问用户，不重复索取批准。\n- 既有文档${refs.length ? `（${refs.join(', ')}）` : ''}保留原处，用链接引用。\n- specs 和 rules 随实际触及的能力与稳定约束逐步建立，不预先编目整个仓库。`
+    : `- Do this before or alongside the first non-trivial task; the agent operates the workflow.\n- Use established repository facts directly. Ask only about a missing boundary that changes this work; do not request blanket approval.\n- Reference existing documents${refs.length ? ` (${refs.join(', ')})` : ''} in place.\n- Grow specs and rules as real work touches capabilities and stable constraints; do not inventory the whole repository.`;
+  write(p.now, `# Now\n\n${state}\n\n## Next\n${next}\n\n## Context\n${context}\n`);
   ok('.keelson/NOW.md: first-contact task written for the agent (derive project intent; ask only at a load-bearing boundary)');
 }

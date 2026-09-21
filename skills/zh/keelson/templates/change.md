@@ -6,16 +6,16 @@ status: clarifying
 
 # {{title}}
 
-## Why
-…
-
 ## What
 - 结果：…
 - 非目标：…
 - …（以加粗的 BREAKING 开头的条目标记破坏性变更，需要一个 Rollout 段）
 
+## Why
+…（谁在什么情境下遇到什么问题；去掉方案也应成立）
+
 ## How
-…
+…（下一个有界动作、涉及的文件及可观察结果；详细步骤需要时放入 tasks.md）
 
 ## Impact
 - …（调用方、其他入口、数据、权限、兼容性；`keelson impact <files>` 给提示，阅读给答案）

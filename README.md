@@ -73,7 +73,7 @@ To upgrade, run `npm install -g @zyaiting/keelson@latest`, then `keelson update`
 
 **Investigate → Decide → Implement → Independently review → Verify → Preserve knowledge**
 
-After initialization, ordinary requests trigger the relevant workflow automatically: investigate requirements, clarify material choices with recommendations, apply engineering and UI/UX guidance, implement, verify, and preserve the result for later sessions. You do not need to name a skill or manage workflow commands. Clear edits use a minimal change record. A simple gap gets one question; connected uncertainties get the whole ready decision frontier, with recommendations and reasons for each choice. The agent resumes authorized work once those choices are settled.
+After initialization, ordinary requests trigger the relevant workflow automatically: investigate requirements, clarify material choices with recommendations, apply engineering and UI/UX guidance, implement, verify, and preserve the result for later sessions. You do not need to name a skill or manage workflow commands. Clear edits use a minimal change record. A simple gap gets one question; connected uncertainties get the whole ready decision frontier, with recommendations and reasons for each choice. The agent resumes authorized work once those choices are settled. It distinguishes the problem from a proposed solution, then carries confirmed decisions into acceptance, implementation and independent review in the same change.
 
 Before implementation, the agent starts the settled change and loads its declared specs and rules. Review gets a separate context pack built from the request and contracts. Verified changes promote durable decisions into project specs, so later work starts with what the project has learned.
 
@@ -97,6 +97,8 @@ Initialization creates a small foundation. Further documents appear as the work 
 | `.keelson/config.yaml` | Project check commands and workflow configuration. |
 | `.keelson/changes/`, `.keelson/specs/`, `.keelson/rules/` | Changes, behavior contracts, and project rules created as needed. |
 | Host entry points such as `AGENTS.md` | Direct the agent to Keelson. |
+
+Project notes put the current result and next action first, with small task groups and links to supporting detail. Full requirements, decisions and verification evidence stay available.
 
 Guidance comes from the installed package by default. Use `--vendor` when you want to commit a copy alongside your project. See [configuration](https://github.com/Atingaii/keelson/blob/main/docs/configuration.md) for paths and options.
 
