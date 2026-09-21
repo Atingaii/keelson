@@ -1,9 +1,9 @@
 # Now
 
-Version 0.5.2 is implemented and locally verified. Configured lint and all 183 tests passed with a current independent review and signed evidence. Purpose discovery now checks the intended experience before implementation; behavioral changes require acceptance review, and exact delta operations prevent silent replacement or stale requirements. A real Codex + gpt-5.6-luna scenario completed discovery, implementation, fresh-session review and landing; eight external acceptance checks passed.
+Version 0.5.2 is published as npm `latest`. Anonymous installation verified all 143 packaged files against source and confirmed initialization, update and validation for Claude Code, Codex and CodeBuddy. Configured lint and all 183 tests passed with a current independent review and signed evidence. Purpose discovery checks the intended experience before implementation; behavioral changes require acceptance review, and exact delta operations reject silent replacement or missing targets. A real Codex + gpt-5.6-luna scenario completed discovery, implementation, fresh-session review and landing; eight external acceptance checks passed.
 
 ## Next
-The verified 0.5.2 tarball has been submitted to npm and awaits browser authentication. After publication, verify public latest and anonymous installation, then finish the release record. Implementation and signed evidence are retained in [the archived change](changes/archive/2026-09-21-close-validation-gaps/); detailed scenario and installation evidence remain in Git's private task-evidence directory on the release machine.
+This release is complete; no release action remains. Public availability is recorded in [npm version metadata](https://registry.npmjs.org/@zyaiting%2fkeelson/0.5.2). Implementation and signed evidence are retained in [the archived change](changes/archive/2026-09-21-close-validation-gaps/); detailed scenario and anonymous-installation evidence remain in Git's private task-evidence directory on the release machine.
 
 ## Current capabilities
 - Ordinary requests automatically route through discovery, engineering, UI/UX, implementation, verification and project memory. Clear work proceeds directly; consequential uncertainty determines question depth. Revised premises require reviewing affected decisions.
