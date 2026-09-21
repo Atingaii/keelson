@@ -68,7 +68,7 @@ effort:
 | `check` | 自动探测 | `keelson check` 按顺序从项目根目录通过 shell 运行的内容。每个条目是一个命令字符串，或对象 `{name, command, kind}`，其中 `kind` 取 `test`、`lint`、`typecheck`、`build`、`fitness`、`check` 之一。对纯字符串，kind 从命令猜测。首次 init 时从 `package.json` 脚本、`pyproject.toml`、`pytest.ini`、`go.mod` 或 `Cargo.toml` 探测 |
 | `guide` | `false` | 可选教学模式。默认提问本来就使用场景和易懂语言；设为 `true` 后额外解释已落定决定背后的工程概念、约束理由，并在 spec 变更收尾时附一段简短教学说明。`keelson init --guide` 设置它 |
 | `vendor` | `false` | 是否复制指导文件；默认使用 keelson guide 按需读取 |
-| `hooks` | `true` | 是否为选中的 Claude、CodeBuddy 宿主注册从包执行的生命周期/会话 hook。Codex 与 Pi 使用宿主提供的 `CODEX_THREAD_ID`、`PI_SESSION_ID`；OpenCode 不复制 plugin，会话焦点为降级模式。`--no-hooks` 持久写成 `false`；`--hooks` 重新开启受管 hook |
+| `hooks` | `true` | 是否为选中的 Claude Code、Codex、CodeBuddy 注册从包执行的工作流 hook。Codex 需要宿主中的 hook 信任；关闭 hooks 后，Codex 和 Pi 的 `CODEX_THREAD_ID`、`PI_SESSION_ID` 仍提供原生身份。OpenCode 不复制 plugin，会话焦点为降级模式。`--no-hooks` 持久写成 `false`；`--hooks` 重新开启受管 hook |
 | `check_timeout_ms` | `600000` | 每条检查命令的时限，允许 1 至 86400000 毫秒；`check --timeout` 可覆盖它 |
 | `budgets` | 见下文 | 每种文档的软行数预算。Keelson 把压力作为内部信号交给 Agent：大型 spec 自动分片，单例/rule 在 RECONCILE 中自动整理，长期文档只有到 2× 预算才硬失败 |
 | `context` | `""` | 打印在 `keelson context` 输出顶部的自由文本。用于放不进 INTENT.md 的事实，比如技术栈概要 |

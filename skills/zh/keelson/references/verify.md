@@ -46,6 +46,8 @@ Ready/完成是由长期 gate 与证据支撑的状态，而证据有两个会�
 ## 陌生读者评审（spec 档）
 <!-- keelson: id=verify.fresh-reader | without: 作者评审自己的工作；同一个盲点通过两次 | sunset: 连续 50 次陌生读者评审都没发现逐任务评审漏掉的东西时 -->
 
+用 `keelson context --phase check` 生成评审材料，附上 `request.md`；评审任务分别用独立行标明 `KEELSON_CHANGE=<change-name>` 和 `KEELSON_PHASE=check`。Codex 评审者自动执行 `keelson focus` 绑定任务，再读取 `keelson context --phase check`；其他受支持 hook 注入 check 依赖。评审者使用全新上下文、只读范围，不继承整段对话；实现者修复问题后，再复核受影响结果。宿主无法提供独立评审者时，明确报告缺口，不得编造评审。
+
 派一个没看过对话的评审者（spec 变更层级 ≥ `deep`），给它原始请求、`change.md`、delta specs 和 diff。让它找：没有真实覆盖的验收项、需求缺口、rule 违反、有风险的假设、任何维护者会反对的地方。每条发现要么处理，要么记入 ledger。第二个代理的同意是信号，不是证明；被检查的是验收清单。
 
 ## 完成报告

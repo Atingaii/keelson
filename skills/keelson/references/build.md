@@ -2,6 +2,16 @@
 
 Execute `tasks.md` slice by slice. You choose how; these notes cover the parts that are easy to get wrong.
 
+## Enter implementation with the current plan
+<!-- keelson: id=build.start | without: an agent edits product files before resolving the plan or reads an unrelated change's rules | sunset: never -->
+
+For modifying work, create the smallest useful change, record concrete acceptance, and run `keelson start` automatically within the owner's existing authorization. Trivial work uses a minimal quick change without a separate plan or interview. Start rejects open decisions, assumptions, missing acceptance and active prerequisites; it records the current plan and declares phase context in `context.json`. Reopened decisions or changed plan/delta require resolving the affected branches and starting again. Do not ask the owner to operate the workflow.
+
+Read `keelson context --phase implement` before editing. The pack contains current and delta specs, relevant rules, decisions and checks; `context.json` can declare additional project-relative files per `implement`/`check` phase. Add newly affected paths to context routing. For spec work, retain the owner's original request and material follow-ups in `request.md` so the reviewer sees the actual requested outcome. Do not replace it with your implementation summary.
+
+Claude Code, Codex and CodeBuddy have native gates for supported file-editing tools and hooks for session context. Codex requires trusted hooks. Shell/MCP writers and other hosts must follow this same protocol through the agent. This is not a sandbox or proof of user authorization.
+
+
 ## Rulings, not stalls
 <!-- keelson: id=build.rulings | without: agent parks the session on questions the plan already answers; or decides silently and the reasoning is lost | sunset: never -->
 
@@ -20,6 +30,8 @@ Outside your authorization, it is an open question: add it to `change.md → Ope
 When tasks are mostly independent and the host offers subagents, dispatch a fresh subagent per task with the model resolved from its effort tier: `keelson models --resolve <tier>` prints the alias for this platform (or map tiers onto the aliases your subagent tool exposes, in ascending capability order). Give the subagent the task text, the matched rules, the relevant spec, and the verification command. Never hand it your whole conversation.
 
 More agents are not a linear throughput multiplier. When tasks share mutable state or the same contract, or need constant synchronization, coordination and merge cost can exceed the parallelism benefit; keep them sequential. Parallelize only when boundaries are clear, outputs are independently verifiable, and the merge contract is explicit. Do not try to rescue tightly coupled work by simply adding agents.
+
+For a tracked task, include a standalone `KEELSON_CHANGE=<change-name>` line and the phase in each child task. In Codex the child automatically runs `keelson focus <change-name>` and `keelson context --phase implement` (or `check` for review) before working. Each child has its own thread identity; never infer its task from the root session. Preserve assigned read-only scope. When resuming a child with an existing focus, retain it unless the new assignment explicitly changes it. Untracked read-only investigation needs no change or marker.
 
 After each task, a reviewer subagent (tier ≥ `standard`, never below the implementer) checks the diff against the spec and the rules. Record both in the ledger:
 

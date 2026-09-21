@@ -2,11 +2,11 @@
 
 项目真相与长期 work item 位于 `.keelson/`；本机会话、信任与密钥位于 Git 私有运行目录；持久签名记录和日志跟随变更归档。**Session 不是 Task**：它只是指向当前对话正在围绕哪个 work item。
 
-每个非平凡修改请求遵循 **ORIENT → BOUND → BUILD → SENSE → RECONCILE**。
+每个修改请求遵循 **ORIENT → BOUND → BUILD → SENSE → RECONCILE**。
 
 - **ORIENT** —— 检查工作树和当前 session focus。同一目标的追问继续使用 focus change；用户说“继续”时运行 `keelson focus --auto`，存在歧义时绝不静默绑定。
-- **BOUND** —— 提问前先读仓库。仓库事实和可逆工程选择自行解决；只在 decision frontier 每轮询问最多三个独立、已就绪、真正属于所有者且会影响结果的决定。trivial 直接改；quick 创建最小有用 change；spec 写 acceptance、行为 delta 和 plan。只检查当前工作真实触发的风险镜头。
-- **BUILD** —— 一次推进一个纵向切片。独立的新修改目标创建新 change；围绕同一目标继续追问不会。
+- **BOUND** —— 提问前先读仓库。按 `interview.md` 在目标不清、产品选择相互依赖或高影响承诺未定时自动深入探索，无需特殊提示词。仓库事实和可逆工程选择自行解决；简单缺口问一个就绪用户决定，复杂不确定性一轮问完就绪 frontier，附推荐和理由。明确任务直接推进。trivial 走最小 quick 变更；quick 创建最小有用 change；spec 写 acceptance、行为 delta 和 plan。只检查当前工作真实触发的风险镜头。
+- **BUILD** —— 自动通过 `keelson start` 并加载 `keelson context --phase implement`，然后一次推进一个纵向切片。独立的新修改目标创建新 change；围绕同一目标继续追问不会。
 - **SENSE** —— 尽早跑便宜检查；完成必须有当前工作树上的新鲜 `keelson check --record` 证据。任务复选框只描述当前计划，不负责判定完成。
 - **RECONCILE** —— 每轮修改后根据 acceptance、阻塞项、rollout/兼容性和新鲜 verification 重新计算生命周期。land 前静默完成 context 暴露的内部知识维护：重写单例当前状态文档、拆分/去重 rules，并让 `land` 自动分片大型 spec。gate 满足后状态成为 `ready` 并自动 land；不等待用户说“做完了”，也不把维护流程暴露给用户。
 - 会话结束、长时间空闲、compaction、关闭窗口只改变本机会话 runtime，绝不自动完成、取消或 land 长期 work item。

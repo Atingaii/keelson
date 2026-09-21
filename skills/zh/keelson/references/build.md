@@ -2,6 +2,16 @@
 
 按切片逐个执行 `tasks.md`。怎么做由你选；这里只写容易出错的部分。
 
+## 按当前计划进入实现
+<!-- keelson: id=build.start | without: Agent 在计划未确定前改产品代码，或读取了另一个变更的规范 | sunset: never -->
+
+修改任务先创建最小有用变更，写明具体验收，再在已有用户授权内自动运行 `keelson start`。琐碎修改走最小 quick 变更，不另做计划或访谈。启动检查拒绝未决决定、未确认假设、缺失验收和未完成前置变更；记录当前计划，并在 `context.json` 中声明阶段上下文。决定被重开或计划/delta 改变时，先解决受影响分支再重新启动。不要让用户操作工作流。
+
+编辑前读取 `keelson context --phase implement`。它包含当前规范、delta、相关规则、决定和检查命令；`context.json` 可为 `implement`/`check` 阶段额外声明项目内相对路径。新涉及的路径应纳入上下文路由。spec 变更将用户原始要求和实质补充保留在 `request.md`，让评审者看到真正的目标，不用实现总结替代。
+
+Claude Code、Codex 和 CodeBuddy 提供受支持文件工具的原生门禁与会话上下文 hook；Codex 需要宿主信任 hooks。shell/MCP 写入及其他宿主由 Agent 遵循同一协议。该机制不是沙箱，也不能证明用户已经授权。
+
+
 ## 裁定，而不是停顿
 <!-- keelson: id=build.rulings | without: 代理把会话卡在计划早已回答的问题上；或者悄悄决定，推理过程丢失 | sunset: never -->
 
@@ -20,6 +30,8 @@ At-least-once with idempotent consumers. Exactly-once would need a broker featur
 任务大体独立、宿主提供子代理时，每个任务派一个全新的子代理，模型由它的 effort 层级解析：`keelson models --resolve <tier>` 打印当前平台的别名（或者把层级按能力从低到高映射到子代理工具暴露的别名上）。交给子代理的是任务文本、命中的 rules、相关 spec 和验证命令。绝不把你的整段对话塞给它。
 
 更多 Agent 不是线性的 throughput multiplier。任务共享可变状态、同一契约，或者需要持续互相同步时，coordination/merge cost 可能超过并行收益；此时保持串行。只有边界清楚、输出可以独立验证、最终 merge contract 明确时才并行。不要靠“再加几个 Agent”挽救一个高度耦合的任务。
+
+已登记变更的子任务均附带独立一行 `KEELSON_CHANGE=<change-name>` 和阶段。Codex 子代理先自动运行 `keelson focus <change-name>`，再读取 `keelson context --phase implement`（评审用 `check`），然后执行任务。每个子代理有自己的线程身份，不从根会话猜测任务；保留分配的只读限制。恢复已有 focus 的子代理时，除非新任务明确要求切换，否则保留其当前关联。未登记变更的只读调查无需创建变更或添加标记。
 
 每个任务之后，由一个评审子代理（层级 ≥ `standard`，绝不低于实施者）对照 spec 和 rules 检查 diff。两者都记进 ledger：
 

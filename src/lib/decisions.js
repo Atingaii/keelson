@@ -37,8 +37,10 @@ export function validateDecisionData(data) {
 
 export function decisionFrontier(data, limit = 3) {
   const ready = data.decisions.filter((d) => d.state === 'open' && d.depends.every((id) => data.decisions.some((x) => x.id === id && x.state === 'settled')));
+  const ownerReady = ready.filter((d) => d.owner === 'user');
   return {
-    questions: ready.filter((d) => d.owner === 'user').slice(0, limit),
+    questions: ownerReady.slice(0, limit),
+    remaining: ownerReady.slice(limit),
     investigate: ready.filter((d) => d.owner !== 'user'),
     blocked: data.decisions.filter((d) => d.state === 'open' && !ready.includes(d)),
     assumptions: data.decisions.filter((d) => d.state === 'assumed'),

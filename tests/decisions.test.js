@@ -59,3 +59,17 @@ test('malformed decision graphs fail closed without rewriting user data', (t) =>
   assert.match(result.stderr, /cycle/);
   assert.equal(fs.readFileSync(`${root}/${file}`, 'utf8'), data);
 });
+
+test('whole frontier preserves all ready questions and invalid limits never mutate', () => {
+  const root = tmpProject({ '.keelson/config.yaml': 'version: 4\n', '.keelson/changes/fix/change.md': '---\ntier: quick\n---\n# Fix' });
+  const ask = (...args) => run(root, ['ask', ...args, '--change', 'fix', '--json'], { allowFail: true });
+  for (const id of ['a', 'b', 'c', 'd', 'e']) assert.equal(ask('add', id, '--question', `Choose ${id}`).code, 0);
+  assert.equal(JSON.parse(ask('frontier', '--all').stdout).questions.length, 5);
+  const single = JSON.parse(ask('frontier', '--limit', '1').stdout);
+  assert.equal(single.questions.length, 1);
+  assert.equal(single.remaining.length, 4);
+  assert.equal(single.complete, false);
+  const before = ask('list').stdout;
+  assert.notEqual(ask('add', 'invalid', '--question', 'Invalid mutation?', '--limit', '0').code, 0);
+  assert.equal(ask('list').stdout, before);
+});

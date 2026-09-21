@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updated": "2026-09-20",
-  "note": "Adapters describe generated discovery paths, not a promise of live end-to-end host parity. Codex session identity has been exercised locally. Other hosts have adapter contract tests; hooks are supported only where listed. Native session identity sources include CODEX_THREAD_ID, Claude hooks, Pi environment and explicit KEELSON_SESSION_ID. No source means an honest degraded state. Default installation is lightweight; --vendor explicitly copies package guidance.",
+  "updated": "2026-09-21",
+  "note": "Adapters describe generated discovery paths, not a promise of live end-to-end host parity. Codex session identity has been exercised locally. Other hosts have adapter contract tests; Claude Code, Codex and CodeBuddy have workflow hook adapters; hook execution depends on the host version, trust and settings. Native session identity sources include CODEX_THREAD_ID, Claude hooks, Pi environment and explicit KEELSON_SESSION_ID. No source means an honest degraded state. Default installation is lightweight; --vendor explicitly copies package guidance.",
   "platforms": {
     "claude": {
       "label": "Claude Code",
@@ -19,7 +19,7 @@
       "bin": "codex",
       "instructions": "AGENTS.md",
       "skillsDir": ".agents/skills",
-      "hooks": false,
+      "hooks": true,
       "confidence": "verified",
       "support": "first-class",
       "sessionFocus": "native",
@@ -71,7 +71,7 @@
       "bin": "codebuddy",
       "instructions": "CODEBUDDY.md",
       "skillsDir": ".codebuddy/skills",
-      "hooks": false,
+      "hooks": true,
       "confidence": "documented",
       "support": "first-class",
       "sessionFocus": "native",

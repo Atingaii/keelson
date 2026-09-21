@@ -11,6 +11,7 @@ Keelson 只有一条黄金路径：**初始化一次，之后继续像原来一�
 
 ## 指南
 
+- [自动化机制](automation.md) —— 决策轮次、启动门禁、规范注入与宿主边界。
 - [已有项目](existing-projects.md) —— 不复制已有文档地接入 Keelson。
 - [协作](collaboration.md) —— 跨会话、跨人、并行变更、handoff、worktree。
 - [验证](verification.md) —— 证据、工作树指纹、stale 检查。

@@ -138,8 +138,8 @@ test('shaping audits assumptions without turning clarification into ceremony', (
   assert.match(zhDiscover, /id=discover\.decision-frontier/);
   assert.match(enPlan, /id=plan\.assumption-routing/);
   assert.match(zhPlan, /id=plan\.assumption-routing/);
-  assert.match(en, /single highest-value question/);
-  assert.match(zh, /只问一个最高价值问题/);
+  assert.match(en, /one question for a simple gap or the whole ready frontier/);
+  assert.match(zh, /简单缺口问一个.*复杂不确定性问完整就绪 frontier/);
 
   const enInterview = fs.readFileSync(path.join(ROOT, 'skills/keelson/references/interview.md'), 'utf8');
   const zhInterview = fs.readFileSync(path.join(ROOT, 'skills/zh/keelson/references/interview.md'), 'utf8');

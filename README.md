@@ -1,6 +1,6 @@
 <p align="center"><img src="https://raw.githubusercontent.com/Atingaii/keelson/main/docs/assets/keelson-banner.png" alt="Keelson" width="620"></p>
 
-<p align="center"><strong>Start with a conversation. Leave work the next session can build on.</strong></p>
+<p align="center"><strong>Clarify the goal. Build to the contract. Keep what you learn.</strong></p>
 <p align="center">Project memory, engineering guidance, and acceptance checks for your coding agent. Describe the outcome; keep decisions and verification alongside the code.</p>
 
 <p align="center">
@@ -16,16 +16,13 @@
 <a href="https://github.com/Atingaii/keelson/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT license"></a>
 </p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/Atingaii/keelson/main/docs/assets/keelson-demo.gif" alt="Real agent conversation replay: a task-filter request followed by implementation, verification, and archiving" width="100%"></p>
-<p align="center"><sub>Initialized example repository · Translated excerpts from a real session, with waits shortened · Just describe the task</sub></p>
-
 ## Why Keelson?
 
 Keelson brings software engineering practices into everyday agent conversations: agree on the outcome, preserve the reasoning, and check the result. It addresses four recurring problems.
 
 **1. The agent builds the wrong thing.**
 
-“Add a filter” leaves room for different defaults, edge cases, and compatibility choices. Keelson guides the agent to inspect the code and turn the request into concrete acceptance examples before implementation. This applies **behaviour-driven development**: use examples to expose disagreement early, asking only about choices that affect the direction.
+“Add a filter” leaves room for different defaults, edge cases, and compatibility choices. Keelson guides the agent to inspect the code, automatically investigate unclear goals and connected decisions, then turn the request into concrete acceptance examples before implementation. This applies **behaviour-driven development**: use examples to expose disagreement early, asking only about choices that affect the direction.
 
 **2. Every session needs the same explanation.**
 
@@ -47,7 +44,7 @@ Keelson combines an **Agent Skill + local CLI**. The skill guides the agent's wo
 - A coding agent that can read project files, make changes, and run commands.
 - A local project directory; Git is recommended for tracking code and project knowledge.
 
-Keelson generates integrations for Codex, Claude Code, OpenCode, Gemini CLI, and other hosts. See [Agent support](https://github.com/Atingaii/keelson/blob/main/docs/platforms.md) for capabilities and validation coverage.
+Claude Code, Codex CLI and CodeBuddy CLI are the primary supported hosts. Keelson also generates integrations for other coding agents. See [Agent support](https://github.com/Atingaii/keelson/blob/main/docs/platforms.md) for capabilities and validation coverage.
 
 ## Quick start
 
@@ -57,24 +54,30 @@ Keelson generates integrations for Codex, Claude Code, OpenCode, Gemini CLI, and
 npm install -g @zyaiting/keelson
 ```
 
-**2. Initialize your project**, using Codex here:
+**2. Initialize your project**, selecting your CLI:
 
 ```bash
 cd /path/to/your/project
-keelson init --codex
+keelson init --claude     # Claude Code
+# or: keelson init --codex
+# or: keelson init --codebuddy
 ```
 
 **3. Open your agent in that directory and describe the task.** Initialize once, then keep working through conversation.
 
-> Add a priority filter to the task list: show everything by default, with an option for high-priority tasks only. Keep existing calls compatible, add tests, and verify the result.
+> Add a priority filter to the task list.
 
 To upgrade, run `npm install -g @zyaiting/keelson@latest`, then `keelson update` in your project. See the [setup guide](https://github.com/Atingaii/keelson/blob/main/docs/getting-started.md) and [supported agents](https://github.com/Atingaii/keelson/blob/main/docs/platforms.md).
 
 ## From request to completion
 
-**Understand → Scope → Implement and verify → Archive and resume**
+**Investigate → Decide → Implement → Independently review → Verify → Preserve knowledge**
 
-The agent loads relevant guidance, maintains acceptance criteria, and runs project checks. It wraps up when the gates pass, asking for your input when a choice changes the plan. Small edits stay lightweight.
+After initialization, ordinary requests trigger the relevant workflow automatically: investigate requirements, clarify material choices with recommendations, apply engineering and UI/UX guidance, implement, verify, and preserve the result for later sessions. You do not need to name a skill or manage workflow commands. Clear edits use a minimal change record. A simple gap gets one question; connected uncertainties get the whole ready decision frontier, with recommendations and reasons for each choice. The agent resumes authorized work once those choices are settled.
+
+Before implementation, the agent starts the settled change and loads its declared specs and rules. Review gets a separate context pack built from the request and contracts. Verified changes promote durable decisions into project specs, so later work starts with what the project has learned.
+
+Claude Code, Codex and CodeBuddy integrations restore workflow context and gate supported file edits. Codex requires the generated hooks to be trusted in `/hooks` when prompted; other host permissions remain in effect. Disabled hooks fall back to installed guidance and the shared CLI. See [automation and its boundaries](https://github.com/Atingaii/keelson/blob/main/docs/automation.md).
 
 You can also ask:
 
@@ -82,7 +85,7 @@ You can also ask:
 - **Improve an interface:** “Polish the settings page, keep our brand, preserve input when saving fails, and check the mobile flow.”
 - **Resume:** “Continue the previous change. First check what's left.”
 
-Frontend work has 22 composable [design actions](https://github.com/Atingaii/keelson/blob/main/docs/frontend.md), discoverable with `keelson design`, including critique, simplification, polish, and adaptation. Checking the actual interface requires the agent to use a browser.
+The agent automatically selects from 22 composable [design actions](https://github.com/Atingaii/keelson/blob/main/docs/frontend.md), discoverable with `keelson design`, including critique, simplification, polish, and adaptation when the work affects an interface. Checking the actual interface requires the agent to use a browser.
 
 ## What stays in your project?
 

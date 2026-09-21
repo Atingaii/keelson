@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { runtimeDir } from '../src/lib/runtime-path.js';
+import { activeWorkflow, phaseContext, renderPhaseContext, workflowHint } from '../src/lib/workflow.js';
 
 const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const k = path.join(root, '.keelson');
@@ -57,6 +58,7 @@ if (sessionPath) {
   session = readJson(sessionPath) || { schema: 1, change: null, createdAt: new Date().toISOString() };
   session.updatedAt = new Date().toISOString();
   session.source = 'claude-session-start';
+  session.injectedContexts = []; // compact/resume must restore previously injected constraints.
   writeJson(sessionPath, session);
 }
 
@@ -91,4 +93,9 @@ if (ordered.length) {
   lines.push('', '--- Active work ---');
   for (const c of ordered.slice(0, 6)) lines.push(`${c.name}${c.name === focused ? ' [focus]' : ''}: ${c.tier}${c.status ? `, ${c.status}` : ''}${c.total ? `, ${c.done}/${c.total} tasks` : ''}${c.owner ? `, ${c.owner}` : ''}`);
 }
+try {
+  const env = { ...process.env, ...(envIdentity ? { KEELSON_SESSION_ID: envIdentity } : {}) };
+  lines.push('', workflowHint(root, env));
+  if (focused) lines.push(renderPhaseContext(phaseContext(root, activeWorkflow(root, focused, env))));
+} catch (error) { lines.push(`[keelson] Context restoration needs attention: ${error.message}`); }
 process.stdout.write(lines.join('\n') + '\n');

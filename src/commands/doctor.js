@@ -85,12 +85,14 @@ export async function doctor({ flags }, cwd = process.cwd()) {
     }
     if (pl.confidence === 'convention') add('info', `${pl.label}: file locations follow the tool's convention and have not been exercised by the maintainers; if the agent does not pick up the skill, override platforms.${pl.id} in config.yaml`);
     for (const problem of sessionAdapterProblems(root, pl)) add('error', `${problem} (run \`keelson update\`)`);
-    if (pl.hooks) {
+    if (pl.hooks && pl.id === 'claude') {
       const settings = readJson(path.join(root, '.claude', 'settings.json'), {}) ?? {};
       const has = (ev, script) => (settings.hooks?.[ev] ?? []).some((g) => (g.hooks ?? []).some((h) => String(h.command ?? '').includes(script)));
       const registrations = [
         ['SessionStart', 'session-start'],
         ['UserPromptSubmit', 'prompt-state'],
+        ['PreToolUse', 'workflow-guard'],
+        ['SubagentStart', 'workflow-guard'],
       ];
       for (const [event, script] of registrations) {
         const registered = has(event, script);

@@ -43,7 +43,7 @@ export async function newChange({ flags, positional }, cwd = process.cwd()) {
   const front = [
     `tier: ${tier}`,
     `created: ${vars.date}`,
-    `status: ${tier === 'spec' ? 'clarifying' : 'in-progress'}`,
+    'status: clarifying',
     `owner: ${owner}`,
     ...(worktree ? [`branch: ${name}`, `worktree: ${path.relative(root, worktree)}`] : branch ? [`branch: ${branch}`] : []),
     ...(list(flags.depends).length ? [`depends: [${list(flags.depends).join(', ')}]`] : []),

@@ -2,6 +2,8 @@
 
 A change is implemented when its slices are verified, integrated when it is on the target branch with its specs folded, and released when a tagged version ships it. These are three states, and Keelson reports them separately.
 
+Before landing, inspect settled `decisions.json` answers. Promote only durable product contracts into delta requirements or capability-prefixed `change.md → Decisions`; preserve reasons that affect future work. Investigation trivia stays in the change. `land` folds those contracts, and the next phase context loads the updated truth.
+
 ## `keelson land <name>`
 <!-- keelson: id=land.command | without: delta specs never merge, specs stop describing the current system, and unverified or unapproved work is declared integrated | sunset: never -->
 

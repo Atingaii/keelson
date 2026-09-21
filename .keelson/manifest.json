@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "packageVersion": "0.4.0",
+  "packageVersion": "0.5.0",
   "vendor": false,
   "targets": [
     {
@@ -14,5 +14,8 @@
       "hooks": false,
       "sessionAdapter": null
     }
-  ]
+  ],
+  "runtime": {
+    ".agents/skills/keelson": "169bf95cd7159fad464eb9c7dcc8d4f8d870730250977bd52f79f75609b86a97"
+  }
 }

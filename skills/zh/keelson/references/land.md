@@ -2,6 +2,8 @@
 
 切片都验证通过，变更就是已实现；进入目标分支且 specs 已折叠，就是已集成；某个打了 tag 的版本把它发出去，才是已发布。这是三种状态，Keelson 分别报告。
 
+归档前检查 `decisions.json` 中已确定的答案。只把长期有效的产品契约提升为 delta Requirement 或带 capability 前缀的 `change.md → Decisions`，保留影响后续工作的理由。调查琐事留在变更内。`land` 合并这些契约，下次阶段上下文会读取更新后的事实。
+
 ## `keelson land <name>`
 <!-- keelson: id=land.command | without: delta specs 永远不合并，specs 不再描述当前系统，未验证或未批准的工作被宣布为已集成 | sunset: never -->
 

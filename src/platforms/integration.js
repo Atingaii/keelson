@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { exists, read, readJson, readOr, rmrf, write, writeJson } from '../lib/fs.js';
 import { installTargets, PLATFORMS } from './registry.js';
-import { managedSkillShimMatches, residentBlock } from './runtime.js';
+import { captureRuntimeOwnership, managedSkillShimMatches, residentBlock } from './runtime.js';
 
 export const MANAGED_STATE = path.join('.keelson', 'manifest.json');
 export const LEGACY_MANAGED_STATE = path.join('.keelson', '.managed.json');
@@ -100,7 +100,7 @@ export function managedStateMatches(root, targets) {
 }
 
 export function writeManagedState(root, targets, packageVersion, { vendor = false } = {}) {
-  writeJson(path.join(root, MANAGED_STATE), { schema: 1, packageVersion, vendor: Boolean(vendor), targets: targets.map(managedTarget) });
+  writeJson(path.join(root, MANAGED_STATE), { schema: 1, packageVersion, vendor: Boolean(vendor), targets: targets.map(managedTarget), runtime: captureRuntimeOwnership(root, targets, vendor) });
   if (exists(path.join(root, LEGACY_MANAGED_STATE))) rmrf(path.join(root, LEGACY_MANAGED_STATE));
   return MANAGED_STATE;
 }
@@ -173,11 +173,11 @@ const LEGACY_CLAUDE_HOOK_COMMANDS = new Set([
   'node "$CLAUDE_PROJECT_DIR/.keelson/hooks/session-start.mjs"',
   'node "$CLAUDE_PROJECT_DIR/.keelson/hooks/prompt-state.mjs"',
 ]);
-const CLAUDE_HOOK_COMMANDS = new Set(['keelson hook session-start', 'keelson hook prompt-state', ...LEGACY_CLAUDE_HOOK_COMMANDS]);
+const CLAUDE_HOOK_COMMANDS = new Set(['keelson hook session-start', 'keelson hook prompt-state', 'keelson hook workflow-guard', ...LEGACY_CLAUDE_HOOK_COMMANDS]);
 const isClaudeHook = (hook) => hook?.type === 'command' && CLAUDE_HOOK_COMMANDS.has(String(hook.command));
 
 export function installHooks(root) {
-  removeHooks(root, { legacyOnly: true });
+  removeHooks(root);
   const settingsPath = path.join(root, '.claude', 'settings.json');
   const settings = readJson(settingsPath, {}) ?? {};
   settings.hooks ??= {};
@@ -192,6 +192,8 @@ export function installHooks(root) {
   };
   ensure('SessionStart', 'startup|resume|clear|compact', 'session-start.mjs');
   ensure('UserPromptSubmit', null, 'prompt-state.mjs');
+  ensure('PreToolUse', 'Edit|Write|MultiEdit|NotebookEdit|Agent|Task', 'workflow-guard.mjs');
+  ensure('SubagentStart', null, 'workflow-guard.mjs');
   writeJson(settingsPath, settings);
   return ['.claude/settings.json'];
 }
@@ -216,78 +218,41 @@ export function removeHooks(root, { legacyOnly = false } = {}) {
   writeJson(settingsPath, settings);
 }
 
-const CODEBUDDY_SESSION_COMMAND = 'keelson hook codebuddy-session';
 const LEGACY_CODEBUDDY_SESSION_COMMAND = 'node "$CODEBUDDY_PROJECT_DIR/.keelson/hooks/codebuddy-session.mjs"';
-const isCodeBuddyHook = (hook) => hook?.type === 'command' && hook.command === CODEBUDDY_SESSION_COMMAND;
+const HOST_HOOKS = {
+  'codebuddy-hooks': {
+    file: '.codebuddy/settings.json',
+    registrations: [
+      ['SessionStart', null, 'codebuddy-session'],
+      ['UserPromptSubmit', null, 'codebuddy-session'],
+      ['PreToolUse', 'Bash|PowerShell', 'codebuddy-session'],
+      ['PreToolUse', '^(Edit|Write|MultiEdit|NotebookEdit|NotebookWrite|Agent|Task)$', 'codebuddy-workflow'],
+    ],
+  },
+  'codex-thread-env': {
+    file: '.codex/hooks.json',
+    registrations: [
+      ['SessionStart', null, 'codex-session'],
+      ['UserPromptSubmit', null, 'codex-session'],
+      ['PreToolUse', '^(apply_patch|Edit|Write|Agent|spawn_agent)$', 'codex-workflow'],
+      ['SubagentStart', null, 'codex-workflow'],
+    ],
+  },
+};
+const adapterFor = (target) => HOST_HOOKS[target?.sessionAdapter];
+const isAdapterHook = (h, adapter) => h?.type === 'command' && adapter.registrations.some(([, , name]) => h.command === `keelson hook ${name}`);
+const hasRegistration = (settings, [event, matcher, name]) => (settings.hooks?.[event] ?? []).some((g) =>
+  (g.matcher ?? null) === matcher && (g.hooks ?? []).some((h) => h.type === 'command' && h.command === `keelson hook ${name}`));
 
-function ensureCodeBuddyHook(settings, event, matcher = null) {
-  settings.hooks ??= {};
-  settings.hooks[event] ??= [];
-  const found = settings.hooks[event].find((g) =>
-    (g.hooks ?? []).some(isCodeBuddyHook),
-  );
-  if (found) {
-    if (matcher && found.matcher !== matcher) found.matcher = matcher;
-    else if (!matcher && 'matcher' in found) delete found.matcher;
-    return;
-  }
-  const group = {
-    hooks: [{
-      type: 'command',
-      command: CODEBUDDY_SESSION_COMMAND,
-      timeout: 10,
-    }],
-  };
-  if (matcher) group.matcher = matcher;
-  settings.hooks[event].push(group);
-}
-
-export function installSessionAdapter(root, target) {
-  const p = typeof target === 'string' ? PLATFORMS[target] : target;
-  if (!p?.sessionAdapter || p.sessionAdapter === 'pi-env' || p.sessionAdapter === 'claude-hooks') return [];
-
-  if (p.sessionAdapter === 'codebuddy-hooks') {
-    removeCodeBuddyHooks(root, { legacyOnly: true });
-    const settingsPath = path.join(root, '.codebuddy', 'settings.json');
-    const settings = readJson(settingsPath, {}) ?? {};
-    ensureCodeBuddyHook(settings, 'SessionStart');
-    ensureCodeBuddyHook(settings, 'UserPromptSubmit');
-    ensureCodeBuddyHook(settings, 'PreToolUse', 'Bash|PowerShell');
-    writeJson(settingsPath, settings);
-    return [path.relative(root, settingsPath)];
-  }
-
-  return [];
-}
-
-export function plannedSessionAdapterFiles(root, target) {
-  const p = typeof target === 'string' ? PLATFORMS[target] : target;
-  const rows = [];
-  if (!p?.sessionAdapter || p.sessionAdapter === 'pi-env' || p.sessionAdapter === 'claude-hooks') return rows;
-
-  if (p.sessionAdapter === 'codebuddy-hooks') {
-    const settings = readJson(path.join(root, '.codebuddy', 'settings.json'), {}) ?? {};
-    const has = (event, matcher = null) => (settings.hooks?.[event] ?? []).some((g) =>
-      (matcher === null || g.matcher === matcher) &&
-      (g.hooks ?? []).some(isCodeBuddyHook),
-    );
-    const ready = has('SessionStart') && has('UserPromptSubmit') && has('PreToolUse', 'Bash|PowerShell');
-    rows.push({ path: '.codebuddy/settings.json (Keelson session hooks)', status: ready ? 'unchanged' : exists(path.join(root, '.codebuddy', 'settings.json')) ? 'update' : 'create' });
-  }
-
-  return rows;
-}
-
-function removeCodeBuddyHooks(root, { legacyOnly = false } = {}) {
-  const settingsPath = path.join(root, '.codebuddy', 'settings.json');
+function removeAdapterHooks(root, adapter) {
+  const settingsPath = path.join(root, adapter.file);
   const settings = readJson(settingsPath, null);
   if (!settings?.hooks) return false;
   let changed = false;
   for (const event of Object.keys(settings.hooks)) {
     settings.hooks[event] = settings.hooks[event].map((g) => {
-      const hooks = (g.hooks ?? []).filter((h) =>
-        !(h?.type === 'command' && h.command === LEGACY_CODEBUDDY_SESSION_COMMAND) && (legacyOnly || !isCodeBuddyHook(h)),
-      );
+      const hooks = (g.hooks ?? []).filter((h) => !isAdapterHook(h, adapter) &&
+        !(adapter.file.startsWith('.codebuddy/') && h?.type === 'command' && h.command === LEGACY_CODEBUDDY_SESSION_COMMAND));
       if (hooks.length === (g.hooks ?? []).length) return g;
       changed = true;
       return hooks.length ? { ...g, hooks } : null;
@@ -301,32 +266,49 @@ function removeCodeBuddyHooks(root, { legacyOnly = false } = {}) {
   return true;
 }
 
+export function installSessionAdapter(root, target) {
+  const p = typeof target === 'string' ? PLATFORMS[target] : target;
+  const adapter = adapterFor(p);
+  if (!adapter) return [];
+  // Split owned hooks out of mixed groups; never change a user's matcher.
+  removeAdapterHooks(root, adapter);
+  const settingsPath = path.join(root, adapter.file);
+  const settings = readJson(settingsPath, {}) ?? {};
+  settings.hooks ??= {};
+  for (const [event, matcher, name] of adapter.registrations) {
+    settings.hooks[event] ??= [];
+    settings.hooks[event].push({
+      ...(matcher ? { matcher } : {}),
+      hooks: [{ type: 'command', command: `keelson hook ${name}`, timeout: 10 }],
+    });
+  }
+  writeJson(settingsPath, settings);
+  return [adapter.file];
+}
+
+export function plannedSessionAdapterFiles(root, target) {
+  const p = typeof target === 'string' ? PLATFORMS[target] : target;
+  const adapter = adapterFor(p);
+  if (!adapter) return [];
+  const file = path.join(root, adapter.file);
+  const settings = readJson(file, {}) ?? {};
+  const ready = adapter.registrations.every((registration) => hasRegistration(settings, registration));
+  return [{ path: `${adapter.file} (Keelson workflow hooks)`, status: ready ? 'unchanged' : exists(file) ? 'update' : 'create' }];
+}
+
 export function removeSessionAdapter(root, target, keep = new Set()) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
-  const removed = [];
-  if (p?.sessionAdapter === 'codebuddy-hooks') {
-    if (removeCodeBuddyHooks(root)) removed.push('.codebuddy/settings.json (Keelson hooks)');
-  }
-  return removed;
+  const adapter = adapterFor(p);
+  return adapter && removeAdapterHooks(root, adapter) ? [`${adapter.file} (Keelson hooks)`] : [];
 }
 
 export function sessionAdapterProblems(root, target) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
-  const problems = [];
-  if (!p?.sessionAdapter || p.sessionAdapter === 'pi-env' || p.sessionAdapter === 'claude-hooks') return problems;
-
-  if (p.sessionAdapter === 'codebuddy-hooks') {
-    const settings = readJson(path.join(root, '.codebuddy', 'settings.json'), {}) ?? {};
-    const has = (event, matcher = null) => (settings.hooks?.[event] ?? []).some((g) =>
-      (matcher === null || g.matcher === matcher) &&
-      (g.hooks ?? []).some(isCodeBuddyHook),
-    );
-    if (!has('SessionStart')) problems.push(`${p.label}: SessionStart session hook not registered`);
-    if (!has('UserPromptSubmit')) problems.push(`${p.label}: UserPromptSubmit session hook not registered`);
-    if (!has('PreToolUse', 'Bash|PowerShell')) problems.push(`${p.label}: Bash|PowerShell PreToolUse session hook not registered`);
-  }
-
-  return problems;
+  const adapter = adapterFor(p);
+  if (!adapter) return [];
+  const settings = readJson(path.join(root, adapter.file), {}) ?? {};
+  return adapter.registrations.filter((r) => !hasRegistration(settings, r))
+    .map(([event, matcher, name]) => `${p.label}: ${event}${matcher ? ` (${matcher})` : ''} hook ${name} not registered`);
 }
 
 function removeTargetSurfaces(root, p, keep = new Set()) {
@@ -334,7 +316,7 @@ function removeTargetSurfaces(root, p, keep = new Set()) {
   const skillRel = path.join(p.skillsDir, 'keelson');
   const skill = path.join(root, skillRel);
   const managed = readManagedState(root);
-  if (!keep.has(skillRel) && exists(skill) && managedSkillShimMatches(root, p, managed?.packageVersion)) {
+  if (!keep.has(skillRel) && exists(skill) && managedSkillShimMatches(root, p, managed?.packageVersion, managed)) {
     rmrf(skill);
     removed.push(path.relative(root, skill));
   }
@@ -348,7 +330,7 @@ function removeTargetSurfaces(root, p, keep = new Set()) {
     rmrf(path.join(root, p.rulesFile));
     removed.push(p.rulesFile);
   }
-  if (p.hooks && !keep.has('.claude/settings.json')) removeHooks(root);
+  if (p.hooks && p.id === 'claude' && !keep.has('.claude/settings.json')) removeHooks(root);
   removed.push(...removeSessionAdapter(root, p, keep));
   return removed;
 }
@@ -357,13 +339,13 @@ export function reconcileManagedTargets(root, targets) {
   const removed = [];
   const stale = staleManagedTargets(root, targets);
   const keep = new Set(targets.flatMap(managedSurfacePaths));
-  if (targets.some((p) => p.hooks)) keep.add('.claude/settings.json');
+  if (targets.some((p) => p.hooks && p.id === 'claude')) keep.add('.claude/settings.json');
   for (const p of stale) removed.push(...removeTargetSurfaces(root, p, keep));
   for (const rel of legacyManagedRemovals(root, targets)) {
     rmrf(path.join(root, rel));
     removed.push(rel);
   }
-  if (stale.some((p) => p.hooks) && !targets.some((p) => p.hooks)) {
+  if (stale.some((p) => p.hooks && p.id === 'claude') && !targets.some((p) => p.hooks && p.id === 'claude')) {
     removeHooks(root);
   }
   return [...new Set(removed)];

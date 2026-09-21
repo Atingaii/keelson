@@ -8,13 +8,15 @@ Keelson separates three stores. Project knowledge under `.keelson/` is durable a
 
 Supported hook entries invoke `keelson hook <event>` from the installed executable. They do not invoke JavaScript copied from the project. This reduces one source of unexpected repository code execution; it does not make the host or project safe to run without review.
 
-The manifest records the package version, selected host surfaces and vendor mode. Generated content is compared with known package output before replacing or removing it; the manifest itself is not a per-file digest database. `doctor` reports drift. Invalid host JSON is an error and is not silently replaced with empty configuration. Initialization leaves `.gitignore` unchanged.
+The manifest records the package version, selected host surfaces, vendor mode and generated runtime content digests. Replacement and removal compare installed bytes with those digests; known published output provides a migration path for manifests created before 0.5.0. `doctor` reports drift. Invalid host JSON is an error and is not silently replaced with empty configuration. Initialization leaves `.gitignore` unchanged.
 
 ## Changes and decisions
 
 `new` creates a durable change and binds it to the current session when identity exists. A session pointer is not a work status. `CODEX_THREAD_ID` supplies native Codex identity; other hosts can use their native bridge or explicit `KEELSON_SESSION_ID`. Ambiguous degraded sessions require an explicit change selection.
 
-`ask` stores schema-versioned structured decisions with owners, dependencies, state, basis and history. Ready user decisions form a frontier of at most three; agent/reality decisions form an investigation list. Reopening a settled answer requires a reason.
+`ask` stores schema-versioned structured decisions with owners, dependencies, state, basis and history. Ready user decisions form a frontier: the default shows three and preserves the rest in `remaining`; `--all` returns the whole ready set. Agent/reality decisions form an investigation list. Reopening a settled answer requires a reason.
+
+`start` checks the plan before transitioning to implementation. Phase context manifests supply versioned dependencies; Claude Code, Codex and CodeBuddy hooks gate supported file edits and inject the relevant context. See [automation and host boundaries](automation.md).
 
 ## Contracts
 

@@ -16,7 +16,7 @@ export async function platforms({ flags }, cwd = process.cwd()) {
     const configured = id === 'agents' ? portableConfigured : cfg?.tools?.includes(id) ?? false;
     const sessionFocus = p.sessionFocus ?? 'degraded';
     const effectiveSessionFocus =
-      configured && cfg?.hooks === false && p.sessionAdapter && p.sessionAdapter !== 'pi-env'
+      configured && cfg?.hooks === false && p.sessionAdapter && !['pi-env', 'codex-thread-env'].includes(p.sessionAdapter)
         ? 'degraded'
         : sessionFocus;
     return { id, label: p.label, support: p.support ?? 'first-class', sessionFocus, effectiveSessionFocus, instructions: p.instructions, skills: p.skillsDir, skillDiscovery: p.skillsDir, rules: p.rulesFile ?? null, hooks: p.hooks, confidence: p.confidence, examples: p.examples ?? null, installed: det[id]?.installed ?? null, configured };

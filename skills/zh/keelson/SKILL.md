@@ -1,6 +1,6 @@
 ---
 name: keelson
-description: 面向含 .keelson/ 目录项目的工程控制层。用于探索想法、修改代码、修复/调试、前端设计与 UX 评审、继续之前的工作，或改进反复出现的工程失败。把“对话会话”和“长期 work item”分开，因此用户可以一直追问，而不需要主动宣布任务何时开始或结束。
+description: 面向含 .keelson/ 目录项目的工程工作流。普通的想法讨论、功能开发或修改、问题修复、界面创建或优化、继续工作、改进反复出现的工程失败请求均自动适用。按需衔接需求探索、设计、实现、验证与项目记忆，无需用户指定 Skill 名称或工作流命令。
 ---
 
 # Keelson
@@ -21,6 +21,8 @@ description: 面向含 .keelson/ 目录项目的工程控制层。用于探索�
 
 - 涉及界面设计、评审、交互或响应式时，加载 `frontend.md`；用 `keelson design` 读取具体动作指导。区分浏览器观察与代码检查。
 
+根据请求结果与仓库证据路由，不依赖特殊用词。用户描述工作，Agent 自行读取指导并执行工作流命令。术语冲突或共享边界自动加载 `model.md`，非显然设计选择加载 `engineer.md`，受影响路径包含用户界面时加载 `frontend.md`，即使用户没有明确要求设计。实现时使用 `build.md`；在已有授权内按 `verify.md` → `land.md` → `reconcile.md` 完成收尾。`guide: true` 只增加教学，不负责启用能力；两种 profile 默认均使用此流程。
+
 ## 执行规则
 
 - conversation/session 只是焦点指针。关闭窗口、长时间不说话、继续追问，都**不能**把 change 判成完成。
@@ -28,9 +30,10 @@ description: 面向含 .keelson/ 目录项目的工程控制层。用于探索�
 - Resume 时先用 `keelson focus --auto`；可以根据 branch 或唯一活动 change 给出候选，但存在歧义时绝不静默绑定。
 - `NOW.md` 为 First contact 时，只推断并确认 `INTENT.md`；不要盘点整个仓库生成 specs/rules。
 - 非平凡修改先读取当前上下文；改共享模块前运行 `keelson impact <files>`。
-- 只在 decision frontier 提问。先做风险触发式盲点扫描，再按 `interview.md` 每轮最多三个独立、已就绪的所有者决策：具体场景/选项、推荐默认值，“不确定”是合法路由。仓库证据、小实验或 Agent 工程判断能解决的事绝不问用户。
+- 新目标、实质性补充或前提变化时，按 `interview.md` 自动判断探索深度；目标不清、产品选择相互依赖或高影响承诺未定时主动深入，无需特殊提示词。明确任务直接推进。简单缺口每轮问一个就绪用户决定，复杂不确定性一轮问完当前就绪 frontier，给具体选项、推荐和理由；复用已定答案，自行调查事实。
 - 非显然机制/架构选择走 `engineer.md`：先还原事实、结果、约束和不变量，再写可证伪 hypothesis，用最便宜的实验/消融区分方案；复杂度必须用证据证明自己值得存在。
-- 只给工作本身定大小：trivial 直接改；quick 轻量 change；spec 先写验收、行为 delta 和计划，在用户已有授权内推进；只澄清尚未解决的所有者决策。
+- 只给工作本身定大小：trivial 走最小 quick 变更；quick 轻量 change；spec 先写验收、行为 delta 和计划，在用户已有授权内推进；只澄清尚未解决的所有者决策。
+- 修改产品文件前，自动对当前变更运行 `keelson start`，再加载 `keelson context --phase implement`；出现新关键决定后，确定答案再重新启动。用户无需运行这些命令。
 - 工件是信息容器，不是仪式。不要创建空 roadmap/glossary/rule/task/ledger/handoff/spec。
 - `tasks.md` 只是执行计划，不拥有“完成”判定权。只要 acceptance 与新鲜证据已经满足，未勾选的旧计划不能覆盖这个事实；实现路径变化时应重写或删除过时任务。
 - 知识维护属于 Keelson 内部职责。RECONCILE 时自动重写、拆分、去重超压的长期文档，大 spec 由 `land` 自动分片；除非涉及产品语义决策，否则绝不要求用户维护 Keelson。

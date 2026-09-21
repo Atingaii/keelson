@@ -258,4 +258,6 @@ test('slices, acceptance, open questions, decision states, handoff parse; placeh
 test('verify entries carry the worktree tree hash', () => {
   const [v] = parseLedger('### Verify: e2e\n`npm test` exit 0; `npm run lint` exit 2 · tree 5bcb829dae\n');
   assert.deepEqual([v.exit, v.tree, v.command], [2, '5bcb829dae', 'npm test']);
+  const digest = '1234567890abcdef'.repeat(4);
+  assert.equal(parseLedger(`### Verify: current\n\`npm test\` exit 0 · tree ${digest}\n`)[0].tree, digest);
 });

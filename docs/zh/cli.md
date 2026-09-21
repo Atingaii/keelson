@@ -21,11 +21,16 @@ keelson guide workflow
 keelson new add-pagination --tier spec --capability orders
 keelson context --paths src/api/** --json
 keelson focus add-pagination
+keelson start add-pagination
+keelson context --phase implement --change add-pagination
+keelson context --phase check --change add-pagination --json
 keelson status --json
 keelson handoff add-pagination --by maintainer
 ```
 
 默认保留项目事实与小型发现入口，从安装包按需读取指导；--vendor 才复制指导。只选择 Claude 不附加 agents 入口，不添加 .gitignore 规则。支持 --tools、宿主标志、--lang、--profile、--guide、--hooks/--no-hooks、--dir。
+
+`start` 由 Agent 自动执行：未决问题、缺少验收或未完成的前置变更会阻止启动；通过后记录当前计划并设为 `in-progress`。计划变化后须重新启动。阶段上下文包含原始需求、变更、决策、契约和相关规则；schema 1 的 `context.json` 用 `implement`、`check` 数组声明额外的项目相对路径。详见[自动化机制](automation.md)。
 
 new 支持 --depends、--owner、--worktree。quick 只创建 change.md；spec 添加 tasks 和指定 delta。focus --clear 只清除会话指针。Codex 使用 CODEX_THREAD_ID，可用 KEELSON_SESSION_ID 显式指定；无可靠身份时不保存共享焦点。私有运行时位于 Git 私有目录或外部用户缓存。
 
@@ -38,7 +43,7 @@ keelson ask frontier --change add-pagination --json
 keelson ask list --change add-pagination
 ```
 
-owner 为 user、agent 或 reality；支持 --depends D1,D2 和 --irreversible。frontier 最多展示三个已就绪且独立的用户问题，并单列调查任务。已解决问题不重复询问。
+owner 为 user、agent 或 reality；支持 --depends D1,D2 和 --irreversible。frontier 默认显示三个就绪用户问题，并返回 `remaining` 和调查任务。简单缺口使用 `--limit 1`，复杂轮次使用 `--all` 取完整就绪集合。`complete: true` 表示已登记的树没有 open 或 assumed 决策；问题列表为空本身不代表结束。已解决问题不重复询问。
 
 assume 需要 answer 与 basis，不可逆决定不能假设；reject 需要 basis。修改已解决决定前使用 reopen D17 --reason，旧答案保留。未解决或假设中的决策阻止正常落地。
 

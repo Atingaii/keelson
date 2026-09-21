@@ -1,6 +1,6 @@
 <p align="center"><img src="https://raw.githubusercontent.com/Atingaii/keelson/main/docs/assets/keelson-banner.png" alt="Keelson" width="620"></p>
 
-<p align="center"><strong>在仓库里对话，让每次开发都有据可循、有处接续。</strong></p>
+<p align="center"><strong>让 Agent 先想清楚，再按规范做完，把经验留在仓库。</strong></p>
 <p align="center">为编码 Agent 提供项目记忆、工程方法和验收流程。你描述目标，Agent 推进实现，把决策与验证留在代码旁。</p>
 
 <p align="center">
@@ -16,16 +16,13 @@
 <a href="https://github.com/Atingaii/keelson/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT license"></a>
 </p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/Atingaii/keelson/main/docs/assets/keelson-demo-zh.gif" alt="真实 Agent 对话回放：用户提出任务筛选需求，Agent 完成实现、验证与归档" width="100%"></p>
-<p align="center"><sub>已初始化的示例仓库 · 真实会话节选，等待已压缩 · 用户只需提出需求</sub></p>
-
 ## 为什么选择 Keelson？
 
 Keelson 将软件工程中的成熟做法带进日常 Agent 对话：先对齐结果，留下决策依据，再检查实际产出。它围绕四个常见问题展开。
 
 **1. Agent 做出来的，并不是你想要的。**
 
-“加个筛选”背后，还有默认行为、边界情况和兼容性。Keelson 引导 Agent 先读代码，把需求变成具体的验收示例，再开始实现。这借鉴了**行为驱动开发（BDD）**：通过例子尽早发现理解偏差，只对影响方向的选择提问。
+“加个筛选”背后，还有默认行为、边界情况和兼容性。Keelson 引导 Agent 先读代码，自动调查模糊目标和相互关联的选择，把需求变成具体的验收示例，再开始实现。这借鉴了**行为驱动开发（BDD）**：通过例子尽早发现理解偏差，只对影响方向的选择提问。
 
 **2. 换个会话，又得解释同一个项目。**
 
@@ -47,7 +44,7 @@ Keelson 由 **Agent Skill + 本地 CLI** 组成：Skill 指导 Agent 如何工�
 - 一个能读取项目、修改文件并执行命令的编码 Agent。
 - 一个本地项目目录；建议使用 Git 管理代码和项目知识。
 
-支持生成 Codex、Claude Code、OpenCode、Gemini CLI 等宿主的集成入口；各宿主的能力与验证范围见 [Agent 支持](https://github.com/Atingaii/keelson/blob/main/docs/platforms.md)。
+重点适配 **Claude Code、Codex CLI 和 CodeBuddy CLI**，也支持其他编码 Agent 的集成入口；各宿主的能力与验证范围见 [Agent 支持](https://github.com/Atingaii/keelson/blob/main/docs/platforms.md)。
 
 ## 快速开始
 
@@ -57,24 +54,30 @@ Keelson 由 **Agent Skill + 本地 CLI** 组成：Skill 指导 Agent 如何工�
 npm install -g @zyaiting/keelson
 ```
 
-**2. 在你的项目中初始化**，以 Codex 为例：
+**2. 在你的项目中初始化**，选择使用的 CLI：
 
 ```bash
 cd /path/to/your/project
-keelson init --codex --lang zh
+keelson init --claude --lang zh       # Claude Code
+# 或：keelson init --codex --lang zh
+# 或：keelson init --codebuddy --lang zh
 ```
 
 **3. 在这个目录启动 Agent，直接提出需求。** 初始化只需一次；后续正常对话即可。
 
-> 给任务列表加一个优先级筛选：默认显示全部，也能只看高优先级。保持现有调用兼容，补齐测试并完成验证。
+> 给任务列表加一个优先级筛选。
 
 升级 CLI：`npm install -g @zyaiting/keelson@latest`，然后在项目中运行 `keelson update`。更多设置见[上手教程](https://github.com/Atingaii/keelson/blob/main/docs/zh/getting-started.md)；其他宿主见 [Agent 支持](https://github.com/Atingaii/keelson/blob/main/docs/platforms.md)。
 
 ## 从一句需求到一次完成
 
-**理解目标 → 明确范围 → 实现与验证 → 归档与接续**
+**调查 → 决策 → 实现 → 独立复核 → 验证 → 知识回写**
 
-Agent 按任务读取需要的指导，维护验收标准并执行项目检查；条件满足后自动收尾。遇到影响方案的选择时再与你确认，普通小修改保持轻量。
+初始化后，普通需求自动触发相应流程：调查需求、带着推荐澄清关键选择、应用工程与 UI/UX 指导、实现、验证，并保留结果供后续会话接续。你无需点名 Skill 或管理工作流命令。明确的小修改使用最小变更记录；简单缺口一次问一个，复杂问题一轮问完前提已明确的整组决定，每题给推荐与理由。决定明确后继续已授权的工作。
+
+实现前，Agent 自动启动已澄清的变更，加载声明的规范与规则；复核使用从原始需求和契约生成的独立上下文包。验收后，持久决策回写到项目规范，下次开发继续使用这些知识。
+
+Claude Code、Codex 和 CodeBuddy 集成均支持恢复流程上下文，并对受支持的文件修改执行启动门禁。Codex 首次提示时需在 `/hooks` 中信任生成的 hooks；各宿主原有权限确认继续生效。禁用 hooks 时，由已安装指导驱动相同 CLI。详见[自动化机制与边界](https://github.com/Atingaii/keelson/blob/main/docs/zh/automation.md)。
 
 你也可以这样说：
 
@@ -82,7 +85,7 @@ Agent 按任务读取需要的指导，维护验收标准并执行项目检查�
 - **改善界面：**“优化设置页，保留品牌风格，保存失败时不要丢输入，并检查手机端体验。”
 - **接着开发：**“继续上次的改动，先确认还剩什么。”
 
-前端任务有 22 个可组合的[设计动作](https://github.com/Atingaii/keelson/blob/main/docs/zh/frontend.md)，可通过 `keelson design` 查看，包括审视、简化、打磨和适配。实际界面效果需要 Agent 使用浏览器检查。
+涉及界面的任务中，Agent 会从 22 个可组合的[设计动作](https://github.com/Atingaii/keelson/blob/main/docs/zh/frontend.md)中按需选择，包括审视、简化、打磨和适配；可通过 `keelson design` 查看。实际界面效果需要 Agent 使用浏览器检查。
 
 ## 项目里会留下什么？
 

@@ -1,6 +1,6 @@
 # Frontend design
 
-Use for creating, improving, diagnosing or verifying an interface people see and operate. Keep the existing change lifecycle; add design judgment and observable interface acceptance.
+Apply automatically when the requested work or affected code creates, changes, diagnoses or verifies an interface people see and operate. Users need not request a design action or name this reference. Keep the existing change lifecycle; add design judgment and observable interface acceptance, scoped to the affected user journey.
 
 ## Route by the problem
 <!-- keelson: id=frontend.routing | without: Small UI fixes turn into broad redesigns and every request loads all guidance | sunset: never -->

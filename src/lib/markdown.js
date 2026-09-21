@@ -200,7 +200,7 @@ export function parseLedger(text) {
       const exits = [...s.body.matchAll(/exit\s*(?:code)?\s*[:=]?\s*(\d+)/gi)].map((m) => Number(m[1]));
       entry.exit = exits.length ? Math.max(...exits) : null;
       entry.command = (s.body.match(/`([^`]+)`/) || [])[1] ?? null;
-      entry.tree = (s.body.match(/\btree\s*[:=]?\s*([0-9a-f]{7,40})\b/i) || [])[1] ?? null;
+      entry.tree = (s.body.match(/\btree\s*[:=]?\s*([0-9a-f]{7,64})\b/i) || [])[1] ?? null;
     }
     if (kind === 'dispatch') {
       const dm = entry.title.match(/(light|standard|deep)/i);

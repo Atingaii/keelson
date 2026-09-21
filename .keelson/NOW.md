@@ -4,6 +4,8 @@ The current implementation provides local signed check records, durable decision
 
 Frontend design now has bilingual action briefs and focused guidance for review, visual craft, interaction, adaptation and browser iteration. CLI help and installed reference discovery are concise; product documentation is consolidated. Repository branches are limited to main. Legacy migration fixtures are preserved as exact compatibility inputs.
 
+Ordinary requests now route automatically through discovery, engineering, UI/UX, implementation, verification and project memory. Discovery depth follows unresolved decisions and their consequences; no special interview wording or mode is required. Both READMEs omit the demo GIFs. Version 0.5.0 adds agent-operated start gates, declared implement/check context, complete decision rounds and safe runtime upgrades. Claude Code and CodeBuddy file tools and Codex apply_patch enforce the start receipt when hooks are active. All three restore workflow context; Codex requires host hook trust. Other hosts use CLI guidance.
+
 ## Verification boundaries
 Codex session identity has been exercised locally. Other hosts have declared adapter capabilities and fixture coverage; live host behavior must be verified in the host. Design guidance is executed by the coding agent using the project's available browser tools. A printed brief is not a completed visual review.
 

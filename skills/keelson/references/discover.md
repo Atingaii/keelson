@@ -1,6 +1,8 @@
 # Discovering what is wanted
 
-The user often cannot describe the whole requirement in the first sentence, and they should not need to know which engineering choice matters. Discovery finds the problem behind the request before anyone picks a database. Use `interview.md` for owner-owned uncertainty; load `design-lenses.md` only when the work triggers a real cross-domain risk.
+The user often cannot describe the whole requirement in the first sentence, and they should not need to know which engineering choice matters. Discovery finds the problem behind the request before anyone picks a database. Apply `interview.md` automatically to determine depth from the goal, unresolved choices and consequences, including when the user simply asks to build something. Load `design-lenses.md` only when the work triggers a real cross-domain risk.
+
+During read-only requests, reuse existing artifacts but keep all new write-backs, decisions and notes in the conversation, even when a change is active. The persistence steps below apply only within existing write authorization.
 
 ## Scenario before technology
 <!-- keelson: id=discover.scenario-first | without: the first question is a technology choice the owner cannot answer, and the product is shaped by whatever they guessed | sunset: never -->
@@ -42,11 +44,11 @@ Before asking, classify the gap by who can resolve it:
 |---|---|
 | Already established in repository/context | Use it; cite the source in the write-back |
 | Reality-owned (code behaviour, API contract, measurement, dependency capability) | Investigate or run a small experiment |
-| User-owned and load-bearing (goal, scope, acceptance, risk tolerance, public commitment) | Ask one question |
+| User-owned and load-bearing (goal, scope, acceptance, risk tolerance, public commitment) | Ask one question for a simple gap or the whole ready frontier for connected uncertainty |
 | Non-load-bearing or cheap to reverse | Decide under authorization, or leave unresolved for a later slice |
 | Evidence exhausted | Mark it UNKNOWN; do not convert uncertainty into a user belief |
 
-Choose the gap with the highest practical value of information: the answer most likely to change the next slice, weighted by the cost of being wrong. Before asking, apply the `interview.md` question protocol. After the answer, update the write-back and reassess the frontier. "Exactly one question" is a bottleneck for **blocking uncertainty**, not a ritual: when no user-owned load-bearing gap exists, ask nothing and proceed.
+Use `interview.md` to choose a single question for a simple gap or the whole ready frontier for connected uncertainty. Prioritize by practical value of information: the answer most likely to change the next slice, weighted by the cost of being wrong. Before asking, apply the `interview.md` question protocol. After the answer, update the write-back and reassess the frontier. Question count follows decision complexity: when no user-owned load-bearing gap exists, ask nothing and proceed.
 
 ## Scope guard
 <!-- keelson: id=discover.scope-guard | without: a first request asks for five independent domains at once, and integration risk, debugging cost, and requirement churn compound | sunset: never -->

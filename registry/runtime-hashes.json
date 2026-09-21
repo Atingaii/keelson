@@ -1,0 +1,41 @@
+{
+  "source": "Generated from published @zyaiting/keelson 0.4.0 and 0.4.1 (English/Chinese, lean/guided, guide on/off). Hashes include paths and normalized file bytes; only exact generated content may be replaced.",
+  "versions": {
+    "0.4.0": {
+      "shims": [
+        "cebe268136c46d9b190f31d5521770a8fe81dd0aa53dfccfd1dfbf39dafa26e7",
+        "5cef12b9c5aec6410040c1f5033fc60cc76fd9837bc73abfef147e36096b981a"
+      ],
+      "skills": [
+        "490534b10c8f594cd8ca40dc4817f56f1d9e84bca1cff973c45d857f367269d1",
+        "a8cdf54fc5e68a03d74c4d8a8a1f714997c1340318b3c664fab1d3473c865dd7",
+        "7d56a7c7197f2363bbbace9149465ade63c8308eb2dfed15d76fbcf892dd5a58",
+        "4e2ca439e8e11683d8913ab72f05537cbbde4afa6d61ad0e0848a59f9cf7bae7"
+      ],
+      "workflows": [
+        "455f5bb4060b984cd1839aed452fb82cbc09101d81d28630bdaa9547aca6d050",
+        "9099f590ae1b8192de759cc9b9d2187d37961b841e80bedd6175c23eac752af1",
+        "73f8562e785d8259d853257d02ac1e0688a5882d8c8e701b42a4e289b317be31",
+        "ca267bd38b5353684e3deb7d1774bb75d25005381541ba67597cd9fb530ad538"
+      ]
+    },
+    "0.4.1": {
+      "shims": [
+        "4afd7eb69ca1ab1913c73737e56890ca6e363881b1cedc76e95f97b0e5d528e3",
+        "a2d88237dbaa7a9aa0fc5340e73690737a5c58f13013dff93604d2414f3fef38"
+      ],
+      "skills": [
+        "bc676907188784049abf44f271643ea726b82ad34eb3af994bbf1b382f8e3d5f",
+        "9f2a472f526646a3f1e180bb1cf9f1aaec74a0da5f4e937c9ca1ed5d88f11602",
+        "adb328b4553e9d3d5e1826f91ffd10528b7f7b6b04565e0c1801606d04509686",
+        "d7ac8d6b0e8c849cca28f574fc6fb355aa863f90c93fbf2165a43a1d14cabe34"
+      ],
+      "workflows": [
+        "455f5bb4060b984cd1839aed452fb82cbc09101d81d28630bdaa9547aca6d050",
+        "9099f590ae1b8192de759cc9b9d2187d37961b841e80bedd6175c23eac752af1",
+        "73f8562e785d8259d853257d02ac1e0688a5882d8c8e701b42a4e289b317be31",
+        "ca267bd38b5353684e3deb7d1774bb75d25005381541ba67597cd9fb530ad538"
+      ]
+    }
+  }
+}

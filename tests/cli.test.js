@@ -796,7 +796,10 @@ test('depends is a real lifecycle gate for status and land', () => {
   }
   const st = JSON.parse(run(dir, ['status', '--json'], { env }).stdout);
   const child = st.changes.find((x) => x.name === 'child-work');
-  assert.equal(child.work, 'in-progress');
+  assert.equal(child.work, 'clarifying');
+  const startRefused = run(dir, ['start', 'child-work'], { env, allowFail: true });
+  assert.equal(startRefused.code, 1);
+  assert.match(startRefused.stderr, /prerequisite/);
   assert.deepEqual(child.blockedBy, ['base-work']);
   assert.ok(child.gates.some((g) => g.code === 'dependencies' && g.pass === false));
   const refused = run(dir, ['land', 'child-work'], { env, allowFail: true });

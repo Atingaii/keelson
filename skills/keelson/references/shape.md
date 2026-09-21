@@ -20,7 +20,7 @@ When quick work is materially ambiguous, and for every spec change, do a compact
 3. **Missing** — information that cannot be learned from the repository; rank it by how much the answer could change the outcome, boundary, acceptance, or an expensive-to-reverse choice.
 4. **Failure if wrong** — name one likely failure pattern for this class of work: wrong problem, scope creep, compatibility break, unmeasured optimisation, unsafe migration, or another concrete risk.
 
-Keep the audit internal except for the facts/assumptions needed in the short write-back. If no missing item is load-bearing, proceed under project authorizations/defaults. If one is load-bearing and user-owned, route it through `interview.md`, ask the single highest-value question, update the write-back, then reassess. Do not expose an audit checklist to the owner.
+Keep the audit internal except for the facts/assumptions needed in the short write-back. If no missing item is load-bearing, proceed under project authorizations/defaults. If one is load-bearing and user-owned, route it through `interview.md`, ask one question for a simple gap or the whole ready frontier for connected uncertainty, update the write-back, then reassess. Do not expose an audit checklist to the owner.
 
 ## Write back your understanding
 <!-- keelson: id=shape.write-back | without: agent builds its own interpretation; mismatches surface after code exists | sunset: never -->
@@ -44,14 +44,14 @@ When you must proceed without an answer, write the working assumption as `- (ass
 ## Stop asking when the next slice is deliverable
 <!-- keelson: id=shape.stop-rule | without: agent either exhausts the owner with questions about later slices, or starts building on a slice whose acceptance is undefined | sunset: never -->
 
-The bar is not "no unknowns in the project". It is: the next slice has a clear outcome, a boundary, and an acceptance check. Unresolved questions about later slices go under `## Open questions` with what they block, and the work they do not block continues. Example: download permissions undecided, link management list can be built, public download must not be defaulted on.
+The bar is not "no unknowns in the project". It is: the current scope has a clear outcome, boundaries and an acceptance check, with the material decision branches resolved as described in `interview.md`. A small first slice is not a shortcut around unresolved shared architecture or product commitments. Genuinely independent work continues while later questions remain under `## Open questions` with what they block. Example: download permissions undecided, link management list can be built only if it does not commit to those semantics; public download must not be defaulted on.
 
 ## Interview (only when the decision frontier requires it)
 <!-- keelson: id=shape.interview | without: architectural ambiguity is silently guessed, or every spec change turns into a mandatory questionnaire | sunset: never -->
 
 Use `interview.md` for the interaction protocol. A spec-sized change does **not** automatically require user questions: first resolve repository-owned facts and reversible engineering choices yourself. If the work touches data, security, concurrency, compatibility, error handling/resource lifetime, operations, performance, UI/accessibility, or AI behavior, inspect only the triggered rows in `design-lenses.md` and turn them into decisions or evidence obligations. For failure-path changes, follow its pre-implementation regression step.
 
-Run the assumption check internally. Do not open with an abstract "what are we assuming?" question unless the owner truly owns that uncertainty; translate it into the concrete user-visible or risk consequence instead. Explicit "stress-test this" requests continue through the relevant decision tree; ordinary work stops as soon as the next safe slice is ready.
+Run the assumption check internally. Translate owner-owned uncertainty into concrete user-visible or risk consequences. Apply the automatic depth rules in `interview.md` without waiting for a special request: connected uncertainties or high-impact unresolved commitments require deeper discovery before dependent design choices. Clear work proceeds directly; resume authorized implementation once the relevant branches are settled.
 
 ## Authorization
 <!-- keelson: id=shape.authorization | without: either every step waits for approval or the agent decides product questions and production actions by itself | sunset: never -->

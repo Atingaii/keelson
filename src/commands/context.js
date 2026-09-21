@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { activeWorkflow, phaseContext, renderPhaseContext } from '../lib/workflow.js';
 import { requireProjectRoot, projectPaths } from '../lib/paths.js';
 import { readOr, listDirs, exists } from '../lib/fs.js';
 import { loadConfig } from '../lib/config.js';
@@ -14,6 +15,12 @@ import { changeSpecDrift } from '../lib/specs.js';
 
 export async function context({ flags, positional }, cwd = process.cwd()) {
   const root = requireProjectRoot(cwd);
+  if (flags.phase) {
+    const workflow = activeWorkflow(root, flags.change);
+    const pack = phaseContext(root, workflow, flags.phase, [...list(flags.paths), ...positional]);
+    console.log(flags.json ? JSON.stringify(pack, null, 2) : renderPhaseContext(pack));
+    return 0;
+  }
   maintainRuntime(root);
   const cfg = loadConfig(projectPaths(root).config);
   const p = projectPaths(root, cfg);

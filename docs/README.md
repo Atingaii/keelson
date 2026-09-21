@@ -11,6 +11,7 @@ Keelson is designed around one golden path: **initialize once, then keep using y
 
 ## Guides
 
+- [Automation](automation.md) — decision rounds, start gates, context injection and host boundaries.
 - [Existing projects](existing-projects.md) — adopt Keelson without duplicating your existing docs.
 - [Collaboration](collaboration.md) — sessions, people, parallel changes, handoffs, worktrees.
 - [Verification](verification.md) — evidence, worktree fingerprints, stale checks.

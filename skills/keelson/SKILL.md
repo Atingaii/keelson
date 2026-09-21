@@ -1,6 +1,6 @@
 ---
 name: keelson
-description: Engineering control plane for coding work in repositories with a .keelson/ directory. Use for exploring an idea, changing code, fixing/debugging, frontend design and UX review, continuing prior work, or improving recurring engineering failures. Keeps conversation sessions separate from durable work items so users can keep asking questions without having to announce when a task starts or ends.
+description: Engineering workflow for repositories with a .keelson/ directory. Apply automatically to ordinary requests to explore an idea, build or change a feature, fix a bug, create or improve an interface, continue prior work, or improve recurring engineering failures. Routes discovery, design, implementation, verification and project memory without requiring skill names or workflow commands.
 ---
 
 # Keelson
@@ -21,6 +21,8 @@ Completion is **not** an intent and never depends on the user saying “done”.
 
 - For interface design, review, interaction or responsive work, load `frontend.md`; use `keelson design` for focused action briefs. Keep browser observations distinct from code checks.
 
+Route from the requested outcome and repository evidence, not special vocabulary. Users describe work; the agent loads guidance and runs workflow commands. Automatically include `model.md` for conflicting terms or shared boundaries, `engineer.md` for non-obvious design choices, and `frontend.md` when the affected path includes a user interface, even without an explicit design request. During implementation use `build.md`; complete with `verify.md` → `land.md` → `reconcile.md` within existing authorization. `guide: true` adds teaching, not activation; both profiles use this workflow by default.
+
 ## Operating rules
 
 - A conversation/session is only a focus pointer. Ending a window, going idle, or continuing to ask questions MUST NOT mark a change complete.
@@ -28,9 +30,10 @@ Completion is **not** an intent and never depends on the user saying “done”.
 - On Resume, use `keelson focus --auto`; branch match or a sole active change may be suggested. Never silently bind an ambiguous session.
 - If `NOW.md` says “First contact”, infer and confirm `INTENT.md`; do not inventory the whole repository into specs/rules.
 - Non-trivial modifying work starts from current context; shared modules get `keelson impact <files>`.
-- Ask only at the decision frontier. Run the triggered blindspot pass, then use `interview.md`: up to three independent ready owner-owned decisions per round, skipping settled answers, concrete scenario/options, recommended default, and `not sure` as a valid route. Never ask what repo evidence, an experiment, or agent engineering judgment can settle.
+- Automatically assess discovery needs on new goals, material follow-ups and changed premises using `interview.md`; unresolved goals, connected product choices or high-impact commitments trigger deeper discovery without special wording. Clear tasks proceed directly. Ask one ready owner decision for a simple gap, or the whole ready frontier for connected uncertainty, with concrete options, a recommendation and reason; reuse settled answers and investigate facts yourself.
 - Route non-obvious mechanisms/architecture through `engineer.md`: reduce to facts, outcome, constraints, and invariants; state a falsifiable hypothesis; use the cheapest experiment/ablation that can discriminate; complexity must earn its keep with evidence.
-- Size only the work: trivial = direct edit; quick = lightweight change; spec = acceptance + behavior delta + plan within existing user authorization; clarify only unresolved owner choices.
+- Size only the work: trivial = minimal quick change; quick = lightweight change; spec = acceptance + behavior delta + plan within existing user authorization; clarify only unresolved owner choices.
+- Before product edits, automatically run `keelson start` for the focused change, then load `keelson context --phase implement`; after new material decisions, restart only once they are settled. Users need not run these commands.
 - Artifacts are information containers, not ceremony. Do not create empty roadmap/glossary/rule/task/ledger/handoff/spec files.
 - `tasks.md` is an execution plan, not completion authority. Unchecked plan items never override satisfied acceptance + fresh evidence; reconcile or remove stale tasks when the implementation path changes.
 - Knowledge maintenance is internal. During RECONCILE, automatically rewrite/split/dedupe pressured durable docs and let `land` auto-shard large specs; never ask the owner to maintain Keelson unless a product-semantic decision is required.

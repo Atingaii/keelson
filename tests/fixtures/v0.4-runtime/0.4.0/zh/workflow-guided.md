@@ -1,0 +1,20 @@
+# Keelson 工作流
+
+> 引导模式：项目所有者希望边做边学。基础提问仍保持场景化；额外解释已采用的工程概念、约束理由，并在 spec 变更收尾时附一段简短教学说明。
+
+项目真相与长期 work item 位于 `.keelson/`；本机会话、信任与密钥位于 Git 私有运行目录；持久签名记录和日志跟随变更归档。**Session 不是 Task**：它只是指向当前对话正在围绕哪个 work item。
+
+每个非平凡修改请求遵循 **ORIENT → BOUND → BUILD → SENSE → RECONCILE**。
+
+- **ORIENT** —— 检查工作树和当前 session focus。同一目标的追问继续使用 focus change；用户说“继续”时运行 `keelson focus --auto`，存在歧义时绝不静默绑定。
+- **BOUND** —— 提问前先读仓库。仓库事实和可逆工程选择自行解决；只在 decision frontier 每轮询问最多三个独立、已就绪、真正属于所有者且会影响结果的决定。trivial 直接改；quick 创建最小有用 change；spec 写 acceptance、行为 delta 和 plan。只检查当前工作真实触发的风险镜头。
+- **BUILD** —— 一次推进一个纵向切片。独立的新修改目标创建新 change；围绕同一目标继续追问不会。
+- **SENSE** —— 尽早跑便宜检查；完成必须有当前工作树上的新鲜 `keelson check --record` 证据。任务复选框只描述当前计划，不负责判定完成。
+- **RECONCILE** —— 每轮修改后根据 acceptance、阻塞项、rollout/兼容性和新鲜 verification 重新计算生命周期。land 前静默完成 context 暴露的内部知识维护：重写单例当前状态文档、拆分/去重 rules，并让 `land` 自动分片大型 spec。gate 满足后状态成为 `ready` 并自动 land；不等待用户说“做完了”，也不把维护流程暴露给用户。
+- 会话结束、长时间空闲、compaction、关闭窗口只改变本机会话 runtime，绝不自动完成、取消或 land 长期 work item。
+- `handoff.md` 只用于真正跨人/跨机器或明确所有权转移。普通新会话从 change/task/ledger 状态和可用的 session focus 重建。
+- 工件按需创建；空文档不是进度。
+- 重复 failure class 升级为作用域 rule 或可执行 fitness check；自动化接管后删掉冗余 prose。
+- First contact 根据仓库证据推导 `INTENT.md`；只有未决项目边界会实质影响当前工作时才询问所有者。specs/rules 只有真实工作暴露长期真相时才增长。
+
+包内路由器是 `keelson guide`。它判断对话意图；生命周期转换来自 work state，而不是用户措辞。项目仅在使用 `keelson init --vendor` 时才会保存副本。

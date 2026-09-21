@@ -32,10 +32,15 @@ keelson context --paths src/api/** --json
 keelson impact src/api/orders.js
 keelson new add-pagination --tier spec --capability orders --touches src/api/**
 keelson focus add-pagination
+keelson start add-pagination
+keelson context --phase implement --change add-pagination
+keelson context --phase check --change add-pagination --json
 keelson focus --auto --json
 keelson status --json
 keelson handoff add-pagination --by maintainer
 ```
+
+`start` is the agent-operated transition from planning to implementation. It rejects unresolved decisions, missing acceptance checks and unfinished prerequisites, then records the current plan and sets `in-progress`. Changed plans require another start. Phase context includes the request, change, decisions, contracts and relevant rules; `context.json` adds project-relative files in `implement` and `check` arrays (schema 1). See [automation](automation.md).
 
 New also accepts `--depends a,b`, `--owner name` and `--worktree`. Quick starts with change.md; spec adds tasks and requested deltas. Other artifacts appear when needed.
 
@@ -50,7 +55,7 @@ keelson ask frontier --change add-pagination --json
 keelson ask list --change add-pagination
 ```
 
-Owners: user, agent, reality. Add accepts `--depends D1,D2` and `--irreversible`. The frontier exposes up to three independent ready user questions plus investigations. Settled questions stay settled.
+Owners: user, agent, reality. Add accepts `--depends D1,D2` and `--irreversible`. The default frontier exposes three ready user questions, `remaining`, and investigations. Use `--limit 1` for a simple gap or `--all` for the whole ready frontier in a complex round. `complete: true` means the registered tree has no open or assumed decisions; an empty question list alone does not establish completion. Settled questions stay settled.
 
 Assume takes answer and basis; irreversible decisions cannot be assumed. Reject takes a basis. `reopen D17 --reason "..."` preserves the previous answer in history. Open and assumed structured decisions block normal landing.
 

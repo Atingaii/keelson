@@ -5,7 +5,7 @@ const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
 
 const COMMANDS = {
-  ask: ['ask <add|frontier|list|settle|assume|reject|reopen> [id] [--change name] [--json]', 'Persist decisions and show up to three ready owner questions', () => import('./commands/ask.js').then((m) => m.ask)],
+  ask: ['ask <add|frontier|list|settle|assume|reject|reopen> [id] [--change name] [--all|--limit n] [--json]', 'Persist decisions and show ready owner questions; --all returns the whole frontier', () => import('./commands/ask.js').then((m) => m.ask)],
   design: ['design [action] [target] [--lang en|zh] [--json]', 'Prepare focused frontend design guidance for your agent', () => import('./commands/design.js').then((m) => m.design)],
   guide: ['guide [reference] [--list] [--json] [--lang en|zh]', 'Read the installed workflow or one reference on demand', () => import('./commands/guide.js').then((m) => m.guide)],
   hook: ['hook <event>', 'Run an installed host adapter', () => import('./commands/hook.js').then((m) => m.hook)],
@@ -13,10 +13,11 @@ const COMMANDS = {
   init: ['init [--<platform> ...] [--tools a,b] [--guide] [--profile lean|guided] [--lang en|zh] [--no-hooks] [--vendor] [--dry-run]', 'Set up the minimal .keelson/ control plane and host discovery. Project artifacts grow only when the work needs them', () => import('./commands/init.js').then((m) => m.init)],
   platforms: ['platforms [--json]', 'List supported coding tools, their file locations, and which are installed or configured', () => import('./commands/platforms.js').then((m) => m.platforms)],
   update: ['update [--vendor] [--dry-run]', 'Refresh owned host shims and configuration; --vendor opts into copied guidance', () => import('./commands/init.js').then((m) => m.init)],
-  context: ['context [--paths a/,b/**] [--json]', 'Print INTENT, ROADMAP, NOW, active changes, existing references, and the rules matching the given paths', () => import('./commands/context.js').then((m) => m.context)],
+  context: ['context [--paths a/,b/**] [--change name] [--phase implement|check] [--json]', 'Print INTENT, ROADMAP, NOW, active changes, existing references, and the rules matching the given paths', () => import('./commands/context.js').then((m) => m.context)],
   impact: ['impact <file> [file...] [--json]', 'Mechanical impact hints: importers, specs and rules that may be affected, active changes that overlap', () => import('./commands/impact.js').then((m) => m.impact)],
   focus: ['focus [change] [--auto|--clear] [--json]', 'Bind this AI session to one active change without changing the change lifecycle', () => import('./commands/focus.js').then((m) => m.focus)],
   new: ['new <name> [--tier quick|spec] [--capability a,b] [--touches globs] [--depends change] [--worktree]', 'Scaffold a change directory (owner, branch, delta base recorded)', () => import('./commands/new.js').then((m) => m.newChange)],
+  start: ['start [change] [--json]', 'Enter implementation after the decision and plan gates pass; run by the agent', () => import('./commands/start.js').then((m) => m.start)],
   status: ['status [--json]', 'Work, verification, and release status per change; slices, open questions, conflicts, handoffs', () => import('./commands/status.js').then((m) => m.status)],
   handoff: ['handoff [name] [--by who]', 'Create or re-stamp handoff.md for a change (at, updated, by)', () => import('./commands/handoff.js').then((m) => m.handoff)],
   validate: ['validate [--json]', 'Check .keelson/ structure, specs, changes, ledgers; non-zero on errors', () => import('./commands/validate.js').then((m) => m.validate)],
@@ -33,7 +34,7 @@ const COMMANDS = {
 
 const COMMAND_GROUPS = [
   ['Your commands', ['init', 'design', 'status', 'doctor', 'update', 'platforms', 'uninstall']],
-  ['Agent workflow', ['ask', 'context', 'impact', 'focus', 'new', 'check', 'handoff', 'validate', 'land', 'cancel']],
+  ['Agent workflow', ['ask', 'context', 'impact', 'focus', 'new', 'start', 'check', 'handoff', 'validate', 'land', 'cancel']],
   ['Maintenance / advanced', ['guide', 'attest', 'retro', 'models', 'ablate', 'restore']],
 ];
 

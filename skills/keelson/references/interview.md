@@ -1,6 +1,19 @@
 # Adaptive decision interviews
 
-Keelson users do not need software-architecture vocabulary. Interviewing is hidden control logic: discover only decisions the owner truly owns, make each one easy to answer, then return to building. Ordinary work is **not** a questionnaire; explicit “stress-test this” requests are deeper stress tests of the same decision tree.
+Keelson users describe their goals in ordinary language. The agent automatically chooses the depth of discovery from unresolved decisions and their consequences; users need no skill name, special phrase, or interview-mode switch. Investigate first, make owner decisions easy to answer, then return to the requested work.
+
+## Trigger discovery from the work
+<!-- keelson: id=interview.activation | without: users must know to request a deep interview, so vague goals and consequential assumptions reach implementation unchecked | sunset: never -->
+
+For a new goal, a material follow-up, or new evidence that changes a settled premise, inspect relevant repository facts and prior answers, then choose the depth:
+
+- **Clear and bounded:** the outcome, acceptance and relevant constraints are established. Proceed without an interview; a routine edit or factual explanation needs no discovery ceremony.
+- **One consequential gap:** ask the highest-value ready owner decision, with a recommendation and reason; reassess after the answer.
+- **Connected uncertainty:** the goal or success criteria are unclear, product choices depend on one another, requirements conflict, or unresolved permission/data/compatibility/migration commitments would materially change the design. Automatically work through the relevant decision branches before committing to a dependent design. A request such as “add team sharing” is enough when these choices remain open; do not ask whether to enable a deeper interview.
+
+Trigger on missing decisions and consequences, not keywords or task size alone. Existing contracts can settle even a high-risk question. Inspect domain risks using `design-lenses.md`, investigate facts yourself, and ask only what requires the owner's judgment. Apply the same rule when later answers reveal new branches. Preserve settled choices unless new evidence justifies reopening them.
+
+Discovery does not expand authorization: an exploratory conversation stays read-only, while an authorized change resumes implementation as soon as its relevant decisions are resolved. An explicit request for broader review can widen the review boundary, but is never required to activate discovery.
 
 ## Question protocol: earn the interruption
 <!-- keelson: id=interview.protocol | without: the agent asks unnecessary questions, hands implementation choices to the owner, or interrupts without knowing what the answer changes | sunset: never -->
@@ -23,10 +36,12 @@ Do one compact risk-triggered pass before interviewing. Load only the rows trigg
 
 A blindspot does **not** automatically become a question. Route it to an existing guarantee, an engineering default, an experiment, an acceptance/evidence case, or an owner decision. Ask only the last category.
 
-## One decision, recognition over recall
+## Match the round to the uncertainty
 <!-- keelson: id=interview.one-at-a-time | without: a wall of questions overloads the owner, while open-ended jargon questions force beginners to invent architecture preferences | sunset: never -->
 
-Read `keelson ask list --json` before asking. Never repeat a settled answer without new evidence and `ask reopen <id> --reason`. Ask at most three independent, ready user-owned decisions in one round; dependent choices wait for their prerequisite. Use `ask add`, `settle`, `assume`, and `frontier` to persist ownership, answer and basis. Irreversible decisions require settlement, not assumptions. Prefer a concrete scenario and recognition over recall:
+Read existing decisions before asking. When the current request authorizes project writes, use `ask add`, `settle`, `assume`, and `frontier` to persist ownership, dependencies, answers and basis on its active change. Never repeat a settled answer without new evidence and `ask reopen <id> --reason`. During read-only exploration, even if an active change exists, keep new answers in the conversation; transfer durable results only when implementation or persistence is authorized.
+
+For a simple gap, ask one highest-value ready owner decision (`ask frontier --limit 1`). For connected uncertainty, ask the **whole ready owner frontier in one round** (`ask frontier --all`), grouped by topic with a recommendation and reason for each question. If the host caps questions, bundle them in one supported text question or deliver same-round batches; do not move to dependent questions until the round's prerequisites are settled. A recommendation is not an answer: wait for the owner's response unless existing authorization explicitly delegates the choice. Repository/reality-owned facts are investigated, never put to the owner. Irreversible decisions require settlement, not assumptions. Prefer a concrete scenario and recognition over recall:
 
 - describe the situation in the owner’s language;
 - give 2–4 **materially different outcomes**; when useful, attach one concise **Engineering:** consequence to each option instead of making the owner infer the implementation;
@@ -79,6 +94,8 @@ Technology is explanatory context after the product consequence is clear. It is 
 
 Resolve decisions in dependency order:
 
+Maintain a compact decision tree: each unresolved choice names its prerequisites and the outcome it changes. Each answer settles a branch or exposes new ones. Recompute the ready frontier after every round; ask the whole ready owner frontier in a complex round with recommended answers and reasons, wait for those answers, then work the newly unblocked branches. An investigation still in progress is an unresolved prerequisite, not permission to guess. Keep the full tree internal; show only the current questions and a concise result.
+
 **problem / actor → scope and non-goals → observable behavior → data/permission invariants → external contracts → failure semantics → expensive architecture → implementation details**
 
 Ask earlier questions only when they change later branches. Detect grab-bag requests and rabbit holes: separate independent domains, identify which one unlocks the next useful slice, and park speculative future needs instead of designing for them now.
@@ -109,12 +126,14 @@ Never turn “I don’t know which technology” into a technology poll. Transla
 ## Read back, persist the result, and stop
 <!-- keelson: id=interview.stop | without: answers stay trapped in chat, the same decision is asked again, or ordinary work becomes an endless interview | sunset: never -->
 
-After an answer, confirm **decision + consequence** in one sentence, persist only the durable result in the owning artifact, and recompute the decision frontier. Do not create a transcript.
+After an answer, confirm **decision + consequence** in one sentence, when the current request authorizes writes, persist only the durable result in the owning artifact, and recompute the decision frontier. Do not create a transcript.
 
-For ordinary work, stop asking as soon as the next vertical slice has:
+Stop asking when the current review boundary or next implementation slice has:
 - a clear observable outcome;
 - explicit boundaries/non-goals where needed;
-- no unresolved owner-owned decision that blocks it;
+- no unresolved owner-owned decision or silent assumption that could change its outcome or design commitment;
 - an acceptance/evidence path.
 
-Questions about later slices remain open without blocking current work. If the owner explicitly asks for a deep stress test, continue through every **material** branch inside the requested boundary, but still reject speculative future branches and low-value implementation trivia.
+In deeper discovery, resolve every material branch that could change the current outcome or design commitment, including downstream choices revealed by earlier answers. Do not call a slice safe while its shared architecture relies on an unresolved high-impact decision. Independent work can continue: move genuinely later open choices into ROADMAP or a separate change, preserving their dependencies and unresolved state. `start` gates the whole current change; do not leave a blocking decision there while declaring the change ready. Reject speculative future branches and low-value implementation trivia. Return to the requested work without requiring an “end interview” phrase or repeating an approval already given.
+
+For a tracked interview, `keelson ask frontier --all --json` must report `complete: true` before claiming its registered tree is settled. An empty question list alone can mean pending investigations, blocked dependencies or assumptions. Also check the current outcome, boundaries and domain risks for material branches not yet registered: graph completion cannot prove discovery completeness. Keep new findings in the conversation for read-only requests.

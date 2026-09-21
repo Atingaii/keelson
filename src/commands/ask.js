@@ -18,6 +18,8 @@ function askUnlocked({ positional, flags }, cwd) {
   const change = changes.find((c) => c.name === name);
   if (!change) throw new Error('choose an active change with --change <name>');
   const [action = 'frontier', id] = positional;
+  const limit = flags.all ? Infinity : flags.limit === undefined ? 3 : Number(flags.limit);
+  if (limit !== Infinity && (!Number.isInteger(limit) || limit < 1)) throw new Error('--limit must be a positive integer; use --all for the whole ready frontier');
   let data = readDecisions(change.dir);
   const text = (value, label) => {
     if (typeof value !== 'string' || !value.trim()) throw new Error(`${label} is required`);
@@ -52,11 +54,12 @@ function askUnlocked({ positional, flags }, cwd) {
       }
     });
   } else if (!['frontier', 'list'].includes(action)) throw new Error('usage: keelson ask <add|frontier|list|settle|assume|reject|reopen> [id] --change <name>');
-  const result = action === 'list' ? data : decisionFrontier(data);
+  const result = action === 'list' ? data : decisionFrontier(data, limit);
   if (flags.json) console.log(JSON.stringify(result, null, 2));
   else if (action === 'list') for (const d of data.decisions) console.log(`${d.id} [${d.owner}/${d.state}] ${d.question}${d.answer ? ` → ${d.answer}` : ''}`);
   else {
     for (const d of result.questions) console.log(`${d.id}. ${d.question}${d.recommended ? ` (recommended: ${d.recommended})` : ''}`);
+    if (result.remaining.length) console.log(`${result.remaining.length} more ready owner decision(s); use --all for a complex interview round.`);
     for (const d of result.investigate) console.log(`Investigate ${d.id} (${d.owner}): ${d.question}`);
     if (!result.questions.length) console.log(result.complete ? 'Decision frontier complete.' : 'No owner question is ready; resolve investigations, dependencies or assumptions.');
   }

@@ -2,6 +2,28 @@
 
 Notable changes to Keelson, organized by version.
 
+## [0.5.0] - 2026-09-21
+
+### Added
+
+- Agent-operated `start` transition with a current-plan receipt, unresolved-decision and prerequisite gates, and declarative implement/check context packs.
+- Native workflow adapters for Claude Code, Codex and CodeBuddy: supported file/patch gates, phase context and session recovery. Codex hook trust and host permissions remain in control; CodeBuddy uses its native modifiedInput protocol without auto-approval.
+- Complete ready-frontier output with `ask --all`, single-question selection with `--limit 1`, and visible remaining decisions.
+
+### Fixed
+
+- Upgrade and uninstall recognize unmodified published 0.4.0/0.4.1 runtime surfaces. Recorded content digests support later upgrades while protecting user edits.
+- Prompt restoration no longer treats handwritten ledger text as proof of passing verification.
+- Codex child hooks and CLI tools share the child's thread identity; explicit task markers support nested delegation without guessing from the root session. Focus remains independent, and child tool events restore context even after compaction without a SessionStart event.
+- Human-readable verification entries recognize the full SHA-256 worktree fingerprint.
+
+### Changed
+
+- Automatically route ordinary requests through discovery, engineering, UI/UX, implementation, verification and project-memory guidance in both languages and profiles.
+- Deepen discovery for unclear goals, connected decisions and unresolved high-impact commitments, without requiring a named skill or special prompt. Recompute decision branches after each round, recommend answers with reasons, reuse settled decisions and resume authorized work when ready.
+- Keep read-only exploration free of change artifacts and retain direct handling for clear, bounded work.
+- Remove the demo GIFs from both READMEs and simplify the quick-start example to an ordinary feature request.
+
 ## [0.4.1] - 2026-09-21
 
 ### Changed
@@ -103,3 +125,5 @@ Initial release.
 [0.3.0]: https://github.com/Atingaii/keelson/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Atingaii/keelson/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Atingaii/keelson/releases/tag/v0.1.0
+
+[0.5.0]: https://www.npmjs.com/package/@zyaiting/keelson/v/0.5.0

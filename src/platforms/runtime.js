@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { PKG_ROOT } from '../lib/paths.js';
-import { exists, read, walk, write, rmrf, replaceDirSafe, withLock } from '../lib/fs.js';
+import { exists, read, readJson, walk, write, rmrf, replaceDirSafe, withLock } from '../lib/fs.js';
 import { PLATFORMS } from './registry.js';
 
 export const CANONICAL_SKILL_DIR = path.join('.keelson', 'skill');
@@ -124,6 +124,42 @@ function treeHash(dir) {
   } catch { return null; }
 }
 
+// Before 0.5.0, manifests carried a version but no content digest. Bootstrap
+// only from exact published output; future releases use the installed digest.
+const HISTORICAL_RUNTIME = readJson(path.join(PKG_ROOT, 'registry', 'runtime-hashes.json'), {}).versions ?? {};
+
+function runtimeDigest(root, rel, kind) {
+  const target = path.join(root, rel);
+  if (kind !== 'workflows') return treeHash(target);
+  try { return fs.lstatSync(target).isFile() ? fileHash(read(target)) : null; } catch { return null; }
+}
+
+function previousRuntimeMatches(root, rel, kind, previousState) {
+  if (!previousState) return false;
+  const owned = kind === 'shims'
+    ? previousState.targets?.some((t) => t.skillsDir && path.join(t.skillsDir, 'keelson') === rel)
+    : previousState.vendor === true;
+  if (!owned) return false;
+  const actual = runtimeDigest(root, rel, kind);
+  if (!actual) return false;
+  const recorded = previousState.runtime?.[rel];
+  if (recorded) return actual === recorded;
+  return (HISTORICAL_RUNTIME[previousState.packageVersion]?.[kind] ?? []).includes(actual);
+}
+
+export function captureRuntimeOwnership(root, targets, vendor) {
+  const runtime = {};
+  for (const target of targets) {
+    const rel = path.join(target.skillsDir, 'keelson');
+    runtime[rel] = runtimeDigest(root, rel, 'shims');
+  }
+  if (vendor) {
+    runtime[CANONICAL_SKILL_DIR] = runtimeDigest(root, CANONICAL_SKILL_DIR, 'skills');
+    runtime[CANONICAL_WORKFLOW] = runtimeDigest(root, CANONICAL_WORKFLOW, 'workflows');
+  }
+  return runtime;
+}
+
 function canonicalSkillMatches(root, { lang, profile, version }) {
   const dest = path.join(root, CANONICAL_SKILL_DIR);
   const files = renderSkillFiles(lang, profile, version);
@@ -132,12 +168,19 @@ function canonicalSkillMatches(root, { lang, profile, version }) {
   return version === '0.3.0' && treeHash(dest) === LEGACY_V03_SKILL_TREE_HASHES.get(`${lang}/${profile}`);
 }
 
-export function installCanonicalSkill(root, { lang, profile, version, force = false }) {
+export function assertCanonicalSkillInstallable(root, { lang, profile, version, previousState, force = false }) {
   const dest = path.join(root, CANONICAL_SKILL_DIR);
-  const files = renderSkillFiles(lang, profile, version);
-  if (fs.lstatSync(dest, { throwIfNoEntry: false }) && !canonicalSkillMatches(root, { lang, profile, version }) && !force) {
+  if (fs.lstatSync(dest, { throwIfNoEntry: false }) && !canonicalSkillMatches(root, { lang, profile, version }) &&
+    !previousRuntimeMatches(root, CANONICAL_SKILL_DIR, 'skills', previousState) &&
+    !(previousState?.packageVersion === '0.3.0' && canonicalSkillMatches(root, { lang, profile, version: '0.3.0' })) && !force) {
     throw new Error('vendored skill differs from this CLI output; Keelson left it unchanged. Review it, then pass --force only if replacing the whole directory is intended.');
   }
+}
+
+export function installCanonicalSkill(root, options) {
+  assertCanonicalSkillInstallable(root, options);
+  const dest = path.join(root, CANONICAL_SKILL_DIR);
+  const files = renderSkillFiles(options.lang, options.profile, options.version);
   withLock(dest, () => {
     replaceDirSafe(dest, (tmp) => {
       for (const f of files) write(path.join(tmp, f.rel), f.content);
@@ -157,10 +200,10 @@ function skillShimMatches(dest, content, legacyVersion) {
     (normalize(read(skill)) === content || legacyV03SkillShimMatches(dest, legacyVersion));
 }
 
-function assertSkillInstallable(root, target, { lang, version, legacyVersion, previousVersion, force }) {
+function assertSkillInstallable(root, target, { lang, version, legacyVersion, previousVersion, previousState, force }) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
   const dest = path.join(root, p.skillsDir, 'keelson');
-  const priorOutput = previousVersion && managedSkillShimMatches(root, p, previousVersion);
+  const priorOutput = previousVersion && managedSkillShimMatches(root, p, previousVersion, previousState);
   if (fs.lstatSync(dest, { throwIfNoEntry: false }) && !skillShimMatches(dest, renderSkillShim(lang, version), legacyVersion) && !priorOutput && !force) {
     throw new Error('discovery shim differs from this CLI output; Keelson left it unchanged. Review it, then pass --force only if replacing the whole directory is intended.');
   }
@@ -177,18 +220,19 @@ export function assertSkillsInstallable(root, targets, options) {
   }
 }
 
-/** True only for a complete current shim or the byte-exact v0.3 shim. */
-export function managedSkillShimMatches(root, target, version) {
+/** True only for a complete generated shim or its recorded/published digest. */
+export function managedSkillShimMatches(root, target, version, previousState) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
   const dest = path.join(root, p.skillsDir, 'keelson');
-  return ['en', 'zh'].some((lang) => skillShimMatches(dest, renderSkillShim(lang, version), version));
+  return previousRuntimeMatches(root, path.join(p.skillsDir, 'keelson'), 'shims', previousState) ||
+    ['en', 'zh'].some((lang) => skillShimMatches(dest, renderSkillShim(lang, version), version));
 }
 
-export function installSkill(root, target, { lang, version, legacyVersion = null, previousVersion = null, force = false }) {
+export function installSkill(root, target, { lang, version, legacyVersion = null, previousVersion = null, previousState, force = false }) {
   const p = typeof target === 'string' ? PLATFORMS[target] : target;
   const dest = path.join(root, p.skillsDir, 'keelson');
   const content = renderSkillShim(lang, version);
-  assertSkillInstallable(root, p, { lang, version, legacyVersion, previousVersion, force });
+  assertSkillInstallable(root, p, { lang, version, legacyVersion, previousVersion, previousState, force });
   withLock(dest, () => replaceDirSafe(dest, (tmp) => write(path.join(tmp, 'SKILL.md'), content)));
   return path.relative(root, dest);
 }
@@ -210,14 +254,21 @@ export function plannedWorkflowFile(root, { lang, guide = false }) {
   return { path: path.relative(root, target), status };
 }
 
-export function installWorkflow(root, { lang, guide = false, force = false }) {
+export function assertWorkflowInstallable(root, { lang, guide = false, previousState, force = false }) {
   const target = path.join(root, CANONICAL_WORKFLOW);
   const content = workflowContent(lang, guide);
   const stat = fs.lstatSync(target, { throwIfNoEntry: false });
-  if (stat && (stat.isSymbolicLink() || normalize(read(target)) !== content) && !force) {
+  if (stat && (!stat.isFile() || normalize(read(target)) !== content) &&
+    !previousRuntimeMatches(root, CANONICAL_WORKFLOW, 'workflows', previousState) &&
+    !(previousState?.packageVersion === '0.3.0' && stat.isFile() && LEGACY_V03_WORKFLOW_HASHES.has(fileHash(read(target)))) && !force) {
     throw new Error('vendored workflow differs from this CLI output; Keelson left it unchanged. Review it, then pass --force only if replacing it is intended.');
   }
-  write(target, content);
+}
+
+export function installWorkflow(root, options) {
+  assertWorkflowInstallable(root, options);
+  const target = path.join(root, CANONICAL_WORKFLOW);
+  write(target, workflowContent(options.lang, options.guide));
   return path.relative(root, target);
 }
 
@@ -225,12 +276,12 @@ export function residentBlock(lang) {
   return read(path.join(skillSource(lang), 'templates', 'resident-block.md'));
 }
 
-export function removeCanonicalRuntime(root, { lang, profile, version, guide = false } = {}) {
+export function removeCanonicalRuntime(root, { lang, profile, version, guide = false, previousState } = {}) {
   const removed = [];
   const preserved = [];
   const skill = path.join(root, CANONICAL_SKILL_DIR);
   if (exists(skill)) {
-    if (canonicalSkillMatches(root, { lang, profile, version })) {
+    if (canonicalSkillMatches(root, { lang, profile, version }) || previousRuntimeMatches(root, CANONICAL_SKILL_DIR, 'skills', previousState)) {
       rmrf(skill);
       removed.push(CANONICAL_SKILL_DIR);
     } else preserved.push(CANONICAL_SKILL_DIR);
@@ -240,7 +291,7 @@ export function removeCanonicalRuntime(root, { lang, profile, version, guide = f
     preserved.push(CANONICAL_WORKFLOW);
   } else if (exists(workflow)) {
     const legacyWorkflow = version === '0.3.0' && LEGACY_V03_WORKFLOW_HASHES.has(fileHash(read(workflow)));
-    if (normalize(read(workflow)) === workflowContent(lang, guide) || legacyWorkflow) {
+    if (normalize(read(workflow)) === workflowContent(lang, guide) || legacyWorkflow || previousRuntimeMatches(root, CANONICAL_WORKFLOW, 'workflows', previousState)) {
       rmrf(workflow);
       removed.push(CANONICAL_WORKFLOW);
     } else preserved.push(CANONICAL_WORKFLOW);
