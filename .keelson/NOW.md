@@ -1,9 +1,9 @@
 # Now
 
-Version 0.5.1 connects purpose discovery to decisions, acceptance, implementation and independent review in the same change. Current-state documents now surface the next action and link complete supporting evidence. The package passed local installation and source-byte comparison; configured lint and all 174 tests passed.
+Version 0.5.1 is published as npm `latest`. Anonymous installation verified all 140 packaged files against source, initialization for Claude Code, Codex and CodeBuddy, readable-memory and interview guidance, and preservation of user progress on update. Configured lint and all 174 tests passed. Purpose discovery connects decisions, acceptance, implementation and independent review in the same change; current-state documents surface the next action and retain complete supporting evidence.
 
 ## Next
-Publish `@zyaiting/keelson@0.5.1` from the verified archive after the landing commit is pushed. npm identity currently needs fresh authentication (`whoami` returned 401).
+This release is complete; no release action remains. Implementation and signed verification evidence are retained in [the archived change](changes/archive/2026-09-21-readable-project-memory/). Public availability is recorded in [npm version metadata](https://registry.npmjs.org/@zyaiting%2fkeelson/0.5.1); detailed installation evidence remains in Git's private task-evidence directory on the release machine.
 
 ## Current capabilities
 - Ordinary requests automatically route through discovery, engineering, UI/UX, implementation, verification and project memory. Clear work proceeds directly; consequential uncertainty determines question depth. Revised premises require reviewing affected decisions.
