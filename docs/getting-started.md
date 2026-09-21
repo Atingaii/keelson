@@ -1,19 +1,16 @@
 # Get started
 
-Install from the repository with Node.js 20 or later:
+Requires Node.js 20+ and npm. Install the CLI globally, then initialize your project:
 
 ```bash
-git clone https://github.com/Atingaii/keelson.git
-cd keelson
-npm ci
-npm link
+npm install -g @zyaiting/keelson
 cd /path/to/your/project
 keelson init --codex
 ```
 
-`npm link` exposes the local checkout's CLI. Use a pinned Git revision for reproducible team installation. The package is named `@atingaii/keelson`; this documentation does not claim it has been published to npm.
+Install once; initialize each project separately. Global installation keeps `keelson` available to your agent in later sessions. See [Agent support](platforms.md) for other hosts.
 
-After the first npm release, users can install without cloning this repository. See [npm installation and publishing](publishing.md).
+To upgrade, run `npm install -g @zyaiting/keelson@latest`, then `keelson update` in each project. See [Contributing](../CONTRIBUTING.md) for source development and [npm publishing](publishing.md) for maintainer release steps.
 
 Initialization writes small project notes and host discovery shims. It leaves `.gitignore` alone. Start Codex in the project and ask for a real change. The installed skill points it to `keelson guide`, project intent and current change state.
 

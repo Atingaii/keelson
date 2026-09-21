@@ -2,9 +2,9 @@
 
 Notable changes to Keelson, organized by version.
 
-## [Unreleased] — 0.4.0 development
+## [0.4.0] - 2026-09-20
 
-This version is in the Git repository; an npm publication is a separate release action.
+First public npm release as `@zyaiting/keelson`. Install with `npm install -g @zyaiting/keelson`.
 
 ### Added
 
@@ -25,7 +25,7 @@ This version is in the Git repository; an npm publication is a separate release 
 - Markdown parsing supports fenced examples, nested headings and Unicode; edits preserve unknown content and sharding rejects unsafe paths.
 - Malformed host JSON fails without replacement; generated-surface reconciliation protects user content.
 - Task checkboxes remain advisory. Settled decisions cannot be silently reopened, and structured assumptions require explicit settlement.
-- Package name is scoped as `@atingaii/keelson`; the executable remains `keelson`. Syntax checks run on every CI platform.
+- Package name is scoped as `@zyaiting/keelson`; the executable remains `keelson`. Syntax checks run on every CI platform.
 
 ### Migration
 
@@ -89,7 +89,7 @@ Initial release.
 - `lean` and `guided` skill profiles; English and Chinese skills and docs.
 - Guidance annotations with sunset conditions, read by `keelson retro`.
 
-[Unreleased]: https://github.com/Atingaii/keelson/compare/v0.3.0...HEAD
+[0.4.0]: https://www.npmjs.com/package/@zyaiting/keelson/v/0.4.0
 [0.3.0]: https://github.com/Atingaii/keelson/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Atingaii/keelson/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Atingaii/keelson/releases/tag/v0.1.0

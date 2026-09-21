@@ -19,7 +19,7 @@ To try a local build in another project without a global install:
 
 ```bash
 npm pack
-npm install -g --prefix ~/.local/npm ./atingaii-keelson-*.tgz   # then put ~/.local/npm/bin on PATH
+npm install -g --prefix ~/.local/npm ./zyaiting-keelson-*.tgz   # then put ~/.local/npm/bin on PATH
 cd ../some-project
 keelson init
 ```

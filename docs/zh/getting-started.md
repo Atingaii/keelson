@@ -1,19 +1,16 @@
 # 快速开始
 
-使用 Node.js 20 或以上版本，从仓库安装：
+需要 Node.js 20+ 和 npm。全局安装 CLI 后，在你的项目中初始化：
 
 ```bash
-git clone https://github.com/Atingaii/keelson.git
-cd keelson
-npm ci
-npm link
+npm install -g @zyaiting/keelson
 cd /path/to/your/project
 keelson init --codex --lang zh
 ```
 
-`npm link` 将当前源码的 CLI 放到命令路径。团队需要可复现安装时，应固定 Git 提交。包名为 `@atingaii/keelson`，此处不代表已发布到 npm。
+安装只需一次；每个项目分别初始化。全局安装让 Agent 后续能持续调用 `keelson`。其他宿主见 [Agent 支持](../platforms.md)。
 
-首次 npm 发布后，用户即可免克隆安装。见 [npm 安装与发布](publishing.md)。
+升级时运行 `npm install -g @zyaiting/keelson@latest`，再到各项目运行 `keelson update`。源码开发见[贡献指南](../../CONTRIBUTING.md)，维护者发布步骤见 [npm 发布](publishing.md)。
 
 初始化创建精简的项目说明和宿主入口，不修改 `.gitignore`。在项目中启动 Codex，正常提出修改需求；它通过 `keelson guide` 加载指导。
 

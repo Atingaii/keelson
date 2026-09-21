@@ -1,5 +1,5 @@
 {
-  "name": "@atingaii/keelson",
+  "name": "@zyaiting/keelson",
   "version": "0.4.0",
   "description": "Local, verifiable check records and durable decisions for AI-assisted code changes.",
   "type": "module",

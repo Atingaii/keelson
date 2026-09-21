@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/assets/keelson-banner.png" alt="Keelson" width="620"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/Atingaii/keelson/main/docs/assets/keelson-banner.png" alt="Keelson" width="620"></p>
 
 <p align="center"><strong>在仓库里对话，让每次开发都有据可循、有处接续。</strong></p>
 <p align="center">为编码 Agent 提供项目记忆、工程方法和验收流程。你描述目标，Agent 推进实现，把决策与验证留在代码旁。</p>
@@ -15,7 +15,7 @@
 <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT license"></a>
 </p>
 
-<p align="center"><img src="docs/assets/keelson-demo-zh.gif" alt="真实 Agent 对话回放：用户提出任务筛选需求，Agent 完成实现、验证与归档" width="100%"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/Atingaii/keelson/main/docs/assets/keelson-demo-zh.gif" alt="真实 Agent 对话回放：用户提出任务筛选需求，Agent 完成实现、验证与归档" width="100%"></p>
 <p align="center"><sub>已初始化的示例仓库 · 真实会话节选，等待已压缩 · 用户只需提出需求</sub></p>
 
 ## 为什么选择 Keelson？
@@ -41,13 +41,10 @@ Keelson 由 **Agent Skill + 本地 CLI** 组成：Skill 指导 Agent 如何工�
 
 ## 快速开始
 
-**1. 安装 CLI**（当前从源码安装）：
+**1. 安装 CLI：**
 
 ```bash
-git clone https://github.com/Atingaii/keelson.git
-cd keelson
-npm ci
-npm link
+npm install -g @zyaiting/keelson
 ```
 
 **2. 在你的项目中初始化**，以 Codex 为例：
@@ -61,7 +58,7 @@ keelson init --codex --lang zh
 
 > 给任务列表加一个优先级筛选：默认显示全部，也能只看高优先级。保持现有调用兼容，补齐测试并完成验证。
 
-`npm link` 使用当前源码目录，请保留该目录。更多设置见[上手教程](docs/zh/getting-started.md)；其他宿主见 [Agent 支持](docs/platforms.md)。
+升级 CLI：`npm install -g @zyaiting/keelson@latest`，然后在项目中运行 `keelson update`。更多设置见[上手教程](docs/zh/getting-started.md)；其他宿主见 [Agent 支持](docs/platforms.md)。
 
 ## 从一句需求到一次完成
 

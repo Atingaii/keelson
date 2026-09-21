@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/assets/keelson-banner.png" alt="Keelson" width="620"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/Atingaii/keelson/main/docs/assets/keelson-banner.png" alt="Keelson" width="620"></p>
 
 <p align="center"><strong>Start with a conversation. Leave work the next session can build on.</strong></p>
 <p align="center">Project memory, engineering guidance, and acceptance checks for your coding agent. Describe the outcome; keep decisions and verification alongside the code.</p>
@@ -15,7 +15,7 @@
 <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT license"></a>
 </p>
 
-<p align="center"><img src="docs/assets/keelson-demo.gif" alt="Real agent conversation replay: a task-filter request followed by implementation, verification, and archiving" width="100%"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/Atingaii/keelson/main/docs/assets/keelson-demo.gif" alt="Real agent conversation replay: a task-filter request followed by implementation, verification, and archiving" width="100%"></p>
 <p align="center"><sub>Initialized example repository · Translated excerpts from a real session, with waits shortened · Just describe the task</sub></p>
 
 ## Why Keelson?
@@ -41,13 +41,10 @@ Keelson generates integrations for Codex, Claude Code, OpenCode, Gemini CLI, and
 
 ## Quick start
 
-**1. Install the CLI** (currently from source):
+**1. Install the CLI:**
 
 ```bash
-git clone https://github.com/Atingaii/keelson.git
-cd keelson
-npm ci
-npm link
+npm install -g @zyaiting/keelson
 ```
 
 **2. Initialize your project**, using Codex here:
@@ -61,7 +58,7 @@ keelson init --codex
 
 > Add a priority filter to the task list: show everything by default, with an option for high-priority tasks only. Keep existing calls compatible, add tests, and verify the result.
 
-`npm link` uses this checkout, so keep it in place. See the [setup guide](docs/getting-started.md) and [supported agents](docs/platforms.md).
+To upgrade, run `npm install -g @zyaiting/keelson@latest`, then `keelson update` in your project. See the [setup guide](docs/getting-started.md) and [supported agents](docs/platforms.md).
 
 ## From request to completion
 

@@ -7,5 +7,5 @@ Frontend design now has bilingual action briefs and focused guidance for review,
 ## Verification boundaries
 Codex session identity has been exercised locally. Other hosts have declared adapter capabilities and fixture coverage; live host behavior must be verified in the host. Design guidance is executed by the coding agent using the project's available browser tools. A printed brief is not a completed visual review.
 
-## Blocked / uncertain
-The first npm release awaits the owner's account registration, confirmed scope, login and release approval. Public package metadata and bilingual instructions are prepared; the actual tarball passed an isolated install/init/guidance smoke check. No full test suite or CI ran for this preparation, and no npm publication or tag push occurred. Continue `npm-release-preparation` after account setup; repack and run the required release checks before publication.
+## Distribution
+Version 0.4.0 is publicly available on npm as @zyaiting/keelson, with latest pointing to 0.4.0. Anonymous global installation, Chinese Codex initialization, packaged guidance and integration update passed; the published tarball matches the reviewed package files. Both READMEs use npm installation. This release was published manually; no v0.4.0 Git tag was pushed because the existing tag workflow would attempt duplicate publication. Git-derived release status therefore differs from npm availability. Remote CI was not triggered.
