@@ -77,6 +77,11 @@ export function evaluateLifecycle(change, fingerprint, {
       'change is marked **BREAKING** but has no "## Rollout" section (compatibility, migration, rollback)'
     ),
     gate(
+      'review',
+      !change.review || ['passed', 'not-required'].includes(change.review.state),
+      `review ${change.review?.state}: ${change.review?.detail}`
+    ),
+    gate(
       'verification',
       verification.state === 'passed',
       `verification ${verification.state} (${verification.detail})`

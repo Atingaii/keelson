@@ -268,7 +268,7 @@ export function parseDelta(text) {
   for (const s of sections(text, 2)) {
     const m = s.title.match(/^(ADDED|MODIFIED|REMOVED)\s+Requirements?$/i);
     if (!m) {
-      if (/Requirements?$/i.test(s.title)) out.issues.push(`unrecognized requirements section "${s.title}"`);
+      out.issues.push(`unrecognized requirements section "${s.title}"`);
       continue;
     }
     const key = m[1].toLowerCase();
@@ -281,12 +281,14 @@ export function parseDelta(text) {
         out[key].push({ name: rm[1].trim(), body: shiftHeadings(r.body.trim(), -1) });
       } else if (/^Requirement:\s*$/i.test(r.title)) {
         out.issues.push(`${m[1].toUpperCase()} Requirements has a requirement with no name`);
+      } else {
+        out.issues.push(`${m[1].toUpperCase()} Requirements has an unrecognized child heading "${r.title}"`);
       }
     }
-    // Empty ADDED/MODIFIED sections are useful template no-ops.  Prose (or an
-    // unrelated heading) in either section is almost certainly a malformed
+    // Empty operation sections are useful template no-ops. Prose (or an
+    // unrelated heading) in an operation is almost certainly a malformed
     // delta and must not be silently treated as an empty change.
-    if (['added', 'modified'].includes(key) && s.body.trim() && out[key].length === before) {
+    if (s.body.trim() && out[key].length === before) {
       out.issues.push(`${m[1].toUpperCase()} Requirements has content but no Requirement sections`);
     }
   }

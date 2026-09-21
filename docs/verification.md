@@ -63,6 +63,8 @@ An explicit owner-authorized emergency may use:
 keelson land change-name --force --reason "owner-authorized emergency and follow-up"
 ```
 
+For changes requiring independent review, `--force` cannot bypass review or fresh complete checks. Other owner overrides remain recorded.
+
 The archive contains `forced.md` and a signed override record with the reason and bypassed gates. The CLI records the supplied authorization; it cannot authenticate a natural-language owner's identity. A force record does not turn failed checks into passed checks.
 
 An invalid signature or missing/edited log fails closed. Restore the intact evidence bundle from a known copy before rerunning checks. An abandoned lock reports its location: confirm that no writer remains before removing that specific lock. Do not delete all runtime state to suppress a validation error.
@@ -72,3 +74,13 @@ An archived record describes the pre-landing snapshot. Landing itself changes co
 ## Migrating 0.3 projects
 
 Run `keelson update`, review the generated diff, and rerun checks with `--trust --record`. Old Markdown verification entries remain readable history but do not satisfy the completion gate. Existing `.keelson/.runtime` and `.local` directories are legacy data; inspect them before removing them. Keelson does not edit your existing ignore rules. Use `update --vendor` if you deliberately want package guidance copied into the project.
+
+## Acceptance review before completion
+
+Spec changes and all changes carrying delta specs require a current independent report, including quick changes. Use `review: independent` in change frontmatter (or `new --review independent`) for behavioral quick work without a delta. Non-behavioral quick wording/formatting edits retain the existing lightweight path.
+
+The agent dispatches a fresh reviewer with the original request and `context --phase check`. `keelson review --prepare [change]` prints a JSON packet with exact acceptance text, projected merged contracts and a `reportTemplate`. The reviewer fills observed evidence for every acceptance, discriminating `counterexamples`, each capability's contract review, its identity and unresolved `findings`. Save it inside the change, then run `keelson review --record .keelson/changes/<name>/<report>.json`. Findings prevent landing; the implementer repairs them and the independent reviewer rechecks. Missing reviewers are reported, never fabricated.
+
+The report binds the worktree, request, acceptance, context and contracts. A report change invalidates check evidence, so record it before the final configured `check --record`. Signatures bind the report as an input; reviewer attribution and the quality of its observations remain caller-supplied, not a proof of independent reasoning. After upgrading, active behavioral changes need this review; old records may be stale because the bound inputs now include request, context and review.
+
+Delta operations preserve requirement identities: MODIFIED and REMOVED require an existing name; ADDED requires a new one. Incorrect names fail before writes. A changed behavior under a different title can still contradict an old requirement, which is why the reviewer inspects the projected complete contract and the agent rewrites superseded requirements and decisions.

@@ -12,7 +12,7 @@ export const VERIFICATION_TYPE = 'https://github.com/Atingaii/keelson/verificati
 export const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
 const pae = (type, payload) => Buffer.concat([Buffer.from(`DSSEv1 ${Buffer.byteLength(type)} ${type} ${payload.length} `), payload]);
 
-export function contractFingerprint(root, changeDir) {
+export function contractFingerprint(root, changeDir, { includeReview = true } = {}) {
   const cfgPath = path.join(root, '.keelson', 'config.yaml');
   const cfg = loadConfig(cfgPath);
   const locations = [
@@ -20,6 +20,8 @@ export function contractFingerprint(root, changeDir) {
     ['specs', path.resolve(root, cfg.paths.specs)], ['rules', path.join(root, '.keelson', 'rules')],
     ['change', path.join(changeDir, 'change.md')], ['delta', path.join(changeDir, 'specs')],
     ['decisions', path.join(changeDir, 'decisions.json')],
+    ['request', path.join(changeDir, 'request.md')], ['context', path.join(changeDir, 'context.json')],
+    ...(includeReview ? [['review', path.join(changeDir, 'review.json')]] : []),
   ];
   const hash = crypto.createHash('sha256');
   for (const [label, loc] of locations) {

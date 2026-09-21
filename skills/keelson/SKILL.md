@@ -31,6 +31,7 @@ Route from the requested outcome and repository evidence, not special vocabulary
 - If `NOW.md` says “First contact”, infer and confirm `INTENT.md`; do not inventory the whole repository into specs/rules.
 - Non-trivial modifying work starts from current context; shared modules get `keelson impact <files>`.
 - Automatically assess discovery needs on new goals, material follow-ups and changed premises using `interview.md`; unresolved goals, connected product choices or high-impact commitments trigger deeper discovery without special wording. Clear tasks proceed directly. Ask one ready owner decision for a simple gap, or the whole ready frontier for connected uncertainty, with concrete options, a recommendation and reason; reuse settled answers and investigate facts yourself.
+- Before implementation, state one observable success and replay what the user will see or do: does the original frustration remain? Unspecified user-visible policy is not an engineering default; preserving data is separate from preserving its presentation. If two plausible experiences materially change success, register the owner decision, ask one concrete contrast with a recommendation and reason, and wait before dependent edits. Small scope, reversibility and proceed-after-write-back do not settle that choice. An established answer or explicit delegation needs no question.
 - Route non-obvious mechanisms/architecture through `engineer.md`: reduce to facts, outcome, constraints, and invariants; state a falsifiable hypothesis; use the cheapest experiment/ablation that can discriminate; complexity must earn its keep with evidence.
 - Size only the work: trivial = minimal quick change; quick = lightweight change; spec = acceptance + behavior delta + plan within existing user authorization; clarify only unresolved owner choices.
 - Before product edits, automatically run `keelson start` for the focused change, then load `keelson context --phase implement`; after new material decisions, restart only once they are settled. Users need not run these commands.
@@ -44,5 +45,7 @@ Route from the requested outcome and repository evidence, not special vocabulary
 - `handoff.md` is for real transfer across people/machines or deliberate ownership change; ordinary session continuity comes from durable change artifacts plus private per-machine session state.
 - Repeated failures graduate to the narrowest durable control: spec → scoped rule → executable fitness check; remove redundant prose afterward.
 - Use `light | standard | deep`; never persist dated model IDs.
+
+- Before claiming a behavior change complete, follow `verify.md` for a fresh independent review and record its acceptance/merged-contract evidence with `keelson review`; this includes quick changes. Pure wording/formatting quick work stays lightweight. Actually invoke a new agent/session; the implementer must not author its own independent report.
 
 Users normally need only `init`, `status`, `doctor`, `update`, and `uninstall`; the agent uses the rest.

@@ -16,12 +16,13 @@ const COMMANDS = {
   context: ['context [--paths a/,b/**] [--change name] [--phase implement|check] [--json]', 'Print INTENT, ROADMAP, NOW, active changes, existing references, and the rules matching the given paths', () => import('./commands/context.js').then((m) => m.context)],
   impact: ['impact <file> [file...] [--json]', 'Mechanical impact hints: importers, specs and rules that may be affected, active changes that overlap', () => import('./commands/impact.js').then((m) => m.impact)],
   focus: ['focus [change] [--auto|--clear] [--json]', 'Bind this AI session to one active change without changing the change lifecycle', () => import('./commands/focus.js').then((m) => m.focus)],
-  new: ['new <name> [--tier quick|spec] [--capability a,b] [--touches globs] [--depends change] [--worktree]', 'Scaffold a change directory (owner, branch, delta base recorded)', () => import('./commands/new.js').then((m) => m.newChange)],
+  new: ['new <name> [--tier quick|spec] [--capability a,b] [--review independent] [--touches globs] [--depends change] [--worktree]', 'Scaffold a change directory (owner, branch, delta base recorded)', () => import('./commands/new.js').then((m) => m.newChange)],
   start: ['start [change] [--json]', 'Enter implementation after the decision and plan gates pass; run by the agent', () => import('./commands/start.js').then((m) => m.start)],
   status: ['status [--json]', 'Work, verification, and release status per change; slices, open questions, conflicts, handoffs', () => import('./commands/status.js').then((m) => m.status)],
   handoff: ['handoff [name] [--by who]', 'Create or re-stamp handoff.md for a change (at, updated, by)', () => import('./commands/handoff.js').then((m) => m.handoff)],
   validate: ['validate [--json]', 'Check .keelson/ structure, specs, changes, ledgers; non-zero on errors', () => import('./commands/validate.js').then((m) => m.validate)],
   check: ['check [cmd...] [--record [claim]] [--change name] [--trust] [--timeout ms] [--quiet] [--json]', 'Run the project checks, save evidence, print or record a Verify entry with the worktree fingerprint', () => import('./commands/check.js').then((m) => m.check)],
+  review: ['review [change] [--prepare | --record report.json] [--change name]', 'Prepare an independent acceptance/merged-contract review or record its observed evidence before final checks', () => import('./commands/review.js').then((m) => m.review)],
   land: ['land [name] [--now "<text>"] [--confirm-assumptions] [--accept-drift] [--keep] [--force --reason "<why>"] [--dry-run]', 'Merge delta specs, fold decisions, remove or archive the change; refuses on stale or missing evidence', () => import('./commands/land.js').then((m) => m.land)],
   cancel: ['cancel <name> [--reason "<why>"]', 'Archive a change as cancelled without merging anything', () => import('./commands/land.js').then((m) => m.cancel)],
   retro: ['retro [--json]', 'Metrics from ledgers plus suggestions to prune guidance or add rules', () => import('./commands/retro.js').then((m) => m.retro)],
@@ -34,7 +35,7 @@ const COMMANDS = {
 
 const COMMAND_GROUPS = [
   ['Your commands', ['init', 'design', 'status', 'doctor', 'update', 'platforms', 'uninstall']],
-  ['Agent workflow', ['ask', 'context', 'impact', 'focus', 'new', 'start', 'check', 'handoff', 'validate', 'land', 'cancel']],
+  ['Agent workflow', ['ask', 'context', 'impact', 'focus', 'new', 'start', 'review', 'check', 'handoff', 'validate', 'land', 'cancel']],
   ['Maintenance / advanced', ['guide', 'attest', 'retro', 'models', 'ablate', 'restore']],
 ];
 

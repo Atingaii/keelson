@@ -12,6 +12,8 @@
 
 
 按 `interview.md` 先区分用户想获得的结果与提出的实现手段；用仓库事实和具体使用情境判断目的是否已明确，只有会改变当前方案的缺口才追问。
+实现前必须用一句可观察结果核对目的，并回放用户会看到/做什么：原困扰还在吗？未明确的用户可见选择不属于默认工程授权；保留数据也不等于保留展示方式。若两种合理体验会改变目标是否达成，先登记这个决定，给一个具体对比、推荐和理由，收到答案后再改依赖代码。任务小、方案可逆或写回后默认继续，都不能替代用户对这种选择的回答。已有明确答案或明确委托则直接推进。
+
 ## 提问前先做假设审计
 <!-- keelson: id=shape.assumption-audit | without: the agent solves a plausible but wrong problem, attributes invented beliefs to the owner, or asks a questionnaire before reading the repository | sunset: never -->
 

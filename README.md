@@ -73,6 +73,8 @@ To upgrade, run `npm install -g @zyaiting/keelson@latest`, then `keelson update`
 
 **Investigate → Decide → Implement → Independently review → Verify → Preserve knowledge**
 
+Behavior changes, including quick ones, receive a fresh acceptance review before archiving: each requirement needs observed evidence, a discriminating counterexample and consistent current specifications. The agent handles this automatically when the host supports an independent context; otherwise it reports the missing review.
+
 After initialization, ordinary requests trigger the relevant workflow automatically: investigate requirements, clarify material choices with recommendations, apply engineering and UI/UX guidance, implement, verify, and preserve the result for later sessions. You do not need to name a skill or manage workflow commands. Clear edits use a minimal change record. A simple gap gets one question; connected uncertainties get the whole ready decision frontier, with recommendations and reasons for each choice. The agent resumes authorized work once those choices are settled. It distinguishes the problem from a proposed solution, then carries confirmed decisions into acceptance, implementation and independent review in the same change.
 
 Before implementation, the agent starts the settled change and loads its declared specs and rules. Review gets a separate context pack built from the request and contracts. Verified changes promote durable decisions into project specs, so later work starts with what the project has learned.

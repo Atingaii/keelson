@@ -16,7 +16,7 @@ Run it when the change is integrated (merged, or committed on the mainline in a 
 - the main spec changed since the delta was written and `--accept-drift` was not passed — re-read it, reconcile, then pass the flag;
 - **BREAKING** without a **Rollout** section.
 
-Then it merges each delta into the capability spec (ADDED appends, MODIFIED replaces by name, REMOVED deletes), appends the `Decisions` lines, and removes the change directory (`land: fold`, default) or archives it (`land: keep`). `--dry-run` previews all of it. `--force` exists for the owner's explicit decision, never for convenience.
+Then it merges each delta into the capability spec (ADDED appends, MODIFIED replaces by name, REMOVED deletes), appends the `Decisions` lines, and removes the change directory (`land: fold`, default) or archives it (`land: keep`). `--dry-run` previews all of it. `--force` exists for the owner's explicit decision, never for convenience. Changes requiring independent review cannot bypass that review or fresh full checks with force.
 
 Commit the landing together with the last code change, so the specs and the code that satisfies them share a revision. Ledger and handoff stay in git history; `keelson retro` reads them from there.
 

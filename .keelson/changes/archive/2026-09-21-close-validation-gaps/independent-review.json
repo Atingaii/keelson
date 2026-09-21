@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "change": "close-validation-gaps",
+  "tree": "4305c82f36c115acfabf7ec72c0d0ff115008a37e0dea98bd6eba7f8385804c9",
+  "contract": "81cf2c71dbfbdc8e03d03fc3875dd6b21b69713939f5e7dfdf73e2a2152c7841",
+  "independent": true,
+  "reviewer": "Codex session 01a0bf34-a043-79f0-ac29-bc8f7017467b; thread 01a0c2af-43e9-7e73-a002-32e9d12d25c3; assigned reviewer /root/review_completion_gates",
+  "coverage": [
+    {
+      "acceptance": "A behavioral quick change with passing tests cannot land without complete, current independent review; findings, omitted acceptance and later edits block it",
+      "evidence": "当前 staged src/lib/review.js 将 independent policy、spec tier 与任意 delta 纳入 requiresReview；src/commands/land.js 的 force 路径仍拒绝 review/verification blocker。已读取 .git/keelson-task-evidence/close-validation-gaps/review-regression.log：#26 验证行为 quick change 不能仅凭绿测落地，#27 验证缺失 acceptance/counterexample/合并 contract 会阻断，#28 验证 findings 与输入变更会使 review 失效，#31 验证显式 review policy 不能通过省略 delta 绕过。该日志完整结果为 31/31；本报告后仍需由流程记录 review 并完成最终签名检查。"
+    },
+    {
+      "acceptance": "Contract revisions replace named requirements and preserve unrelated ones; malformed operations fail before writes",
+      "evidence": "已检查 staged src/lib/deltas.js 与 src/lib/markdown.js：操作身份按 ADDED/MODIFIED/REMOVED 严格解析，未知操作、未知 H2/H3、缺失目标和 prose-only 必需操作均抛错；src/lib/deltas.js 的事务式合并在写入前完成解析与校验。已读取 strict-parser-final.log（25/25）及 review-regression.log #29（无效 delta 保持 current truth 与 active change 不变）、#30（同 capability 的多 delta 按最终合并 contract 复核并与 land 投影一致）。"
+    },
+    {
+      "acceptance": "Discovery checks the user's desired outcome, asks only consequential unresolved choices and carries answers into the same change",
+      "evidence": "request.md、change.md、check context 与 staged workflow/guide 均将目的澄清、同一 change 的 owner answer 与后续 contract 衔接为流程要求。 .git/keelson-task-evidence/close-validation-gaps/attempt-2/01-discover.final.txt 记录一次 consequential choice，且明确未改文件；03-owner-answers.prompt.txt 随后在同一变更中给出自动推荐、排序、只读数据和 --today 等约束。attempt-2 的 03-owner-answers 是续接会话，故其 session/model 只用于核对回答连续性，不作为本报告独立性证据。"
+    },
+    {
+      "acceptance": "Review includes discriminating counterexamples and projected current contracts; the full configured checks pass",
+      "evidence": "本次 review --prepare 取得的当前 packet 投影一个 cli capability，并包含合并后的 before/after contract；本报告提供三个区分性反例和该投影的证据。已读取 .git/keelson-task-evidence/close-validation-gaps/tests-candidate.log，末尾为 1..183、183 tests、183 pass；strict-parser-final.log 为 25/25，review-regression.log 为 31/31。attempt-2/03-independent-acceptance.json 的 8/8 仅作为黑盒 daily-tasks 行为与 dataUnchanged 证据，未被当作独立 reviewer 身份或推理独立性的机器证明；最终 signed check 仍按流程在记录本报告后执行。"
+    }
+  ],
+  "counterexamples": [
+    {
+      "case": "行为 quick change 有绿测，但没有 current independent review；随后使用 --force 尝试绕过 review/verification gate。",
+      "result": "land 仍被 review/verification blocker 拒绝；review-regression.log #26、#28 与当前 src/commands/land.js 的 force guard 一致，且输入变化会使旧 review 失效。"
+    },
+    {
+      "case": "delta 使用未知操作/未知 section，或 REMOVED 只有普通 prose 而没有可识别 requirement。",
+      "result": "parseDelta/markdown parser 在写入前报告 malformed/unknown delta；strict-parser-final.log 25/25 与 review-regression.log #29 证明 current truth 和 active change 均保持不变。"
+    },
+    {
+      "case": "同一 cli capability 有多个 delta，且新 requirement 替换命名项但不得丢失未命名的既有 requirement。",
+      "result": "reviewPacket 按 capability 顺序累计单一 after projection，review 与 land 使用同一合并投影；review-regression.log #30 通过并验证最终 contract 精确一致。"
+    }
+  ],
+  "contracts": [
+    {
+      "capability": "cli",
+      "evidence": "当前 packet 的 cli projection 已逐项检查：after 同时保留未命名既有要求、应用 ADDED/MODIFIED/REMOVED，并包含 review/verification、force 边界、独立 review 报告字段和严格 delta identity 约束；src/lib/review.js 与 src/commands/land.js 使用相同 merge/decision projection。"
+    }
+  ],
+  "findings": []
+}

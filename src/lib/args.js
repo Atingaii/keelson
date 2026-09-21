@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const PLATFORM_FLAGS = Object.keys(require('../../registry/platforms.json').platforms);
 const RETIRED_PLATFORM_FLAGS = ['cursor', 'copilot', 'kilo', 'antigravity', 'devin', 'qoder', 'droid', 'ohmypi', 'reasonix', 'zcode', 'trae', 'grok', 'kimi', 'snow'];
-export const BOOLEAN_FLAGS = new Set(['all', 'list', 'irreversible', 'trust', 'vendor', 'session', 'json', 'force', 'dryRun', 'hooks', 'noHooks', 'onboard', 'refresh', 'detect', 'help', 'version', 'yes', 'keep', 'noProviders', 'quiet', 'confirmAssumptions', 'acceptDrift', 'worktree', 'purge', 'clear', 'auto', ...PLATFORM_FLAGS, ...RETIRED_PLATFORM_FLAGS]);
+export const BOOLEAN_FLAGS = new Set(['prepare', 'all', 'list', 'irreversible', 'trust', 'vendor', 'session', 'json', 'force', 'dryRun', 'hooks', 'noHooks', 'onboard', 'refresh', 'detect', 'help', 'version', 'yes', 'keep', 'noProviders', 'quiet', 'confirmAssumptions', 'acceptDrift', 'worktree', 'purge', 'clear', 'auto', ...PLATFORM_FLAGS, ...RETIRED_PLATFORM_FLAGS]);
 
 /** Tiny argv parser: --flag, --key value, --key=value, positionals. */
 export function parseArgs(argv) {

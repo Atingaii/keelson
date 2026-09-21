@@ -35,6 +35,7 @@ export function projectStatus(root) {
       branch: c.branch,
       work: lifecycle.work,
       verification,
+      review: c.review,
       gates: lifecycle.gates,
       lifecycleWarnings: lifecycle.warnings,
       release: c.release ?? 'unreleased',
@@ -92,6 +93,7 @@ export async function status({ flags }, cwd = process.cwd()) {
     const who = [c.owner, c.branch && c.branch !== 'main' && c.branch !== 'master' ? c.branch : null].filter(Boolean).join(' @ ');
     console.log(`${c.name}  ${dim(`[${c.tier}]`)}  work: ${c.work}  verify: ${GLYPH[c.verification.state]} ${c.verification.state}  release: ${c.release}${who ? dim(`  (${who})`) : ''}`);
     if (c.verification.state === 'stale') console.log(dim(`   ${c.verification.detail} — re-run \`keelson check --record\` before landing`));
+    if (c.review && !['passed', 'not-required'].includes(c.review.state)) console.log(dim(`   review ${c.review.state}: ${c.review.detail}`));
     if (c.blockedBy.length) console.log(dim(`   depends on active: ${c.blockedBy.join(', ')}`));
     if (c.slices.length) for (const sl of c.slices) console.log(`   ${sl.done === sl.total && sl.total ? '✓' : '·'} slice ${sl.name} ${sl.done}/${sl.total}${sl.delivers ? dim(` — ${sl.delivers}`) : ''}`);
     else for (const t of c.tasks) console.log(`   ${t.done ? '✓' : '·'} ${t.id ? t.id + ' ' : ''}${t.title}${t.effort ? dim(` (${t.effort})`) : ''}`);

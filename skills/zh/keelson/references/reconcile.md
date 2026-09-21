@@ -28,6 +28,8 @@
 
 一条 spec、一条 rule、一行术语表说的是系统现在怎么工作。行为变化时，描述旧行为的那句话被替换，而不是在后面跟一句"从九月起现在是……"。变更的先后顺序在 git 里、在归档或折叠掉的 change 里、在点名了被否方案的决策行里。`keelson doctor` 会标出读起来像历史叙述的需求文本。
 
+写 delta 前，把每项变化映射到现有 Requirement 名称。修改用相同名称的 MODIFIED 和完整替换正文；废弃要求用 REMOVED；ADDED 只用于真正独立的新行为。换个标题并不会覆盖旧契约。通过 `keelson review --prepare` 的 contracts[].after 把合并结果当作一份当前规范检查，而不是按历史先后阅读；也检查 Decisions 中已推翻的选择，最终评审和检查前改写过时决定。CLI 拒绝找不到名称的 MODIFIED/REMOVED 和覆盖既有名称的 ADDED；不同标题下的语义冲突仍需评审者识别。
+
 ## 压缩：让被读到的东西保持小
 <!-- keelson: id=reconcile.compact | without: 文档无限增长；常驻集合让每个会话都变贵，过时文本被当作现状读取 | sunset: never -->
 

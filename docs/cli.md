@@ -85,7 +85,7 @@ keelson cancel add-pagination --reason "Superseded"
 
 Landing requires completed acceptance, fresh complete evidence, resolved questions/dependencies, reconciled contracts and a rollout for breaking changes. Task checkboxes are advisory. Accept-drift acknowledges a reviewed spec-base conflict; changed inputs still require rechecking. Confirm-assumptions applies to legacy prose assumptions; structured ones must be settled.
 
-`--force --reason "..."` records a signed override and failed gates; it does not turn failed checks into success. Use only for an authorized override. Active checks block landing and cancellation. Landing snapshots affected files and rolls back ordinary failures. After a process crash, confirm no writer remains and resolve any abandoned lock before retrying; the next landing then recovers the interrupted transaction. See [recovery instructions](verification.md).
+`--force --reason "..."` records a signed override and failed gates; it does not turn failed checks into success. Use only for an authorized override. Changes requiring independent review cannot force past review or fresh complete checks. Active checks block landing and cancellation. Landing snapshots affected files and rolls back ordinary failures. After a process crash, confirm no writer remains and resolve any abandoned lock before retrying; the next landing then recovers the interrupted transaction. See [recovery instructions](verification.md).
 
 Delta specs and durable decisions merge into main specs; large specs shard automatically. Signed changes archive even with land: fold. Cancellation archives without merging.
 
@@ -102,3 +102,7 @@ keelson uninstall
 ```
 
 Retro summarizes ledger events. Model tiers guide agents rather than launching a model. Ablate/restore stash and restore integration; stop other writers during maintenance. Uninstall retains project facts; purge explicitly removes .keelson data. Review output logs before committing.
+
+## `review`
+
+Agent-operated: `keelson review --prepare [change]` produces the current acceptance/merged-contract packet and report template. A fresh reviewer fills it, then `keelson review --record <project-relative-report.json> [--change name]` records the outcome. Every acceptance needs observed evidence; counterexamples and merged-capability checks are required. Findings, missing coverage or stale inputs prevent normal landing. Record the review before final signed checks. Spec changes and any delta require review; other behavioral quick work uses `new --review independent`.

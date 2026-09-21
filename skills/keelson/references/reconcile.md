@@ -28,6 +28,8 @@ Every line above is present tense in its destination. The change directory is sc
 
 A spec, a rule, or a glossary line says how the system works now. When behaviour changes, the sentence that described the old behaviour is replaced, not followed by "as of September this is now…". The sequence of changes is in git, in the archived or folded change, and in the decision line that names the rejected option. `keelson doctor` flags requirement text that reads like history.
 
+Before writing a delta, map each changed behavior to the current requirement name. Use MODIFIED with that exact name and its complete replacement body; use REMOVED for superseded requirements; reserve ADDED for genuinely new independent behavior. A new title does not supersede the old contract. Review `keelson review --prepare` → contracts[].after as one current specification, not a chronology. Check durable Decisions for reversed choices as well; rewrite obsolete decision lines before the final review and checks. The CLI rejects unknown MODIFIED/REMOVED names and ADDED over existing names, but semantic conflicts under different titles require the reviewer.
+
 ## Compact: keep what is read small
 <!-- keelson: id=reconcile.compact | without: documents grow without bound; the always-on set inflates every session and stale text is read as current | sunset: never -->
 

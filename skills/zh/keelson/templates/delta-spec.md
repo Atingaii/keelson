@@ -1,5 +1,7 @@
 # {{capability}} — delta
 
+<!-- 新增只用 ADDED；修改既有行为用相同 Requirement 名称的 MODIFIED，废弃用 REMOVED。删除未使用的占位正文。 -->
+
 ## ADDED Requirements
 ### Requirement: …
 The system SHALL …

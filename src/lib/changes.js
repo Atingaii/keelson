@@ -4,6 +4,7 @@ import { parseFrontmatter, parseTasks, parseSlices, parseLedger, parseAcceptance
 import { evaluateLifecycle } from './lifecycle.js';
 import { readDecisions } from './decisions.js';
 import { inspectEvidence } from './evidence.js';
+import { inspectReview } from './review.js';
 import { findProjectRoot, resolveWithin } from './paths.js';
 export { verificationStatus } from './lifecycle.js';
 
@@ -47,10 +48,11 @@ export function loadChange(changesDir, name) {
   const capabilities = new Set(deltaFiles.map((f) => path.dirname(f).replace(/\\/g, '/')).filter((c) => c !== '.'));
   for (const d of decisions) if (d.capability) capabilities.add(d.capability);
 
-  return {
+  const change = {
     name,
     dir,
     tier: (data.tier ?? 'quick').toLowerCase(),
+    reviewPolicy: data.review ?? null,
     created: data.created ?? null,
     owner: data.owner ?? null,
     branch: data.branch ?? null,
@@ -81,6 +83,8 @@ export function loadChange(changesDir, name) {
     // Only a bullet that starts with **BREAKING** counts, so the template's own hint does not.
     breaking: /^\s*[-*]\s+\*\*BREAKING\*\*/m.test(body),
   };
+  change.review = inspectReview(findProjectRoot(dir) ?? path.resolve(changesDir, '../..'), change);
+  return change;
 }
 
 export function derivedWorkStatus(change, fingerprint, options = {}) {

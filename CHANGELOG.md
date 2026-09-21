@@ -2,6 +2,16 @@
 
 Notable changes to Keelson, organized by version.
 
+## [0.5.2] - 2026-09-21
+
+### Fixed
+
+- Check the proposed user experience against the original problem even for small requests, without adding a fixed question quota.
+- Require current independent acceptance and merged-contract review for behavioral deltas, including quick changes; retain lightweight non-behavioral quick edits.
+- Bind review coverage, counterexamples, findings and contract consistency to the reviewed inputs before final signed checks; required review/check gates cannot be forced past.
+- Reject malformed delta sections, unknown MODIFIED/REMOVED requirements and ADDED over existing identities instead of silently changing the operation; review multiple deltas as one cumulative capability.
+- Include original request, context and review in verification fingerprints; update both language mirrors and migration guidance.
+
 ## [0.5.1] - 2026-09-21
 
 ### Changed

@@ -1,5 +1,7 @@
 # {{capability}} — delta
 
+<!-- Use ADDED only for new behavior; replace an existing requirement under MODIFIED with its exact name, or remove it under REMOVED. Delete unused placeholder bodies. -->
+
 ## ADDED Requirements
 ### Requirement: …
 The system SHALL …

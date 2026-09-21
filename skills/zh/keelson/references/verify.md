@@ -45,12 +45,18 @@ Ready/完成是由长期 gate 与证据支撑的状态，而证据有两个会�
 
 需求变了就改测试，这很正常。删掉断言、跳过用例、放宽容差，或者用 mock 替换真实检查，是对验收标准的改动：它需要负责人的决定（或明确的授权），并作为一条 `Ruling:` 写进 ledger，写明削弱了什么、为什么。隐瞒它的完成报告是错的。
 
-## 陌生读者评审（spec 档）
+## 行为变更的陌生读者评审
 <!-- keelson: id=verify.fresh-reader | without: 作者评审自己的工作；同一个盲点通过两次 | sunset: 连续 50 次陌生读者评审都没发现逐任务评审漏掉的东西时 -->
 
-用 `keelson context --phase check` 生成评审材料，附上 `request.md`；评审任务分别用独立行标明 `KEELSON_CHANGE=<change-name>` 和 `KEELSON_PHASE=check`。Codex 评审者自动执行 `keelson focus` 绑定任务，再读取 `keelson context --phase check`；其他受支持 hook 注入 check 依赖。评审者使用全新上下文、只读范围，不继承整段对话；实现者修复问题后，再复核受影响结果。宿主无法提供独立评审者时，明确报告缺口，不得编造评审。
+行为变更即使采用 quick 档，也需要全新上下文的评审。CLI 对 spec 变更、携带 delta spec 或显式声明 `review: independent` 的变更要求当前复核记录。没有 delta 的行为类 quick 变更应写入 `review: independent`，或用 `new --review independent` 创建。纯文字、格式类 quick 修改无需额外评审。
 
-派一个没看过对话的评审者（spec 变更层级 ≥ `deep`），给它原始请求、`change.md`、delta specs 和 diff。让它找：没有真实覆盖的验收项、需求缺口、rule 违反、有风险的假设、任何维护者会反对的地方。每条发现要么处理，要么记入 ledger。第二个代理的同意是信号，不是证明；被检查的是验收清单。
+在已有授权内使用宿主的全新子代理或独立原生 CLI 会话。任务用独立行标记 `KEELSON_CHANGE=<change-name>` 和 `KEELSON_PHASE=check`，提供原始请求、仓库位置和 diff，不继承原对话或实现者的结论。评审者读取 `context --phase check` 与 `review --prepare`。产品文件只读，仅允许在当前变更下写评审报告。宿主无法提供独立上下文时，报告缺口并保留未落地状态；不得虚构第二个身份或强制完成。
+
+必须真正调用一次新代理工具或新 CLI 进程，并保留实际会话/工具调用标识；自己重读 diff、重新跑测试、换一个评审者名称，都不构成独立上下文。实现者不得自行填写独立报告。Codex 没有子代理工具时，可运行全新的 `codex exec`（不得 resume/fork），通过 stdin 传入只读评审任务并明确报告路径；沿用用户选择的模型和权限，不修改全局设置。Claude Code、CodeBuddy 使用各自宿主的全新代理能力；不可用时如实保留缺口。独立评审任务必须说明“只做本次 review，不再派评审、不运行完成流程、不 land”；报告中的 reviewer 写真实会话/工具标识。
+
+准备包包含精确验收文字和预计合并后的完整规范。评审者填写 `reportTemplate`：标明独立评审者，逐项记录实际观察到的验收证据，给出可区分错误实现的反例，并检查每个合并后的能力是否仍含过时或冲突要求。用负责人规则推导用例，不照抄实现：改变新决定要求忽略的字段，分别检查每个优先组与同优先级情况。未解决缺陷写进 `findings`，不能藏在成功总结里。记录说明发生了评审，不等于机器证明判断正确。
+
+执行 `keelson review --record .keelson/changes/<name>/<report>.json`。实现者修复发现后，由独立评审者针对新准备包重新核对受影响结果。最终评审前完成验收记录，之后运行完整 `check --record`，再 land。代码、请求、验收、上下文或契约变化使报告过期；修改报告使检查证据过期。修复证据缺口时保留原始请求和已确认选择。
 
 ## 完成报告
 

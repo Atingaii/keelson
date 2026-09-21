@@ -16,7 +16,22 @@ after(() => fs.rmSync(HOME, { recursive: true, force: true }));
 function recordFixture(dir, name) {
   const config = read(dir, '.keelson/config.yaml');
   if (/^check: \[\]$/m.test(config)) write(dir, '.keelson/config.yaml', config.replace(/^check: \[\]$/m, 'check:\n  - node -e "process.exit(0)"'));
+  reviewFixture(dir, name);
   run(dir, ['check', '--trust', '--record', '--change', name, '--quiet'], { env });
+}
+
+// Protocol fixtures, not claims of a real independent code review.
+function reviewFixture(dir, name) {
+  const change = JSON.parse(run(dir, ['status', '--json'], { env }).stdout).changes.find((c) => c.name === name);
+  if (change.review.state === 'not-required') return;
+  const report = JSON.parse(run(dir, ['review', name, '--prepare'], { env }).stdout).reportTemplate;
+  report.reviewer = 'lifecycle test fixture';
+  for (const row of report.coverage) row.evidence = 'Fixture acceptance for this lifecycle scenario.';
+  for (const row of report.contracts) row.evidence = 'Fixture projected contract inspected for this scenario.';
+  report.counterexamples = [{ case: 'Lifecycle regression under test.', result: 'Assertions below inspect the durable outcome.' }];
+  const file = `.keelson/changes/${name}/fixture-review.json`;
+  write(dir, file, JSON.stringify(report));
+  run(dir, ['review', '--change', name, '--record', file], { env });
 }
 
 // Captured from the actual 0.3 project output. This fixture is deliberately
@@ -592,6 +607,7 @@ test('change lifecycle: new → gates → check --record → land folds specs an
   write(dir, '.keelson/changes/add-pagination/tasks.md', '# Tasks\n\n## Slice: Paging\nDelivers: pages work\n- [x] 1. Do it (effort: light) — verify: `echo ok`\n');
   let cm = read(dir, '.keelson/changes/add-pagination/change.md').replace('- [ ] default', '- [x] default').replace(/## Open questions\n- [^\n]+\n/, '## Open questions\n- none\n');
   write(dir, '.keelson/changes/add-pagination/change.md', cm);
+  reviewFixture(dir, 'add-pagination');
   const rec = run(dir, ['check', '--trust', '--record', 'pagination', '--quiet'], { env });
   assert.match(rec.stdout, /recorded in/);
   assert.match(read(dir, '.keelson/changes/add-pagination/ledger.md'), /### Verify: pagination\n`npm run test` exit 0 · tree [0-9a-f]{10}/);
@@ -612,6 +628,7 @@ test('change lifecycle: new → gates → check --record → land folds specs an
   assert.ok(drifted.gates.some((g) => g.code === 'drift' && g.pass === false));
   assert.match(run(dir, ['land', '--confirm-assumptions'], { env, allowFail: true }).stderr, /changed since this delta was written/);
   assert.equal(drifted.verification.state, 'stale');
+  reviewFixture(dir, 'add-pagination');
   run(dir, ['check', '--trust', '--record', '--quiet'], { env });
   run(dir, ['land', '--confirm-assumptions', '--accept-drift', '--now', '# Now\n\nNothing in flight.'], { env });
   assert.ok(!exists(dir, '.keelson/changes/add-pagination'));
@@ -1112,6 +1129,7 @@ test('status exposes shared contracts and impact lists importers', () => {
   write(dir, '.keelson/changes/a/tasks.md', '- [x] 1. x (effort: light)\n');
   write(dir, '.keelson/changes/a/change.md', read(dir, '.keelson/changes/a/change.md').replace(/^status:.*$/m, 'status: in-progress').replace(/## Acceptance[\s\S]*?## Open questions/, '## Acceptance\n- [x] ok — check: `true`\n\n## Open questions').replace(/## How\n…/, '## How\nh').replace(/## Alternatives[\s\S]*?## Impact/, '## Alternatives\n- **x (chosen)** — a\n- **y** — strongest: b. Rejected because: c\n\n## Impact').replace(/## Decisions[\s\S]*$/, '## Decisions\n- orders: x over y; y rejected because c\n'));
   write(dir, '.keelson/changes/a/ledger.md', '### Verify: ok\n`true` exit 0\n');
+  write(dir, '.keelson/changes/a/specs/orders/spec.md', '## ADDED Requirements\n');
   recordFixture(dir, 'a');
   const landed = run(dir, ['land', 'a', '--dry-run'], { env }).stdout;
   assert.match(landed, /shared contract with active change b/);

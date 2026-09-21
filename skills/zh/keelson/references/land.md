@@ -47,3 +47,5 @@
 ## Spec `Decisions` 的写法
 
 一条决策行一到三行，现在时，写明被否决的选项：`- messaging: consumers are idempotent; exactly-once delivery rejected because the broker does not provide it`。决策后来反转时，重写这一行并在末尾留一句：`(previously: at-most-once, abandoned after duplicate-notification incident)`。绝不让 `Decisions` 变成 changelog。代码与已确认的需求不一致时，报告差距；改 spec 去迁就缺陷需要负责人的决定。
+
+需要独立复核的变更不能使用 `--force` 绕过复核或新鲜完整检查；缺少全新评审上下文时保留未完成状态并说明原因。

@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { mergeDelta, appendDecisions } from '../lib/deltas.js';
 import fs from 'node:fs';
 import { requireProjectRoot, projectPaths, resolveWithin } from '../lib/paths.js';
 import { exists, read, write, rmrf, mkdirp, readOr, withLock } from '../lib/fs.js';
@@ -9,59 +10,15 @@ import { recoverLanding, landingTransaction } from '../lib/transaction.js';
 import { loadConfig } from '../lib/config.js';
 import { loadChange, loadAllChanges, sharedContracts } from '../lib/changes.js';
 import { evaluateLifecycle } from '../lib/lifecycle.js';
-import { parseSpec, parseDelta, renderSpec, parseFrontmatter } from '../lib/markdown.js';
 import { worktreeFingerprint } from '../lib/git.js';
 import { ok, warn, info, heading } from '../lib/out.js';
 import { clearChangeBindings, readSession } from '../lib/session.js';
 import { budgetStatus } from '../lib/health.js';
 import { readCapabilitySpec, planCapabilityStorage, writeCapabilityStorage, capabilityStorageOptions, changeSpecDrift } from '../lib/specs.js';
 
-export function mergeDelta(mainText, deltaText, capability) {
-  const main = mainText ? parseSpec(mainText) : { purpose: '', requirements: [], decisions: [] };
-  const d = parseDelta(parseFrontmatter(deltaText).body);
-  if (d.issues?.length) throw new Error(`malformed delta: ${d.issues.join('; ')}`);
-  const names = [...d.added, ...d.modified, ...d.removed].map((r) => r.name.normalize('NFC').toLowerCase());
-  if (new Set(names).size !== names.length) throw new Error('malformed delta: duplicate requirement');
-  if ([...d.added, ...d.modified].some((r) => !r.body.trim())) throw new Error('malformed delta: empty requirement body');
-  const reqs = [...main.requirements];
-  const report = { added: [], modified: [], removed: [], missing: [] };
-  for (const r of d.removed) {
-    const i = reqs.findIndex((x) => x.name.toLowerCase() === r.name.toLowerCase());
-    if (i === -1) report.missing.push(`REMOVED "${r.name}" not found`);
-    else {
-      reqs.splice(i, 1);
-      report.removed.push(r.name);
-    }
-  }
-  for (const r of d.modified) {
-    const i = reqs.findIndex((x) => x.name.toLowerCase() === r.name.toLowerCase());
-    if (i === -1) {
-      report.missing.push(`MODIFIED "${r.name}" not found; added instead`);
-      reqs.push(r);
-    } else {
-      reqs[i] = r;
-      report.modified.push(r.name);
-    }
-  }
-  for (const r of d.added) {
-    const i = reqs.findIndex((x) => x.name.toLowerCase() === r.name.toLowerCase());
-    if (i === -1) {
-      reqs.push(r);
-      report.added.push(r.name);
-    } else {
-      reqs[i] = r;
-      report.modified.push(`${r.name} (ADDED over existing)`);
-    }
-  }
-  return { text: renderSpec({ ...main, name: main.name || capability, requirements: reqs }), report };
-}
+export { mergeDelta } from '../lib/deltas.js';
 
-export function appendDecisions(specText, capability, lines) {
-  const s = specText ? parseSpec(specText) : { purpose: '', requirements: [], decisions: [] };
-  const existing = new Set(s.decisions.map((d) => d.toLowerCase()));
-  const fresh = lines.filter((l) => !existing.has(`${capability}: ${l}`.toLowerCase()) && !existing.has(l.toLowerCase()));
-  return renderSpec({ ...s, name: s.name || capability, decisions: [...s.decisions, ...fresh.map((l) => `${capability}: ${l}`)] });
-}
+export { appendDecisions } from '../lib/deltas.js';
 
 /** Everything that stops a landing. Pure; used by `land` and `doctor`. */
 export function landingBlockers(c, fingerprint, { confirmAssumptions = false, acceptDrift = false, specsDir, activeNames = [] } = {}) {
@@ -103,6 +60,10 @@ function landUnlocked({ flags, positional }, cwd) {
   const fp = worktreeFingerprint(root);
   const activeNames = new Set(allChanges.map((x) => x.name));
   const blockers = landingBlockers(c, fp, { confirmAssumptions: Boolean(flags.confirmAssumptions), acceptDrift: Boolean(flags.acceptDrift), specsDir: p.specs, activeNames });
+  if (flags.force && c.review.state !== 'not-required') {
+    const evidenceBlockers = blockers.filter((item) => /^review |^verification /.test(item));
+    if (evidenceBlockers.length) throw new Error(`cannot force-land "${name}": independent review and current full checks cannot be bypassed.\n  - ${evidenceBlockers.join('\n  - ')}`);
+  }
   if (blockers.length && !flags.force) throw new Error(`cannot land "${name}":\n  - ${blockers.join('\n  - ')}\nFix them, or pass --force if the user explicitly asked.`);
   if (blockers.length) warn(`landing with --force despite:\n  - ${blockers.join('\n  - ')}`);
   const uncheckedPlan = c.progress.total ? c.progress.total - c.progress.done : 0;

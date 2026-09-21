@@ -6,8 +6,9 @@
 
 - **ORIENT** —— 检查工作树和当前 session focus。同一目标的追问继续使用 focus change；用户说“继续”时运行 `keelson focus --auto`，存在歧义时绝不静默绑定。
 - **BOUND** —— 提问前先读仓库。按 `interview.md` 在目标不清、产品选择相互依赖或高影响承诺未定时自动深入探索，无需特殊提示词。仓库事实和可逆工程选择自行解决；简单缺口问一个就绪用户决定，复杂不确定性一轮问完就绪 frontier，附推荐和理由。明确任务直接推进。trivial 走最小 quick 变更；quick 创建最小有用 change；spec 写 acceptance、行为 delta 和 plan。只检查当前工作真实触发的风险镜头。
+- 实现前必须用一句可观察结果核对目的，并回放用户会看到/做什么：原困扰还在吗？未明确的用户可见选择不属于默认工程授权；保留数据也不等于保留展示方式。若两种合理体验会改变目标是否达成，先登记这个决定，给一个具体对比、推荐和理由，收到答案后再改依赖代码。任务小、方案可逆或写回后默认继续，都不能替代用户对这种选择的回答。已有明确答案或明确委托则直接推进。
 - **BUILD** —— 自动通过 `keelson start` 并加载 `keelson context --phase implement`，然后一次推进一个纵向切片。独立的新修改目标创建新 change；围绕同一目标继续追问不会。
-- **SENSE** —— 尽早跑便宜检查；完成必须有当前工作树上的新鲜 `keelson check --record` 证据。任务复选框只描述当前计划，不负责判定完成。
+- **SENSE** —— 尽早做低成本检查；行为变更还须按 `verify.md` 自动独立复核，quick delta 也适用。用 `keelson review` 记录验收、反例与合并后规范检查，再对最终树运行 `keelson check --record`。任务勾选不决定完成。
 - **RECONCILE** —— 每轮修改后根据 acceptance、阻塞项、rollout/兼容性和新鲜 verification 重新计算生命周期。land 前静默完成 context 暴露的内部知识维护：重写单例当前状态文档、拆分/去重 rules，并让 `land` 自动分片大型 spec。gate 满足后状态成为 `ready` 并自动 land；不等待用户说“做完了”，也不把维护流程暴露给用户。
 - 会话结束、长时间空闲、compaction、关闭窗口只改变本机会话 runtime，绝不自动完成、取消或 land 长期 work item。
 - `handoff.md` 只用于真正跨人/跨机器或明确所有权转移。普通新会话从 change/task/ledger 状态和可用的 session focus 重建。

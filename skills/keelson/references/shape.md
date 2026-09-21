@@ -12,6 +12,8 @@ Read what answers the question: the code, tests, `INTENT.md`, `ROADMAP.md`, the 
 
 Use `interview.md` to separate the desired outcome from the proposed mechanism. Check repository evidence and a concrete usage situation to establish whether the purpose is already clear; ask only about gaps that change the current path.
 
+Before implementation, state one observable success and replay what the user will see or do: does the original frustration remain? Unspecified user-visible policy is not an engineering default; preserving data is separate from preserving its presentation. If two plausible experiences materially change success, register the owner decision, ask one concrete contrast with a recommendation and reason, and wait before dependent edits. Small scope, reversibility and proceed-after-write-back do not settle that choice. An established answer or explicit delegation needs no question.
+
 ## Assumption audit before questions
 <!-- keelson: id=shape.assumption-audit | without: the agent solves a plausible but wrong problem, attributes invented beliefs to the owner, or asks a questionnaire before reading the repository | sunset: never -->
 

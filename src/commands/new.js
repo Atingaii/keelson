@@ -22,6 +22,7 @@ export async function newChange({ flags, positional }, cwd = process.cwd()) {
   const name = slugify(raw);
   const tier = (flags.tier ?? 'quick').toLowerCase();
   if (!TIERS.includes(tier)) throw new Error(`tier must be one of ${TIERS.join('|')}`);
+  if (flags.review !== undefined && flags.review !== 'independent') throw new Error('--review must be independent; omit it for an ordinary non-behavioral quick change');
   const dir = path.join(p.changes, name);
   if (exists(dir)) throw new Error(`change "${name}" already exists`);
   const tpl = path.join(skillSource(cfg.lang), 'templates');
@@ -42,6 +43,7 @@ export async function newChange({ flags, positional }, cwd = process.cwd()) {
 
   const front = [
     `tier: ${tier}`,
+    ...(flags.review ? ['review: independent'] : []),
     `created: ${vars.date}`,
     'status: clarifying',
     `owner: ${owner}`,

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "implement": [
+    ".keelson/INTENT.md",
+    ".keelson/changes/close-validation-gaps/request.md",
+    ".keelson/changes/close-validation-gaps/change.md",
+    ".keelson/changes/close-validation-gaps/tasks.md",
+    ".keelson/specs/cli/spec.md",
+    ".keelson/rules/general.md",
+    ".keelson/rules/src.md",
+    ".keelson/rules/skills.md"
+  ],
+  "check": [
+    ".keelson/INTENT.md",
+    ".keelson/changes/close-validation-gaps/request.md",
+    ".keelson/changes/close-validation-gaps/change.md",
+    ".keelson/changes/close-validation-gaps/tasks.md",
+    ".keelson/specs/cli/spec.md",
+    ".keelson/rules/general.md",
+    ".keelson/rules/src.md",
+    ".keelson/rules/skills.md"
+  ]
+}

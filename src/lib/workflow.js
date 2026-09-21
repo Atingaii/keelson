@@ -77,8 +77,8 @@ export function phaseContext(root, workflow, phase = 'implement', touched = []) 
   }
   for (const rule of matchRules(paths.rules, [...(change?.touches ?? []), ...touched], { patterns: true })) add(path.join(paths.rules, rule.file), true);
   const instructions = phase === 'check'
-    ? 'Review the original request, acceptance, current/delta specs and diff in a fresh context. Find uncovered behavior and risky assumptions. Report findings with evidence; implementation owns repairs, then re-review the affected result. Do not treat the implementer\'s summary as proof.'
-    : 'Resolve owner decisions before dependent implementation. Follow the supplied contracts, run relevant checks, and send material changes to an independent reviewer. Continue within existing authorization.';
+    ? 'Review the original request, acceptance, current/delta specs and diff in a fresh context. Run `keelson review --prepare` for exact acceptance and projected merged contracts. Derive discriminating counterexamples from owner decisions, including changed or removed tie-breaks, boundaries and defaults. Inspect the projected current truth for contradictory old requirements. Record observations with `keelson review --record <report.json>`; implementation owns repairs, then obtain a fresh review. Do not treat the implementer\'s summary or green tests as proof.'
+    : 'Before implementation, replay what the user will see or do: does the original frustration remain? A feature request does not settle unspecified product policy. Preserve data separately from its presentation. If the request or existing decisions do not choose between materially different experiences, register that owner decision and ask one concrete contrast with a recommendation; wait for the answer before dependent edits. Clear or explicitly delegated choices need no question. Follow the supplied contracts. Send behavior changes, including quick deltas, to a fresh independent reviewer with `keelson review --prepare` before final checks and landing. Continue within existing authorization.';
   return {
     phase, change: change?.name ?? null, instructions,
     checks: cfg.check ?? [],
@@ -94,7 +94,7 @@ export function renderPhaseContext(pack) {
 
 export function workflowHint(root, env = process.env) {
   const focus = readSession(root, env).state?.change;
-  if (!focus) return '[keelson] Read `keelson guide` for this request. Investigate facts first; use one question for a simple gap or the whole ready frontier for connected uncertainty. Before modifying files, create/focus a change and run `keelson start`; keep read-only requests read-only.';
+  if (!focus) return '[keelson] Read `keelson guide` for this request. Before choosing behavior, state the user-visible success and check whether the proposed experience leaves the original frustration in place. Unspecified user-visible policy is not an authorized engineering default: register the consequential owner choice and ask a concrete contrast with a recommendation, then wait for the answer. Simple gap: one question; connected uncertainty: the ready frontier; settled or explicitly delegated outcomes: no questions. Before modifying files, create/focus a change and run `keelson start`; keep read-only requests read-only.';
   const workflow = activeWorkflow(root, focus, env);
   if (!workflow.change) return '[keelson] Previous focus is no longer active. Re-read context and select work for the current request.';
   const blocked = implementationBlockers(workflow.change, workflow.changes);

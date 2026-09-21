@@ -72,3 +72,9 @@ land 要求验收完成、完整证据新鲜可信、决策依赖解决、契约
 ## 维护
 
 retro 汇总账本；models 管理模型层级建议，不负责启动模型。ablate/restore 可逆暂存和恢复集成，维护时停止其他写入者。uninstall 保留项目事实，--purge 才明确删除 .keelson 数据。提交前审阅日志内容。
+
+## `review`
+
+由代理执行：`keelson review --prepare [change]` 生成当前验收、合并后规范与报告模板。全新上下文评审者填写后，用 `keelson review --record <项目相对报告路径.json> [--change name]` 记录结果。逐项验收需要实测证据，还需反例与合并后能力检查；缺陷、遗漏或输入过期均阻止正常落地。记录复核后再运行最终签名检查。spec 和任何 delta 都需要复核；其他行为类 quick 工作使用 `new --review independent`。
+
+需要独立复核的变更不能用 `land --force` 绕过复核或新鲜完整检查。

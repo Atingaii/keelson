@@ -24,6 +24,8 @@ Separate an explicit requirement from a proposed means. “Add a dashboard” ma
 
 Use engineering principles only where they change a decision: an observable acceptance scenario for success, a domain term or invariant for boundaries, measurement for a performance claim, reversibility for commitment, and the smallest end-to-end slice to test the chosen direction. Do not turn this into a theory lecture, a technology questionnaire or an endless sequence of “why?” questions. Stop pursuing the cause when the next design decision and its evidence path are clear.
 
+Even a small request needs an outcome check: mentally replay the proposed experience and ask whether the original frustration would still exist. Preserving data does not require preserving its presentation. If two plausible experiences would change whether the problem is solved and the owner has not chosen, ask one concrete contrast with a recommendation before coding. If the request already establishes the experience, state the observable acceptance and proceed. Small scope is not evidence that purpose is settled.
+
 ## Question protocol: earn the interruption
 <!-- keelson: id=interview.protocol | without: the agent asks unnecessary questions, hands implementation choices to the owner, or interrupts without knowing what the answer changes | sunset: never -->
 

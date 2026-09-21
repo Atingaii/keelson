@@ -202,6 +202,7 @@ Explain the change here.
 `);
   assert.deepEqual(malformed.issues, [
     'ADDED Requirements has content but no Requirement sections',
+    'MODIFIED Requirements has an unrecognized child heading "Scenario: misplaced"',
     'MODIFIED Requirements has content but no Requirement sections',
   ]);
   assert.deepEqual(parseDelta('## ADDED Requirements\n\n## MODIFIED Requirements\n').issues, []);
